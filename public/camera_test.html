@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        video {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            max-width: 100%;
+        }
+        
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        #preview {
+            margin-top: 20px;
+        }
+        
+        #preview img {
+            max-width: 300px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Camera Test</h1>
+    <video id="video" autoplay playsinline width="400"></video>
+    <br>
+    <button onclick="startCamera()">Start Camera</button>
+    <button onclick="takePhoto()">Take Photo</button>
+    <button onclick="stopCamera()">Stop Camera</button>
+    
+    <div id="preview"></div>
+    
+    <script>
+        let stream = null;
+        const video = document.getElementById('video');
+        
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                console.log('Camera started successfully');
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                alert('Camera access denied or not available');
+            }
+        }
+        
+        function takePhoto() {
+            if (!stream) {
+                alert('Please start camera first');
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            context.drawImage(video, 0, 0);
+            
+            const dataURL = canvas.toDataURL('image/jpeg');
+            
+            const preview = document.getElementById('preview');
+            preview.innerHTML = `<img src="${dataURL}" alt="Captured Photo">`;
+            
+            console.log('Photo taken successfully');
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+                console.log('Camera stopped');
+            }
+        }
+    </script>
+</body>
+</html>
