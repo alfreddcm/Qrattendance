@@ -26,17 +26,17 @@
     @endif
 
     <!-- Main Statistics Cards -->
-    <div class="row g-4 mb-4">
+    <div class="row g-2 mb-3">
         <!-- Total Schools Card -->
         <div class="col-lg-4 col-md-6">
             <div class="card stats-card text-center shadow-sm h-100 border-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title text-primary mb-0">Total Schools</h6>
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h6 class="card-title text-primary mb-0 fs-6">Total Schools</h6>
                         <i class="fas fa-school text-primary"></i>
                     </div>
-                    <h2 class="display-4 text-primary">{{ $totalSchools ?? 0 }}</h2>
-                    <small class="text-muted">Registered schools</small>
+                    <h2 class="h3 text-primary">{{ $totalSchools ?? 0 }}</h2>
+                    <small class="text-muted fs-6">Registered schools</small>
                 </div>
             </div>
         </div>
@@ -44,13 +44,13 @@
         <!-- Total Teachers Card -->
         <div class="col-lg-4 col-md-6">
             <div class="card stats-card text-center shadow-sm h-100 border-success">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title text-success mb-0">Total Teachers</h6>
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h6 class="card-title text-success mb-0 fs-6">Total Teachers</h6>
                         <i class="fas fa-chalkboard-teacher text-success"></i>
                     </div>
-                    <h2 class="display-4 text-success">{{ $totalTeachers ?? 0 }}</h2>
-                    <small class="text-muted">Active teachers</small>
+                    <h2 class="h3 text-success">{{ $totalTeachers ?? 0 }}</h2>
+                    <small class="text-muted fs-6">Active teachers</small>
                 </div>
             </div>
         </div>
@@ -58,42 +58,42 @@
         <!-- Total Students Card -->
         <div class="col-lg-4 col-md-6">
             <div class="card stats-card text-center shadow-sm h-100 border-info">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title text-info mb-0">Total Students</h6>
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h6 class="card-title text-info mb-0 fs-6">Total Students</h6>
                         <i class="fas fa-users text-info"></i>
                     </div>
-                    <h2 class="display-4 text-info">{{ $totalStudents ?? 0 }}</h2>
-                    <small class="text-muted">Enrolled students</small>
+                    <h2 class="h3 text-info">{{ $totalStudents ?? 0 }}</h2>
+                    <small class="text-muted fs-6">Enrolled students</small>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Schools List Section -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center p-2">
+                    <h5 class="mb-0 fs-6">
                         <i class="fas fa-school me-2"></i>
                         Schools Management
                     </h5>
-                    <span class="badge bg-primary">{{ $schools->count() }} schools</span>
+                    <span class="badge bg-primary fs-6">{{ $schools->count() }} schools</span>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-1">
                     @if($schools->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0 table-sm">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width: 80px;">Logo</th>
+                                        <th style="width: 60px;">Logo</th>
                                         <th>School ID</th>
                                         <th>School Name</th>
                                         <th>Address</th>
                                         <th>Teachers</th>
                                         <th>Students</th>
-                                        <th style="width: 120px;">Actions</th>
+                                        <th style="width: 100px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -104,33 +104,33 @@
                                                 <img src="{{ asset('storage/' . $school->logo) }}" 
                                                      alt="{{ $school->name }} Logo" 
                                                      class="rounded-circle" 
-                                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                                     style="width: 30px; height: 30px; object-fit: cover;">
                                             @else
                                                 <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" 
-                                                     style="width: 40px; height: 40px; font-size: 14px;">
+                                                     style="width: 30px; height: 30px; font-size: 11px;">
                                                     {{ substr($school->name, 0, 2) }}
                                                 </div>
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">{{ $school->school_id }}</span>
+                                            <span class="badge bg-info fs-6">{{ $school->school_id }}</span>
                                         </td>
                                         <td>
-                                            <strong>{{ $school->name }}</strong>
+                                            <strong class="fs-6">{{ $school->name }}</strong>
                                         </td>
                                         <td>
-                                            <small class="text-muted">{{ Str::limit($school->address, 50) }}</small>
+                                            <small class="text-muted fs-6">{{ Str::limit($school->address, 40) }}</small>
                                         </td>
                                         <td>
-                                            <span class="badge bg-success">{{ $school->teachers_count ?? 0 }}</span>
+                                            <span class="badge bg-success fs-6">{{ $school->teachers_count ?? 0 }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-primary">{{ $school->students_count ?? 0 }}</span>
+                                            <span class="badge bg-primary fs-6">{{ $school->students_count ?? 0 }}</span>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-1">
                                                 <a href="{{ route('admin.edit-school', $school->id) }}" 
-                                                   class="btn btn-sm btn-outline-primary" 
+                                                   class="btn btn-sm btn-outline-primary px-2 py-1" 
                                                    title="Edit School">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -141,7 +141,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
-                                                            class="btn btn-sm btn-outline-danger" 
+                                                            class="btn btn-sm btn-outline-danger px-2 py-1" 
                                                             title="Delete School">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -154,10 +154,10 @@
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-5">
-                            <i class="fas fa-school fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No schools found</h5>
-                            <p class="text-muted">Start by adding your first school to the system.</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-school fa-2x text-muted mb-2"></i>
+                            <h5 class="text-muted fs-6">No schools found</h5>
+                            <p class="text-muted fs-6">Start by adding your first school to the system.</p>
                             <a href="{{ route('admin.add-school') }}" class="btn btn-primary">
                                 <i class="fas fa-plus me-1"></i>Add First School
                             </a>

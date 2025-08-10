@@ -5,14 +5,14 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <i class="fas fa-school me-2"></i>
                 Manage Schools
-            </h2>
-            <p class="subtitle">Create and manage schools in the system</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Create and manage schools in the system</p>
         </div>
         <div class="page-actions">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
+            <button class="btn btn-primary btn-sm px-2 py-1" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
                 <i class="fas fa-plus me-1"></i>Add School
             </button>
         </div>
@@ -48,26 +48,26 @@
 
     <!-- Schools Table -->
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Schools</h5>
+        <div class="card-header bg-primary text-white p-2">
+            <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>All Schools</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover table-sm">
                     <thead class="table-light">
                         <tr>
-                            <th>Logo</th>
-                            <th>School ID</th>
-                            <th>Name</th>
-                            <th>Address</th>
-                            <th>Created</th>
-                            <th>Actions</th>
+                            <th class="py-1 fs-6">Logo</th>
+                            <th class="py-1 fs-6">School ID</th>
+                            <th class="py-1 fs-6">Name</th>
+                            <th class="py-1 fs-6">Address</th>
+                            <th class="py-1 fs-6">Created</th>
+                            <th class="py-1 fs-6">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($schools as $school)
                         <tr>
-                            <td>
+                            <td class="py-1">
                                 @if($school->logo)
                                     <img src="{{ asset('storage/' . $school->logo) }}" alt="Logo" class="school-logo">
                                 @else
@@ -76,25 +76,25 @@
                                     </div>
                                 @endif
                             </td>
-                            <td>
-                                <span class="badge bg-info">{{ $school->school_id }}</span>
+                            <td class="py-1">
+                                <span class="badge bg-info fs-6">{{ $school->school_id }}</span>
                             </td>
-                            <td>
-                                <strong>{{ $school->name }}</strong>
+                            <td class="py-1">
+                                <strong class="fs-6">{{ $school->name }}</strong>
                             </td>
-                            <td>
-                                <small class="text-muted">{{ Str::limit($school->address, 50) }}</small>
+                            <td class="py-1">
+                                <small class="text-muted fs-6">{{ Str::limit($school->address, 50) }}</small>
                             </td>
-                            <td>
-                                <small>{{ $school->created_at->format('M j, Y') }}</small>
+                            <td class="py-1">
+                                <small class="fs-6">{{ $school->created_at->format('M j, Y') }}</small>
                             </td>
-                            <td>
+                            <td class="py-1">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary" 
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-2 py-1" 
                                             onclick="editSchool({{ $school->id }}, '{{ $school->school_id }}', '{{ $school->name }}', '{{ addslashes($school->address) }}', '{{ $school->logo }}')">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger" 
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" 
                                             onclick="deleteSchool({{ $school->id }}, '{{ $school->name }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -103,10 +103,10 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="6" class="text-center py-3">
                                 <div class="text-muted">
-                                    <i class="fas fa-school fa-3x mb-3"></i>
-                                    <p>No schools found. Create your first school!</p>
+                                    <i class="fas fa-school fa-2x mb-2"></i>
+                                    <p class="fs-6">No schools found. Create your first school!</p>
                                 </div>
                             </td>
                         </tr>
@@ -116,7 +116,7 @@
             </div>
 
             <!-- Pagination -->
-            <div class="d-flex justify-content-center mt-3">
+            <div class="d-flex justify-content-center mt-2">
                 {{ $schools->links() }}
             </div>
         </div>
@@ -127,46 +127,46 @@
 <div class="modal fade" id="addSchoolModal" tabindex="-1" aria-labelledby="addSchoolModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSchoolModalLabel">Add New School</h5>
+            <div class="modal-header p-2">
+                <h6 class="modal-title fs-6" id="addSchoolModalLabel">Add New School</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('admin.store-school') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-body">
+                <div class="modal-body p-2">
                     <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="logo" class="form-label">School Logo</label>
-                            <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                        <div class="col-md-12 mb-2">
+                            <label for="logo" class="form-label fs-6">School Logo</label>
+                            <input type="file" class="form-control form-control-sm" id="logo" name="logo" accept="image/*">
                             <small class="text-muted">Upload school logo (optional)</small>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="school_id" class="form-label">School ID</label>
-                                <input type="text" class="form-control" id="school_id" name="school_id" required>
+                            <div class="mb-2">
+                                <label for="school_id" class="form-label fs-6">School ID</label>
+                                <input type="text" class="form-control form-control-sm" id="school_id" name="school_id" required>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">School Name</label>
-                                <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="mb-2">
+                                <label for="name" class="form-label fs-6">School Name</label>
+                                <input type="text" class="form-control form-control-sm" id="name" name="name" required>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Address</label>
-                                <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                            <div class="mb-2">
+                                <label for="address" class="form-label fs-6">Address</label>
+                                <textarea class="form-control form-control-sm" id="address" name="address" rows="2" required></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create School</button>
+                <div class="modal-footer p-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-2 py-1" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Create School</button>
                 </div>
             </form>
         </div>
@@ -177,48 +177,48 @@
 <div class="modal fade" id="editSchoolModal" tabindex="-1" aria-labelledby="editSchoolModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editSchoolModalLabel">Edit School</h5>
+            <div class="modal-header p-2">
+                <h6 class="modal-title fs-6" id="editSchoolModalLabel">Edit School</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editSchoolForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                <div class="modal-body">
+                <div class="modal-body p-2">
                     <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="edit_logo" class="form-label">School Logo</label>
-                            <input type="file" class="form-control" id="edit_logo" name="logo" accept="image/*">
+                        <div class="col-md-12 mb-2">
+                            <label for="edit_logo" class="form-label fs-6">School Logo</label>
+                            <input type="file" class="form-control form-control-sm" id="edit_logo" name="logo" accept="image/*">
                             <small class="text-muted">Upload new logo (leave empty to keep current)</small>
                             <div id="current_logo_preview" class="mt-2"></div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_school_id" class="form-label">School ID</label>
-                                <input type="text" class="form-control" id="edit_school_id" name="school_id" required>
+                            <div class="mb-2">
+                                <label for="edit_school_id" class="form-label fs-6">School ID</label>
+                                <input type="text" class="form-control form-control-sm" id="edit_school_id" name="school_id" required>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_name" class="form-label">School Name</label>
-                                <input type="text" class="form-control" id="edit_name" name="name" required>
+                            <div class="mb-2">
+                                <label for="edit_name" class="form-label fs-6">School Name</label>
+                                <input type="text" class="form-control form-control-sm" id="edit_name" name="name" required>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="edit_address" class="form-label">Address</label>
-                                <textarea class="form-control" id="edit_address" name="address" rows="3" required></textarea>
+                            <div class="mb-2">
+                                <label for="edit_address" class="form-label fs-6">Address</label>
+                                <textarea class="form-control form-control-sm" id="edit_address" name="address" rows="2" required></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update School</button>
+                <div class="modal-footer p-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-2 py-1" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Update School</button>
                 </div>
             </form>
         </div>
@@ -229,20 +229,20 @@
 <div class="modal fade" id="deleteSchoolModal" tabindex="-1" aria-labelledby="deleteSchoolModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteSchoolModalLabel">Confirm Delete</h5>
+            <div class="modal-header bg-danger text-white p-2">
+                <h6 class="modal-title fs-6" id="deleteSchoolModalLabel">Confirm Delete</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the school "<span id="deleteSchoolName"></span>"?</p>
-                <p class="text-danger"><strong>Warning:</strong> This action cannot be undone and will affect all associated data.</p>
+            <div class="modal-body p-2">
+                <p class="fs-6">Are you sure you want to delete the school "<span id="deleteSchoolName"></span>"?</p>
+                <p class="text-danger fs-6"><strong>Warning:</strong> This action cannot be undone and will affect all associated data.</p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <div class="modal-footer p-2">
+                <button type="button" class="btn btn-secondary btn-sm px-2 py-1" data-bs-dismiss="modal">Cancel</button>
                 <form id="deleteSchoolForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete School</button>
+                    <button type="submit" class="btn btn-danger btn-sm px-2 py-1">Delete School</button>
                 </form>
             </div>
         </div>

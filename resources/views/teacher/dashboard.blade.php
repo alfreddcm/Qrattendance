@@ -4,45 +4,44 @@
 
 <style>
 .compact-card {
-    height: 120px !important;
-    min-height: 120px !important;
+    height: 100px !important;
+    min-height: 100px !important;
 }
 
 .compact-card .card-body {
-    padding: 15px !important;
+    padding: 12px !important;
 }
 
 .fs-7 {
-    font-size: 0.875rem !important;
+    font-size: 0.8rem !important;
 }
 
 .fs-8 {
-    font-size: 0.75rem !important;
+    font-size: 0.7rem !important;
 }
 
 .table-compact {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
 }
 
 .table-compact th,
 .table-compact td {
-    padding: 0.5rem !important;
+    padding: 0.4rem !important;
 }
 
 .btn-compact {
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.75rem !important;
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.7rem !important;
 }
 
 .card-compact {
-    margin-bottom: 1rem !important;
+    margin-bottom: 0.75rem !important;
 }
 
 .container-fluid {
-    padding: 1rem !important;
+    padding: 0.75rem !important;
 }
 
-/* School Logo Circle Styles */
 .school-logo-circle {
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
