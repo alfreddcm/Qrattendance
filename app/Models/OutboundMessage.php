@@ -10,11 +10,14 @@ class OutboundMessage extends Model
     use HasFactory;
 
     protected $fillable = [
+        'teacher_id',
         'student_id',
         'contact_number',
         'message',
         'message_id',
-        'status'
+        'status',
+        'recipient_type',
+        'recipient_count'
     ];
 
     protected $casts = [
@@ -25,5 +28,10 @@ class OutboundMessage extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
     }
 }

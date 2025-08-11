@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('outbound_messages', function (Blueprint $table) {
+        Schema::create('outbound_messages_complete', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('teacher_id');
             $table->enum('recipient_type', ['individual', 'broadcast'])->default('individual');
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('outbound_messages');
+        Schema::dropIfExists('outbound_messages_complete');
     }
 };

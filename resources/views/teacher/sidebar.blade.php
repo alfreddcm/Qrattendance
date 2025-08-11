@@ -110,22 +110,77 @@
             overflow: hidden;
         }
         .sidebar {
-            width: 220px;
+            width: 250px;
             background: #2c3e50;
-            color: #fff;
+            border-right: 3px solid #00a86b;
+            color: #ecf0f1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 20px;
-            transition: width 0.3s, transform 0.3s;
+            padding: 10px 0 30px 0;
+            transition: width 0.3s;
             height: 100vh;
-            position: relative;
-            z-index: 998; 
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 997;
             flex-shrink: 0;
             overflow: hidden;
         }
         .sidebar.closed {
             width: 60px;
+        }
+
+        .hamburger-menu {
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .hamburger-menu:hover {
+            background: rgba(0, 168, 107, 0.1);
+        }
+
+        .hamburger-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background: #ecf0f1;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .hamburger-label {
+            margin-left: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #ecf0f1;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar.closed .hamburger-label {
+            opacity: 0;
+            display: none;
+        }
+
+        .sidebar.closed .hamburger-menu {
+            justify-content: center;
+            padding: 10px;
         }
         .sidebar .logo {
             width: 80px;
@@ -247,54 +302,6 @@
             margin-bottom: 25px;
             transition: opacity 0.3s;
         }
-        .hamburger {
-            position: fixed;
-            top: 20px;
-            left: 240px;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            z-index: 999;  
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: left 0.3s, background 0.2s;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .hamburger:hover {
-            background: rgba(255, 255, 255, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        .sidebar.closed ~ .hamburger {
-            left: 80px;
-        }
-        .hamburger span,
-        .hamburger span:before,
-        .hamburger span:after {
-            display: block;
-            background: #2c3e50;
-            height: 3px;
-            width: 24px;
-            border-radius: 2px;
-            position: absolute;
-            transition: all 0.3s;
-        }
-        .hamburger span {
-            position: relative;
-        }
-        .hamburger span:before {
-            content: '';
-            top: -8px;
-            position: absolute;
-        }
-        .hamburger span:after {
-            content: '';
-            top: 8px;
-            position: absolute;
-        }
         .content {
             flex: 1;
             padding: 0 40px 40px 40px;
@@ -304,6 +311,11 @@
             overflow-y: auto;
             transition: margin-left 0.3s;
             position: relative;
+            margin-left: 250px;
+        }
+
+        .sidebar.closed ~ .content {
+            margin-left: 60px;
         }
         
         .sticky-header {
@@ -393,13 +405,6 @@
                 padding: 0 20px 20px 20px;
                 margin-left: 0;
             }
-            .hamburger {
-                left: 240px;
-                z-index: 999;  
-            }
-            .sidebar.closed ~ .hamburger {
-                left: 20px;  
-            }
             .sidebar.closed {
                 transform: translateX(-100%);
             }
@@ -425,6 +430,16 @@
 
 <body>
     <div class="sidebar" id="sidebar">
+        <!-- Hamburger Menu -->
+        <div class="hamburger-menu" id="hamburgerToggle">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span class="hamburger-label">Menu</span>
+        </div>
+
         <div class="logo">
             @if(auth()->user()->school && auth()->user()->school->logo)
                 <img src="{{ asset('storage/' . auth()->user()->school->logo) }}" 
@@ -490,14 +505,11 @@
             </li>
         </ul>
     </div>
-    <button class="hamburger" id="hamburgerBtn">
-        <span></span>
-    </button>
     <div class="content">
         @yield('content')
     </div>
     <script>
-        const hamburger = document.getElementById('hamburgerBtn');
+        const hamburgerToggle = document.getElementById('hamburgerToggle');
         const sidebar = document.getElementById('sidebar');
 
         
@@ -505,7 +517,7 @@
             sidebar.classList.add('closed');
         }
 
-        hamburger.addEventListener('click', () => {
+        hamburgerToggle.addEventListener('click', () => {
             sidebar.classList.toggle('closed');
             
             localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));

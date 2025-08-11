@@ -29,7 +29,8 @@ class MessageApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'number' => 'required|string',
                 'message' => 'required|string|max:1000',
-                'student_id' => 'nullable|exists:students,id'
+                'student_id' => 'nullable|exists:students,id',
+                'send_to_all' => 'boolean'
             ]);
 
             if ($validator->fails()) {
@@ -47,6 +48,12 @@ class MessageApiController extends Controller
             $number = $request->input('number');
             $message = $request->input('message');
             $studentId = $request->input('student_id');
+            $sendToAll = $request->input('send_to_all', false);
+
+            // Handle send to all parents
+            if ($sendToAll) {
+                return $this->sendToAllParents($message);
+            }
 
             if (!$this->isValidPhoneNumber($number)) {
                 Log::warning('Invalid phone number format', [
@@ -68,11 +75,14 @@ class MessageApiController extends Controller
 
             // Store to database
             $outboundMessage = OutboundMessage::create([
+                'teacher_id' => auth()->id(),
                 'student_id' => $studentId,
                 'contact_number' => $normalizedNumber,
                 'message' => $message,
                 'message_id' => $result['message_id'] ?? null,
-                'status' => $result['status'] ?? 'pending'
+                'status' => $result['status'] ?? 'pending',
+                'recipient_type' => 'individual',
+                'recipient_count' => 1
             ]);
 
             if ($result['success']) {
@@ -116,6 +126,130 @@ class MessageApiController extends Controller
             return response()->json([
                 'status' => 'fail',
                 'message' => 'An error occurred while sending SMS'
+            ], 500);
+        }
+    }
+
+    /**
+     * Send SMS to all parents of students in teacher's class
+     */
+    private function sendToAllParents($message)
+    {
+        try {
+            // Get all students with parent contact numbers for the current teacher
+            $students = Student::where('user_id', auth()->id())
+                ->whereNotNull('contact_person_contact')
+                ->where('contact_person_contact', '!=', '')
+                ->get();
+
+            if ($students->isEmpty()) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'No students with parent contact numbers found in your class'
+                ], 404);
+            }
+
+            $senderId = config('sms.use_sender_id') ? config('sms.sender_id') : null;
+            $successCount = 0;
+            $failCount = 0;
+            $recipients = [];
+
+            // First, collect all valid recipients to get the total count
+            foreach ($students as $student) {
+                $contactNumber = $student->contact_person_contact;
+                
+                if (!$this->isValidPhoneNumber($contactNumber)) {
+                    continue;
+                }
+
+                $normalizedNumber = $this->normalizePhoneNumber($contactNumber);
+                $recipients[] = [
+                    'student' => $student,
+                    'number' => $normalizedNumber
+                ];
+            }
+
+            $totalRecipients = count($recipients);
+
+            if ($totalRecipients === 0) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'No valid parent contact numbers found in your class'
+                ], 404);
+            }
+
+            // Create one record for the broadcast message
+            $broadcastResult = [
+                'success_count' => 0,
+                'fail_count' => 0,
+                'message_ids' => []
+            ];
+
+            // Send to each parent
+            foreach ($recipients as $recipient) {
+                $student = $recipient['student'];
+                $normalizedNumber = $recipient['number'];
+
+                $result = $this->smsService->sendSms($message, $normalizedNumber, $senderId);
+
+                if ($result['success']) {
+                    $successCount++;
+                    if (isset($result['message_id'])) {
+                        $broadcastResult['message_ids'][] = $result['message_id'];
+                    }
+                } else {
+                    $failCount++;
+                }
+            }
+
+            // Store one record for the entire broadcast
+            OutboundMessage::create([
+                'teacher_id' => auth()->id(),
+                'student_id' => null, // No specific student for broadcast
+                'contact_number' => 'broadcast', // Indicate this is a broadcast
+                'message' => $message,
+                'message_id' => json_encode($broadcastResult['message_ids']), // Store all message IDs
+                'status' => $successCount > 0 ? 'sent' : 'failed',
+                'recipient_type' => 'broadcast',
+                'recipient_count' => $totalRecipients
+            ]);
+
+            Log::info('Broadcast SMS sent', [
+                'teacher_id' => auth()->id(),
+                'total_recipients' => $totalRecipients,
+                'success_count' => $successCount,
+                'fail_count' => $failCount
+            ]);
+
+            if ($successCount > 0) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => "SMS sent successfully to {$successCount} parents" . 
+                                ($failCount > 0 ? " ({$failCount} failed)" : ""),
+                    'success_count' => $successCount,
+                    'fail_count' => $failCount,
+                    'total_count' => $totalRecipients
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed to send SMS to any parent',
+                    'success_count' => 0,
+                    'fail_count' => $failCount,
+                    'total_count' => $totalRecipients
+                ], 500);
+            }
+
+        } catch (Exception $e) {
+            Log::error('Broadcast SMS error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'teacher_id' => auth()->id()
+            ]);
+
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'An error occurred while sending broadcast SMS'
             ], 500);
         }
     }
@@ -192,7 +326,8 @@ class MessageApiController extends Controller
     public function getOutboundMessages(Request $request)
     {
         try {
-            $query = OutboundMessage::with(['student.user'])
+            $query = OutboundMessage::with(['student', 'teacher'])
+                ->where('teacher_id', auth()->id())
                 ->orderBy('created_at', 'desc');
 
              if ($request->has('student_id') && $request->student_id) {
@@ -223,8 +358,8 @@ class MessageApiController extends Controller
                     'total' => $messages->total()
                 ],
                 'stats' => [
-                    'sent' => OutboundMessage::where('status', 'sent')->count(),
-                    'failed' => OutboundMessage::where('status', 'failed')->count()
+                    'sent' => OutboundMessage::where('teacher_id', auth()->id())->where('status', 'sent')->count(),
+                    'failed' => OutboundMessage::where('teacher_id', auth()->id())->where('status', 'failed')->count()
                 ]
             ]);
 

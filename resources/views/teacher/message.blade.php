@@ -2,6 +2,7 @@
 @section('title', 'SMS Messages')
 @section('content')
 
+
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -11,13 +12,12 @@
             </h4>
             <p class="subtitle fs-6 mb-0">View and manage SMS message history</p>
         </div>
-        
+            
     </div>
 </div>
 
 <div class="container mt-4">
-    <!-- Filters and Stats -->
-    <div class="row mb-4">
+     <div class="row mb-4">
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
@@ -94,6 +94,9 @@
             </div>
             <div class="col text-end">
                 <div class="d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="loadMessages()" title="Refresh Messages">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
                     <button class="btn btn-outline-primary btn-sm" onclick="testSMSGateway()">
                         <i class="fas fa-signal me-1"></i>Check SMS Status
                     </button>
@@ -113,7 +116,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="py-2 small">Date</th>
-                            <th class="py-2 small">Student</th>
+                            <th class="py-2 small">Recipient</th>
                             <th class="py-2 small">Message</th>
                             <th class="py-2 small">Teacher</th>
                             <th class="py-2 small">Status</th>
@@ -208,8 +211,7 @@
                         </div>
                     </div>
                     
-                    <!-- Student Information Panel -->
-                    <div class="mb-2" id="studentInfoPanel" style="display:none;">
+                     <div class="mb-2" id="studentInfoPanel" style="display:none;">
                         <div class="card border-info mb-0">
                             <div class="card-header bg-light py-1 px-2">
                                 <h6 class="mb-0 small"><i class="fas fa-user me-1"></i>Student Information</h6>
@@ -463,19 +465,26 @@ function loadStudents() {
     const queryString = new URLSearchParams(filters).toString();
     
     fetch(`/teacher/outbound-messages?${queryString}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             console.log('API response:', data); // Debug log
             if (data.success) {
                 if (!data.messages || !Array.isArray(data.messages) || data.messages.length === 0) {
                     displayEmptyState('No messages found');
+                    updatePagination(null);
                 } else {
                     displayMessages(data.messages);
+                    updatePagination(data.pagination);
                 }
-                updatePagination(data.pagination);
                 updateStats(data.stats);
             } else {
-                showAlert('Error loading messages: ' + data.message, 'danger');
+                console.error('API returned error:', data.message);
+                showAlert('Error loading messages: ' + (data.message || 'Unknown error'), 'danger');
                 displayEmptyState('Error loading messages');
             }
         })
@@ -498,15 +507,23 @@ function loadStudents() {
     
     const rows = messages.map(message => {
         const statusBadge = getStatusBadge(message.status);
-        const studentName = message.student ? message.student.name : 'Unknown';
-        const teacherName = message.student && message.student.user ? message.student.user.name : 'Unknown Teacher';
+        
+        // Handle different recipient types
+        let recipientDisplay = '';
+        if (message.recipient_type === 'broadcast') {
+            recipientDisplay = `All Parents (${message.recipient_count || 'Multiple'})`;
+        } else {
+            recipientDisplay = message.student ? message.student.name : 'Custom Number';
+        }
+        
+        const teacherName = message.teacher ? message.teacher.name : 'Unknown Teacher';
         const messagePreview = message.message && message.message.length > 70 ? 
             message.message.substring(0, 70) + '...' : (message.message || 'No message');
         
         return `
             <tr>
                 <td class="py-1 small">${formatDateTimeCompact(message.created_at)}</td>
-                <td class="py-1 small">${studentName}</td>
+                <td class="py-1 small">${recipientDisplay}</td>
                 <td class="py-1 small">
                     <span class="message-preview" title="${escapeHtml(message.message)}">
                         ${escapeHtml(messagePreview)}
@@ -519,11 +536,7 @@ function loadStudents() {
                         <button class="btn btn-outline-primary btn-sm" onclick="viewMessage(${message.id})" title="View Details">
                             <i class="fas fa-eye"></i>
                         </button>
-                        ${message.message_id ? `
-                            <button class="btn btn-outline-info btn-sm" onclick="checkMessageStatus(${message.id})" title="Check Status">
-                                <i class="fas fa-sync"></i>
-                            </button>
-                        ` : ''}
+                         
                     </div>
                 </td>
             </tr>
@@ -606,22 +619,19 @@ function loadStudents() {
  function toggleRecipientOptions() {
     const selectedType = $('input[name="recipientType"]:checked').val();
     
-    // Hide all option divs first
-    $('#allParentsDiv').hide();
+     $('#allParentsDiv').hide();
     $('#studentSelectDiv').hide();
     $('#customNumberDiv').hide();
     $('#studentInfoPanel').hide();
     
-    // Show the selected option
-    if (selectedType === 'all_parents') {
+     if (selectedType === 'all_parents') {
         $('#allParentsDiv').show();
     } else if (selectedType === 'specific_student') {
         $('#studentSelectDiv').show();
-        // Show student info if a student is already selected
-        const selectedValue = $('#studentSelect').val();
+         const selectedValue = $('#studentSelect').val();
         if (selectedValue) {
             $('#studentInfoPanel').show();
-            onStudentSelect(); // Update info panel
+            onStudentSelect();  
         }
     } else if (selectedType === 'custom') {
         $('#customNumberDiv').show();
@@ -634,8 +644,7 @@ function loadStudents() {
         const selectedType = $('input[name="recipientType"]:checked').val();
         let message = messageTemplates[template];
         
-        // Replace date placeholder
-        const today = new Date().toLocaleDateString('en-PH', {
+         const today = new Date().toLocaleDateString('en-PH', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -799,18 +808,17 @@ function sendSMS() {
         showAlert('Error sending SMS', 'danger');
     })
     .finally(() => {
-        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Send SMS');
+        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Okay');
     });
 }
 
-// Check message status
 function checkMessageStatus(messageId) {
     fetch(`/teacher/message-status/${messageId}`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
                 showAlert(`Message status: ${data.delivery_status}`, 'info');
-                loadMessages(); // Refresh to show updated status
+                loadMessages(); 
             } else {
                 showAlert('Error checking status: ' + data.message, 'warning');
             }
@@ -856,19 +864,42 @@ function testSMSGateway() {
 }
 
  function showMessageDetails(message) {
-    const teacherName = message.student && message.student.user ? message.student.user.name : 'Unknown Teacher';
+    // Handle different recipient types
+    let recipientDisplay = '';
+    let recipientIcon = '';
+    
+    if (message.recipient_type === 'broadcast') {
+        recipientDisplay = `All Parents (${message.recipient_count || 'Multiple'} recipients)`;
+        recipientIcon = '<i class="fas fa-users text-primary me-1"></i>';
+    } else if (message.student) {
+        recipientDisplay = message.student.name;
+        recipientIcon = '<i class="fas fa-user text-info me-1"></i>';
+    } else {
+        recipientDisplay = 'Custom Number: ' + (message.contact_number || 'Unknown');
+        recipientIcon = '<i class="fas fa-phone text-warning me-1"></i>';
+    }
+    
+    const teacherName = message.teacher ? message.teacher.name : 'Unknown Teacher';
     const content = `
         <div class="row mb-3">
             <div class="col-sm-3"><strong>Date & Time:</strong></div>
             <div class="col-sm-9">${formatDateTime(message.created_at)}</div>
         </div>
         <div class="row mb-3">
-            <div class="col-sm-3"><strong>Student:</strong></div>
-            <div class="col-sm-9">${message.student ? message.student.name : 'Unknown'}</div>
+            <div class="col-sm-3"><strong>Recipient:</strong></div>
+            <div class="col-sm-9">${recipientIcon}${recipientDisplay}</div>
         </div>
         <div class="row mb-3">
             <div class="col-sm-3"><strong>Teacher:</strong></div>
-            <div class="col-sm-9">${teacherName}</div>
+            <div class="col-sm-9"><i class="fas fa-chalkboard-teacher text-success me-1"></i>${teacherName}</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-3"><strong>Type:</strong></div>
+            <div class="col-sm-9">
+                <span class="badge ${message.recipient_type === 'broadcast' ? 'bg-primary' : 'bg-info'}">
+                    ${message.recipient_type === 'broadcast' ? 'Broadcast' : 'Individual'}
+                </span>
+            </div>
         </div>
         <div class="row mb-3">
             <div class="col-sm-3"><strong>Status:</strong></div>
