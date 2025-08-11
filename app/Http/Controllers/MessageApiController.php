@@ -69,9 +69,7 @@ class MessageApiController extends Controller
 
             $normalizedNumber = $this->normalizePhoneNumber($number);
 
-            $senderId = config('sms.use_sender_id') ? config('sms.sender_id') : null;
-
-            $result = $this->smsService->sendSms($message, $normalizedNumber, $senderId);
+            $result = $this->smsService->sendSms($message, $normalizedNumber);
 
             // Store to database
             $outboundMessage = OutboundMessage::create([
@@ -190,7 +188,7 @@ class MessageApiController extends Controller
                 $student = $recipient['student'];
                 $normalizedNumber = $recipient['number'];
 
-                $result = $this->smsService->sendSms($message, $normalizedNumber, $senderId);
+                $result = $this->smsService->sendSms($message, $normalizedNumber);
 
                 if ($result['success']) {
                     $successCount++;

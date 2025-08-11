@@ -23,9 +23,9 @@ class AndroidSmsGatewayService
     }
 
     /**
-     * Send SMS with optional custom sender ID
+     * Send SMS (sender ID not supported by Android SMS Gateway)
      */
-    public function sendSms($text, $recipients, $senderId = null)
+    public function sendSms($text, $recipients)
     {
         try {
              if (is_string($recipients)) {
@@ -46,26 +46,16 @@ class AndroidSmsGatewayService
                 throw new Exception('No valid recipients provided');
             }
 
-            // Use default sender ID if none provided and enabled in config
-            if (!$senderId && config('sms.use_sender_id', false)) {
-                $senderId = config('sms.sender_id');
-            }
-
              $requestData = [
                 'textMessage' => ['text' => $text],
                 'phoneNumbers' => $validRecipients,
             ];
 
-            // Add sender ID if provided
-            if ($senderId) {
-                $requestData['textMessage']['senderId'] = $senderId;
-            }
-
             Log::info('Sending SMS via Android Gateway', [
                 'recipients' => $validRecipients,
                 'message_length' => strlen($text),
-                'sender_id' => $senderId,
-                'gateway_url' => $this->gatewayUrl
+                'gateway_url' => $this->gatewayUrl,
+                'full_request_data' => $requestData
             ]);
 
              $response = Http::timeout($this->timeout)
@@ -77,8 +67,7 @@ class AndroidSmsGatewayService
                 
                 Log::info('SMS sent successfully', [
                     'response' => $responseData,
-                    'recipients' => $validRecipients,
-                    'sender_id' => $senderId
+                    'recipients' => $validRecipients
                 ]);
 
                 return [
