@@ -135,11 +135,11 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <span class="me-2">✏️</span>
                 Edit Student
-            </h2>
-            <p class="subtitle">Update student information and records</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Update student information and records</p>
         </div>
        
     </div>

@@ -11,6 +11,8 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "capcom6/android-sms-gateway": "^2.1",
+        "guzzlehttp/guzzle": "^7.9",
         "khanamiryan/qrcode-detector-decoder": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",

@@ -5,11 +5,11 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <i class="fas fa-user-graduate me-2"></i>
                 Manage Students
-            </h2>
-            <p class="subtitle">View and manage student records across all schools</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">View and manage student records across all schools</p>
         </div>
         
     </div>
@@ -24,19 +24,19 @@
     @endif
 
     <!-- Search   -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-body">
+                <div class="card-body p-2">
                     <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterForm">
-                        <div class="row g-3 align-items-end">
+                        <div class="row g-2 align-items-end">
                             <div class="col-md-3">
-                                <label for="search" class="form-label small fw-semibold">Search Students</label>
-                                <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control" value="{{ request('search') }}" oninput="debounceSubmit()">
+                                <label for="search" class="form-label small fw-semibold fs-6">Search Students</label>
+                                <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control form-control-sm" value="{{ request('search') }}" oninput="debounceSubmit()">
                             </div>
                             <div class="col-md-2">
-                                <label for="school_id" class="form-label small fw-semibold">School</label>
-                                <select name="school_id" id="school_id" class="form-select" onchange="this.form.submit()">
+                                <label for="school_id" class="form-label small fw-semibold fs-6">School</label>
+                                <select name="school_id" id="school_id" class="form-select form-select-sm" onchange="this.form.submit()">
                                     <option value="">All Schools</option>
                                     @foreach($schools as $school)
                                         <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
@@ -46,8 +46,8 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label for="teacher_id" class="form-label small fw-semibold">Teacher</label>
-                                <select name="teacher_id" id="teacher_id" class="form-select" onchange="this.form.submit()">
+                                <label for="teacher_id" class="form-label small fw-semibold fs-6">Teacher</label>
+                                <select name="teacher_id" id="teacher_id" class="form-select form-select-sm" onchange="this.form.submit()">
                                     <option value="">All Teachers</option>
                                     @foreach($teachers as $teacher)
                                         <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
@@ -173,11 +173,7 @@
                                         </button>
                                     </form>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('admin.students.printQrs') }}" target="_blank">
-                                        <i class="fas fa-qrcode me-2 text-secondary"></i>Print All QR Codes
-                                    </a>
-                                </li>
+                              
                                 <li>
                                     <a class="dropdown-item" href="{{ route('student.ids.print.all') }}" target="_blank">
                                         <i class="fas fa-print me-2 text-success"></i>Print All Student IDs
@@ -224,8 +220,10 @@
                                             <input type="checkbox" class="form-check-input student-checkbox" value="{{ $student->id }}" name="selected_students[]">
                                         </td>
                                         <td style="text-align: center; vertical-align: middle;">
+                                             
+
                                             @if($student->picture)
-                                                <img src="{{ asset('storage/' . $student->picture) }}" 
+                                                <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" 
                                                      alt="{{ $student->name }}" 
                                                      class="rounded" 
                                                      style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dee2e6;">
@@ -275,22 +273,47 @@
                                             </div>
                                         </td>
                                         <td style="vertical-align: middle; text-align: center;">
-                                            @if($student->qr_code)
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    <i class="fas fa-eye me-2" style="color: #28a745; cursor: pointer; font-size: 1.2rem;" 
-                                                       title="View QR Code" onclick="showQRCode('{{ asset('storage/' . $student->qr_code) }}')"></i>
-                                                    <span class="badge bg-success">Available</span>
-                                                </div>
-                                            @else
-                                                <div class="text-center">
-                                                    <form action="{{ route('admin.students.generateQr', $student->id) }}" method="POST" class="generate-qr-form d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-outline-warning btn-sm">
-                                                            <i class="fas fa-qrcode me-1"></i>Generate
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            @endif
+                                            
+                                        
+                                @php
+                                $hasQrCode = false;
+                                $qrImagePath = '';
+
+                                if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+                                    $hasQrCode = true;
+                                    $qrImagePath = $student->qr_code;
+                                } else {
+                                    $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+                                    $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
+                                    $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
+                                    if ($qrSvgExists) {
+                                    $hasQrCode = true;
+                                    $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
+                                    } elseif ($qrPngExists) {
+                                    $hasQrCode = true;
+                                    $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
+                                    }
+                                }
+                                @endphp
+
+                                @if($hasQrCode)
+                                <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
+                                    class="qr-code-display"
+                                    style="width: 5em; height: 5em; object-fit: contain;"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#qrModal{{ $student->id }}"
+                                    title="Click to view larger QR code">
+                                @else
+                                <form action="{{ route('admin.students.generateQr', $student->id) }}" method="POST" class="generate-qr-form d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-qrcode me-1"></i>Generate
+                                    </button>
+                                </form>
+                                @endif
+
+
+ 
                                         </td>
                                         <td style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
                                             @php
@@ -399,7 +422,7 @@
                 <div class="row">
                     <div class="col-md-4 text-center">
                         @if($student->picture)
-                            <img src="{{ asset('storage/' . $student->picture) }}" alt="Student Picture" 
+                            <img src="{{ asset('storage/student_pictures/' . $student->picture)  }}" alt="Student Picture" 
                                  class="img-fluid rounded-circle mb-3" 
                                  style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6;">
                         @else
@@ -413,7 +436,27 @@
                             <h5 class="mb-1">{{ $student->name }}</h5>
                             <span class="badge bg-secondary">{{ $student->id_no }}</span>
                         </div>
+                        <div class="text-center mt-2">
+                            
+ <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title mb-2">
+                                            <i class="fas fa-qrcode me-2"></i>QR Code
+                                        </h6>
+                                        @if($student->qr_code)
+                                            <img src="{{ asset('storage/' . $student->qr_code) }}" alt="QR Code" 
+                                                 style="width: 120px; height: 120px; border: 2px solid #dee2e6; border-radius: 10px;">
+                                        @else
+                                            <div class="text-muted">
+                                                <i class="fas fa-qrcode fa-3x mb-2"></i>
+                                                <div>No QR Code available</div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                        </div>
                     </div>
+                   
                     <div class="col-md-8">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -476,24 +519,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <div class="card bg-light">
-                                    <div class="card-body p-3 text-center">
-                                        <h6 class="card-title mb-2">
-                                            <i class="fas fa-qrcode me-2"></i>QR Code
-                                        </h6>
-                                        @if($student->qr_code)
-                                            <img src="{{ asset('storage/' . $student->qr_code) }}" alt="QR Code" 
-                                                 style="width: 120px; height: 120px; border: 2px solid #dee2e6; border-radius: 10px;">
-                                        @else
-                                            <div class="text-muted">
-                                                <i class="fas fa-qrcode fa-3x mb-2"></i>
-                                                <div>No QR Code available</div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
+                             
                         </div>
                     </div>
                 </div>
@@ -866,10 +892,7 @@
     .badge {
         font-size: 0.75em;
     }
-    
-    .table-hover tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.05);
-    }
+
     
     .bg-pink {
         background-color: #e91e63 !important;
@@ -896,12 +919,7 @@
         transition: all 0.2s ease;
     }
     
-    .table tbody tr:hover {
-        background-color: #f8f9fa;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
+
      .dropdown-toggle {
         border-radius: 20px;
         padding: 0.375rem 1rem;
@@ -947,7 +965,6 @@
         text-align: center;
     }
     
-    /* Bulk actions styling */
     #bulkActions .btn {
         font-size: 0.85rem;
         padding: 0.5rem 0.75rem;

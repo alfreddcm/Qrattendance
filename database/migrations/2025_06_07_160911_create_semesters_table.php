@@ -14,11 +14,17 @@ return new class extends Migration
         Schema::create('semesters', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->unsignedBigInteger('school_id')->nullable();
+
             $table->date('start_date');
             $table->date('end_date');
+
+            $table->time('am_time_in_start')->nullable()->after('end_date');
+            $table->time('am_time_in_end')->nullable()->after('am_time_in_start');
+            $table->time('pm_time_out_start')->nullable()->after('am_time_in_end');
+            $table->time('pm_time_out_end')->nullable()->after('pm_time_out_start');
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('school_id')->nullable();
             
             $table->timestamps();
         

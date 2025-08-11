@@ -27,20 +27,20 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <span class="me-2">👨‍🎓</span>
                 Student Management
-            </h2>
-            <p class="subtitle">Manage student records and QR codes</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Manage student records and QR codes</p>
         </div>
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-2">
     <div>
         <form method="GET" action="{{ route('teacher.students') }}" class="d-flex align-items-center gap-2">
-            <input type="text" name="search" placeholder="Search students..." class="form-control" value="{{ request('search') }}" style="width: 250px;">
-            <select name="semester_id" class="form-select" style="width: 200px;">
+            <input type="text" name="search" placeholder="Search students..." class="form-control form-control-sm" value="{{ request('search') }}" style="width: 200px;">
+            <select name="semester_id" class="form-select form-select-sm" style="width: 180px;">
                 <option value="">All Semesters</option>
                 @foreach($semesters as $sem)
                     <option value="{{ $sem->id }}" {{ $selectedSemester == $sem->id ? 'selected' : '' }}>
@@ -59,7 +59,7 @@
                 <i class="fas fa-plus me-1"></i>Add Student
             </button>
             <div class="btn-group">
-                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-qrcode me-1"></i>QR Actions
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="qrActionsDropdown">
@@ -72,13 +72,20 @@
                             </button>
                         </form>
                     </li>
+                    @else
+                        <li>
+                        <span class="dropdown-item text-success d-flex align-items-center">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Every student has a QR code
+                        </span>
+                        </li>
                     @endif
 
                 </ul>
             </div>
             
             <div class="btn-group">
-                <button class="btn btn-outline-success dropdown-toggle" type="button" id="idActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-outline-success btn-sm dropdown-toggle" type="button" id="idActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-id-card me-1"></i>Student IDs
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="idActionsDropdown">
@@ -98,186 +105,167 @@
                 </ul>
             </div>
 
-        <a href="{{ route('teacher.students.export') }}" class="btn btn-outline-success me-2">
+        <a href="{{ route('teacher.students.export') }}" class="btn btn-outline-success btn-sm me-2">
             <i class="fas fa-download me-1"></i>Export
         </a>
     </div>
 </div>
 
 @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show mt-2 mb-3" role="alert" style="max-width: 900px;">
+    <div class="alert alert-success alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @elseif(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show mt-2 mb-3" role="alert" style="max-width: 900px;">
+    <div class="alert alert-danger alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @elseif(session('info'))
-    <div class="alert alert-info alert-dismissible fade show mt-2 mb-3" role="alert" style="max-width: 900px;">
+    <div class="alert alert-info alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
         {{ session('info') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
 
-<div class="card shadow-sm">
-    <div class="card-header bg-primary text-white">
+<div class="card shadow-sm" style="height: calc(100vh - 220px); display: flex; flex-direction: column;">
+    <div class="card-header bg-primary text-white p-2">
         <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <span class="me-2">👨‍🎓</span>
+            <h6 class="mb-0 fs-6">
+                <span class="me-1">👨‍🎓</span>
                 Student Records
-            </h5>
-            <span class="badge bg-light text-primary">{{ count($students) }} Students</span>
+            </h6>
+            <span class="badge bg-light text-primary fs-6">{{ count($students) }} Students</span>
         </div>
     </div>
-    <div class="card-body p-3">
+    <div class="card-body p-2" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
         @if(count($students) > 0)
-            <div class="row g-3" style="max-height: 600px; overflow-y: auto;">
+            <div class="row g-2" style="flex: 1; overflow-y: auto; margin: 0; padding-right: 8px;">
                 @php $studentCount = 1; @endphp
                 @foreach($students as $student)
                 <div class="col-md-6 col-lg-4">
-                <div class="student-card h-100 shadow-sm">
+                <div class="student-card shadow-sm">
                     <div class="card-header-custom">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="student-id">{{ str_pad($studentCount, 4, '0', STR_PAD_LEFT) }}</span>
-                       
-                    </div>
-                    </div>
-                    <div class="card-body-custom">
-                    <div class="row">
-                        <!-- Student Photo Section -->
-                        <div class="col-4">
-                        <div class="student-image-section">
-                            @if($student->picture)
-                            <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" alt="Student Picture" 
-                                 class="student-photo-card" 
-                                 style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
-                            @else
-                            <div class="student-photo-placeholder-card">
-                                <i class="fas fa-user"></i>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="student-id">{{ str_pad($studentCount, 4, '0', STR_PAD_LEFT) }}</span>
+                            <div class="header-actions">
+                                <button class="btn btn-outline-light btn-xs me-1" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}" title="View">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-light btn-xs dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                                        <i class="fas fa-ellipsis-v"></i>Actions
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a href="{{ route('teacher.students.edit', $student->id) }}" class="dropdown-item">
+                                                <i class="fas fa-edit me-2"></i>Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ route('student.id.print', $student->id) }}" class="dropdown-item" target="_blank">
+                                                <i class="fas fa-print me-2"></i>Print
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure?')">
+                                                    <i class="fas fa-trash me-2"></i>Remove
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                            @endif
                         </div>
-                        </div>
-                        <!-- Student Details Section -->
-                        <div class="col-8">
-                        <div class="student-info-section">
-                            <h6 class="student-name-card mb-1">{{ $student->name }}</h6>
-                            <p class="student-id-text mb-2">ID: {{ $student->id_no }}</p>
+                    </div>
+                    
+                    <div class="card-body-custom">
+                        <div class="row h-100">
+                             <div class="col-3">
+                                <div class="student-image-section">
+                                    @if($student->picture)
+                                    <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" alt="Student Picture" 
+                                         class="student-photo">
+                                    @else
+                                    <div class="student-photo-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
                             
-                            <div class="student-details-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">Gender:</span>
-                                @if($student->gender == 'M')
-                                <span class="badge bg-info">Male</span>
-                                @elseif($student->gender == 'F')
-                                <span class="badge bg-pink">Female</span>
+                             <div class="col-6">
+                                <div class="student-info-section">
+                                    <h6 class="student-name">{{ $student->name }}</h6>
+                                    <p class="student-id-text">ID: {{ $student->id_no }}</p>
+                                    
+                                    <div class="student-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Gender:</span>
+                                            @if($student->gender == 'M')
+                                            <span class="badge bg-info">Male</span>
+                                            @elseif($student->gender == 'F')
+                                            <span class="badge bg-pink">Female</span>
+                                            @else
+                                            <span class="badge bg-secondary">{{ $student->gender }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Age:</span>
+                                            <span class="badge bg-secondary">{{ $student->age }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- QR Code Section -->
+                            <div class="col-3 d-flex align-items-center justify-content-center">
+                                @php
+                                $hasQrCode = false;
+                                $qrImagePath = '';
+
+                                if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+                                    $hasQrCode = true;
+                                    $qrImagePath = $student->qr_code;
+                                } else {
+                                    $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+                                    $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
+                                    $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
+                                    if ($qrSvgExists) {
+                                    $hasQrCode = true;
+                                    $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
+                                    } elseif ($qrPngExists) {
+                                    $hasQrCode = true;
+                                    $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
+                                    }
+                                }
+                                @endphp
+                                @if($hasQrCode)
+                                <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
+                                     class="qr-code-display"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#qrModal{{ $student->id }}"
+                                     title="Click to view larger QR code">
                                 @else
-                                <span class="badge bg-secondary">{{ $student->gender }}</span>
+                                <button type="button" class="btn btn-outline-primary qr-generate-btn" data-bs-toggle="modal" data-bs-target="#generateQrModal{{ $student->id }}" title="Generate QR">
+                                    <i class="fas fa-qrcode"></i><br>
+                                    <small>Generate<br>QR</small>
+                                </button>
                                 @endif
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Age:</span>
-                                <span class="badge bg-secondary">{{ $student->age }}</span>
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Other Info Section with QR Code -->
-                    <div class="other-info-section mt-3">
-                        <div class="row">
-                        <!-- Contact/Address Info -->
-                        <div class="col-9">
-                            <div class="info-grid">
+                       
                             <div class="info-item">
-                                <small class="text-muted">Address:</small>
-                                <div class="text-truncate" title="{{ $student->address }}">{{ $student->address }}</div>
-                            </div>
-                            <div class="info-item">
-                                <small class="text-muted">Contact:</small>
+                                <small>Address:</small>
+                                <div class="text-truncate">{{ $student->address }}</div>
+                            
+                                <small>Contact:</small>
                                 <div>{{ $student->cp_no }}</div>
                             </div>
-                            @if($student->contact_person_name)
-                            <div class="info-item">
-                                <small class="text-muted">Emergency Contact:</small>
-                                <div>{{ $student->contact_person_name }}</div>
-                            </div>
-                            @endif
-                            </div>
                         </div>
-                        
-                        <!-- QR Code Section -->
-                        <div class="col-3 d-flex align-items-center justify-content-center">
-                            @php
-                            $hasQrCode = false;
-                            $qrImagePath = '';
-
-                            if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
-                                $hasQrCode = true;
-                                $qrImagePath = $student->qr_code;
-                            } else {
-                                $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
-                                $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
-                                $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
-                                if ($qrSvgExists) {
-                                $hasQrCode = true;
-                                $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
-                                } elseif ($qrPngExists) {
-                                $hasQrCode = true;
-                                $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
-                                }
-                            }
-                            @endphp
-                            @if($hasQrCode)
-                            <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
-                                 class="qr-code-display clickable-qr"
-                                 data-bs-toggle="modal"
-                                 data-bs-target="#qrModal{{ $student->id }}"
-                                 style="width: 60px; height: 60px; border: 1px solid #dee2e6; border-radius: 8px; cursor: pointer;"
-                                 title="Click to view larger QR code">
-                            @else
-                            <form method="POST" action="{{ route('teacher.students.generateQr', $student->id) }}" class="generate-qr-form d-inline" onsubmit="return confirmGenerate()">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-primary btn-sm qr-generate-btn" title="Generate QR Code">
-                                <i class="fas fa-qrcode"></i><br>
-                                <small>Generate<br>QR</small>
-                                </button>
-                            </form>
-                            @endif
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                    
-                    <!-- Action Buttons Section -->
-                    <div class="card-footer-custom">
-                    <div class="d-flex justify-content-end align-items-center">
-                        <!-- Action Buttons -->
-                        <div class="action-buttons d-flex gap-2">
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}" title="View Details">
-                            <i class="fas fa-eye me-1"></i>View
-                        </button>
-                        <a href="{{ route('teacher.students.edit', $student->id) }}" class="btn btn-sm btn-warning" title="Edit Student">
-                            <i class="fas fa-edit me-1"></i>Edit
-                        </a>
-                           
-                        <div class="btn-group">
-                            <a href="{{ route('student.id.print', $student->id) }}" class="btn btn-sm btn-outline-info" title="Print Student ID (Ctrl+P)" target="_blank">
-                            <i class="fas fa-print me-1"></i>Print
-                            </a>
-                        </div>
-                        <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this student?')" title="Delete Student">
-                            <i class="fas fa-trash me-1"></i>Remove
-                            </button>
-                        </form>
-                        </div>
-                    </div>
                     </div>
                 </div>
                 </div>
@@ -299,7 +287,7 @@
     </div>
 </div>
 
- @foreach($students as $student)
+@foreach($students as $student)
 <div class="modal fade" id="infoModal{{ $student->id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ $student->id }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -381,12 +369,21 @@
                                         <div class="info-item">
                                             <strong>Name:</strong> {{ $student->contact_person_name ?? 'N/A' }}
                                         </div>
-                                        <div class="info-item">
+
+                                        <div class="row">
+                                            <div class="col">
+                                                  <div class="info-item">
                                             <strong>Relationship:</strong> {{ $student->contact_person_relationship ?? 'N/A' }}
                                         </div>
-                                        <div class="info-item">
+                                            </div>
+                                            <div class="col">
+                                                 <div class="info-item">
                                             <strong>Contact:</strong> {{ $student->contact_person_contact ?? 'N/A' }}
                                         </div>
+                                            </div>
+                                        </div>
+                                      
+                                       
                                     </div>
                                 </div>
                             </div>
@@ -399,8 +396,7 @@
                                         @php
                                             $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
                                             $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
-                                            $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
-                                        @endphp
+                                         @endphp
                                         @if($qrSvgExists)
                                             <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code" 
                                                  style="width: 120px; height: 120px; border: 2px solid #dee2e6; border-radius: 10px;">
@@ -436,7 +432,6 @@
 </div>
 @endforeach
 
-<!-- QR Modals for each student -->
 @foreach($students as $student)
 <div class="modal fade" id="qrModal{{ $student->id }}" tabindex="-1" aria-labelledby="qrModalLabel{{ $student->id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -488,6 +483,40 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Close
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
+
+@foreach($students as $student)
+<!-- Generate QR Modal -->
+<div class="modal fade" id="generateQrModal{{ $student->id }}" tabindex="-1" aria-labelledby="generateQrModalLabel{{ $student->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="generateQrModalLabel{{ $student->id }}">
+                    <i class="fas fa-qrcode me-2"></i>Generate QR Code - {{ $student->name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-qrcode text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <p class="mb-3">Generate a QR code for <strong>{{ $student->name }}</strong> (ID: {{ $student->id_no }})?</p>
+                <p class="text-muted small">This will create a unique QR code that can be used for attendance tracking.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form method="POST" action="{{ route('teacher.students.generateQr', $student->id) }}" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-magic me-2"></i>Generate QR Code
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -639,208 +668,247 @@
 </div>
 
 <style>
+    /* Custom scrollbar styling */
+    .row::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .row::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .row::-webkit-scrollbar-thumb {
+        background: #6366f1;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+    
+    .row::-webkit-scrollbar-thumb:hover {
+        background: #4f46e5;
+    }
+    
+    /* Firefox scrollbar */
+    .row {
+        scrollbar-width: thin;
+        scrollbar-color: #6366f1 #f1f1f1;
+    }
 
-.student-card {
-    background: white;
-    border-radius: 15px;
-    border: 1px solid #e0e0e0;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.student-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.card-header-custom {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding: 1rem;
-    color: white;
-}
-
-.card-body-custom {
-    padding: 1.5rem;
-    background: white;
-    position: relative;
-}
-
-.card-footer-custom {
-    background: #f8f9fa;
-    border-top: 1px solid #e0e0e0;
-    padding: 1rem;
-}
-
-.student-id {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: white;
-    background: rgba(255,255,255,0.2);
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    border: 1px solid rgba(255,255,255,0.3);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.student-image-section {
-    height: 100%;
-}
-
-.student-photo-card {
-    border: 2px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.student-photo-placeholder-card {
-    width: 100%;
-    height: 120px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: 2px dashed #dee2e6;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
-}
-
-.student-photo-placeholder-card i {
-    font-size: 3rem;
-    opacity: 0.5;
-}
-
-.student-info-section {
-    padding-left: 1rem;
-}
-
-.student-name-card {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 1.1rem;
-    line-height: 1.2;
-}
-
-.student-id-text {
-    color: #6c757d;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.student-details-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-}
-
-.detail-label {
-    font-weight: 500;
-    color: #495057;
-    min-width: 60px;
-}
-
-.other-info-section {
-    border-top: 1px solid #f0f0f0;
-    padding-top: 1rem;
-}
-
-.info-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.info-item {
-    font-size: 0.85rem;
-}
-
-.info-item small {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-}
-
-.qr-generate-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    font-size: 0.7rem;
-    line-height: 1.2;
-}
-
-.action-buttons .btn {
-    font-size: 0.8rem;
-    padding: 0.375rem 0.75rem;
-}
-
-/* Modal Improvements */
-.modal-content {
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-}
-
-.modal-header {
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    border-radius: 12px 12px 0 0;
-}
-
-.modal-body {
-    padding: 2rem;
-}
-
-.modal-footer {
-    border-top: 1px solid #f0f0f0;
-    border-radius: 0 0 12px 12px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
     .student-card {
-        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background: white;
+        transition: all 0.2s ease;
+        height: 240px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .student-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        transform: translateY(-2px);
+    }
+    
+    .card-header-custom {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 10px 10px 0 0;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .btn-xs {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+        border-radius: 4px;
+    }
+    
+    .btn-outline-light {
+        border-color: rgba(255,255,255,0.3);
+        color: white;
+    }
+    
+    .btn-outline-light:hover {
+        background-color: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.5);
+        color: white;
+    }
+    
+    .dropdown-menu {
+        font-size: 0.85rem;
+        min-width: 140px;
+    }
+    
+    .dropdown-item {
+        padding: 6px 12px;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
     }
     
     .card-body-custom {
-        padding: 1rem;
+        padding: 12px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .student-image-section {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .student-photo {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #6366f1;
+    }
+    
+    .student-photo-placeholder {
+        width: 60px;
+        height: 60px;
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 24px;
     }
     
     .student-info-section {
-        padding-left: 0.5rem;
+        padding-left: 8px;
+        height: 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     
-    .action-buttons {
-        flex-wrap: wrap;
-        gap: 0.25rem;
+    .student-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+        line-height: 1.2;
     }
     
-    .action-buttons .btn {
+    .student-id-text {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+    
+    .student-details {
+        display: flex;
+        gap: 6px;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .detail-label {
         font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
+        color: #6b7280;
     }
-}
-
-/* Loading States */
-.generate-qr-form {
-    display: inline-block;
-}
-
-.loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-}
+    
+    .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    
+    .bg-pink {
+        background-color: #ec4899 !important;
+    }
+    
+    .qr-code-display {
+        width: 50px;
+        height: 50px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    
+    .qr-code-display:hover {
+        transform: scale(1.05);
+    }
+    
+    .qr-generate-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 0.6rem;
+        padding: 4px;
+        line-height: 1.1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .additional-info {
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #f1f5f9;
+        flex: 1;
+    }
+    
+    .info-item {
+        margin-bottom: 4px;
+    }
+    
+    .info-item small {
+        font-size: 0.7rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .info-item div {
+        font-size: 0.75rem;
+        color: #374151;
+        line-height: 1.2;
+    }
+    
+    @media (max-width: 768px) {
+        .student-card {
+            height: auto;
+            min-height: 200px;
+        }
+        
+        .student-photo, .student-photo-placeholder {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .qr-code-display, .qr-generate-btn {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .header-actions {
+            gap: 2px;
+        }
+        
+        .btn-xs {
+            padding: 2px 4px;
+            font-size: 0.65rem;
+        }
+    }
 </style>
 
 <script>

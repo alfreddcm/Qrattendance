@@ -6,11 +6,11 @@
     <div class="sticky-header">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h2>
+                <h4 class="fs-5 mb-1">
                     <span class="me-2">📊</span>
                     Attendance Reports
-                </h2>
-                <p class="subtitle">Generate and export attendance reports</p>
+                </h4>
+                <p class="subtitle fs-6 mb-0">Generate and export attendance reports</p>
             </div>
            
         </div>
@@ -19,19 +19,19 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <span class="me-2">🔍</span>
+                <div class="card-header bg-primary text-white p-2">
+                    <h6 class="mb-0 fs-6">
+                        <span class="me-1">🔍</span>
                         Report Filters
-                    </h5>
+                    </h6>
                 </div>
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3 mb-4">
+                <div class="card-body p-2">
+                    <form id="filterForm" class="row g-2 mb-3">
                         <div class="col-md-3">
-                            <label for="type" class="form-label fw-bold">
+                            <label for="type" class="form-label fw-bold fs-6">
                                 <i class="fas fa-filter me-1"></i>Report Type
                             </label>
-                            <select name="type" id="type" class="form-select">
+                            <select name="type" id="type" class="form-select form-select-sm">
                                 <option value="daily" {{ request('type', 'daily') == 'daily' ? 'selected' : '' }}>
                                     📅 Daily Report
                                 </option>
@@ -46,7 +46,7 @@
                         
                         <div class="col-md-3">
                             <div id="dateField" style="display:none;">
-                                <label for="date" class="form-label fw-bold">
+                                <label for="date" class="form-label fw-bold fs-6">
                                     <i class="fas fa-calendar me-1"></i>Select Date
                                 </label>
                                 <input type="date" name="date" id="date" value="{{ request('date', now()->toDateString()) }}" class="form-control">

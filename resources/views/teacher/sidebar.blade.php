@@ -9,6 +9,9 @@
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
     <script src="{{ asset('js/all.min.js') }}"></script>
     

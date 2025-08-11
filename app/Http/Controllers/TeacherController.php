@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class TeacherController extends Controller
@@ -170,6 +171,18 @@ class TeacherController extends Controller
         return view('teacher.students', compact('students'));
     }
 
+    public function message()
+    {
+        $selectedSemester = $this->getCurrentSemesterId();
+        
+        $students = Student::where('user_id', Auth::id())
+            ->where('semester_id', $selectedSemester)
+            ->orderBy('name')
+            ->get();
+        
+        return view('teacher.message', compact('students'));
+    }
+
     
     public function semesters()
     {
@@ -177,19 +190,36 @@ class TeacherController extends Controller
         return view('teacher.semester', compact('semesters'));
     }
 
-    
+    /*
     public function addSemester(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'am_time_in_start' => 'required|date_format:H:i',
-            'am_time_in_end' => 'required|date_format:H:i',
-            'pm_time_out_start' => 'required|date_format:H:i',
-            'pm_time_out_end' => 'required|date_format:H:i',
+        Log::info('Semester creation request', [
+            'teacher_id' => Auth::id(),
+            'semester_name' => $request->name,
+            'status' => $request->status,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
         ]);
+
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'status' => 'required|in:active,inactive',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'am_time_in_start' => 'required|date_format:H:i',
+                'am_time_in_end' => 'required|date_format:H:i',
+                'pm_time_out_start' => 'required|date_format:H:i',
+                'pm_time_out_end' => 'required|date_format:H:i',
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Semester validation failed', [
+                'teacher_id' => Auth::id(),
+                'semester_name' => $request->name,
+                'validation_errors' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         
         $startDate = Carbon::parse($request->start_date);
@@ -279,21 +309,39 @@ class TeacherController extends Controller
         }
         
         return redirect()->route('teacher.semesters')->with('success', $successMessage);
-    }
+    } 
+    */
 
     
     public function updateSemesterStatus(Request $request)
     {
-        $request->validate([
-            'semester_id' => 'required|exists:semesters,id',
-            'status' => 'required|in:active,inactive',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'am_time_in_start' => 'required|date_format:H:i',
-            'am_time_in_end' => 'required|date_format:H:i',
-            'pm_time_out_start' => 'required|date_format:H:i',
-            'pm_time_out_end' => 'required|date_format:H:i',
+        Log::info('Semester update request', [
+            'teacher_id' => Auth::id(),
+            'semester_id' => $request->semester_id,
+            'new_status' => $request->status,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
         ]);
+
+        try {
+            $request->validate([
+                'semester_id' => 'required|exists:semesters,id',
+                'status' => 'required|in:active,inactive',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'am_time_in_start' => 'required|date_format:H:i',
+                'am_time_in_end' => 'required|date_format:H:i',
+                'pm_time_out_start' => 'required|date_format:H:i',
+                'pm_time_out_end' => 'required|date_format:H:i',
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Semester update validation failed', [
+                'teacher_id' => Auth::id(),
+                'semester_id' => $request->semester_id,
+                'validation_errors' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         
         if ($request->am_time_in_start >= $request->am_time_in_end) {
@@ -366,6 +414,57 @@ class TeacherController extends Controller
                 'end_date' => $semester->end_date,
             ]
         ]);
+    }
+
+    public function account()
+    {
+        $teacher = Auth::user();
+        return view('teacher.manageaccount', compact('teacher'));
+    }
+
+    public function update(Request $request)
+    {
+        $teacher = Auth::user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->id,
+            'phone_number' => 'nullable|string|max:20',
+            'position' => 'nullable|string|max:100',
+            'section_name' => 'nullable|string|max:100',
+        ]);
+
+        $teacher->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'position' => $request->position,
+            'section_name' => $request->section_name,
+        ]);
+
+        return redirect()->route('teacher.account')->with('success', 'Account updated successfully!');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $teacher = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check if current password is correct
+        if (!Hash::check($request->current_password, $teacher->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+        }
+
+        // Update password
+        $teacher->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->route('teacher.account')->with('success', 'Password updated successfully!');
     }
 
     

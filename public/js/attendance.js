@@ -7,8 +7,7 @@ let currentStudentData = null;
 let sessionCheckInterval = null;
 let currentPeriodStatus = null;
 
-// Initialize everything when page loads
-document.addEventListener('DOMContentLoaded', function() {
+ document.addEventListener('DOMContentLoaded', function() {
     console.log('Page loaded, session token:', window.sessionToken);
     updateDateTime();
     setInterval(updateDateTime, 1000);
@@ -16,20 +15,15 @@ document.addEventListener('DOMContentLoaded', function() {
     startSessionMonitoring();
     setupEventListeners();
     
-    // Initialize Material Design components
-    initializeMaterialDesign();
+     initializeMaterialDesign();
 });
 
-// Initialize Material Design Components
-function initializeMaterialDesign() {
-    // Set up initial Material Design state
-    resetToMaterialWaitingState();
+ function initializeMaterialDesign() {
+     resetToMaterialWaitingState();
     
-    // Add Material Design classes to body
-    document.body.classList.add('material-design-enabled');
+     document.body.classList.add('material-design-enabled');
     
-    // Initialize Material Design snackbar system
-    if (!document.querySelector('.material-snackbar-container')) {
+     if (!document.querySelector('.material-snackbar-container')) {
         const container = document.createElement('div');
         container.className = 'material-snackbar-container';
         document.body.appendChild(container);
@@ -154,13 +148,13 @@ function handlePeriodChange(periodInfo) {
         
         setTimeout(() => {
             resetToWaitingState();
-        }, 5000); // Extended to 5 seconds
+        }, 5000);  
     } else if (!periodInfo.allowed && currentPeriodStatus !== null) {
         showInlineStatus(`🔴 Recording period has ended.`, 'warning');
         
         setTimeout(() => {
             resetToWaitingState();
-        }, 5000); // Extended to 5 seconds
+        }, 5000);  
     }
 }
 
@@ -425,8 +419,21 @@ async function processQRCode(qrData, scannerType) {
 
 // Parse QR Code Data: Extract student->id_no, student->name, student->teacher_id
 function parseQRCodeData(qrData) {
+    // First check if this is the new stud_code format (e.g., "12345_ABCDEFGHIJ")
+    if (qrData.includes('_') && qrData.length >= 5) {
+        // New format: just the stud_code, we'll let the backend handle the lookup
+        return {
+            stud_code: qrData,
+            student_id: qrData.split('_')[0], // Extract the ID part for display
+            id_no: qrData.split('_')[0],
+            name: 'Student ' + qrData.split('_')[0], // Temporary name until backend lookup
+            teacher_id: null,
+            section: 'Loading...'
+        };
+    }
+    
     try {
-        // Try JSON parsing first (current format)
+        // Try JSON parsing (legacy format)
         const jsonData = JSON.parse(qrData);
         if (jsonData.student_id) {
             return {

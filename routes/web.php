@@ -11,6 +11,7 @@ use App\Http\Controllers\AttendanceAnalyticsController;
 use App\Http\Controllers\StudentIdController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\MessageApiController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -31,14 +32,15 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit')->m
 
 // Teacher Routes - protected by teacher role
 Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
-    Route::get('/semesters', [TeacherController::class, 'semesters'])->name('teacher.semesters');
+    Route::get('/semesters', [SemesterController::class, 'index'])->name('teacher.semesters');
     Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     
     // Teachers can only edit semesters, not create them
-    Route::get('/semester/{id}/data', [TeacherController::class, 'getSemesterData'])->name('teacher.semester.data');
-    Route::get('/semester/{id}/edit', [TeacherController::class, 'editSemester'])->name('teacher.semester.edit');
-    Route::put('/semester/{id}', [SemesterController::class, 'update'])->name('teacher.semester.update');
-    Route::post('/semester/status/update', [TeacherController::class, 'updateSemesterStatus'])->name('teacher.semester.status.update');
+    Route::get('/semester/{semester}/data', [SemesterController::class, 'show'])->name('teacher.semester.data');
+    Route::get('/semester/{semester}/edit', [SemesterController::class, 'edit'])->name('teacher.semester.edit');
+    Route::put('/semester/{semester}', [SemesterController::class, 'update'])->name('teacher.semester.update');
+    Route::post('/semester/{semester}/toggle-status', [SemesterController::class, 'toggleStatus'])->name('teacher.semester.status.update');
+    Route::get('/semester/active', [SemesterController::class, 'getActiveSemester'])->name('teacher.semester.active');
 
     Route::get('/students', [StudentManagementController::class, 'index'])->name('teacher.students');
     Route::post('/students/add', [StudentManagementController::class, 'addStudent'])->name('teacher.students.add');
@@ -54,9 +56,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/students/download-qrs', [StudentManagementController::class, 'downloadQrs'])->name('teacher.students.downloadQrs');
     Route::post('/students/{id}/generate-qr', [StudentManagementController::class, 'generateQr'])->name('teacher.students.generateQr');
 
-    Route::get('/message', function () {
-        return view('teacher.message');
-    })->name('teacher.message');
+    Route::get('/message', [TeacherController::class, 'message'])->name('teacher.message');
     Route::get('/attendance', [AttendanceAnalyticsController::class, 'attendanceToday'])->name('teacher.attendance');
     
     Route::get('/analytics/statistics', [AttendanceAnalyticsController::class, 'getOverallStatistics'])->name('teacher.analytics.statistics');
@@ -73,6 +73,13 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::put('/account/password', [TeacherController::class, 'updatePassword'])->name('teacher.account.password');
     
     Route::post('/qr-verify', [AttendanceController::class, 'verifyQrAndRecordAttendance'])->name('teacher.qr.verify');
+    
+    // SMS/Message Routes
+    Route::post('/send-sms', [MessageApiController::class, 'sendSms'])->name('teacher.send.sms');
+    Route::get('/outbound-messages', [MessageApiController::class, 'getOutboundMessages'])->name('teacher.outbound.messages');
+    Route::get('/message-status/{id}', [MessageApiController::class, 'getMessageStatus'])->name('teacher.message.status');
+    Route::get('/test-sms-gateway', [MessageApiController::class, 'testGateway'])->name('teacher.test.gateway');
+    Route::get('/get-students', [StudentManagementController::class, 'getStudentsForApi'])->name('teacher.get.students');
     
     // Attendance Session Routes
     Route::post('/attendance-session/create', [App\Http\Controllers\AttendanceSessionController::class, 'createSession'])->name('teacher.attendance.session.create');
@@ -100,10 +107,14 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::delete('/teachers/{id}', [AdminController::class, 'deleteTeacher'])->name('admin.delete-teacher');
     
     // Semester Management (Admin creates, teachers edit)
-    Route::get('/manage-semesters', [AdminController::class, 'manageSemesters'])->name('admin.manage-semesters');
-    Route::post('/semesters/store', [AdminController::class, 'storeSemester'])->name('admin.semester.store');
-    Route::put('/semesters/{id}', [AdminController::class, 'updateSemester'])->name('admin.semester.update');
-    Route::delete('/semesters/{id}', [AdminController::class, 'deleteSemester'])->name('admin.semester.delete');
+    Route::get('/manage-semesters', [SemesterController::class, 'index'])->name('admin.manage-semesters');
+    Route::get('/semesters/create', [SemesterController::class, 'create'])->name('admin.semester.create');
+    Route::post('/semesters/store', [SemesterController::class, 'store'])->name('admin.semester.store');
+    Route::get('/semesters/{semester}/edit', [SemesterController::class, 'edit'])->name('admin.semester.edit');
+    Route::put('/semesters/{semester}', [SemesterController::class, 'update'])->name('admin.semester.update');
+    Route::delete('/semesters/{semester}', [SemesterController::class, 'destroy'])->name('admin.semester.delete');
+    Route::post('/semesters/{semester}/toggle-status', [SemesterController::class, 'toggleStatus'])->name('admin.semester.toggle-status');
+    Route::get('/semester/active', [SemesterController::class, 'getActiveSemester'])->name('admin.semester.active');
     
     // Student Management
     Route::get('/manage-students', [AdminController::class, 'manageStudents'])->name('admin.manage-students');

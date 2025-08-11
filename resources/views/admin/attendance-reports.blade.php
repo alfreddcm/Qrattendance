@@ -5,15 +5,15 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <i class="fas fa-chart-bar me-2"></i>
                 Attendance Reports
-            </h2>
-            <p class="subtitle">Generate and view attendance reports across schools and teachers</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Generate and view attendance reports across schools and teachers</p>
         </div>
         <div class="page-actions">
             @if(isset($attendanceData) && $attendanceData->count() > 0)
-                <button type="button" class="btn btn-success" onclick="exportReport()">
+                <button type="button" class="btn btn-success btn-sm px-2 py-1" onclick="exportReport()">
                     <i class="fas fa-download me-1"></i>Export Report
                 </button>
             @endif
@@ -30,22 +30,22 @@
     @endif
 
     <!-- Filters Card -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-filter me-2"></i>
+                <div class="card-header bg-primary text-white p-2">
+                    <h6 class="mb-0 fs-6">
+                        <i class="fas fa-filter me-1"></i>
                         Report Filters
-                    </h5>
+                    </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     <form method="GET" action="{{ route('admin.attendance-reports') }}" id="filtersForm">
                         <div class="row">
                             <!-- Date Range -->
-                            <div class="col-md-3 mb-3">
-                                <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                            <div class="col-md-3 mb-2">
+                                <label for="start_date" class="form-label fs-6">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" 
                                        value="{{ request('start_date') }}" required>
                             </div>
                             

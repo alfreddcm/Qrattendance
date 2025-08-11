@@ -5,14 +5,14 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <i class="fas fa-chalkboard-teacher me-2"></i>
                 Manage Teachers
-            </h2>
-            <p class="subtitle">Add, edit, and manage teacher accounts</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Add, edit, and manage teacher accounts</p>
         </div>
         <div class="page-actions">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
+            <button type="button" class="btn btn-primary btn-sm px-2 py-1" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
                 <i class="fas fa-plus me-1"></i>Add Teacher
             </button>
         </div>
@@ -43,53 +43,53 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-users me-2"></i>
+                <div class="card-header bg-light d-flex justify-content-between align-items-center p-2">
+                    <h6 class="mb-0 fs-6">
+                        <i class="fas fa-users me-1"></i>
                         Teachers List
-                    </h5>
-                    <span class="badge bg-primary">{{ $teachers->total() }} teachers</span>
+                    </h6>
+                    <span class="badge bg-primary fs-6">{{ $teachers->total() }} teachers</span>
                 </div>
                 <div class="card-body p-0">
                     @if($teachers->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover table-sm mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Username</th>
-                                        <th>Email</th>
-                                        <th>School</th>
-                                        <th>Position</th>
-                                        <th>Section</th>
-                                        <th>Phone</th>
-                                        <th style="width: 120px;">Actions</th>
+                                        <th class="py-1 fs-6">Name</th>
+                                        <th class="py-1 fs-6">Username</th>
+                                        <th class="py-1 fs-6">Email</th>
+                                        <th class="py-1 fs-6">School</th>
+                                        <th class="py-1 fs-6">Position</th>
+                                        <th class="py-1 fs-6">Section</th>
+                                        <th class="py-1 fs-6">Phone</th>
+                                        <th class="py-1 fs-6" style="width: 100px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($teachers as $teacher)
                                     <tr>
-                                        <td>
-                                            <strong>{{ $teacher->name }}</strong>
+                                        <td class="py-1">
+                                            <strong class="fs-6">{{ $teacher->name }}</strong>
                                         </td>
-                                        <td>
-                                            <span class="badge bg-info">{{ $teacher->username }}</span>
+                                        <td class="py-1">
+                                            <span class="badge bg-info fs-6">{{ $teacher->username }}</span>
                                         </td>
-                                        <td>{{ $teacher->email }}</td>
-                                        <td>
+                                        <td class="py-1 fs-6">{{ $teacher->email }}</td>
+                                        <td class="py-1">
                                             @if($teacher->school)
-                                                <span class="badge bg-success">{{ $teacher->school->name }}</span>
+                                                <span class="badge bg-success fs-6">{{ $teacher->school->name }}</span>
                                             @else
-                                                <span class="badge bg-warning">No School</span>
+                                                <span class="badge bg-warning fs-6">No School</span>
                                             @endif
                                         </td>
-                                        <td>{{ $teacher->position ?? 'N/A' }}</td>
-                                        <td>{{ $teacher->section_name ?? 'N/A' }}</td>
-                                        <td>{{ $teacher->phone_number ?? 'N/A' }}</td>
-                                        <td>
+                                        <td class="py-1 fs-6">{{ $teacher->position ?? 'N/A' }}</td>
+                                        <td class="py-1 fs-6">{{ $teacher->section_name ?? 'N/A' }}</td>
+                                        <td class="py-1 fs-6">{{ $teacher->phone_number ?? 'N/A' }}</td>
+                                        <td class="py-1">
                                             <div class="d-flex gap-1">
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-outline-primary" 
+                                                        class="btn btn-sm btn-outline-primary px-2 py-1" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#editTeacherModal"
                                                         onclick="editTeacher({{ $teacher->id }})"
@@ -103,7 +103,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
-                                                            class="btn btn-sm btn-outline-danger" 
+                                                            class="btn btn-sm btn-outline-danger px-2 py-1" 
                                                             title="Delete Teacher">
                                                         <i class="fas fa-trash"></i>
                                                     </button>

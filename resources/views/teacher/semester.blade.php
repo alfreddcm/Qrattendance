@@ -7,11 +7,11 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <span class="me-2">📚</span>
                 Manage Semesters
-            </h2>
-            <p class="subtitle">View and edit semester information (Contact admin to create new semesters)</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">View and edit semester information (Contact admin to create new semesters)</p>
         </div>
         
     </div>
@@ -185,6 +185,9 @@
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                
+                                <!-- Hidden school_id field for teachers -->
+                                <input type="hidden" id="edit_school_id" name="school_id" value="{{ Auth::user()->school_id }}">
                             </div>
                         </div>
                     </div>
@@ -410,6 +413,7 @@ function editSemester(semesterId) {
         .then(data => {
             document.getElementById('edit_name').value = data.name;
             document.getElementById('edit_status').value = data.status;
+            document.getElementById('edit_school_id').value = data.school_id; // Add school_id
             document.getElementById('edit_start_date').value = data.start_date;
             document.getElementById('edit_end_date').value = data.end_date;
             document.getElementById('edit_am_time_in_start').value = data.am_time_in_start_input || '';

@@ -5,11 +5,11 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <span class="me-2">⚙️</span>
                 Account Settings
-            </h2>
-            <p class="subtitle">Manage your profile and security settings</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Manage your profile and security settings</p>
         </div>
     </div>
 </div>
@@ -31,43 +31,59 @@
     @endif
 
     <!-- Account Info Card -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-user me-2"></i>
+    <div class="card mb-3 shadow-sm">
+        <div class="card-header bg-primary text-white p-2">
+            <h6 class="mb-0 fs-6">
+                <i class="fas fa-user me-1"></i>
                 Profile Information
-            </h5>
+            </h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
             <form method="POST" action="{{ route('teacher.account.update') }}">
                 @csrf
                 @method('PUT')
-                <div class="mb-3">
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control @error('name') is-invalid @enderror"
+                <div class="mb-2">
+                    <label for="name" class="form-label fs-6">Name</label>
+                    <input type="text" class="form-control form-control-sm @error('name') is-invalid @enderror"
                         id="name" name="name" value="{{ old('name', auth()->user()->name) }}" required>
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email address</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                <div class="mb-2">
+                    <label for="email" class="form-label fs-6">Email address</label>
+                    <input type="email" class="form-control form-control-sm @error('email') is-invalid @enderror"
                         id="email" name="email" value="{{ old('email', auth()->user()->email) }}" required>
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control @error('username') is-invalid @enderror"
-                        id="username" name="username" value="{{ old('username', auth()->user()->username) }}">
-                    @error('username')
+                <div class="mb-2">
+                    <label for="phone_number" class="form-label fs-6">Phone Number</label>
+                    <input type="text" class="form-control form-control-sm @error('phone_number') is-invalid @enderror"
+                        id="phone_number" name="phone_number" value="{{ old('phone_number', auth()->user()->phone_number) }}">
+                    @error('phone_number')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <button type="submit" class="btn btn-primary">Update Profile</button>
-                <button type="button" class="btn btn-secondary float-end" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                <div class="mb-2">
+                    <label for="position" class="form-label fs-6">Position</label>
+                    <input type="text" class="form-control form-control-sm @error('position') is-invalid @enderror"
+                        id="position" name="position" value="{{ old('position', auth()->user()->position) }}">
+                    @error('position')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="mb-2">
+                    <label for="section_name" class="form-label fs-6">Section Name</label>
+                    <input type="text" class="form-control form-control-sm @error('section_name') is-invalid @enderror"
+                        id="section_name" name="section_name" value="{{ old('section_name', auth()->user()->section_name) }}">
+                    @error('section_name')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Update Profile</button>
+                <button type="button" class="btn btn-secondary btn-sm px-2 py-1 float-end" data-bs-toggle="modal" data-bs-target="#passwordModal">
                     Change Password
                 </button>
             </form>
@@ -84,16 +100,16 @@
         @csrf
         @method('PUT')
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="passwordModalLabel">Change Password</h5>
+          <div class="modal-header p-2">
+            <h6 class="modal-title fs-6" id="passwordModalLabel">Change Password</h6>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body p-2">
                 <div id="passwordModalAlert"></div>
-                <div class="mb-3 position-relative">
-                    <label for="current_password" class="form-label">Current Password</label>
+                <div class="mb-2 position-relative">
+                    <label for="current_password" class="form-label fs-6">Current Password</label>
                     <div class="input-group">
-                        <input type="password" class="form-control @error('current_password') is-invalid @enderror"
+                        <input type="password" class="form-control form-control-sm @error('current_password') is-invalid @enderror"
                             id="current_password" name="current_password" required>
                         <span class="input-group-text bg-white" style="cursor:pointer;" onclick="togglePassword('current_password', this)">
                             <i class="bi bi-eye-slash" id="icon_current_password"></i>

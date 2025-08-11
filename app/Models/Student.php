@@ -27,7 +27,8 @@ class Student extends Model
         'semester_id',
         'user_id',
         'school_id',
-        'qr_code'
+        'qr_code',
+        'stud_code'
     ];
 
     // Relationship: Student belongs to a Semester
@@ -52,6 +53,12 @@ class Student extends Model
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    // Relationship: Student has many Outbound Messages
+    public function outboundMessages()
+    {
+        return $this->hasMany(OutboundMessage::class);
     }
 
     // Analytics methods

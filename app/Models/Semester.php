@@ -38,6 +38,11 @@ class Semester extends Model
         return $this->hasMany(Student::class, 'semester_id');
     }
 
+    public function attendanceSessions()
+    {
+        return $this->hasMany(AttendanceSession::class, 'semester_id');
+    }
+
  
 
      public function getAmTimeInStartInputAttribute()

@@ -5,14 +5,14 @@
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2>
+            <h4 class="fs-5 mb-1">
                 <i class="fas fa-calendar-alt me-2"></i>
                 Manage Semesters
-            </h2>
-            <p class="subtitle">Create and manage academic semesters for schools</p>
+            </h4>
+            <p class="subtitle fs-6 mb-0">Create and manage academic semesters for schools</p>
         </div>
         <div class="page-actions">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSemesterModal">
+            <button class="btn btn-primary btn-sm px-2 py-1" data-bs-toggle="modal" data-bs-target="#addSemesterModal">
                 <i class="fas fa-plus me-1"></i>Add Semester
             </button>
         </div>
@@ -36,18 +36,18 @@
 
     <!-- Semesters Table -->
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Semesters</h5>
+        <div class="card-header bg-primary text-white p-2">
+            <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>All Semesters</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover table-sm">
                     <thead class="table-light">
                         <tr>
-                            <th>Name</th>
-                            <th>School</th>
-                            <th>Duration</th>
-                            <th>Status</th>
+                            <th class="py-1 fs-6">Name</th>
+                            <th class="py-1 fs-6">School</th>
+                            <th class="py-1 fs-6">Duration</th>
+                            <th class="py-1 fs-6">Status</th>
                             <th>Time Ranges</th>
                             <th>Actions</th>
                         </tr>
@@ -100,7 +100,7 @@
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button type="button" class="btn btn-outline-primary" 
-                                            onclick="editSemester({{ $semester->id }}, '{{ $semester->name }}', '{{ $semester->status }}', '{{ $semester->start_date }}', '{{ $semester->end_date }}', {{ $semester->school_id ?? 'null' }}, '{{ $semester->am_time_in_start ?? '' }}', '{{ $semester->am_time_in_end ?? '' }}', '{{ $semester->pm_time_out_start ?? '' }}', '{{ $semester->pm_time_out_end ?? '' }}')">
+                                            onclick="editSemester({{ $semester->id }})">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-outline-danger" 
@@ -177,6 +177,17 @@
                         </div>
                     </div>
                     
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-control" id="status" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     
                     <h6 class="mt-4 mb-3">Time Ranges</h6>
                     <div class="row">
@@ -184,11 +195,11 @@
                             <label class="form-label">AM Time In Range</label>
                             <div class="row">
                                 <div class="col-6">
-                                    <input type="time" class="form-control" name="am_time_in_start" required>
+                                    <input type="time" class="form-control" name="am_time_in_start">
                                     <small class="text-muted">Start</small>
                                 </div>
                                 <div class="col-6">
-                                    <input type="time" class="form-control" name="am_time_in_end" required>
+                                    <input type="time" class="form-control" name="am_time_in_end">
                                     <small class="text-muted">End</small>
                                 </div>
                             </div>
@@ -197,11 +208,11 @@
                             <label class="form-label">PM Time Out Range</label>
                             <div class="row">
                                 <div class="col-6">
-                                    <input type="time" class="form-control" name="pm_time_out_start" required>
+                                    <input type="time" class="form-control" name="pm_time_out_start">
                                     <small class="text-muted">Start</small>
                                 </div>
                                 <div class="col-6">
-                                    <input type="time" class="form-control" name="pm_time_out_end" required>
+                                    <input type="time" class="form-control" name="pm_time_out_end">
                                     <small class="text-muted">End</small>
                                 </div>
                             </div>
@@ -280,11 +291,11 @@
                             <label class="form-label">AM Time In Range</label>
                             <div class="row">
                                 <div class="col-6">
-                                    <input type="time" class="form-control" id="edit_am_time_in_start" name="am_time_in_start" required>
+                                    <input type="time" class="form-control" id="edit_am_time_in_start" name="am_time_in_start">
                                     <small class="text-muted">Start</small>
                                 </div>
                                 <div class="col-6">
-                                    <input type="time" class="form-control" id="edit_am_time_in_end" name="am_time_in_end" required>
+                                    <input type="time" class="form-control" id="edit_am_time_in_end" name="am_time_in_end">
                                     <small class="text-muted">End</small>
                                 </div>
                             </div>
@@ -293,11 +304,11 @@
                             <label class="form-label">PM Time Out Range</label>
                             <div class="row">
                                 <div class="col-6">
-                                    <input type="time" class="form-control" id="edit_pm_time_out_start" name="pm_time_out_start" required>
+                                    <input type="time" class="form-control" id="edit_pm_time_out_start" name="pm_time_out_start">
                                     <small class="text-muted">Start</small>
                                 </div>
                                 <div class="col-6">
-                                    <input type="time" class="form-control" id="edit_pm_time_out_end" name="pm_time_out_end" required>
+                                    <input type="time" class="form-control" id="edit_pm_time_out_end" name="pm_time_out_end">
                                     <small class="text-muted">End</small>
                                 </div>
                             </div>
@@ -338,25 +349,28 @@
 </div>
 
 <script>
-function editSemester(id, name, status, startDate, endDate, schoolId, amStart, amEnd, pmStart, pmEnd) {
-    try {
-        document.getElementById('edit_name').value = name || '';
-        document.getElementById('edit_status').value = status || 'active';
-        document.getElementById('edit_start_date').value = startDate || '';
-        document.getElementById('edit_end_date').value = endDate || '';
-        document.getElementById('edit_school_id').value = schoolId || '';
-        document.getElementById('edit_am_time_in_start').value = amStart || '';
-        document.getElementById('edit_am_time_in_end').value = amEnd || '';
-        document.getElementById('edit_pm_time_out_start').value = pmStart || '';
-        document.getElementById('edit_pm_time_out_end').value = pmEnd || '';
-        
-        document.getElementById('editSemesterForm').action = '/admin/semesters/' + id;
-        
-        new bootstrap.Modal(document.getElementById('editSemesterModal')).show();
-    } catch (error) {
-        console.error('Error opening edit modal:', error);
-        alert('Error opening edit form. Please refresh the page and try again.');
-    }
+function editSemester(semesterId) {
+    fetch(`/admin/semesters/${semesterId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit_name').value = data.name || '';
+            document.getElementById('edit_status').value = data.status || 'active';
+            document.getElementById('edit_start_date').value = data.start_date || '';
+            document.getElementById('edit_end_date').value = data.end_date || '';
+            document.getElementById('edit_school_id').value = data.school_id || '';
+            document.getElementById('edit_am_time_in_start').value = data.am_time_in_start_input || '';
+            document.getElementById('edit_am_time_in_end').value = data.am_time_in_end_input || '';
+            document.getElementById('edit_pm_time_out_start').value = data.pm_time_out_start_input || '';
+            document.getElementById('edit_pm_time_out_end').value = data.pm_time_out_end_input || '';
+            
+            document.getElementById('editSemesterForm').action = '/admin/semesters/' + semesterId;
+            
+            new bootstrap.Modal(document.getElementById('editSemesterModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading semester data');
+        });
 }
 
 function deleteSemester(id, name) {

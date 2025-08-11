@@ -159,6 +159,10 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
             'Illuminate\\Support\\' => 19,
             'Illuminate\\' => 11,
         ),
+        'H' => 
+        array (
+            'Http\\Discovery\\' => 15,
+        ),
         'G' => 
         array (
             'GuzzleHttp\\UriTemplate\\' => 23,
@@ -209,6 +213,7 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
         'A' => 
         array (
             'App\\' => 4,
+            'AndroidSmsGateway\\' => 18,
         ),
     );
 
@@ -521,6 +526,10 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
         array (
             0 => __DIR__ . '/..' . '/laravel/framework/src/Illuminate',
         ),
+        'Http\\Discovery\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/php-http/discovery/src',
+        ),
         'GuzzleHttp\\UriTemplate\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/uri-template/src',
@@ -644,6 +653,10 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
             0 => __DIR__ . '/../..' . '/app',
             1 => __DIR__ . '/..' . '/laravel/pint/app',
         ),
+        'AndroidSmsGateway\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -657,6 +670,22 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
     );
 
     public static $classMap = array (
+        'AndroidSmsGateway\\Client' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Client.php',
+        'AndroidSmsGateway\\Domain\\Device' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/Device.php',
+        'AndroidSmsGateway\\Domain\\LogEntry' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/LogEntry.php',
+        'AndroidSmsGateway\\Domain\\Message' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/Message.php',
+        'AndroidSmsGateway\\Domain\\MessageBuilder' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/MessageBuilder.php',
+        'AndroidSmsGateway\\Domain\\MessageState' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/MessageState.php',
+        'AndroidSmsGateway\\Domain\\MessagesExportRequest' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/MessagesExportRequest.php',
+        'AndroidSmsGateway\\Domain\\RecipientState' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/RecipientState.php',
+        'AndroidSmsGateway\\Domain\\Settings' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/Settings.php',
+        'AndroidSmsGateway\\Domain\\SettingsBuilder' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/SettingsBuilder.php',
+        'AndroidSmsGateway\\Domain\\Webhook' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Domain/Webhook.php',
+        'AndroidSmsGateway\\Encryptor' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Encryptor.php',
+        'AndroidSmsGateway\\Enums\\ProcessState' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Enums/ProcessState.php',
+        'AndroidSmsGateway\\Enums\\WebhookEvent' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Enums/WebhookEvent.php',
+        'AndroidSmsGateway\\Exceptions\\HttpException' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Exceptions/HttpException.php',
+        'AndroidSmsGateway\\Interfaces\\SerializableInterface' => __DIR__ . '/..' . '/capcom6/android-sms-gateway/src/Interfaces/SerializableInterface.php',
         'App\\Console\\Commands\\ManageDailySessions' => __DIR__ . '/../..' . '/app/Console/Commands/ManageDailySessions.php',
         'App\\Helpers\\AttendanceLogger' => __DIR__ . '/../..' . '/app/Helpers/AttendanceLogger.php',
         'App\\Http\\Controllers\\AdminController' => __DIR__ . '/../..' . '/app/Http/Controllers/AdminController.php',
@@ -666,6 +695,7 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
         'App\\Http\\Controllers\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuthController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\ImportController' => __DIR__ . '/../..' . '/app/Http/Controllers/ImportController.php',
+        'App\\Http\\Controllers\\MessageApiController' => __DIR__ . '/../..' . '/app/Http/Controllers/MessageApiController.php',
         'App\\Http\\Controllers\\ReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/ReportController.php',
         'App\\Http\\Controllers\\SemesterController' => __DIR__ . '/../..' . '/app/Http/Controllers/SemesterController.php',
         'App\\Http\\Controllers\\StudentIdController' => __DIR__ . '/../..' . '/app/Http/Controllers/StudentIdController.php',
@@ -677,6 +707,7 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
         'App\\Imports\\StudentsImport' => __DIR__ . '/../..' . '/app/Imports/StudentsImport.php',
         'App\\Models\\Attendance' => __DIR__ . '/../..' . '/app/Models/Attendance.php',
         'App\\Models\\AttendanceSession' => __DIR__ . '/../..' . '/app/Models/AttendanceSession.php',
+        'App\\Models\\OutboundMessage' => __DIR__ . '/../..' . '/app/Models/OutboundMessage.php',
         'App\\Models\\School' => __DIR__ . '/../..' . '/app/Models/School.php',
         'App\\Models\\Semester' => __DIR__ . '/../..' . '/app/Models/Semester.php',
         'App\\Models\\Student' => __DIR__ . '/../..' . '/app/Models/Student.php',
@@ -2243,6 +2274,29 @@ class ComposerStaticInit610b3b7601bc646a295d5a38897ee1bd
         'Hamcrest\\Type\\IsString' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Type/IsString.php',
         'Hamcrest\\Util' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Util.php',
         'Hamcrest\\Xml\\HasXPath' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Xml/HasXPath.php',
+        'Http\\Discovery\\ClassDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/ClassDiscovery.php',
+        'Http\\Discovery\\Exception' => __DIR__ . '/..' . '/php-http/discovery/src/Exception.php',
+        'Http\\Discovery\\Exception\\ClassInstantiationFailedException' => __DIR__ . '/..' . '/php-http/discovery/src/Exception/ClassInstantiationFailedException.php',
+        'Http\\Discovery\\Exception\\DiscoveryFailedException' => __DIR__ . '/..' . '/php-http/discovery/src/Exception/DiscoveryFailedException.php',
+        'Http\\Discovery\\Exception\\NoCandidateFoundException' => __DIR__ . '/..' . '/php-http/discovery/src/Exception/NoCandidateFoundException.php',
+        'Http\\Discovery\\Exception\\NotFoundException' => __DIR__ . '/..' . '/php-http/discovery/src/Exception/NotFoundException.php',
+        'Http\\Discovery\\Exception\\PuliUnavailableException' => __DIR__ . '/..' . '/php-http/discovery/src/Exception/PuliUnavailableException.php',
+        'Http\\Discovery\\Exception\\StrategyUnavailableException' => __DIR__ . '/..' . '/php-http/discovery/src/Exception/StrategyUnavailableException.php',
+        'Http\\Discovery\\HttpAsyncClientDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/HttpAsyncClientDiscovery.php',
+        'Http\\Discovery\\HttpClientDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/HttpClientDiscovery.php',
+        'Http\\Discovery\\MessageFactoryDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/MessageFactoryDiscovery.php',
+        'Http\\Discovery\\NotFoundException' => __DIR__ . '/..' . '/php-http/discovery/src/NotFoundException.php',
+        'Http\\Discovery\\Psr17Factory' => __DIR__ . '/..' . '/php-http/discovery/src/Psr17Factory.php',
+        'Http\\Discovery\\Psr17FactoryDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/Psr17FactoryDiscovery.php',
+        'Http\\Discovery\\Psr18Client' => __DIR__ . '/..' . '/php-http/discovery/src/Psr18Client.php',
+        'Http\\Discovery\\Psr18ClientDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/Psr18ClientDiscovery.php',
+        'Http\\Discovery\\Strategy\\CommonClassesStrategy' => __DIR__ . '/..' . '/php-http/discovery/src/Strategy/CommonClassesStrategy.php',
+        'Http\\Discovery\\Strategy\\CommonPsr17ClassesStrategy' => __DIR__ . '/..' . '/php-http/discovery/src/Strategy/CommonPsr17ClassesStrategy.php',
+        'Http\\Discovery\\Strategy\\DiscoveryStrategy' => __DIR__ . '/..' . '/php-http/discovery/src/Strategy/DiscoveryStrategy.php',
+        'Http\\Discovery\\Strategy\\MockClientStrategy' => __DIR__ . '/..' . '/php-http/discovery/src/Strategy/MockClientStrategy.php',
+        'Http\\Discovery\\Strategy\\PuliBetaStrategy' => __DIR__ . '/..' . '/php-http/discovery/src/Strategy/PuliBetaStrategy.php',
+        'Http\\Discovery\\StreamFactoryDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/StreamFactoryDiscovery.php',
+        'Http\\Discovery\\UriFactoryDiscovery' => __DIR__ . '/..' . '/php-http/discovery/src/UriFactoryDiscovery.php',
         'Illuminate\\Auth\\Access\\AuthorizationException' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Auth/Access/AuthorizationException.php',
         'Illuminate\\Auth\\Access\\Events\\GateEvaluated' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Auth/Access/Events/GateEvaluated.php',
         'Illuminate\\Auth\\Access\\Gate' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Auth/Access/Gate.php',

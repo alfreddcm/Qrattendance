@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use ZipArchive;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -60,45 +61,93 @@ class StudentManagementController extends Controller
 
     public function addStudent(Request $request)
     {
-        $request->validate([
-            'id_no' => 'required|string|max:255|unique:students,id_no',
-            'name' => 'required|string|max:255',
-            'gender' => 'required|string|max:1',
-            'age' => 'required|integer',
-            'address' => 'required|string|max:255',
-            'cp_no' => 'required|string|max:15',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'captured_image' => 'nullable|string',
-            'contact_person_name' => 'nullable|string|max:255',
-            'contact_person_relationship' => 'nullable|string|max:255',
-            'contact_person_contact' => 'nullable|string|max:15',
-            'semester_id' => 'required|integer',
+        Log::info('Student add request received', [
+            'teacher_id' => Auth::id(),
+            'student_id_no' => $request->id_no,
+            'student_name' => $request->name,
+            'semester_id' => $request->semester_id,
+            'has_picture_file' => $request->hasFile('picture'),
+            'has_captured_image' => !empty($request->captured_image),
         ]);
+
+        try {
+            $request->validate([
+                'id_no' => 'required|string|max:255|unique:students,id_no',
+                'name' => 'required|string|max:255',
+                'gender' => 'required|string|max:1',
+                'age' => 'required|integer',
+                'address' => 'required|string|max:255',
+                'cp_no' => 'required|string|max:15',
+                'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'captured_image' => 'nullable|string',
+                'contact_person_name' => 'nullable|string|max:255',
+                'contact_person_relationship' => 'nullable|string|max:255',
+                'contact_person_contact' => 'nullable|string|max:15',
+                'semester_id' => 'required|integer',
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Student add validation failed', [
+                'teacher_id' => Auth::id(),
+                'student_id_no' => $request->id_no,
+                'validation_errors' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         $studentData = $request->all();
         $studentData['user_id'] = Auth::id(); 
 
+        try {
+            if ($request->hasFile('picture')) {
+                $picture = $request->file('picture');
+                $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
+                $picture->storeAs('student_pictures', $pictureName, 'public');
+                $studentData['picture'] = $pictureName;
+                
+                Log::info('Student picture uploaded', [
+                    'teacher_id' => Auth::id(),
+                    'student_id_no' => $request->id_no,
+                    'picture_name' => $pictureName,
+                ]);
+            } elseif ($request->captured_image) {
+                 $imageData = $request->captured_image;
+                $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
+                $imageData = str_replace(' ', '+', $imageData);
+                $imageData = base64_decode($imageData);
+                
+                $pictureName = time() . '_' . $request->id_no . '.jpg';
+                Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
+                $studentData['picture'] = $pictureName;
+                
+                Log::info('Student captured image saved', [
+                    'teacher_id' => Auth::id(),
+                    'student_id_no' => $request->id_no,
+                    'picture_name' => $pictureName,
+                ]);
+            }
 
-        if ($request->hasFile('picture')) {
-            $picture = $request->file('picture');
-            $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
-            $picture->storeAs('student_pictures', $pictureName, 'public');
-            $studentData['picture'] = $pictureName;
-        } elseif ($request->captured_image) {
- 
-            $imageData = $request->captured_image;
-            $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
-            $imageData = str_replace(' ', '+', $imageData);
-            $imageData = base64_decode($imageData);
+            $student = Student::create($studentData);
             
-            $pictureName = time() . '_' . $request->id_no . '.jpg';
-            Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
-            $studentData['picture'] = $pictureName;
+            Log::info('Student created successfully', [
+                'teacher_id' => Auth::id(),
+                'student_id' => $student->id,
+                'student_id_no' => $student->id_no,
+                'student_name' => $student->name,
+                'semester_id' => $student->semester_id,
+            ]);
+
+            return redirect()->route('teacher.students')->with('success', 'Student added successfully.');
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to create student', [
+                'teacher_id' => Auth::id(),
+                'student_id_no' => $request->id_no,
+                'student_name' => $request->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()->back()->with('error', 'Failed to add student. Please try again.');
         }
-
-        Student::create($studentData);
-
-        return redirect()->route('teacher.students')->with('success', 'Student added successfully.');
     }
 
     public function edit($id)
@@ -161,17 +210,53 @@ class StudentManagementController extends Controller
 
 public function destroy($id)
 {
-    $student = Student::where('user_id', Auth::id())->findOrFail($id);
-    
-     if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
-        Storage::disk('public')->delete('student_pictures/' . $student->picture);
-    }
-    
-     $this->clearStudentQrCode($student);
-    
-    $student->delete();
+    Log::info('Student delete request', [
+        'student_id' => $id,
+        'teacher_id' => Auth::id(),
+    ]);
 
-    return redirect()->route('teacher.students')->with('success', 'Student deleted successfully.');
+    try {
+        $student = Student::where('user_id', Auth::id())->findOrFail($id);
+        
+        Log::info('Student found for deletion', [
+            'student_id' => $student->id,
+            'student_name' => $student->name,
+            'student_id_no' => $student->id_no,
+            'has_picture' => !empty($student->picture),
+            'has_qr_code' => !empty($student->qr_code),
+            'teacher_id' => Auth::id(),
+        ]);
+        
+         if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+            Storage::disk('public')->delete('student_pictures/' . $student->picture);
+            Log::info('Student picture deleted', [
+                'student_id' => $student->id,
+                'picture_name' => $student->picture,
+            ]);
+        }
+        
+         $this->clearStudentQrCode($student);
+        
+        $student->delete();
+        
+        Log::info('Student deleted successfully', [
+            'student_id' => $student->id,
+            'student_name' => $student->name,
+            'student_id_no' => $student->id_no,
+            'teacher_id' => Auth::id(),
+        ]);
+
+        return redirect()->route('teacher.students')->with('success', 'Student deleted successfully.');
+        
+    } catch (\Exception $e) {
+        Log::error('Failed to delete student', [
+            'student_id' => $id,
+            'teacher_id' => Auth::id(),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        return redirect()->back()->with('error', 'Failed to delete student. Please try again.');
+    }
 }
 
 public function bulkDelete(Request $request)
@@ -202,65 +287,216 @@ public function bulkDelete(Request $request)
 
      public function generateQrs(Request $request)
     {
-        // If specific student IDs are provided, generate QR codes for those students only
-        if ($request->has('student_ids') && is_array($request->student_ids)) {
+        Log::info('Bulk QR generation started', [
+            'teacher_id' => Auth::id(),
+            'has_student_ids' => $request->has('student_ids'),
+            'student_ids_count' => $request->has('student_ids') ? count($request->student_ids) : 0,
+            'timestamp' => now(),
+        ]);
+
+         if ($request->has('student_ids') && is_array($request->student_ids)) {
             $students = Student::where('user_id', Auth::id())
                               ->whereIn('id', $request->student_ids)
                               ->get();
         } else {
-            // Generate for all students
-            $students = Student::where('user_id', Auth::id())->get();
+             $students = Student::where('user_id', Auth::id())->get();
         }
         
         $generated = 0;
+        $failed = 0;
 
         foreach ($students as $student) {
-            if ($this->generateQrForStudent($student)) {
-                $generated++;
+            try {
+                if ($this->generateQrForStudent($student)) {
+                    $generated++;
+                    Log::info('QR generated for student', [
+                        'student_id' => $student->id,
+                        'student_name' => $student->name,
+                        'student_id_no' => $student->id_no,
+                        'teacher_id' => Auth::id(),
+                    ]);
+                } else {
+                    Log::info('QR already exists for student', [
+                        'student_id' => $student->id,
+                        'student_name' => $student->name,
+                        'student_id_no' => $student->id_no,
+                        'teacher_id' => Auth::id(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $failed++;
+                Log::error('Failed to generate QR for student', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'student_id_no' => $student->id_no,
+                    'teacher_id' => Auth::id(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
             }
         }
 
+        Log::info('Bulk QR generation completed', [
+            'teacher_id' => Auth::id(),
+            'total_students' => count($students),
+            'generated' => $generated,
+            'failed' => $failed,
+            'timestamp' => now(),
+        ]);
+
         if ($generated > 0) {
-            return back()->with('success', "$generated QR code(s) generated for students missing them.");
+            $message = "$generated QR code(s) generated for students missing them.";
+            if ($failed > 0) {
+                $message .= " $failed QR code(s) failed to generate.";
+            }
+            return back()->with('success', $message);
         } else {
-            return back()->with('info', 'All selected students already have QR codes.');
+            if ($failed > 0) {
+                return back()->with('error', "$failed QR code(s) failed to generate.");
+            } else {
+                return back()->with('info', 'All selected students already have QR codes.');
+            }
         }
     }
 
      public function generateQr($id)
     {
-        $student = Student::where('user_id', Auth::id())->findOrFail($id);
+        Log::info('Single QR generation started', [
+            'student_id' => $id,
+            'teacher_id' => Auth::id(),
+            'timestamp' => now(),
+        ]);
 
-        if ($this->generateQrForStudent($student)) {
-            return back()->with('success', 'QR code generated for student.');
-        } else {
-            return back()->with('info', 'Student already has a QR code.');
+        try {
+            $student = Student::where('user_id', Auth::id())->findOrFail($id);
+
+            Log::info('Student found for QR generation', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'student_id_no' => $student->id_no,
+                'has_existing_qr' => !empty($student->qr_code),
+                'has_existing_stud_code' => !empty($student->stud_code),
+                'teacher_id' => Auth::id(),
+            ]);
+
+            if ($this->generateQrForStudent($student)) {
+                Log::info('QR generation successful', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'teacher_id' => Auth::id(),
+                ]);
+                return back()->with('success', 'QR code generated for student.');
+            } else {
+                Log::info('QR already exists', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'teacher_id' => Auth::id(),
+                ]);
+                return back()->with('info', 'Student already has a QR code.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Single QR generation failed', [
+                'student_id' => $id,
+                'teacher_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return back()->with('error', 'Failed to generate QR code. Please try again.');
         }
     }
 
      private function generateQrForStudent(Student $student)
     {
-         $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+        Log::info('Generating QR for student', [
+            'student_id' => $student->id,
+            'student_name' => $student->name,
+            'student_id_no' => $student->id_no,
+            'existing_qr_code' => $student->qr_code,
+            'existing_stud_code' => $student->stud_code,
+            'teacher_id' => Auth::id(),
+        ]);
+
+        // Generate random 10-character string (alphanumeric)
+        $randomString = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10);
+        $qrCodeData = $student->id_no . '_' . $randomString;
+        
+        Log::info('Generated QR data', [
+            'student_id' => $student->id,
+            'qr_code_data' => $qrCodeData,
+            'random_string' => $randomString,
+            'id_no' => $student->id_no,
+        ]);
+        
+        $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
         $qrPath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
 
+        Log::info('QR file path prepared', [
+            'student_id' => $student->id,
+            'qr_path' => $qrPath,
+            'sanitized_name' => $sanitizedName,
+            'file_exists' => Storage::disk('public')->exists($qrPath),
+        ]);
+
         if (!Storage::disk('public')->exists($qrPath) || !$student->qr_code) {
-            $data = [
-                'student_id' => $student->id,
-                'name' => $student->name,
-                'semester_id' => $student->semester_id,
-            ];
-            
-             $qrImage = QrCode::format('svg')
-                ->size(200)
-                ->errorCorrection('M')
-                ->generate(json_encode($data));
-            
-            Storage::disk('public')->put($qrPath, $qrImage);
-            
-             $student->update(['qr_code' => $qrPath]);
-            
-            return true;
+            try {
+                $data = [
+                    'student_id' => $student->id,
+                    'name' => $student->name,
+                    'semester_id' => $student->semester_id,
+                    'qr_data' => $qrCodeData, // Add the new QR data format
+                ];
+                
+                Log::info('Creating QR image', [
+                    'student_id' => $student->id,
+                    'qr_data' => $qrCodeData,
+                ]);
+                
+                 $qrImage = QrCode::format('svg')
+                    ->size(200)
+                    ->errorCorrection('M')
+                    ->generate($qrCodeData); // Use the new format instead of JSON
+                
+                Log::info('QR image generated, saving to storage', [
+                    'student_id' => $student->id,
+                    'qr_path' => $qrPath,
+                    'qr_image_size' => strlen($qrImage),
+                ]);
+                
+                Storage::disk('public')->put($qrPath, $qrImage);
+                
+                 // Save both qr_code (file path) and stud_code (the data)
+                $student->update([
+                    'qr_code' => $qrPath,
+                    'stud_code' => $qrCodeData
+                ]);
+                
+                Log::info('QR generation completed successfully', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'qr_path' => $qrPath,
+                    'stud_code' => $qrCodeData,
+                    'file_saved' => Storage::disk('public')->exists($qrPath),
+                ]);
+                
+                return true;
+            } catch (\Exception $e) {
+                Log::error('Failed to generate QR image or save to database', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'qr_path' => $qrPath,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return false;
+            }
         }
+        
+        Log::info('QR already exists for student', [
+            'student_id' => $student->id,
+            'existing_qr_path' => $student->qr_code,
+            'file_exists' => Storage::disk('public')->exists($qrPath),
+        ]);
+        
         return false;
     }
 
@@ -465,5 +701,24 @@ public function bulkDelete(Request $request)
         if (Storage::disk('public')->exists($simpleQrPath)) {
             Storage::disk('public')->delete($simpleQrPath);
         }
+    }
+
+    /**
+     * Get students as JSON for API calls
+     */
+    public function getStudentsForApi(Request $request)
+    {
+        $query = Student::where('user_id', Auth::id());
+        
+         $selectedSemester = $this->getCurrentSemesterId();
+        if ($selectedSemester) {
+            $query->where('semester_id', $selectedSemester);
+        }
+        
+         $students = $query->select('id', 'name', 'cp_no', 'contact_person_contact', 'contact_person_name', 'id_no')
+                         ->orderBy('name')
+                         ->get();
+        
+        return response()->json($students);
     }
 }

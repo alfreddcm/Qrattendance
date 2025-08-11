@@ -22,26 +22,69 @@ class AttendanceController extends Controller
         ]);
 
         $request->validate(['qr_data' => 'required|string']);
-        $data = json_decode($request->qr_data, true);
+        $qrData = $request->qr_data;
         $scannerType = $this->detectScannerType($request);
 
-        if (!$data || !isset($data['student_id'])) {
-            Log::warning('Invalid QR code', [
+        // Log the incoming QR data for debugging
+        Log::info('QR scan attempt', [
+            'qr_data' => $qrData,
+            'qr_data_length' => strlen($qrData),
+            'qr_data_type' => gettype($qrData),
+            'scanner_type' => $scannerType,
+            'user_id' => Auth::id(),
+        ]);
+
+        // Validate and find student by stud_code
+        if (empty($qrData) || strlen($qrData) < 3) {
+            Log::warning('Invalid QR data format', [
                 'scanner_type' => $scannerType,
-                'qr_data' => $request->qr_data,
+                'qr_data' => $qrData,
+                'qr_data_length' => strlen($qrData),
+                'qr_data_empty' => empty($qrData),
                 'user_id' => Auth::id(),
             ]);
-            return response()->json(['success' => false, 'message' => 'Invalid QR code.']);
+            return response()->json(['success' => false, 'message' => 'Invalid QR code format.']);
         }
 
-        $student = Student::where('user_id', Auth::id())->find($data['student_id']);
+        // Find student by stud_code with additional verification
+        $student = Student::where('user_id', Auth::id())
+                         ->where('stud_code', $qrData)
+                         ->whereNotNull('stud_code')
+                         ->where('stud_code', '!=', '')
+                         ->first();
+
+        // Log search results
+        Log::info('Student search results', [
+            'scanner_type' => $scannerType,
+            'stud_code' => $qrData,
+            'student_found' => $student ? true : false,
+            'user_id' => Auth::id(),
+        ]);
+
         if (!$student) {
-            Log::warning('Student not found', [
+            // Try to find any student with this stud_code (for debugging)
+            $anyStudent = Student::where('stud_code', $qrData)->first();
+            
+            Log::warning('Student not found with stud_code', [
                 'scanner_type' => $scannerType,
-                'student_id' => $data['student_id'],
+                'stud_code' => $qrData,
+                'any_student_found' => $anyStudent ? true : false,
+                'any_student_teacher_id' => $anyStudent ? $anyStudent->user_id : null,
+                'current_teacher_id' => Auth::id(),
                 'user_id' => Auth::id(),
             ]);
-            return response()->json(['success' => false, 'message' => 'Student not found.']);
+            return response()->json(['success' => false, 'message' => 'Student not found. Please check your QR code or contact your teacher.']);
+        }
+
+         if (!$this->verifyStudentInfo($student)) {
+            Log::warning('Student verification failed', [
+                'scanner_type' => $scannerType,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'stud_code' => $qrData,
+                'user_id' => Auth::id(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Student verification failed. Please contact your teacher.']);
         }
 
         $semester = Semester::find($student->semester_id);
@@ -178,5 +221,82 @@ class AttendanceController extends Controller
         }
         
          return 'Webcam/USB Scanner';
+    }
+
+    /**
+     * Verify student information and data integrity
+     */
+    private function verifyStudentInfo(Student $student)
+    {
+        // Check if student has required fields
+        if (empty($student->name) || empty($student->id_no)) {
+            Log::warning('Student missing required information', [
+                'student_id' => $student->id,
+                'has_name' => !empty($student->name),
+                'has_id_no' => !empty($student->id_no),
+                'user_id' => Auth::id(),
+            ]);
+            return false;
+        }
+
+        // Check if student has valid stud_code
+        if (empty($student->stud_code)) {
+            Log::warning('Student missing stud_code', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'user_id' => Auth::id(),
+            ]);
+            return false;
+        }
+
+        // Verify stud_code format (should be id_no + underscore + 10 characters)
+        $expectedPrefix = $student->id_no . '_';
+        if (substr($student->stud_code, 0, strlen($expectedPrefix)) !== $expectedPrefix) {
+            Log::warning('Student stud_code format invalid', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'stud_code' => $student->stud_code,
+                'expected_prefix' => $expectedPrefix,
+                'user_id' => Auth::id(),
+            ]);
+            return false;
+        }
+
+        // Check if stud_code has correct length (id_no + _ + 10 random chars)
+        $expectedLength = strlen($student->id_no) + 1 + 10; // id_no + underscore + 10 chars
+        if (strlen($student->stud_code) !== $expectedLength) {
+            Log::warning('Student stud_code length invalid', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'stud_code' => $student->stud_code,
+                'stud_code_length' => strlen($student->stud_code),
+                'expected_length' => $expectedLength,
+                'user_id' => Auth::id(),
+            ]);
+            return false;
+        }
+
+        // Check if student belongs to current teacher
+        if ($student->user_id !== Auth::id()) {
+            Log::warning('Student does not belong to current teacher', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'student_teacher_id' => $student->user_id,
+                'current_teacher_id' => Auth::id(),
+            ]);
+            return false;
+        }
+
+        // Check if student has valid semester
+        if (empty($student->semester_id)) {
+            Log::warning('Student missing semester assignment', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'user_id' => Auth::id(),
+            ]);
+            return false;
+        }
+
+        return true;
     }
 }

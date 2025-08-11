@@ -7,6 +7,7 @@ use App\Models\Semester;
 use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\User;
+use App\Http\Controllers\MessageApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -573,11 +574,13 @@ class AttendanceSessionController extends Controller
             }
 
             
-            $data = json_decode($request->qr_data, true);
-            if (!$data || !isset($data['student_id'])) {
-                Log::warning('Invalid QR code in public session', [
+            $qrData = $request->qr_data;
+            
+            
+            if (empty($qrData) || strlen($qrData) < 3) {
+                Log::warning('Invalid QR data format in public session', [
                     'session_id' => $session->id,
-                    'qr_data' => $request->qr_data,
+                    'qr_data_length' => strlen($qrData),
                     'ip_address' => request()->ip()
                 ]);
                 return response()->json([
@@ -586,20 +589,38 @@ class AttendanceSessionController extends Controller
                 ]);
             }
 
-            $student = Student::with('user') 
+             $student = Student::with('user') 
                 ->where('user_id', $session->teacher_id)
                 ->where('semester_id', $session->semester_id)
-                ->find($data['student_id']);
+                ->where('stud_code', $qrData)
+                ->whereNotNull('stud_code')
+                ->where('stud_code', '!=', '')
+                ->first();
 
             if (!$student) {
-                Log::warning('Student not found in public session', [
+                Log::warning('Student not found in public session with stud_code', [
                     'session_id' => $session->id,
-                    'student_id' => $data['student_id'],
+                    'stud_code' => $qrData,
                     'ip_address' => request()->ip()
                 ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Student not found in this session.'
+                    'message' => 'Student not found. Please check your QR code or contact your teacher.'
+                ]);
+            }
+
+            
+            if (!$this->verifyStudentInfo($student, $session)) {
+                Log::warning('Student verification failed in public session', [
+                    'session_id' => $session->id,
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'stud_code' => $qrData,
+                    'ip_address' => request()->ip()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student verification failed. Please contact your teacher.'
                 ]);
             }
 
@@ -658,6 +679,9 @@ class AttendanceSessionController extends Controller
                     'time_remaining' => $periodInfo['time_remaining'],
                     'recorded_time' => Carbon::now('Asia/Manila')->format('g:i A')
                 ];
+
+                // Send SMS notification to parent/guardian
+                $this->sendAttendanceNotification($student, $periodInfo['period_type'], $responseData['period_info']['recorded_time']);
 
                 
                 $session->increment('attendance_count');
@@ -739,6 +763,160 @@ class AttendanceSessionController extends Controller
                 'message' => 'Error retrieving session data.'
             ], 500);
         }
+    }
+
+    
+    private function verifyStudentInfo($student, $session)
+    {
+        
+        if (empty($student->name) || empty($student->id_no)) {
+            Log::warning('Student missing required information in public session', [
+                'student_id' => $student->id,
+                'session_id' => $session->id,
+                'has_name' => !empty($student->name),
+                'has_id_no' => !empty($student->id_no),
+                'ip_address' => request()->ip(),
+            ]);
+            return false;
+        }
+
+        
+        if (empty($student->stud_code)) {
+            Log::warning('Student missing stud_code in public session', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'session_id' => $session->id,
+                'ip_address' => request()->ip(),
+            ]);
+            return false;
+        }
+
+        
+        $expectedPrefix = $student->id_no . '_';
+        if (!str_starts_with($student->stud_code, $expectedPrefix)) {
+            Log::warning('Student stud_code format invalid in public session', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'session_id' => $session->id,
+                'stud_code' => $student->stud_code,
+                'expected_prefix' => $expectedPrefix,
+                'ip_address' => request()->ip(),
+            ]);
+            return false;
+        }
+
+        
+        $expectedLength = strlen($student->id_no) + 1 + 10; 
+        if (strlen($student->stud_code) !== $expectedLength) {
+            Log::warning('Student stud_code length invalid in public session', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'session_id' => $session->id,
+                'stud_code' => $student->stud_code,
+                'stud_code_length' => strlen($student->stud_code),
+                'expected_length' => $expectedLength,
+                'ip_address' => request()->ip(),
+            ]);
+            return false;
+        }
+
+        
+        if ($student->user_id !== $session->teacher_id) {
+            Log::warning('Student does not belong to session teacher', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'session_id' => $session->id,
+                'student_teacher_id' => $student->user_id,
+                'session_teacher_id' => $session->teacher_id,
+                'ip_address' => request()->ip(),
+            ]);
+            return false;
+        }
+
+        
+        if ($student->semester_id !== $session->semester_id) {
+            Log::warning('Student semester mismatch with session', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'session_id' => $session->id,
+                'student_semester_id' => $student->semester_id,
+                'session_semester_id' => $session->semester_id,
+                'ip_address' => request()->ip(),
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Send SMS notification for attendance recording
+     */
+    private function sendAttendanceNotification($student, $attendanceStatus, $recordedTime)
+    {
+        try {
+            // Check if student has a valid contact number
+            if (!$student->contact_person_contact) {
+                Log::info('No contact number for student, skipping SMS', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name
+                ]);
+                return;
+            }
+
+            // Create message API controller instance with SMS service
+            $smsService = new \App\Services\AndroidSmsGatewayService();
+            $messageController = new MessageApiController($smsService);
+
+            // Send attendance notification
+            $success = $messageController->sendAttendanceNotification($student, $attendanceStatus, $recordedTime);
+
+            if ($success) {
+                Log::info('SMS notification sent for attendance', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'contact_number' => $student->contact_person_contact,
+                    'attendance_status' => $attendanceStatus
+                ]);
+            } else {
+                Log::warning('SMS notification failed or skipped', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'contact_number' => $student->contact_person_contact
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send SMS notification', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Validate Philippine phone number format
+     */
+    private function isValidPhoneNumber($number)
+    {
+        if (!$number) return false;
+        
+        // Remove spaces and dashes
+        $cleaned = preg_replace('/[\s\-]/', '', $number);
+        
+        // Check for +63 format (13 digits total)
+        if (preg_match('/^\+639\d{9}$/', $cleaned)) {
+            return true;
+        }
+        
+        // Check for 09 format (11 digits total)
+        if (preg_match('/^09\d{9}$/', $cleaned)) {
+            return true;
+        }
+        
+        return false;
     }
 }
  

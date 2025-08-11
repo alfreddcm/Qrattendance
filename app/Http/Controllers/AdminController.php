@@ -666,6 +666,10 @@ class AdminController extends Controller
      */
     private function generateQrForStudent(Student $student)
     {
+        // Generate random 10-character string (alphanumeric)
+        $randomString = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10);
+        $qrCodeData = $student->id_no . '_' . $randomString;
+        
         $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
         $qrPath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
 
@@ -674,16 +678,21 @@ class AdminController extends Controller
                 'student_id' => $student->id,
                 'name' => $student->name,
                 'school_id' => $student->school_id,
+                'qr_data' => $qrCodeData, // Add the new QR data format
             ];
             
             $qrImage = QrCode::format('svg')
                 ->size(200)
                 ->errorCorrection('M')
-                ->generate(json_encode($data));
+                ->generate($qrCodeData); // Use the new format instead of JSON
             
             Storage::disk('public')->put($qrPath, $qrImage);
             
-            $student->update(['qr_code' => $qrPath]);
+            // Save both qr_code (file path) and stud_code (the data)
+            $student->update([
+                'qr_code' => $qrPath,
+                'stud_code' => $qrCodeData
+            ]);
             
             return true;
         }
