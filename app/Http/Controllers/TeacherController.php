@@ -144,7 +144,13 @@ class TeacherController extends Controller
                 ->first();
         }
 
-        return view('teacher.dashboard', compact(
+        // --- Add chart objects for statistics include ---
+        $analytics = app(\App\Http\Controllers\AttendanceAnalyticsController::class);
+    $chartRequest = new \Illuminate\Http\Request();
+    $chartRequest->replace($request->all());
+    $chartData = $analytics->getChartData($chartRequest);
+
+        return view('teacher.dashboard', array_merge(compact(
             'semesters',
             'selectedSemester',
             'currentSemester',
@@ -155,7 +161,7 @@ class TeacherController extends Controller
             'mostAbsent',
             'mostPunctual',
             'todaySession'
-        ));
+        ), $chartData));
     }
 
     

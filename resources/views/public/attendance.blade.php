@@ -286,10 +286,8 @@ if (isset($session)) {
         </div>
     </div>
 
-    <!-- Status Container -->
     <div id="status-container" class="status-container"></div>
 
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
@@ -298,7 +296,6 @@ if (isset($session)) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        // Set session token for JavaScript
         window.sessionToken = '{{ $session->session_token }}';
     </script>
     <script src="{{ asset('js/attendance.js') }}"></script>

@@ -7,6 +7,7 @@ use App\Models\Semester;
 use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\User;
+use App\Models\OutboundMessage;
 use App\Http\Controllers\MessageApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -367,12 +368,13 @@ class AttendanceSessionController extends Controller
             $session->logAccess(request()->ip(), request()->header('User-Agent'));
 
             $semester = $session->semester;
-            $students = Student::where('user_id', $session->teacher_id)
+            $students = Student::with('user')
+                ->where('user_id', $session->teacher_id)
                 ->where('semester_id', $session->semester_id)
                 ->orderBy('name')
                 ->get();
 
-             $recentAttendance = Attendance::with('student')
+             $recentAttendance = Attendance::with(['student', 'student.user'])
                 ->whereHas('student', function($query) use ($session) {
                     $query->where('user_id', $session->teacher_id)
                           ->where('semester_id', $session->semester_id);
@@ -553,19 +555,48 @@ class AttendanceSessionController extends Controller
     public function publicQrVerify(Request $request, $token)
     {
         try {
+            // Log initial request details
+            Log::info('Public QR verification started', [
+                'session_token' => $token,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'request_data' => $request->all(),
+                'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
+            ]);
+
             $request->validate(['qr_data' => 'required|string']);
 
             $session = AttendanceSession::where('session_token', $token)->first();
 
             if (!$session) {
+                Log::warning('Session not found for public QR verification', [
+                    'session_token' => $token,
+                    'ip_address' => request()->ip(),
+                    'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Session not found.'
                 ]);
             }
 
+            Log::info('Session found for public QR verification', [
+                'session_id' => $session->id,
+                'session_name' => $session->session_name,
+                'teacher_id' => $session->teacher_id,
+                'semester_id' => $session->semester_id,
+                'session_status' => $session->status,
+                'ip_address' => request()->ip()
+            ]);
+
             
             if ($session->status !== 'active') {
+                Log::warning('Inactive session accessed for public QR verification', [
+                    'session_id' => $session->id,
+                    'session_status' => $session->status,
+                    'ip_address' => request()->ip(),
+                    'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'This session is not active.',
@@ -576,18 +607,37 @@ class AttendanceSessionController extends Controller
             
             $qrData = $request->qr_data;
             
+            Log::info('QR data received for processing', [
+                'session_id' => $session->id,
+                'qr_data' => $qrData,
+                'qr_data_length' => strlen($qrData),
+                'qr_data_type' => gettype($qrData),
+                'ip_address' => request()->ip()
+            ]);
+            
             
             if (empty($qrData) || strlen($qrData) < 3) {
                 Log::warning('Invalid QR data format in public session', [
                     'session_id' => $session->id,
+                    'qr_data' => $qrData,
                     'qr_data_length' => strlen($qrData),
-                    'ip_address' => request()->ip()
+                    'qr_data_empty' => empty($qrData),
+                    'ip_address' => request()->ip(),
+                    'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
                 ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid QR code format.'
                 ]);
             }
+
+            Log::info('Starting student lookup', [
+                'session_id' => $session->id,
+                'teacher_id' => $session->teacher_id,
+                'semester_id' => $session->semester_id,
+                'stud_code' => $qrData,
+                'ip_address' => request()->ip()
+            ]);
 
              $student = Student::with('user') 
                 ->where('user_id', $session->teacher_id)
@@ -598,10 +648,19 @@ class AttendanceSessionController extends Controller
                 ->first();
 
             if (!$student) {
+                // Try to find any student with this stud_code for debugging
+                $anyStudent = Student::where('stud_code', $qrData)->first();
+                
                 Log::warning('Student not found in public session with stud_code', [
                     'session_id' => $session->id,
+                    'teacher_id' => $session->teacher_id,
+                    'semester_id' => $session->semester_id,
                     'stud_code' => $qrData,
-                    'ip_address' => request()->ip()
+                    'any_student_found' => $anyStudent ? true : false,
+                    'any_student_teacher_id' => $anyStudent ? $anyStudent->user_id : null,
+                    'any_student_semester_id' => $anyStudent ? $anyStudent->semester_id : null,
+                    'ip_address' => request()->ip(),
+                    'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
                 ]);
                 return response()->json([
                     'success' => false,
@@ -609,14 +668,26 @@ class AttendanceSessionController extends Controller
                 ]);
             }
 
+            Log::info('Student found and loaded successfully', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'student_id_no' => $student->id_no,
+                'student_section' => $student->user ? $student->user->section_name : 'N/A',
+                'stud_code' => $qrData,
+                'ip_address' => request()->ip()
+            ]);
+
             
             if (!$this->verifyStudentInfo($student, $session)) {
                 Log::warning('Student verification failed in public session', [
                     'session_id' => $session->id,
                     'student_id' => $student->id,
                     'student_name' => $student->name,
+                    'student_id_no' => $student->id_no,
                     'stud_code' => $qrData,
-                    'ip_address' => request()->ip()
+                    'ip_address' => request()->ip(),
+                    'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
                 ]);
                 return response()->json([
                     'success' => false,
@@ -624,8 +695,26 @@ class AttendanceSessionController extends Controller
                 ]);
             }
 
+            Log::info('Student verification passed', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'ip_address' => request()->ip()
+            ]);
+
             
             $periodInfo = $this->getCurrentPeriodInfo($session->semester);
+            
+            Log::info('Period info retrieved', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'period_allowed' => $periodInfo['allowed'],
+                'period_name' => $periodInfo['period_name'] ?? 'N/A',
+                'period_type' => $periodInfo['period_type'] ?? 'N/A',
+                'current_time' => Carbon::now('Asia/Manila')->format('H:i:s'),
+                'ip_address' => request()->ip()
+            ]);
+            
             if (!$periodInfo['allowed']) {
                 
                 $message = 'Attendance recording is only allowed during scheduled periods: AM Period and PM Period (both Time In and Time Out allowed).';
@@ -638,8 +727,11 @@ class AttendanceSessionController extends Controller
                     'session_id' => $session->id,
                     'student_id' => $student->id,
                     'student_name' => $student->name,
+                    'student_id_no' => $student->id_no,
                     'period_info' => $periodInfo,
-                    'ip_address' => request()->ip()
+                    'message' => $message,
+                    'ip_address' => request()->ip(),
+                    'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
                 ]);
                 
                 return response()->json([
@@ -649,13 +741,23 @@ class AttendanceSessionController extends Controller
                     'student' => [
                         'id' => $student->id,
                         'name' => $student->name,
-                        'student_id' => $student->id_no ?? $student->id,
+                        'id_no' => $student->id_no ?? $student->id,
                         'section' => $student->user ? $student->user->section_name : 'N/A',
                         'photo' => $student->picture
                     ],
-                    'period_info' => $periodInfo
+                    'period_info' => $periodInfo,
+                    'current_time' => Carbon::now('Asia/Manila')->format('g:i:s A')
                 ]);
             }
+
+            Log::info('Period validation passed, proceeding with attendance recording', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'period_name' => $periodInfo['period_name'],
+                'period_type' => $periodInfo['period_type'],
+                'ip_address' => request()->ip()
+            ]);
 
             
             $attendanceController = new AttendanceController();
@@ -665,11 +767,30 @@ class AttendanceSessionController extends Controller
                 'scanner_type' => $request->scanner_type ?? 'Daily Session - ' . $periodInfo['period_name']
             ]);
 
+            Log::info('Calling AttendanceController for recording', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'teacher_id' => $session->teacher_id,
+                'temp_request_data' => $tempRequest->all(),
+                'ip_address' => request()->ip()
+            ]);
+
             Auth::loginUsingId($session->teacher_id);
             $result = $attendanceController->verifyQrAndRecordAttendance($tempRequest);
             Auth::logout();
 
             $responseData = json_decode($result->getContent(), true);
+            
+            Log::info('AttendanceController response received', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'response_success' => $responseData['success'] ?? false,
+                'response_message' => $responseData['message'] ?? 'N/A',
+                'response_status' => $responseData['status'] ?? 'N/A',
+                'ip_address' => request()->ip()
+            ]);
 
             
             if ($responseData['success']) {
@@ -680,31 +801,63 @@ class AttendanceSessionController extends Controller
                     'recorded_time' => Carbon::now('Asia/Manila')->format('g:i A')
                 ];
 
-                // Send SMS notification to parent/guardian
-                $this->sendAttendanceNotification($student, $periodInfo['period_type'], $responseData['period_info']['recorded_time']);
+                if (!empty($responseData['attendance_recorded'])) {
+                    Log::info('Attendance recorded successfully, sending SMS notification', [
+                        'session_id' => $session->id,
+                        'student_id' => $student->id,
+                        'student_name' => $student->name,
+                        'period_type' => $periodInfo['period_type'],
+                        'recorded_time' => $responseData['period_info']['recorded_time'],
+                        'contact_number' => $student->contact_person_contact,
+                        'ip_address' => request()->ip()
+                    ]);
+                    // Send SMS notification to parent/guardian
+                    $this->sendAttendanceNotification($student, $periodInfo['period_type'], $responseData['period_info']['recorded_time'], $session);
+                }
 
-                
                 $session->increment('attendance_count');
+                Log::info('Session attendance count incremented', [
+                    'session_id' => $session->id,
+                    'new_attendance_count' => $session->attendance_count + 1,
+                    'ip_address' => request()->ip()
+                ]);
+            } else {
+                Log::warning('Attendance recording failed', [
+                    'session_id' => $session->id,
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'failure_reason' => $responseData['message'] ?? 'Unknown error',
+                    'response_data' => $responseData,
+                    'ip_address' => request()->ip()
+                ]);
             }
 
             
-            Log::info('Attendance recorded via daily session', [
+            Log::info('Final attendance processing result', [
                 'session_id' => $session->id,
                 'student_id' => $student->id,
                 'student_name' => $student->name,
+                'student_id_no' => $student->id_no,
                 'success' => $responseData['success'],
                 'period' => $periodInfo['period_name'],
                 'period_type' => $periodInfo['period_type'],
-                'ip_address' => request()->ip()
+                'response_message' => $responseData['message'] ?? 'N/A',
+                'ip_address' => request()->ip(),
+                'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
             ]);
 
             return response()->json($responseData);
 
         } catch (\Exception $e) {
-            Log::error('Error in public QR verification', [
+            Log::error('Critical error in public QR verification', [
                 'token' => $token,
-                'error' => $e->getMessage(),
-                'ip_address' => request()->ip()
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'error_trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'ip_address' => request()->ip(),
+                'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
             ]);
 
             return response()->json([
@@ -852,10 +1005,9 @@ class AttendanceSessionController extends Controller
     /**
      * Send SMS notification for attendance recording
      */
-    private function sendAttendanceNotification($student, $attendanceStatus, $recordedTime)
+    private function sendAttendanceNotification($student, $attendanceStatus, $recordedTime, $session = null)
     {
         try {
-            // Check if student has a valid contact number
             if (!$student->contact_person_contact) {
                 Log::info('No contact number for student, skipping SMS', [
                     'student_id' => $student->id,
@@ -864,11 +1016,15 @@ class AttendanceSessionController extends Controller
                 return;
             }
 
-            // Create message API controller instance with SMS service
+            // Determine the teacher ID for the SMS record
+            $teacherId = $session ? $session->teacher_id : $student->user_id;
+            
             $smsService = new \App\Services\AndroidSmsGatewayService();
             $messageController = new MessageApiController($smsService);
 
-            // Send attendance notification
+            // Set the teacher ID in the MessageApiController for OutboundMessage creation
+            $messageController->setTeacherId($teacherId);
+            
             $success = $messageController->sendAttendanceNotification($student, $attendanceStatus, $recordedTime);
 
             if ($success) {
@@ -876,13 +1032,17 @@ class AttendanceSessionController extends Controller
                     'student_id' => $student->id,
                     'student_name' => $student->name,
                     'contact_number' => $student->contact_person_contact,
-                    'attendance_status' => $attendanceStatus
+                    'attendance_status' => $attendanceStatus,
+                    'teacher_id' => $teacherId,
+                    'session_id' => $session ? $session->id : null
                 ]);
             } else {
                 Log::warning('SMS notification failed or skipped', [
                     'student_id' => $student->id,
                     'student_name' => $student->name,
-                    'contact_number' => $student->contact_person_contact
+                    'contact_number' => $student->contact_person_contact,
+                    'teacher_id' => $teacherId,
+                    'session_id' => $session ? $session->id : null
                 ]);
             }
 
@@ -903,20 +1063,51 @@ class AttendanceSessionController extends Controller
     {
         if (!$number) return false;
         
-        // Remove spaces and dashes
-        $cleaned = preg_replace('/[\s\-]/', '', $number);
+         $cleaned = preg_replace('/[\s\-]/', '', $number);
         
-        // Check for +63 format (13 digits total)
-        if (preg_match('/^\+639\d{9}$/', $cleaned)) {
+         if (preg_match('/^\+639\d{9}$/', $cleaned)) {
             return true;
         }
         
-        // Check for 09 format (11 digits total)
-        if (preg_match('/^09\d{9}$/', $cleaned)) {
+         if (preg_match('/^09\d{9}$/', $cleaned)) {
             return true;
         }
         
         return false;
     }
+
+    
+    public function getTimeSessions()
+    {
+        $user = auth()->user();
+        $semester = null;
+
+        if ($user) {
+            if ($user->role === 'student') {
+                // Get the student record for this user
+                $student = \App\Models\Student::where('user_id', $user->id)->first();
+                if ($student && $student->semester_id) {
+                    $semester = Semester::find($student->semester_id);
+                }
+            } else {
+                $semester = Semester::where('school_id', $user->school_id)
+                    ->where('is_active', 1)
+                    ->orderByDesc('start_date')
+                    ->first();
+            }
+        }
+
+        if (!$semester) {
+            return response()->json(['error' => 'No active semester found for user.'], 404);
+        }
+
+        return response()->json([
+            'am_time_in_start' => $semester->am_time_in_start,
+            'am_time_in_end' => $semester->am_time_in_end,
+            'pm_time_out_start' => $semester->pm_time_out_start,
+            'pm_time_out_end' => $semester->pm_time_out_end,
+            'start_date' => $semester->start_date,
+            'end_date' => $semester->end_date,
+        ]);
+    }
 }
- 

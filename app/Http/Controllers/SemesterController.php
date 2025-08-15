@@ -80,8 +80,7 @@ class SemesterController extends Controller
 
             $user = Auth::user();
             
-            // Only admins can create semesters
-            if ($user->role !== 'admin') {
+             if ($user->role !== 'admin') {
                 Log::warning('Non-admin tried to access semester create form', [
                     'user_id' => $user->id,
                     'user_role' => $user->role
@@ -161,7 +160,7 @@ class SemesterController extends Controller
                 'user_id' => $user->id
             ]);
 
-            return redirect()->route('semesters.index')->with('success', 'Semester created successfully.');
+            return redirect()->route('teacher.semesters')->with('success', 'Semester created successfully.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Semester validation failed', [
@@ -318,8 +317,7 @@ class SemesterController extends Controller
                 'pm_time_out_end' => 'nullable|date_format:H:i',
             ]);
 
-            // Additional permission check for school_id change
-            if ($user->role !== 'admin' && $validated['school_id'] != $user->school_id) {
+             if ($user->role !== 'admin' && $validated['school_id'] != $user->school_id) {
                 Log::warning('Unauthorized school change attempt', [
                     'user_id' => $user->id,
                     'user_school_id' => $user->school_id,
@@ -329,8 +327,7 @@ class SemesterController extends Controller
                 return redirect()->back()->with('error', 'You cannot move semesters to other schools.');
             }
 
-            // If setting this semester as active, deactivate others in the same school
-            if ($validated['status'] === 'active' && $semester->status !== 'active') {
+             if ($validated['status'] === 'active' && $semester->status !== 'active') {
                 Semester::where('school_id', $validated['school_id'])
                     ->where('id', '!=', $semester->id)
                     ->where('status', 'active')
@@ -351,7 +348,7 @@ class SemesterController extends Controller
                 'user_id' => $user->id
             ]);
 
-            return redirect()->route('semesters.index')->with('success', 'Semester updated successfully.');
+            return redirect()->route('teacher.semesters')->with('success', 'Semester updated successfully.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Semester update validation failed', [
@@ -423,7 +420,7 @@ class SemesterController extends Controller
                 'user_id' => $user->id
             ]);
 
-            return redirect()->route('semesters.index')->with('success', 'Semester deleted successfully.');
+            return redirect()->route('teacher.semesters')->with('success', 'Semester deleted successfully.');
             
         } catch (\Exception $e) {
             Log::error('Error deleting semester', [

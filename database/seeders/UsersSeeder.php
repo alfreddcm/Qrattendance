@@ -29,8 +29,8 @@ class UsersSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],[
-                'name' => 'Teacher One',
-                'username' => 'teacher1',
+                'name' => 'Pagalan, Mark Anthony',
+                'username' => 'mark',
                 'email' => 'teacher1@sgvs.edu',
                 'password' => Hash::make('password'),
                 'role' => 'teacher',

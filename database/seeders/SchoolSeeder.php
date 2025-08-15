@@ -11,7 +11,7 @@ class SchoolSeeder extends Seeder
     {
         DB::table('schools')->insert([
             'school_id' => '33011',
-            'name' => 'SGVS',
+            'name' => 'San Guillermo Vocational and Industrial High School',
             'address' => 'San Guillermo, Isabela',
             'logo' => null,
             'created_at' => now(),

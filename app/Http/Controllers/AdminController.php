@@ -321,8 +321,7 @@ class AdminController extends Controller
                 'school_id' => $request->school_id,
             ];
 
-            // Check if time columns exist in the database before adding them
-            $tableColumns = \Schema::getColumnListing('semesters');
+           $tableColumns = \Schema::getColumnListing('semesters');
             
             if (in_array('am_time_in_start', $tableColumns)) {
                 $createData['am_time_in_start'] = $request->am_time_in_start;
@@ -339,10 +338,10 @@ class AdminController extends Controller
 
             Semester::create($createData);
 
-            return redirect()->route('admin.manage-semesters')->with('success', 'Semester created successfully!');
+            return redirect()->back()->with('success', 'Semester created successfully!');
             
         } catch (\Exception $e) {
-            return redirect()->route('admin.manage-semesters')->with('error', 'Failed to create semester. Please check your data and try again.');
+            return redirect()->back()->with('error', 'Failed to create semester. Please check your data and try again.');
         }
     }
 
@@ -392,11 +391,10 @@ class AdminController extends Controller
             }
 
             $semester->update($updateData);
-
-            return redirect()->route('admin.manage-semesters')->with('success', 'Semester updated successfully!');
+            return redirect()->back()->with('success', 'Semester updated successfully!');
             
         } catch (\Exception $e) {
-            return redirect()->route('admin.manage-semesters')->with('error', 'Failed to update semester. Please check your data and try again.');
+            return redirect()->back()->with('error', 'Failed to update semester. Please check your data and try again.');
         }
     }
 
@@ -407,37 +405,30 @@ class AdminController extends Controller
     {
         $semester = Semester::findOrFail($id);
         
-        // Get teachers associated with this semester (by school)
-        $teachers = User::where('role', 'teacher')
+         $teachers = User::where('role', 'teacher')
                         ->where('school_id', $semester->school_id)
                         ->get();
         
         foreach ($teachers as $teacher) {
-            // Get students associated with this teacher
-            $students = Student::where('user_id', $teacher->id)->get();
+             $students = Student::where('user_id', $teacher->id)->get();
             
-            // Delete students and their files
-            foreach ($students as $student) {
-                // Clear QR code files
-                if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+             foreach ($students as $student) {
+                 if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
                     Storage::disk('public')->delete($student->qr_code);
                 }
                 
-                // Clear picture
-                if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+                 if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                     Storage::disk('public')->delete('student_pictures/' . $student->picture);
                 }
                 
-                // Delete student record
-                $student->delete();
+                 $student->delete();
             }
             
             // Delete teacher
             $teacher->delete();
         }
         
-        // Delete semester
-        $semester->delete();
+         $semester->delete();
 
         return redirect()->route('admin.manage-semesters')->with('success', 'Semester and related teachers/students deleted successfully!');
     }
@@ -449,8 +440,7 @@ class AdminController extends Controller
     {
         $query = Student::with(['user', 'school']);
         
-        // Handle search
-        if ($request->filled('search')) {
+         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -458,18 +448,14 @@ class AdminController extends Controller
             });
         }
         
-        // Handle school filter
-        if ($request->filled('school_id')) {
+         if ($request->filled('school_id')) {
             $query->where('school_id', $request->school_id);
         }
-        
-        // Handle teacher filter
-        if ($request->filled('teacher_id')) {
+         if ($request->filled('teacher_id')) {
             $query->where('user_id', $request->teacher_id);
         }
-        
-        // Handle QR status filter
-        if ($request->filled('qr_status')) {
+
+         if ($request->filled('qr_status')) {
             if ($request->qr_status == 'with_qr') {
                 $query->whereNotNull('qr_code');
             } elseif ($request->qr_status == 'without_qr') {

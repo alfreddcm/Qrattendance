@@ -185,7 +185,7 @@ body {
 }
 
 /* Material Design Badges */
-.time-in-badge, .time-out-badge, .recording-badge, .recorded-badge {
+.time-in-badge, .time-out-badge, .time-complete-badge, .recording-badge, .recorded-badge {
     padding: 4px 12px;
     border-radius: 16px;
     font-size: 0.8rem;
@@ -202,6 +202,11 @@ body {
 .time-out-badge {
     background: #FFF3E0;
     color: #F57C00;
+}
+
+.time-complete-badge {
+    background: #E3F2FD;
+    color: #1976D2;
 }
 
 .recording-badge {

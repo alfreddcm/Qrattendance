@@ -200,7 +200,6 @@
                                 <thead style="background-color: #5b73e8; color: white;">
                                     <tr>
                                         <th style="width: 40px; border: none;">
-                                        <input type="checkbox" id="selectAll" />
 
                                         </th>
                                         <th style="width: 80px; text-align: center; border: none;">Photo</th>
@@ -217,11 +216,9 @@
                                     @foreach($students as $student)
                                     <tr style="border-bottom: 1px solid #e9ecef;">
                                         <td style="vertical-align: middle;">
-                                            <input type="checkbox" class="form-check-input student-checkbox" value="{{ $student->id }}" name="selected_students[]">
                                         </td>
                                         <td style="text-align: center; vertical-align: middle;">
                                              
-
                                             @if($student->picture)
                                                 <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" 
                                                      alt="{{ $student->name }}" 
@@ -438,7 +435,7 @@
                         </div>
                         <div class="text-center mt-2">
                             
- <div class="card bg-light">
+                         <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h6 class="card-title mb-2">
                                             <i class="fas fa-qrcode me-2"></i>QR Code
@@ -775,10 +772,10 @@
                             <h6 class="fw-bold mb-3">
                                 <i class="fas fa-upload me-2"></i>Step 2: Upload Your File
                             </h6>
-                            <form action="{{ route('admin.students.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                            <form action="{{ route('import.upload') }}" method="POST" enctype="multipart/form-data" id="importForm">
                                 @csrf
                                 <div class="row g-3">
-                                    <div class="col-md-8">
+                                    <div class="col">
                                         <label for="import_file" class="form-label">Choose Excel/CSV file:</label>
                                         <input type="file" name="file" id="import_file" class="form-control" 
                                                accept=".csv, .xls, .xlsx" required 
@@ -788,15 +785,7 @@
                                             Accepted formats: CSV, Excel (.xls, .xlsx) | Max size: 5MB
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label for="assign_teacher" class="form-label">Assign to Teacher (Optional):</label>
-                                        <select name="assign_teacher_id" id="assign_teacher" class="form-select">
-                                            <option value="">No specific teacher</option>
-                                            @foreach($teachers as $teacher)
-                                                <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    
                                 </div>
 
                                 <!-- File Info Display -->
@@ -812,16 +801,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Preview Option -->
-                                <div class="mt-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="previewData" name="preview" value="1" checked>
-                                        <label class="form-check-label" for="previewData">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Preview data before importing (recommended)
-                                        </label>
-                                    </div>
-                                </div>
+
 
                                 <div class="d-grid gap-2 mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
@@ -841,14 +821,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Cancel
-                        </button>
-                        <button type="button" class="btn btn-outline-primary" onclick="window.open('{{ route('admin.students.importGuide') }}', '_blank')">
-                            <i class="fas fa-question-circle me-1"></i>Import Guide
-                        </button>
-                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -972,7 +945,6 @@
         font-weight: 500;
     }
     
-    /* Badge improvements */
     .badge {
         font-size: 0.8rem;
         padding: 0.5rem 0.75rem;
@@ -980,7 +952,6 @@
         font-weight: 500;
     }
     
-    /* Card header button styling */
     .card-header .btn {
         border-radius: 25px;
         font-weight: 600;
@@ -1010,134 +981,6 @@
         });
     });
 
- document.addEventListener('DOMContentLoaded', function() {
-    const selectAllCheckbox = document.getElementById('selectAll');
-    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
-    const bulkActions = document.getElementById('bulkActions');
-    const noBulkActions = document.getElementById('noBulkActions');
-    const selectedCount = document.getElementById('selectedCount');
-
-     selectAllCheckbox?.addEventListener('change', function() {
-        studentCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-        });
-        updateBulkActionsVisibility();
-    });
-
-     studentCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            updateSelectAllState();
-            updateBulkActionsVisibility();
-        });
-    });
-
-    function updateSelectAllState() {
-        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
-        const totalBoxes = studentCheckboxes.length;
-        
-        if (checkedBoxes.length === 0) {
-            selectAllCheckbox.indeterminate = false;
-            selectAllCheckbox.checked = false;
-        } else if (checkedBoxes.length === totalBoxes) {
-            selectAllCheckbox.indeterminate = false;
-            selectAllCheckbox.checked = true;
-        } else {
-            selectAllCheckbox.indeterminate = true;
-            selectAllCheckbox.checked = false;
-        }
-    }
-
-    function updateBulkActionsVisibility() {
-        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
-        if (checkedBoxes.length > 0) {
-            bulkActions.style.display = 'block';
-            if (noBulkActions) noBulkActions.style.display = 'none';
-            selectedCount.textContent = checkedBoxes.length;
-        } else {
-            bulkActions.style.display = 'none';
-            if (noBulkActions) noBulkActions.style.display = 'block';
-        }
-    }
-
-    // Initialize the display
-    updateBulkActionsVisibility();
-
-     document.getElementById('bulkGenerateQr')?.addEventListener('click', function() {
-        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
-        if (checkedBoxes.length === 0) return;
-        
-        if (confirm(`Generate QR codes for ${checkedBoxes.length} selected students?`)) {
-            const studentIds = Array.from(checkedBoxes).map(cb => cb.value);
-            
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route("admin.students.generateQrs") }}';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
-            
-            studentIds.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'student_ids[]';
-                input.value = id;
-                form.appendChild(input);
-            });
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
-
-    document.getElementById('bulkPrintIds')?.addEventListener('click', function() {
-        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
-        if (checkedBoxes.length === 0) return;
-        
-        const studentIds = Array.from(checkedBoxes).map(cb => cb.value);
-        const url = '{{ route("student.ids.print.all") }}?students=' + studentIds.join(',');
-        window.open(url, '_blank');
-    });
-
-    document.getElementById('bulkDelete')?.addEventListener('click', function() {
-        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
-        if (checkedBoxes.length === 0) return;
-        
-        if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected students? This action cannot be undone.`)) {
-            const studentIds = Array.from(checkedBoxes).map(cb => cb.value);
-            
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route("admin.students.bulkDelete") }}';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
-            
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'DELETE';
-            form.appendChild(methodInput);
-            
-            studentIds.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'student_ids[]';
-                input.value = id;
-                form.appendChild(input);
-            });
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
-});
-
 
 let debounceTimer;
 
@@ -1160,10 +1003,7 @@ function showQRCode(qrCodeUrl) {
                 <div class="modal-body text-center">
                     <img src="${qrCodeUrl}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
                 </div>
-                <div class="modal-footer">
-                    <a href="${qrCodeUrl}" download class="btn btn-primary">Download QR Code</a>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
+
             </div>
         </div>
     `;
@@ -1174,6 +1014,7 @@ function showQRCode(qrCodeUrl) {
      modal.addEventListener('hidden.bs.modal', function () {
         modal.remove();
     });
+}
 }
 
 function deleteStudent(studentId, studentName) {
@@ -1199,8 +1040,7 @@ function deleteStudent(studentId, studentName) {
     }
 }
 
-// Initialize Bootstrap dropdowns and ensure they work properly
-// Initialize Bootstrap dropdowns and ensure they work properly
+
 document.addEventListener('DOMContentLoaded', function() {
     var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
     var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
@@ -1214,27 +1054,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Download template function
 function downloadTemplate() {
     window.location.href = '{{ route("admin.students.downloadTemplate") }}';
 }
 
-// File selection handler for import modal
-function handleFileSelect(input) {
+ function handleFileSelect(input) {
     const fileInfo = document.getElementById('fileInfo');
     const fileName = document.getElementById('fileName');
     const fileDetails = document.getElementById('fileDetails');
     
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        const fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); 
         
         fileName.textContent = file.name;
         fileDetails.textContent = `Size: ${fileSize} MB | Type: ${file.type || 'Unknown'}`;
         fileInfo.style.display = 'block';
         
-        // Validate file size (5MB limit)
-        if (file.size > 5 * 1024 * 1024) {
+         if (file.size > 5 * 1024 * 1024) {
             showImportAlert('File size exceeds 5MB limit. Please choose a smaller file.', 'danger');
             input.value = '';
             fileInfo.style.display = 'none';
@@ -1255,28 +1092,23 @@ function handleFileSelect(input) {
     }
 }
 
-// Alert helper function for import modal
-function showImportAlert(message, type = 'info') {
+ function showImportAlert(message, type = 'info') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
     alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
-    // Insert at top of modal body
     const modalBody = document.querySelector('#importStudentsModal .modal-body');
     modalBody.insertBefore(alertDiv, modalBody.firstChild);
     
-    // Auto dismiss after 5 seconds
-    setTimeout(() => {
+     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
         }
     }, 5000);
 }
 
-// Form submission handler for import
 document.addEventListener('DOMContentLoaded', function() {
     const importForm = document.getElementById('importForm');
     if (importForm) {
@@ -1284,17 +1116,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploadBtn = document.getElementById('uploadBtn');
             const uploadProgress = document.getElementById('uploadProgress');
             
-            // Show progress
             uploadBtn.disabled = true;
             uploadProgress.style.display = 'block';
             
-            // Change button text
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
         });
     }
 
-    // Reset form when modal is hidden
-    const importModal = document.getElementById('importStudentsModal');
+     const importModal = document.getElementById('importStudentsModal');
     if (importModal) {
         importModal.addEventListener('hidden.bs.modal', function() {
             const form = document.getElementById('importForm');
@@ -1302,27 +1131,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploadProgress = document.getElementById('uploadProgress');
             const fileInfo = document.getElementById('fileInfo');
             
-            // Reset form
-            if (form) form.reset();
+             if (form) form.reset();
             
-            // Reset button
-            if (uploadBtn) {
+             if (uploadBtn) {
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload and Process File';
             }
             
-            // Hide elements
-            if (uploadProgress) uploadProgress.style.display = 'none';
+             if (uploadProgress) uploadProgress.style.display = 'none';
             if (fileInfo) fileInfo.style.display = 'none';
             
-            // Remove any alerts
-            const alerts = document.querySelectorAll('#importStudentsModal .alert-dismissible');
+             const alerts = document.querySelectorAll('#importStudentsModal .alert-dismissible');
             alerts.forEach(alert => alert.remove());
         });
     }
 });
 
-// Debounce function for search
 function debounceSubmit() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function() {

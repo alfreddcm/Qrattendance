@@ -22,5 +22,6 @@ return [
     'timeout' => 30,  
     'validate_numbers' => true, 
     'allowed_country_codes' => ['+63'],  
-    'default_country_code' => '+63',  
+    'default_country_code' => '+63',
+    'sender_id' => env('SMS_SENDER_ID', 'Scan-to-notify'),  // Default sender ID
 ];

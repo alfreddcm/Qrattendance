@@ -11,6 +11,7 @@ class Attendance extends Model
         'semester_id',
         'student_id',
         'school_id',
+        'teacher_id',
         'date',
         'time_in_am',
         'time_out_am',
@@ -31,6 +32,11 @@ class Attendance extends Model
     public function school()
     {
         return $this->belongsTo(School::class, 'school_id', 'id');
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id', 'id');
     }
 
     public function scopeInDateRange($query, $startDate, $endDate)

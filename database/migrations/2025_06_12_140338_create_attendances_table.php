@@ -21,9 +21,12 @@ return new class extends Migration
             $table->time('time_out_am')->nullable();
             $table->time('time_in_pm')->nullable();
             $table->time('time_out_pm')->nullable();
+            $table->unsignedBigInteger('teacher_id')->nullable();
+
             $table->timestamps();
 
             // Foreign key constraints
+            $table->foreign('teacher_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('semester_id')->references('id')->on('semesters')->onDelete('cascade');
             $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
             $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');

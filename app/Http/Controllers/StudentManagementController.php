@@ -25,27 +25,24 @@ class StudentManagementController extends Controller
     {
         $query = Student::where('user_id', Auth::id());
         
-        // Handle search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('id_no', 'like', "%{$search}%");
+             
             });
         }
         
-        // Handle semester filter
         if ($request->filled('semester_id')) {
             $query->where('semester_id', $request->semester_id);
         } else {
-            // Default to current semester if no filter
             $selectedSemester = $this->getCurrentSemesterId();
             if ($selectedSemester) {
                 $query->where('semester_id', $selectedSemester);
             }
         }
         
-        // Handle QR status filter
         if ($request->filled('qr_status')) {
             if ($request->qr_status == 'with_qr') {
                 $query->whereNotNull('qr_code');
@@ -54,7 +51,7 @@ class StudentManagementController extends Controller
             }
         }
         
-        $students = $query->orderBy('id_no')->get();
+        $students =$query->orderBy('name', 'asc')->get();
         
         return view('teacher.students', compact('students'));
     }
@@ -416,7 +413,6 @@ public function bulkDelete(Request $request)
             'teacher_id' => Auth::id(),
         ]);
 
-        // Generate random 10-character string (alphanumeric)
         $randomString = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10);
         $qrCodeData = $student->id_no . '_' . $randomString;
         
@@ -616,7 +612,7 @@ public function bulkDelete(Request $request)
             
             $headerMapping = [
                 'id_no' => 'ID No',
-                'name' => 'Student Name', 
+                'name' => 'Student Name(LN, FN MI.)', 
                 'gender' => 'Gender (M/F)',
                 'age' => 'Age',
                 'address' => 'Address',

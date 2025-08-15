@@ -50,108 +50,108 @@ class StudentIdController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
-    public function downloadAll(Request $request)
-    {
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Unauthorized access. Only administrators can download all student IDs.');
-        }
+    // public function downloadAll(Request $request)
+    // {
+    //     if (auth()->user()->role !== 'admin') {
+    //         abort(403, 'Unauthorized access. Only administrators can download all student IDs.');
+    //     }
 
-        $schoolId = $request->input('school_id');
+    //     $schoolId = $request->input('school_id');
 
-        if (!$schoolId && auth()->check()) {
-            $schoolId = auth()->user()->school_id;
-        }
+    //     if (!$schoolId && auth()->check()) {
+    //         $schoolId = auth()->user()->school_id;
+    //     }
 
-        $students = Student::with(['school', 'user']);
+    //     $students = Student::with(['school', 'user']);
         
-        if ($schoolId) {
-            $students = $students->where('school_id', $schoolId);
-        }
+    //     if ($schoolId) {
+    //         $students = $students->where('school_id', $schoolId);
+    //     }
         
-        $students = $students->orderBy('user_id')
-            ->orderBy('id')
-            ->get();
+    //     $students = $students->orderBy('user_id')
+    //         ->orderBy('id')
+    //         ->get();
 
-        $html = view('student-id.grid', compact('students'))->render();
+    //     $html = view('student-id.grid', compact('students'))->render();
 
-        $mpdf = new Mpdf([
-            'format' => 'A4',
-            'orientation' => 'P',
-            'margin_left' => 10,
-            'margin_right' => 10,
-            'margin_top' => 10,
-            'margin_bottom' => 10,
-        ]);
+    //     $mpdf = new Mpdf([
+    //         'format' => 'A4',
+    //         'orientation' => 'P',
+    //         'margin_left' => 10,
+    //         'margin_right' => 10,
+    //         'margin_top' => 10,
+    //         'margin_bottom' => 10,
+    //     ]);
 
-        $mpdf->WriteHTML($html);
+    //     $mpdf->WriteHTML($html);
 
-        $schoolName = $students->first()->school->name ?? 'School';
-        $sanitizedSchoolName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $schoolName);
-        $filename = 'all_student_ids_' . $sanitizedSchoolName . '.pdf';
+    //     $schoolName = $students->first()->school->name ?? 'School';
+    //     $sanitizedSchoolName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $schoolName);
+    //     $filename = 'all_student_ids_' . $sanitizedSchoolName . '.pdf';
 
-        return response($mpdf->Output($filename, 'S'))
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-        }
+    //     return response($mpdf->Output($filename, 'S'))
+    //         ->header('Content-Type', 'application/pdf')
+    //         ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    // }
 
-    public function downloadByTeacher($teacherId = null)
-    {
-        $currentUser = auth()->user();
+    // public function downloadByTeacher($teacherId = null)
+    // {
+    //     $currentUser = auth()->user();
         
-        if (!$teacherId) {
-            $teacherId = $currentUser->id;
-        }
+    //     if (!$teacherId) {
+    //         $teacherId = $currentUser->id;
+    //     }
         
-        if ($currentUser->role === 'teacher' && $currentUser->id != $teacherId) {
-            abort(403, 'Unauthorized access. Teachers can only download their own students\' IDs.');
-        }
+    //     if ($currentUser->role === 'teacher' && $currentUser->id != $teacherId) {
+    //         abort(403, 'Unauthorized access. Teachers can only download their own students\' IDs.');
+    //     }
 
-        $selectedSemester = $this->getCurrentSemesterId();
+    //     $selectedSemester = $this->getCurrentSemesterId();
 
-        $students = Student::with(['school', 'user'])
-            ->where('user_id', $teacherId)
-            ->where('semester_id', $selectedSemester)
-            ->get();
+    //     $students = Student::with(['school', 'user'])
+    //         ->where('user_id', $teacherId)
+    //         ->where('semester_id', $selectedSemester)
+    //         ->get();
          
-        \Log::info("Download by teacher {$teacherId}, semester {$selectedSemester}: Found {$students->count()} students");
+    //     \Log::info("Download by teacher {$teacherId}, semester {$selectedSemester}: Found {$students->count()} students");
         
-        if ($students->count() === 0) {
-            \Log::warning("Teacher {$teacherId} has no students assigned for semester {$selectedSemester}");
+    //     if ($students->count() === 0) {
+    //         \Log::warning("Teacher {$teacherId} has no students assigned for semester {$selectedSemester}");
             
             
-            $teacher = User::find($teacherId);
-            $teacherName = $teacher ? $teacher->name : 'Teacher';
+    //         $teacher = User::find($teacherId);
+    //         $teacherName = $teacher ? $teacher->name : 'Teacher';
             
-            return response()->view('errors.no-students', [
-                'message' => "No students found for {$teacherName} in the current semester.",
-                'suggestion' => 'Please add students first using the toolbar options such as "Add Student" or import students, then generate QR codes before downloading student IDs.',
-                'teacherId' => $teacherId
-            ], 404);
-        }
+    //         return response()->view('errors.no-students', [
+    //             'message' => "No students found for {$teacherName} in the current semester.",
+    //             'suggestion' => 'Please add students first using the toolbar options such as "Add Student" or import students, then generate QR codes before downloading student IDs.',
+    //             'teacherId' => $teacherId
+    //         ], 404);
+    //     }
         
-        $html = view('student-id.grid', compact('students'))->render();
+    //     $html = view('student-id.grid', compact('students'))->render();
         
-        $mpdf = new Mpdf([
-            'format' => 'A4',
-            'orientation' => 'P',
-            'margin_left' => 10,
-            'margin_right' => 10,
-            'margin_top' => 10,
-            'margin_bottom' => 10,
-        ]);
+    //     $mpdf = new Mpdf([
+    //         'format' => 'A4',
+    //         'orientation' => 'P',
+    //         'margin_left' => 10,
+    //         'margin_right' => 10,
+    //         'margin_top' => 10,
+    //         'margin_bottom' => 10,
+    //     ]);
         
-        $mpdf->WriteHTML($html);
+    //     $mpdf->WriteHTML($html);
         
         
-        $teacher = User::find($teacherId);
-        $teacherName = $teacher ? $teacher->name : 'Teacher';
-        $sanitizedTeacherName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $teacherName);
-        $filename = 'teacher_' . $teacherId . '_' . $sanitizedTeacherName . '_student_ids.pdf';
+    //     $teacher = User::find($teacherId);
+    //     $teacherName = $teacher ? $teacher->name : 'Teacher';
+    //     $sanitizedTeacherName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $teacherName);
+    //     $filename = 'teacher_' . $teacherId . '_' . $sanitizedTeacherName . '_student_ids.pdf';
         
-        return response($mpdf->Output($filename, 'S'))
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-    }
+    //     return response($mpdf->Output($filename, 'S'))
+    //         ->header('Content-Type', 'application/pdf')
+    //         ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    // }
 
     public function downloadMyStudents()
     {

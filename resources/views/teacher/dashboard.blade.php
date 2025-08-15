@@ -467,41 +467,8 @@
     </div>
     @endif
 
-    <!-- Quick Analytics Summary -->
-    <div class="row g-3 mb-3">
-        <div class="col-12">
-            <div class="card shadow-sm card-compact">
-                <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fs-7">
-                        <i class="fas fa-chart-line me-2"></i>Quick Analytics
-                    </h6>
-                    <button class="btn btn-outline-light btn-compact" onclick="refreshAnalytics()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-                <div class="card-body p-3">
-                    <div class="row text-center">
-                        <div class="col-3">
-                            <h6 class="text-success mb-1" id="attendanceRate">85%</h6>
-                            <small class="text-muted fs-8">Attendance Rate</small>
-                        </div>
-                        <div class="col-3">
-                            <h6 class="text-warning mb-1" id="punctualityRate">78%</h6>
-                            <small class="text-muted fs-8">Punctuality Rate</small>
-                        </div>
-                        <div class="col-3">
-                            <h6 class="text-danger mb-1" id="lateArrivals">12</h6>
-                            <small class="text-muted fs-8">Late Arrivals</small>
-                        </div>
-                        <div class="col-3">
-                            <h6 class="text-info mb-1" id="dailyAverage">92%</h6>
-                            <small class="text-muted fs-8">Daily Average</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('teacher.statistics')
+
 </div>
 
  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

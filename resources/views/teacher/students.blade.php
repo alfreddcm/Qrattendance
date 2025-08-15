@@ -58,10 +58,12 @@
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
                 <i class="fas fa-plus me-1"></i>Add Student
             </button>
+                        @if(count($students) > 0)
             <div class="btn-group">
                 <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-qrcode me-1"></i>QR Actions
                 </button>
+
                 <ul class="dropdown-menu" aria-labelledby="qrActionsDropdown">
                     @if($missingQr)
                     <li>
@@ -89,25 +91,19 @@
                     <i class="fas fa-id-card me-1"></i>Student IDs
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="idActionsDropdown">
-                    @if(auth()->user()->role === 'admin')
-                    <li>
-                        <a href="{{ route('student.ids.print.all') }}" class="dropdown-item" target="_blank">
-                            <i class="fas fa-print me-2"></i>Print All Student IDs (Ctrl+P)
-                        </a>
-                    </li>
-                    @elseif(auth()->user()->role === 'teacher')
+                   
                     <li>
                         <a href="{{ route('student.ids.print.my.students') }}" class="dropdown-item" target="_blank">
                             <i class="fas fa-print me-2"></i>Print My Students' IDs (Ctrl+P)
                         </a>
                     </li>
-                    @endif
                 </ul>
             </div>
 
-        <a href="{{ route('teacher.students.export') }}" class="btn btn-outline-success btn-sm me-2">
-            <i class="fas fa-download me-1"></i>Export
-        </a>
+                <a href="{{ route('teacher.students.export') }}" class="btn btn-outline-success btn-sm me-2">
+                    <i class="fas fa-download me-1"></i>Export
+                </a>
+            @endif
     </div>
 </div>
 
@@ -624,10 +620,20 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <p class="text-muted">Download the template first, fill it with student data, then upload the file.</p>
-                            <a href="{{ route('teacher.students.downloadTemplate') }}" class="btn btn-outline-success btn-sm">
+ <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>How to Import Students</h6>
+                            <ol class="mb-2">
+                                <li>Download the template file below</li>
+                                <a href="{{ route('teacher.students.downloadTemplate') }}" class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-download me-1"></i>Download Template
-                            </a>
+                            </a><br>
+                                <li>Fill in the student data following the format</li>
+                                <li>Save and upload your completed file</li>
+                                <li>Review the preview before confirming the import</li>
+                            </ol>
+                            <hr>
+                            <p class="mb-0"><strong>Supported formats:</strong> .csv, .xls, .xlsx (max 5MB)</p>
+                        </div>                            
                         </div>
                         <hr>
                         <form action="{{ route('import.upload') }}" method="POST" enctype="multipart/form-data">

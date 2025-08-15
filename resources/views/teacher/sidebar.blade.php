@@ -209,8 +209,9 @@
         }
         .sidebar h2,
         .sidebar .user-info {
+            text-align: center;
             transition: opacity 0.3s, max-height 0.3s;
-            white-space: nowrap;
+            white-space: wrap;
             overflow: hidden;
         }
         .sidebar.closed h2,
@@ -299,7 +300,7 @@
         .sidebar .user-info {
             font-size: 0.95em;
             color: #bbb;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
             transition: opacity 0.3s;
         }
         .content {

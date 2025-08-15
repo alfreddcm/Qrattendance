@@ -13,10 +13,20 @@ use Exception;
 class MessageApiController extends Controller
 {
     protected $smsService;
+    protected $teacherId;
 
     public function __construct(AndroidSmsGatewayService $smsService)
     {
         $this->smsService = $smsService;
+        $this->teacherId = null;
+    }
+
+    /**
+     * Set teacher ID for OutboundMessage creation
+     */
+    public function setTeacherId($teacherId)
+    {
+        $this->teacherId = $teacherId;
     }
 
     /**
@@ -25,7 +35,6 @@ class MessageApiController extends Controller
     public function sendSms(Request $request)
     {
         try {
-            // Validate request data
             $validator = Validator::make($request->all(), [
                 'number' => 'required|string',
                 'message' => 'required|string|max:1000',
@@ -50,7 +59,6 @@ class MessageApiController extends Controller
             $studentId = $request->input('student_id');
             $sendToAll = $request->input('send_to_all', false);
 
-            // Handle send to all parents
             if ($sendToAll) {
                 return $this->sendToAllParents($message);
             }
@@ -71,9 +79,8 @@ class MessageApiController extends Controller
 
             $result = $this->smsService->sendSms($message, $normalizedNumber);
 
-            // Store to database
             $outboundMessage = OutboundMessage::create([
-                'teacher_id' => auth()->id(),
+                'teacher_id' => $this->teacherId ?? auth()->id(),
                 'student_id' => $studentId,
                 'contact_number' => $normalizedNumber,
                 'message' => $message,
@@ -152,7 +159,6 @@ class MessageApiController extends Controller
             $failCount = 0;
             $recipients = [];
 
-            // First, collect all valid recipients to get the total count
             foreach ($students as $student) {
                 $contactNumber = $student->contact_person_contact;
                 
@@ -176,15 +182,13 @@ class MessageApiController extends Controller
                 ], 404);
             }
 
-            // Create one record for the broadcast message
             $broadcastResult = [
                 'success_count' => 0,
                 'fail_count' => 0,
                 'message_ids' => []
             ];
 
-            // Send to each parent
-            foreach ($recipients as $recipient) {
+             foreach ($recipients as $recipient) {
                 $student = $recipient['student'];
                 $normalizedNumber = $recipient['number'];
 
@@ -200,13 +204,12 @@ class MessageApiController extends Controller
                 }
             }
 
-            // Store one record for the entire broadcast
-            OutboundMessage::create([
+             OutboundMessage::create([
                 'teacher_id' => auth()->id(),
-                'student_id' => null, // No specific student for broadcast
-                'contact_number' => 'broadcast', // Indicate this is a broadcast
+                'student_id' => null,  
+                'contact_number' => 'broadcast',  
                 'message' => $message,
-                'message_id' => json_encode($broadcastResult['message_ids']), // Store all message IDs
+                'message_id' => json_encode($broadcastResult['message_ids']),  
                 'status' => $successCount > 0 ? 'sent' : 'failed',
                 'recipient_type' => 'broadcast',
                 'recipient_count' => $totalRecipients
@@ -415,10 +418,18 @@ class MessageApiController extends Controller
      */
     private function generateAttendanceMessage($student, $status, $time)
     {
-        $statusText = strtoupper($status);
+        // Determine if it's Time In or Time Out based on status
+        if (stripos($status, 'IN') !== false) {
+            $attendanceType = 'Time In';
+        } elseif (stripos($status, 'OUT') !== false) {
+            $attendanceType = 'Time Out';
+        } else {
+            $attendanceType = $status; // fallback
+        }
+        
         $timeFormatted = \Carbon\Carbon::parse($time)->format('g:i A');
         
-        return "Your child {$student->name} was marked {$statusText} today at {$timeFormatted}.";
+        return "Your child {$student->name} {$attendanceType} attendance recorded at {$timeFormatted}";
     }
 
     /**

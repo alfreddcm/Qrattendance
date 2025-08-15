@@ -422,64 +422,7 @@
         </div>
     </div>
 
-    <!-- Custom SMS Modal -->
-    <div class="modal fade" id="customSMSModal" tabindex="-1" aria-labelledby="customSMSModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="customSMSModalLabel">
-                        <i class="fas fa-sms me-2"></i>Send Custom SMS
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="customSMSForm">
-                        <input type="hidden" id="sms_student_id" name="student_id">
-                        
-                        <div class="mb-3">
-                            <label for="sms_student_name" class="form-label">Student Name</label>
-                            <input type="text" class="form-control" id="sms_student_name" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="sms_contact_number" class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="sms_contact_number" name="number" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="sms_message" class="form-label">Message <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="sms_message" name="message" rows="4" 
-                                      placeholder="Enter your custom message..." maxlength="1000" required></textarea>
-                            <div class="form-text">
-                                <span id="message-counter">0/1000</span> characters
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Quick Templates</label>
-                            <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTemplate('absent')">
-                                    Absent Today Template
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTemplate('reminder')">
-                                    General Reminder Template
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTemplate('custom')">
-                                    Custom Message Template
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="sendSMSMessage()" id="send-sms-btn">
-                        <i class="fas fa-paper-plane me-1"></i>Send SMS
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Today's Recorded Attendance -->
     <div class="row mb-4">
@@ -519,13 +462,11 @@
                                     <tr>
                                         <th style="width: 40px;">#</th>
                                         <th class="text-start">Student Name</th>
-                                        <th style="width: 120px;">Contact Number</th>
                                         <th style="width: 80px;">Status</th>
                                         <th style="width: 70px;">AM IN</th>
                                         <th style="width: 70px;">AM OUT</th>
                                         <th style="width: 70px;">PM IN</th>
                                         <th style="width: 70px;">PM OUT</th>
-                                        <th style="width: 100px;">SMS Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendance-table-body">
@@ -533,35 +474,29 @@
                                     <tr>
                                         <td>{{ $i + 1 }}</td>
                                         <td class="text-start">{{ $row['student']->name }}</td>
+                                        
                                         <td>
-                                            @if($row['student']->contact_person_contact)
-                                                <small class="text-muted">{{ $row['student']->contact_person_contact }}</small>
+                                            @php
+                                                $hasTimeIn = $row['time_in_am'] || $row['time_in_pm'];
+                                                $hasTimeOut = $row['time_out_am'] || $row['time_out_pm'];
+                                            @endphp
+                                            
+                                            @if($hasTimeIn && $hasTimeOut)
+                                                <span class="badge bg-success">Present</span>
+                                                <br><small class="badge bg-info mt-1">Complete</small>
+                                            @elseif($hasTimeIn)
+                                                <span class="badge bg-warning">Time In Only</span>
+                                            @elseif($hasTimeOut)
+                                                <span class="badge bg-secondary">Time Out Only</span>
                                             @else
-                                                <small class="text-danger">No contact</small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($row['time_in_am'] || $row['time_in_pm'])
-                                            <span class="badge bg-success">Present</span>
-                                            @else
-                                            <span class="badge bg-danger">Absent</span>
+                                                <span class="badge bg-danger">Absent</span>
                                             @endif
                                         </td>
                                         <td>{{ $row['time_in_am'] ?? '-' }}</td>
                                         <td>{{ $row['time_out_am'] ?? '-' }}</td>
                                         <td>{{ $row['time_in_pm'] ?? '-' }}</td>
                                         <td>{{ $row['time_out_pm'] ?? '-' }}</td>
-                                        <td>
-                                            @if($row['student']->contact_person_contact)
-                                                <button class="btn btn-sm btn-outline-primary" 
-                                                        onclick="sendCustomSMS('{{ $row['student']->id }}', '{{ $row['student']->name }}', '{{ $row['student']->contact_person_contact }}')"
-                                                        title="Send custom SMS">
-                                                    <i class="fas fa-sms"></i>
-                                                </button>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
+                                        
                                     </tr>
                                     @empty
                                     <tr>
@@ -578,34 +513,7 @@
         </div>
     </div>
 
-    <!-- SMS Messages History Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-history me-2"></i>SMS Messages History
-                        </h5>
-                        <button class="btn btn-light btn-sm" onclick="refreshSMSHistory()">
-                            <i class="fas fa-refresh"></i> Refresh
-                        </button>
-                        <button class="btn btn-outline-info btn-sm ms-2" onclick="testSMSGateway()">
-                            <i class="fas fa-satellite-dish"></i> Test Gateway
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="sms-history-container">
-                        <div class="text-center py-3">
-                            <i class="fas fa-spinner fa-spin"></i> Loading SMS history...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+  
     <!-- Include HTML5 QR Code Library -->
     <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -720,32 +628,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('qr-result').innerHTML = `
-                <div class="alert alert-success text-center scan-success">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <h6><strong>✅ Attendance Recorded!</strong></h6>
-                    <hr>
-                    <div class="row text-start">
-                        <div class="col-6"><strong>Name:</strong></div>
-                        <div class="col-6">${data.student.name}</div>
-                        <div class="col-6"><strong>ID No:</strong></div>
-                        <div class="col-6">${data.student.id_no}</div>
-                        <div class="col-6"><strong>Period:</strong></div>
-                        <div class="col-6"><span class="badge bg-primary">${data.time_period}</span></div>
-                        <div class="col-6"><strong>Status:</strong></div>
-                        <div class="col-6">${data.status}</div>
-                        <div class="col-6"><strong>Time:</strong></div>
-                        <div class="col-6">${data.recorded_time}</div>
-                    </div>
-                </div>
-            `;
-
+                    // Display student info with countdown timer for 5 seconds
+                    displayStudentInfoWithTimer(data);
                     playNotificationSound(true);
 
-                    // Refresh the attendance table after successful scan
+                    // Refresh the attendance table after 5 seconds
                     setTimeout(() => {
                         location.reload();
-                    }, 2000);
+                    }, 5000);
                 } else {
                     document.getElementById('qr-result').innerHTML = `
                 <div class="alert alert-danger text-center">
@@ -757,6 +647,11 @@
             `;
 
                     playNotificationSound(false);
+                    
+                    // Return to ready state after 3 seconds for error messages
+                    setTimeout(() => {
+                        resetToReadyState();
+                    }, 3000);
                 }
             })
             .catch(error => {
@@ -770,7 +665,81 @@
             </div>
         `;
                 playNotificationSound(false);
+                
+                // Return to ready state after 3 seconds for errors
+                setTimeout(() => {
+                    resetToReadyState();
+                }, 3000);
             });
+    }
+
+    // Function to display student info with countdown timer
+    function displayStudentInfoWithTimer(data) {
+        let timeLeft = 5;
+        
+        function updateDisplay() {
+            document.getElementById('qr-result').innerHTML = `
+                <div class="alert alert-success text-center scan-success">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><strong>✅ Attendance Recorded!</strong></h6>
+                        <span class="badge bg-warning text-dark fs-6" id="countdown">${timeLeft}s</span>
+                    </div>
+                    <hr>
+                    <div class="row text-start">
+                        <div class="col-6"><strong>Name:</strong></div>
+                        <div class="col-6">${data.student.name}</div>
+                        <div class="col-6"><strong>ID No:</strong></div>
+                        <div class="col-6">${data.student.id_no}</div>
+                        <div class="col-6"><strong>Section:</strong></div>
+                        <div class="col-6">${data.student.section || 'N/A'}</div>
+                        <div class="col-6"><strong>Period:</strong></div>
+                        <div class="col-6"><span class="badge bg-primary">${data.time_period}</span></div>
+                        <div class="col-6"><strong>Status:</strong></div>
+                        <div class="col-6"><span class="badge bg-success">${data.status}</span></div>
+                        <div class="col-6"><strong>Time:</strong></div>
+                        <div class="col-6">${data.recorded_time}</div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Student information will be displayed for ${timeLeft} seconds
+                        </small>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initial display
+        updateDisplay();
+
+        // Update countdown every second
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                updateDisplay();
+            } else {
+                clearInterval(countdownInterval);
+                resetToReadyState();
+            }
+        }, 1000);
+    }
+
+    // Function to reset scanner to ready state
+    function resetToReadyState() {
+        document.getElementById('qr-result').innerHTML = `
+            <div class="alert alert-info text-center">
+                <i class="fas fa-qrcode me-2"></i>
+                <strong>Ready to Scan</strong><br>
+                <small>Scan a QR code to record attendance</small>
+            </div>
+        `;
+        
+        // Clear USB scanner input
+        const usbInput = document.getElementById('usb-scanner-input');
+        if (usbInput) {
+            usbInput.value = '';
+            usbInput.focus();
+        }
     }
 
     function onScanSuccess(decodedText, decodedResult) {
@@ -845,10 +814,9 @@
         });
     }
 
-    // Bootstrap 5 Modal Event Handlers
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize QR Scanner when modal is shown
         document.getElementById('qrScannerModal').addEventListener('shown.bs.modal', function() {
+            resetToReadyState();
             setTimeout(() => {
                 initUSBScanner();
             }, 500);
@@ -966,8 +934,7 @@
                     // Close create modal first
                     bootstrap.Modal.getInstance(document.getElementById('createSessionModal')).hide();
 
-                    // Show success modal with session details
-                    const successMessage = `
+                     const successMessage = `
                 <div class="alert alert-success">
                     <h6><strong>Today's session is ready!</strong></h6>
                     <hr>
@@ -1105,258 +1072,6 @@
         );
     }
 
-    // Session status checking can be added here if needed for future features
-    // Daily sessions are now permanent links - each day gets its own unique link
-
-    // SMS Functions
-    function sendCustomSMS(studentId, studentName, contactNumber) {
-        document.getElementById('sms_student_id').value = studentId;
-        document.getElementById('sms_student_name').value = studentName;
-        document.getElementById('sms_contact_number').value = contactNumber;
-        document.getElementById('sms_message').value = '';
-        updateMessageCounter();
-        
-        var modal = new bootstrap.Modal(document.getElementById('customSMSModal'));
-        modal.show();
-    }
-
-    function useTemplate(type) {
-        const studentName = document.getElementById('sms_student_name').value;
-        const currentTime = new Date().toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit', 
-            hour12: true 
-        });
-        const currentDate = new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-        
-        let message = '';
-        
-        switch(type) {
-            case 'absent':
-                message = `Good day! This is to inform you that your child ${studentName} was marked ABSENT today (${currentDate}). Please ensure regular attendance for better academic performance.`;
-                break;
-            case 'reminder':
-                message = `Good day! This is a reminder regarding your child ${studentName}. Please contact the school if you have any questions or concerns.`;
-                break;
-            case 'custom':
-                message = `Good day! Regarding your child ${studentName}: `;
-                break;
-        }
-        
-        document.getElementById('sms_message').value = message;
-        updateMessageCounter();
-    }
-
-    function updateMessageCounter() {
-        const message = document.getElementById('sms_message').value;
-        const counter = document.getElementById('message-counter');
-        counter.textContent = `${message.length}/1000`;
-        
-        if (message.length > 900) {
-            counter.style.color = 'red';
-        } else if (message.length > 700) {
-            counter.style.color = 'orange';
-        } else {
-            counter.style.color = 'green';
-        }
-    }
-
-    // Add event listener for message counter
-    document.addEventListener('DOMContentLoaded', function() {
-        const messageTextarea = document.getElementById('sms_message');
-        if (messageTextarea) {
-            messageTextarea.addEventListener('input', updateMessageCounter);
-        }
-        
-        // Load SMS history on page load
-        refreshSMSHistory();
-    });
-
-    function sendSMSMessage() {
-        const form = document.getElementById('customSMSForm');
-        const formData = new FormData(form);
-        const sendBtn = document.getElementById('send-sms-btn');
-        
-        // Validation
-        const message = document.getElementById('sms_message').value.trim();
-        if (!message) {
-            showAlert('error', 'Please enter a message');
-            return;
-        }
-        
-        if (message.length > 1000) {
-            showAlert('error', 'Message is too long (max 1000 characters)');
-            return;
-        }
-        
-        // Disable button and show loading
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
-        
-        fetch('{{ route("teacher.send.sms") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                student_id: formData.get('student_id'),
-                number: formData.get('number'),
-                message: formData.get('message')
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showAlert('success', 'SMS sent successfully!');
-                bootstrap.Modal.getInstance(document.getElementById('customSMSModal')).hide();
-                refreshSMSHistory();
-            } else {
-                showAlert('error', data.message || 'Failed to send SMS');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'An error occurred while sending SMS');
-        })
-        .finally(() => {
-            // Reset button
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send SMS';
-        });
-    }
-
-    function refreshSMSHistory() {
-        const container = document.getElementById('sms-history-container');
-        container.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading SMS history...</div>';
-        
-        fetch('{{ route("teacher.outbound.messages") }}')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displaySMSHistory(data.messages);
-            } else {
-                container.innerHTML = '<div class="alert alert-danger">Failed to load SMS history</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            container.innerHTML = '<div class="alert alert-danger">Error loading SMS history</div>';
-        });
-    }
-
-    function displaySMSHistory(messages) {
-        const container = document.getElementById('sms-history-container');
-        
-        if (!messages.data || messages.data.length === 0) {
-            container.innerHTML = '<div class="text-center py-3 text-muted">No SMS messages found</div>';
-            return;
-        }
-        
-        let html = '<div class="table-responsive">';
-        html += '<table class="table table-sm table-hover">';
-        html += '<thead class="table-light">';
-        html += '<tr><th>Date/Time</th><th>Student</th><th>Contact</th><th>Message</th><th>Message ID</th><th>Status</th><th>Actions</th></tr>';
-        html += '</thead><tbody>';
-        
-        messages.data.forEach(message => {
-            const date = new Date(message.created_at).toLocaleString();
-            const studentName = message.student ? message.student.name : 'Unknown';
-            const status = message.status;
-            const statusBadge = status === 'sent' ? 'bg-success' : status === 'failed' ? 'bg-danger' : 'bg-warning';
-            const messageId = message.message_id || 'N/A';
-            
-            html += '<tr>';
-            html += `<td><small>${date}</small></td>`;
-            html += `<td>${studentName}</td>`;
-            html += `<td><small>${message.contact_number}</small></td>`;
-            html += `<td><small>${message.message.substring(0, 50)}${message.message.length > 50 ? '...' : ''}</small></td>`;
-            html += `<td><small>${messageId}</small></td>`;
-            html += `<td><span class="badge ${statusBadge}">${status.toUpperCase()}</span></td>`;
-            html += `<td>`;
-            if (message.message_id && status === 'sent') {
-                html += `<button class="btn btn-sm btn-outline-info" onclick="checkMessageStatus(${message.id})" title="Check Status">`;
-                html += `<i class="fas fa-sync"></i></button>`;
-            } else {
-                html += `<span class="text-muted">-</span>`;
-            }
-            html += `</td>`;
-            html += '</tr>';
-        });
-        
-        html += '</tbody></table></div>';
-        
-        // Add pagination if available
-        if (messages.links) {
-            html += '<div class="d-flex justify-content-center">';
-            html += '<small class="text-muted">Page ' + messages.current_page + ' of ' + messages.last_page + '</small>';
-            html += '</div>';
-        }
-        
-        container.innerHTML = html;
-    }
-
-    function checkMessageStatus(messageId) {
-        const statusBtn = document.querySelector(`button[onclick="checkMessageStatus(${messageId})"]`);
-        const originalText = statusBtn.innerHTML;
-        
-        statusBtn.disabled = true;
-        statusBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        
-        fetch(`{{ url('/teacher/message-status') }}/${messageId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showAlert('success', `Message status updated: ${data.delivery_status.toUpperCase()}`);
-                refreshSMSHistory();
-            } else {
-                showAlert('error', data.message || 'Failed to check status');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'Error checking message status');
-        })
-        .finally(() => {
-            statusBtn.disabled = false;
-            statusBtn.innerHTML = originalText;
-        });
-    }
-
-    function testSMSGateway() {
-        const testBtn = document.querySelector('button[onclick="testSMSGateway()"]');
-        const originalText = testBtn.innerHTML;
-        
-        testBtn.disabled = true;
-        testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
-        
-        fetch('{{ route("teacher.test.gateway") }}')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                if (data.reachable) {
-                    showAlert('success', 'SMS Gateway is reachable and working!');
-                } else {
-                    showAlert('error', 'SMS Gateway is not reachable. Please check your configuration.');
-                }
-            } else {
-                showAlert('error', data.message || 'Failed to test gateway');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'Error testing SMS gateway');
-        })
-        .finally(() => {
-            testBtn.disabled = false;
-            testBtn.innerHTML = originalText;
-        });
-    }
 
     function showAlert(type, message) {
         // Create or update an alert element

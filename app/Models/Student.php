@@ -15,7 +15,8 @@ class Student extends Model
     // Fillable fields for mass assignment
     protected $fillable = [
         'id_no', 
-        'name', 
+        'name',
+        'section', 
         'gender', 
         'age', 
         'address', 

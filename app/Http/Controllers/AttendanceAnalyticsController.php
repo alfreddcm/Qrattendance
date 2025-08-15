@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
@@ -10,20 +9,247 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
-class AttendanceAnalyticsController extends Controller
-{
+class AttendanceAnalyticsController extends Controller {
+
+    // Show dashboard with statistics charts (for @include in dashboard)
+    public function dashboardWithStatistics(Request $request)
+    {
+        $teacherId = Auth::id();
+        $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+        $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+        // Daily Attendance Trends
+        $trends = \App\Models\Attendance::selectRaw('
+                DATE(date) as attendance_date,
+                COUNT(*) as total_students,
+                COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present_students,
+                COUNT(CASE WHEN time_in_am IS NULL AND time_in_pm IS NULL THEN 1 END) as absent_students
+            ')
+            ->where('teacher_id', $teacherId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->groupBy('attendance_date')
+            ->orderBy('attendance_date')
+            ->get();
+        $trendLabels = $trends->pluck('attendance_date')->toArray();
+        $trendPresent = $trends->pluck('present_students')->toArray();
+        $trendAbsent = $trends->pluck('absent_students')->toArray();
+        $attendanceTrendsChart = new \App\Charts\AttendanceTrendsChart($trendLabels, $trendPresent, $trendAbsent);
+
+        // Time-in & Time-out Patterns
+        $patterns = \App\Models\Attendance::selectRaw('
+                DATE(date) as attendance_date,
+                COUNT(time_in_am) as am_in,
+                COUNT(time_out_pm) as pm_out
+            ')
+            ->where('teacher_id', $teacherId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->groupBy('attendance_date')
+            ->orderBy('attendance_date')
+            ->get();
+        $patternLabels = $patterns->pluck('attendance_date')->toArray();
+        $patternIn = $patterns->pluck('am_in')->toArray();
+        $patternOut = $patterns->pluck('pm_out')->toArray();
+        $timePatternsChart = new \App\Charts\TimePatternsChart($patternLabels, $patternIn, $patternOut);
+
+        // Absenteeism Rates
+        $rates = $this->absenteeismRates($request)->getData();
+        $absenteeismLabels = collect($rates)->pluck('student_id')->toArray();
+        $absenteeismPercentages = collect($rates)->pluck('attendance_percentage')->toArray();
+        $absenteeismRatesChart = new \App\Charts\AbsenteeismRatesChart($absenteeismLabels, $absenteeismPercentages);
+
+        // Weekly/Monthly Attendance Trends
+        $seasonal = $this->seasonalTrends($request)->getData();
+        $weekly = isset($seasonal->weekly) ? $seasonal->weekly : [];
+        $monthly = isset($seasonal->monthly) ? $seasonal->monthly : [];
+        $seasonalLabels = collect($weekly)->pluck('week')->toArray();
+        $weeklyCounts = collect($weekly)->pluck('attendance_count')->toArray();
+        $monthlyLabels = collect($monthly)->pluck('month')->toArray();
+        $monthlyCounts = collect($monthly)->pluck('attendance_count')->toArray();
+        $seasonalTrendsChart = new \App\Charts\SeasonalTrendsChart($seasonalLabels, $weeklyCounts, $monthlyCounts);
+
+        // Students Attendance Forecast (example: use first student)
+        $studentId = $request->get('student_id');
+        if (!$studentId) {
+            $studentId = \App\Models\Student::where('user_id', $teacherId)->value('id');
+        }
+        $forecastData = $this->studentForecast(new Request(['student_id' => $studentId, 'start_date' => $startDate, 'end_date' => $endDate]))->getData();
+        $forecastLabels = collect($forecastData)->pluck('date')->toArray();
+        $forecastAttendance = collect($forecastData)->pluck('time_in_am')->toArray();
+        $studentForecastChart = new \App\Charts\StudentForecastChart($forecastLabels, $forecastAttendance);
+
+        // Subject Attendance
+        $subjectData = $this->subjectAttendance($request)->getData();
+        $subjectLabels = collect($subjectData)->pluck('subject_code')->toArray();
+        $subjectPresent = collect($subjectData)->pluck('students_present')->toArray();
+        $subjectAttendanceChart = new \App\Charts\SubjectAttendanceChart($subjectLabels, $subjectPresent);
+
+         return view('teacher.statistics', compact(
+            'attendanceTrendsChart',
+            'timePatternsChart',
+            'absenteeismRatesChart',
+            'seasonalTrendsChart',
+            'studentForecastChart',
+            'subjectAttendanceChart'
+        ));
+    }
+
+     public function statistics(Request $request)
+    {
+    $chartData = $this->getChartData($request);
+
+    // Attendance Forecasting (simple moving average for next 7 days)
+    $teacherId = \Auth::id();
+    $endDate = $request->get('end_date', \Carbon\Carbon::now()->toDateString());
+    $attendance = \App\Models\Attendance::selectRaw('DATE(date) as attendance_date, COUNT(DISTINCT student_id) as present_count')
+        ->where('teacher_id', $teacherId)
+        ->whereBetween('date', [\Carbon\Carbon::now()->subDays(14), $endDate])
+        ->groupBy('attendance_date')
+        ->orderBy('attendance_date')
+        ->get();
+    $labels = $attendance->pluck('attendance_date')->toArray();
+    $presentCounts = $attendance->pluck('present_count')->toArray();
+    $average = count($presentCounts) ? array_sum($presentCounts) / count($presentCounts) : 0;
+    $forecastLabels = [];
+    $forecastData = [];
+    for ($i = 1; $i <= 7; $i++) {
+        $date = \Carbon\Carbon::parse($endDate)->addDays($i)->toDateString();
+        $forecastLabels[] = $date;
+        $forecastData[] = round($average, 2);
+    }
+    $attendanceForecastChart = new \App\Charts\AttendanceForecastChart(array_merge($labels, $forecastLabels), array_merge($presentCounts, $forecastData));
+
+    $chartData['attendanceForecastChart'] = $attendanceForecastChart;
+    return view('teacher.statistics', $chartData);
+}
+
     /**
-     * Display today's attendance for teacher's students with session management
+     * Get chart objects as array for use in dashboard or statistics view
      */
+    public function getChartData(Request $request)
+    {
+        $teacherId = Auth::id();
+        $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+        $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+        // Log the parameters for debugging
+        \Log::info('Getting chart data', [
+            'teacher_id' => $teacherId,
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ]);
+
+        // Daily Attendance Trends
+        $trends = \App\Models\Attendance::selectRaw('
+                DATE(date) as attendance_date,
+                COUNT(*) as total_students,
+                COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present_students,
+                COUNT(CASE WHEN time_in_am IS NULL AND time_in_pm IS NULL THEN 1 END) as absent_students
+            ')
+            ->where('teacher_id', $teacherId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->groupBy('attendance_date')
+            ->orderBy('attendance_date')
+            ->get();
+        
+        \Log::info('Trends data', ['count' => $trends->count(), 'data' => $trends->toArray()]);
+        
+        $trendLabels = $trends->pluck('attendance_date')->toArray();
+        $trendPresent = $trends->pluck('present_students')->toArray();
+        $trendAbsent = $trends->pluck('absent_students')->toArray();
+        $attendanceTrendsChart = new \App\Charts\AttendanceTrendsChart($trendLabels, $trendPresent, $trendAbsent);
+
+        // Time-in & Time-out Patterns
+        $patterns = \App\Models\Attendance::selectRaw('
+                DATE(date) as attendance_date,
+                COUNT(time_in_am) as am_in,
+                COUNT(time_out_pm) as pm_out
+            ')
+            ->where('teacher_id', $teacherId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->groupBy('attendance_date')
+            ->orderBy('attendance_date')
+            ->get();
+        
+        \Log::info('Patterns data', ['count' => $patterns->count(), 'data' => $patterns->toArray()]);
+        
+        $patternLabels = $patterns->pluck('attendance_date')->toArray();
+        $patternIn = $patterns->pluck('am_in')->toArray();
+        $patternOut = $patterns->pluck('pm_out')->toArray();
+        $timePatternsChart = new \App\Charts\TimePatternsChart($patternLabels, $patternIn, $patternOut);
+
+        // Absenteeism Rates
+        $rates = $this->absenteeismRates($request)->getData();
+        $absenteeismLabels = collect($rates)->pluck('student_id')->toArray();
+        $absenteeismPercentages = collect($rates)->pluck('attendance_percentage')->toArray();
+        $absenteeismRatesChart = new \App\Charts\AbsenteeismRatesChart($absenteeismLabels, $absenteeismPercentages);
+
+        // Weekly/Monthly Attendance Trends
+        $seasonal = $this->seasonalTrends($request)->getData();
+        $weekly = isset($seasonal->weekly) ? $seasonal->weekly : [];
+        $monthly = isset($seasonal->monthly) ? $seasonal->monthly : [];
+        $seasonalLabels = collect($weekly)->pluck('week')->toArray();
+        $weeklyCounts = collect($weekly)->pluck('attendance_count')->toArray();
+        $monthlyLabels = collect($monthly)->pluck('month')->toArray();
+        $monthlyCounts = collect($monthly)->pluck('attendance_count')->toArray();
+        $seasonalTrendsChart = new \App\Charts\SeasonalTrendsChart($seasonalLabels, $weeklyCounts, $monthlyCounts);
+
+        // Students Attendance Forecast (example: use first student)
+        $studentId = $request->get('student_id');
+        if (!$studentId) {
+            $studentId = \App\Models\Student::where('user_id', $teacherId)->value('id');
+        }
+        $forecastData = $this->studentForecast(new Request(['student_id' => $studentId, 'start_date' => $startDate, 'end_date' => $endDate]))->getData();
+        $forecastLabels = collect($forecastData)->pluck('date')->toArray();
+        $forecastAttendance = collect($forecastData)->pluck('time_in_am')->toArray();
+        $studentForecastChart = new \App\Charts\StudentForecastChart($forecastLabels, $forecastAttendance);
+
+        // Subject Attendance
+        $subjectData = $this->subjectAttendance($request)->getData();
+        $subjectLabels = collect($subjectData)->pluck('subject_code')->toArray();
+        $subjectPresent = collect($subjectData)->pluck('students_present')->toArray();
+        $subjectAttendanceChart = new \App\Charts\SubjectAttendanceChart($subjectLabels, $subjectPresent);
+
+        return [
+            'attendanceTrendsChart' => $attendanceTrendsChart,
+            'timePatternsChart' => $timePatternsChart,
+            'absenteeismRatesChart' => $absenteeismRatesChart,
+            'seasonalTrendsChart' => $seasonalTrendsChart,
+            'studentForecastChart' => $studentForecastChart,
+            'subjectAttendanceChart' => $subjectAttendanceChart,
+        ];
+    }
+
+    public function getOverallStatistics(Request $request)
+    {
+        $absenteeismRates = $this->absenteeismRates($request)->getData();
+
+        $seasonal = $this->seasonalTrends($request)->getData();
+        $weekly = isset($seasonal->weekly) ? $seasonal->weekly : [];
+        $monthly = isset($seasonal->monthly) ? $seasonal->monthly : [];
+
+        $subjectAttendance = $this->subjectAttendance($request)->getData();
+
+        $responseData = [
+            'absenteeismRates' => $absenteeismRates,
+            'weekly' => $weekly,
+            'monthly' => $monthly,
+            'subjectAttendance' => $subjectAttendance
+        ];
+
+        \Log::debug('getOverallStatistics response data', $responseData);
+
+        return response()->json($responseData);
+    }
+
     public function attendanceToday(Request $request)
     {
-        $date = now()->toDateString(); // Always use today's date
+        $date = now()->toDateString(); 
         $search = $request->get('search', '');
 
         $currentSemester = Semester::where('status', 'active')->first() ?? Semester::latest()->first();
 
-        // Get session data
         $activeSessions = AttendanceSession::with('semester')
                                          ->where('teacher_id', Auth::id())
                                          ->active()
@@ -82,242 +308,144 @@ class AttendanceAnalyticsController extends Controller
         ]);
     }
 
-    public function getOverallStatistics(Request $request)
-    {
-        $semesterId = $request->get('semester_id');
-        $dateRange = $request->get('date_range', '30'); 
-        
-        $endDate = Carbon::now();
-        $startDate = $endDate->copy()->subDays($dateRange);
-        
-        $query = Attendance::with('student')
-            ->whereHas('student', function($q) {
-                $q->where('user_id', Auth::id());
-            })
-            ->whereBetween('date', [$startDate, $endDate]);
-            
-        if ($semesterId) {
-            $query->where('semester_id', $semesterId);
+    public function dailyTrends(Request $request)
+        {
+            $teacherId = Auth::id();
+            $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+            $trends = Attendance::selectRaw('
+                    DATE(date) as attendance_date,
+                    COUNT(*) as total_students,
+                    COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present_students,
+                    COUNT(CASE WHEN time_in_am IS NULL AND time_in_pm IS NULL THEN 1 END) as absent_students
+                ')
+                ->where('teacher_id', $teacherId)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->groupBy('attendance_date')
+                ->orderBy('attendance_date')
+                ->get();
+
+            Log::info('dailyTrends fetched count', ['count' => $trends->count()]);
+            return response()->json($trends);
         }
-        
-        $attendances = $query->get();
-        $totalStudents = Student::where('user_id', Auth::id())->when($semesterId, function($q) use ($semesterId) {
-            return $q->where('semester_id', $semesterId);
-        })->count();
-        
-        $statistics = [
-            'total_students' => $totalStudents,
-            'total_attendance_records' => $attendances->count(),
-            'attendance_rate' => $this->calculateAttendanceRate($attendances, $totalStudents, $dateRange),
-            'punctuality_rate' => $this->calculatePunctualityRate($attendances),
-            'daily_average' => $this->calculateDailyAverage($attendances),
-            'gender_distribution' => $this->getGenderDistribution($attendances),
-            'late_arrivals' => $this->getLateArrivals($attendances),
-            'early_departures' => $this->getEarlyDepartures($attendances),
-        ];
-        
-        return response()->json($statistics);
-    }
 
-    public function getDailyTrends(Request $request)
-    {
-        $semesterId = $request->get('semester_id');
-        $dateRange = $request->get('date_range', '30');
-        
-        // Calculate start and end dates based on date range
-        $endDate = Carbon::now()->toDateString();
-        $startDate = Carbon::now()->subDays((int)$dateRange)->toDateString();
-        
-        $query = Attendance::selectRaw('
-            DATE(date) as attendance_date,
-            COUNT(*) as total_attendances,
-            COUNT(CASE WHEN time_in_am IS NOT NULL THEN 1 END) as morning_attendances,
-            COUNT(CASE WHEN time_in_pm IS NOT NULL THEN 1 END) as afternoon_attendances,
-            COUNT(CASE WHEN time_in_am IS NOT NULL AND time_out_am IS NOT NULL 
-                      AND time_in_pm IS NOT NULL AND time_out_pm IS NOT NULL THEN 1 END) as full_day_attendances
-        ')
-        ->whereHas('student', function($q) {
-            $q->where('user_id', Auth::id());
-        })
-        ->whereBetween('date', [$startDate, $endDate])
-        ->groupBy('attendance_date')
-        ->orderBy('attendance_date');
-        
-        if ($semesterId) {
-            $query->where('semester_id', $semesterId);
+        // Time-in and Time-out Patterns
+        public function timePatterns(Request $request)
+        {
+            $teacherId = Auth::id();
+            $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+            $patterns = Attendance::select('student_id', 'date', 'time_in_am', 'time_out_pm')
+                ->where('teacher_id', $teacherId)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->get();
+
+            Log::info('timePatterns fetched count', ['count' => $patterns->count()]);
+            return response()->json($patterns);
         }
-        
-        $trends = $query->get();
-        
-        return response()->json($trends);
-    }
 
-    public function getStudentPerformance(Request $request)
-    {
-        $semesterId = $request->get('semester_id');
-        $limit = $request->get('limit', 10);
-        $dateRange = $request->get('date_range', '30');
-        
-        $endDate = Carbon::now();
-        $startDate = $endDate->copy()->subDays($dateRange);
-        
-        $query = Student::with(['semester'])
-            ->where('students.user_id', Auth::id())
-            ->leftJoin('attendances', 'students.id', '=', 'attendances.student_id')
-            ->selectRaw('
-                students.id,
-                students.id_no,
-                students.name,
-                students.gender,
-                COUNT(attendances.id) as total_attendances,
-                COUNT(CASE WHEN attendances.time_in_am IS NOT NULL THEN 1 END) as morning_attendances,
-                COUNT(CASE WHEN attendances.time_in_pm IS NOT NULL THEN 1 END) as afternoon_attendances,
-                COUNT(CASE WHEN attendances.time_in_am IS NOT NULL AND attendances.time_out_am IS NOT NULL 
-                          AND attendances.time_in_pm IS NOT NULL AND attendances.time_out_pm IS NOT NULL THEN 1 END) as full_day_attendances,
-                AVG(CASE WHEN attendances.time_in_am IS NOT NULL THEN 1 ELSE 0 END) * 100 as attendance_rate
-            ')
-            ->whereBetween('attendances.date', [$startDate, $endDate])
-            ->groupBy('students.id', 'students.id_no', 'students.name', 'students.gender')
-            ->orderBy('attendance_rate', 'desc')
-            ->limit($limit);
-        
-        if ($semesterId) {
-            $query->where('students.semester_id', $semesterId);
+        // Absenteeism Rates
+        public function absenteeismRates(Request $request)
+        {
+            $teacherId = Auth::id();
+            $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+            $students = Student::where('user_id', $teacherId)->get();
+            $rates = [];
+            foreach ($students as $student) {
+                $totalClasses = Attendance::where('student_id', $student->id)
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->count();
+                $attended = Attendance::where('student_id', $student->id)
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->where(function($q){
+                        $q->whereNotNull('time_in_am')->orWhereNotNull('time_in_pm');
+                    })
+                    ->count();
+                $rates[] = [
+                    'student_id' => $student->id,
+                    'total_classes' => $totalClasses,
+                    'classes_attended' => $attended,
+                    'attendance_percentage' => $totalClasses ? round(($attended/$totalClasses)*100,2) : 0
+                ];
+            }
+            Log::info('absenteeismRates fetched count', ['count' => count($rates)]);
+            return response()->json($rates);
         }
-        
-        $performance = $query->get();
-        
-        return response()->json($performance);
-    }
 
-    public function getAttendancePatterns(Request $request)
-    {
-        $semesterId = $request->get('semester_id');
-        $dateRange = $request->get('date_range', '30');
-        
-        // Calculate start and end dates based on date range
-        $endDate = Carbon::now()->toDateString();
-        $startDate = Carbon::now()->subDays((int)$dateRange)->toDateString();
-        
-        $query = Attendance::selectRaw('
-            DAYNAME(date) as day_name,
-            DAYOFWEEK(date) as day_number,
-            COUNT(*) as total_attendances,
-            COUNT(CASE WHEN time_in_am IS NOT NULL THEN 1 END) as morning_count,
-            COUNT(CASE WHEN time_in_pm IS NOT NULL THEN 1 END) as afternoon_count,
-            AVG(CASE WHEN time_in_am IS NOT NULL THEN 1 ELSE 0 END) * 100 as morning_rate,
-            AVG(CASE WHEN time_in_pm IS NOT NULL THEN 1 ELSE 0 END) * 100 as afternoon_rate
-        ')
-        ->whereHas('student', function($q) {
-            $q->where('user_id', Auth::id());
-        })
-        ->whereBetween('date', [$startDate, $endDate])
-        ->groupBy('day_name', 'day_number')
-        ->orderBy('day_number');
-        
-        if ($semesterId) {
-            $query->where('semester_id', $semesterId);
+        // Subject/Class Attendance
+        public function subjectAttendance(Request $request)
+        {
+            $teacherId = Auth::id();
+            $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+            $attendance = Attendance::selectRaw('
+                    users.section_name as subject_code, DATE(attendances.date) as attendance_date, COUNT(DISTINCT attendances.student_id) as students_present
+                ')
+                ->join('users', 'attendances.teacher_id', '=', 'users.id')
+                ->where('attendances.teacher_id', $teacherId)
+                ->whereBetween('attendances.date', [$startDate, $endDate])
+                ->where(function($q){
+                    $q->whereNotNull('attendances.time_in_am')->orWhereNotNull('attendances.time_in_pm');
+                })
+                ->groupBy('users.section_name', 'attendance_date')
+                ->orderBy('attendance_date')
+                ->get();
+
+            Log::info('subjectAttendance fetched count', ['count' => $attendance->count()]);
+            return response()->json($attendance);
         }
-        
-        $patterns = $query->get();
-        
-        return response()->json($patterns);
-    }
 
-    public function getTimeDistribution(Request $request)
-    {
-        $semesterId = $request->get('semester_id');
-        $dateRange = $request->get('date_range', '30');
-        
-        // Calculate start and end dates based on date range
-        $endDate = Carbon::now()->toDateString();
-        $startDate = Carbon::now()->subDays((int)$dateRange)->toDateString();
-        
-        $query = Attendance::selectRaw('
-            HOUR(time_in_am) as hour,
-            COUNT(*) as count,
-            "morning" as session
-        ')
-        ->whereHas('student', function($q) {
-            $q->where('user_id', Auth::id());
-        })
-        ->whereBetween('date', [$startDate, $endDate])
-        ->whereNotNull('time_in_am')
-        ->groupBy('hour')
-        ->unionAll(
-            Attendance::selectRaw('
-                HOUR(time_in_pm) as hour,
-                COUNT(*) as count,
-                "afternoon" as session
-            ')
-            ->whereHas('student', function($q) {
-                $q->where('user_id', Auth::id());
-            })
-            ->whereBetween('date', [$startDate, $endDate])
-            ->whereNotNull('time_in_pm')
-            ->groupBy('hour')
-        );
-        
-        if ($semesterId) {
-            $query->where('semester_id', $semesterId);
+        // Weekly/Monthly Attendance Trends
+        public function seasonalTrends(Request $request)
+        {
+            $teacherId = Auth::id();
+            $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+            $weekly = Attendance::selectRaw('
+                    YEARWEEK(date, 1) as week, COUNT(*) as attendance_count
+                ')
+                ->where('teacher_id', $teacherId)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->groupBy('week')
+                ->orderBy('week')
+                ->get();
+
+            $monthly = Attendance::selectRaw('
+                    DATE_FORMAT(date, "%Y-%m") as month, COUNT(*) as attendance_count
+                ')
+                ->where('teacher_id', $teacherId)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            Log::info('seasonalTrends fetched count', ['weekly' => $weekly->count(), 'monthly' => $monthly->count()]);
+            return response()->json(['weekly' => $weekly, 'monthly' => $monthly]);
         }
-        
-        $distribution = $query->get();
-        
-        return response()->json($distribution);
-    }
 
-    private function calculateAttendanceRate($attendances, $totalStudents, $dateRange)
-    {
-        if ($totalStudents == 0) return 0;
-        
-        $expectedAttendances = $totalStudents * $dateRange;
-        $actualAttendances = $attendances->count();
-        
-        return round(($actualAttendances / $expectedAttendances) * 100, 2);
-    }
+        // Individual Student Attendance Forecast
+        public function studentForecast(Request $request)
+        {
+            $teacherId = Auth::id();
+            $studentId = $request->get('student_id');
+            $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
-    private function calculatePunctualityRate($attendances)
-    {
-        $totalMorningAttendances = $attendances->whereNotNull('time_in_am')->count();
-        if ($totalMorningAttendances == 0) return 0;
-        
-        $punctualAttendances = $attendances->filter(function($attendance) {
-            return $attendance->time_in_am && Carbon::parse($attendance->time_in_am)->format('H:i') <= '08:00';
-        })->count();
-        
-        return round(($punctualAttendances / $totalMorningAttendances) * 100, 2);
-    }
+            $forecast = Attendance::select('student_id', 'date', 'time_in_am', 'time_out_pm')
+                ->where('teacher_id', $teacherId)
+                ->where('student_id', $studentId)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->orderBy('date')
+                ->get();
 
-    private function calculateDailyAverage($attendances)
-    {
-        $dailyAttendances = $attendances->groupBy('date');
-        if ($dailyAttendances->count() == 0) return 0;
-        
-        $totalDays = $dailyAttendances->count();
-        $totalAttendances = $attendances->count();
-        
-        return round($totalAttendances / $totalDays, 2);
-    }
-
-    private function getGenderDistribution($attendances)
-    {
-        return $attendances->groupBy('student.gender')->map(function($group) {
-            return $group->count();
-        });
-    }
-
-    private function getLateArrivals($attendances)
-    {
-        return $attendances->filter(function($attendance) {
-            return $attendance->time_in_am && Carbon::parse($attendance->time_in_am)->format('H:i') > '08:00';
-        })->count();
-    }
-
-    private function getEarlyDepartures($attendances)
-    {
-        return $attendances->filter(function($attendance) {
-            return $attendance->time_out_pm && Carbon::parse($attendance->time_out_pm)->format('H:i') < '16:00';
-        })->count();
-    }
+            Log::info('studentForecast fetched count', ['count' => $forecast->count()]);
+            return response()->json($forecast);
+        }
+    
 }

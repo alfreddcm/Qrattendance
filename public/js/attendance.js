@@ -7,6 +7,8 @@ let currentStudentData = null;
 let sessionCheckInterval = null;
 let currentPeriodStatus = null;
 
+let amTimeInStart, amTimeInEnd, pmTimeOutStart, pmTimeOutEnd;
+
  document.addEventListener('DOMContentLoaded', function() {
     console.log('Page loaded, session token:', window.sessionToken);
     updateDateTime();
@@ -147,13 +149,13 @@ function handlePeriodChange(periodInfo) {
         playNotificationSound(true);
         
         setTimeout(() => {
-            resetToWaitingState();
+            resetToMaterialWaitingState();
         }, 5000);  
     } else if (!periodInfo.allowed && currentPeriodStatus !== null) {
         showInlineStatus(`🔴 Recording period has ended.`, 'warning');
         
         setTimeout(() => {
-            resetToWaitingState();
+            resetToMaterialWaitingState();
         }, 5000);  
     }
 }
@@ -317,16 +319,14 @@ function stopScanning() {
     }
     showInlineStatus('Webcam scanner stopped', 'info');
     setTimeout(() => {
-        resetToWaitingState();
+        resetToMaterialWaitingState();
     }, 2000);
 }
 
 
-// QR Code Processing with Material Design Logic
 async function processQRCode(qrData, scannerType) {
     console.log('Processing QR Code:', qrData, 'from', scannerType);
     
-    // Duplicate detection
     const now = Date.now();
     const timeSinceLastScan = now - (window.lastScanTime || 0);
     const isDuplicateWithinWindow = (window.lastScannedCode === qrData && timeSinceLastScan < 3000);
@@ -347,7 +347,6 @@ async function processQRCode(qrData, scannerType) {
             throw new Error('QR code too short or empty');
         }
 
-        // Parse QR Data: Extract student->id_no, student->name, student->teacher_id
         const parsedData = parseQRCodeData(qrData.trim());
         if (!parsedData) {
             throw new Error('Invalid QR code format');
@@ -398,7 +397,23 @@ async function processQRCode(qrData, scannerType) {
         if (result.success) {
             recordMaterialAttendance(parsedData, attendanceType, result);
             showMaterialSnackbar(`✅ ${attendanceType} recorded successfully!`, 'success');
+            
+            // Show success popup with student details
+            showSuccessPopup(result.student || parsedData, attendanceType, result.recorded_time);
         } else {
+            // Even on failure, show student information if available (e.g., outside period)
+            if (result.student) {
+                console.log('Student data received on failure:', result.student);
+                // Update only the status in the existing card (avoid redundant population)
+                const statusElement = document.getElementById('material-status');
+                if (statusElement) {
+                    statusElement.textContent = result.status || 'Outside recording hours';
+                }
+                // Update info cards below with the student data (only if different from parsed data)
+                if (result.student.name !== parsedData.name || result.student.section !== parsedData.section) {
+                    updateInfoCards(result.student, result.current_time);
+                }
+            }
             showMaterialSnackbar(`❌ ${result.message || 'Recording failed'}`, 'error');
         }
         
@@ -415,25 +430,20 @@ async function processQRCode(qrData, scannerType) {
     }
 }
 
-// Material Design Helper Functions
 
-// Parse QR Code Data: Extract student->id_no, student->name, student->teacher_id
 function parseQRCodeData(qrData) {
-    // First check if this is the new stud_code format (e.g., "12345_ABCDEFGHIJ")
     if (qrData.includes('_') && qrData.length >= 5) {
-        // New format: just the stud_code, we'll let the backend handle the lookup
         return {
             stud_code: qrData,
-            student_id: qrData.split('_')[0], // Extract the ID part for display
+            student_id: qrData.split('_')[0], 
             id_no: qrData.split('_')[0],
-            name: 'Student ' + qrData.split('_')[0], // Temporary name until backend lookup
+            name: 'Student ' + qrData.split('_')[0],
             teacher_id: null,
             section: 'Loading...'
         };
     }
     
     try {
-        // Try JSON parsing (legacy format)
         const jsonData = JSON.parse(qrData);
         if (jsonData.student_id) {
             return {
@@ -445,7 +455,6 @@ function parseQRCodeData(qrData) {
             };
         }
     } catch (e) {
-        // Try parsing as delimited string (fallback)
         const parts = qrData.split('|');
         if (parts.length >= 3) {
             return {
@@ -460,96 +469,85 @@ function parseQRCodeData(qrData) {
     return null;
 }
 
-// Determine Attendance Type based on current period and previous records
-function determineAttendanceType(parsedData, timeValidation) {
-    // First, try to determine based on current time period
+    fetch('/api/semester/time-sessions')
+    .then(response => response.json())
+    .then(data => {
+        amTimeInStart = toMinutes(data.am_time_in_start);
+        amTimeInEnd = toMinutes(data.am_time_in_end);
+        pmTimeOutStart = toMinutes(data.pm_time_out_start);
+        pmTimeOutEnd = toMinutes(data.pm_time_out_end);
+    });
+
+    function toMinutes(timeStr) {
+    const [h, m] = timeStr.split(':');
+    return parseInt(h) * 60 + parseInt(m);
+    }
+
+
+ function determineAttendanceType(parsedData, timeValidation) {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinutes = now.getMinutes();
     const currentTimeInMinutes = currentHour * 60 + currentMinutes;
     
-    // Period ranges based on semester settings (convert to minutes for comparison)
-    const amTimeInStart = 7 * 60 + 31;   // 07:31 = 451 minutes
-    const amTimeInEnd = 8 * 60 + 35;     // 08:35 = 515 minutes
-    const pmTimeOutStart = 12 * 60 + 30; // 12:30 = 750 minutes
-    const pmTimeOutEnd = 17 * 60 + 31;   // 17:31 = 1051 minutes
-    
-    // Determine based on current time period
     if (currentTimeInMinutes >= amTimeInStart && currentTimeInMinutes <= amTimeInEnd) {
-        // We're in AM Time In period - default to Time In, but check if student already has Time In
-        return getNextAttendanceTypeForStudent(parsedData, 'Time In');
+         return getNextAttendanceTypeForStudent(parsedData, 'Time In');
     } else if (currentTimeInMinutes >= pmTimeOutStart && currentTimeInMinutes <= pmTimeOutEnd) {
-        // We're in PM Time Out period - default to Time Out, but check if student already has Time Out
-        return getNextAttendanceTypeForStudent(parsedData, 'Time Out');
+         return getNextAttendanceTypeForStudent(parsedData, 'Time Out');
     }
     
-    // Fallback: check previous records to determine next action
-    return getNextAttendanceTypeForStudent(parsedData, null);
+     return getNextAttendanceTypeForStudent(parsedData, null);
 }
 
-// Helper function to get next attendance type based on student's recent records
-function getNextAttendanceTypeForStudent(parsedData, defaultType) {
-    // Get recent attendance records from the displayed list (both material and legacy records)
-    const attendanceList = document.getElementById('attendance-list');
+ function getNextAttendanceTypeForStudent(parsedData, defaultType) {
+     const attendanceList = document.getElementById('attendance-list');
     const recentRecords = attendanceList ? attendanceList.querySelectorAll('.material-attendance-record, .attendance-record') : [];
     
-    // Look for the most recent record of this student
-    let lastAttendanceType = null;
+     let lastAttendanceType = null;
     for (const record of recentRecords) {
         const recordName = record.querySelector('.record-name')?.textContent;
         const recordId = record.querySelector('.record-id')?.textContent;
         
         if (recordName === parsedData.name || recordId?.includes(parsedData.id_no)) {
-            // Look for both material and legacy badge classes
-            const badge = record.querySelector('.time-in-badge, .time-out-badge, .time-badge');
+             const badge = record.querySelector('.time-in-badge, .time-out-badge, .time-badge');
             if (badge) {
                 let badgeText = badge.textContent.trim();
-                // Normalize badge text - if it's just a time, check if there's a time-out-badge
-                if (record.querySelector('.time-out-badge')) {
+                 if (record.querySelector('.time-out-badge')) {
                     lastAttendanceType = 'Time Out';
                 } else if (badgeText.includes('Time Out')) {
                     lastAttendanceType = 'Time Out';
                 } else if (badgeText.includes('Time In') || record.querySelector('.time-badge')) {
                     lastAttendanceType = 'Time In';
                 }
-                break; // Found the most recent record
+                break;  
             }
         }
     }
     
-    // If we have a default type based on current period, use it unless there's a conflict
-    if (defaultType) {
-        // If default is Time In and student already has Time In, switch to Time Out
-        if (defaultType === 'Time In' && lastAttendanceType === 'Time In') {
+     if (defaultType) {
+         if (defaultType === 'Time In' && lastAttendanceType === 'Time In') {
             return 'Time Out';
         }
-        // If default is Time Out and student already has Time Out, switch to Time In
-        if (defaultType === 'Time Out' && lastAttendanceType === 'Time Out') {
+         if (defaultType === 'Time Out' && lastAttendanceType === 'Time Out') {
             return 'Time In';
         }
-        // Otherwise use the default for this period
-        return defaultType;
+         return defaultType;
     }
     
-    // No default type, determine based on last attendance
-    if (lastAttendanceType === 'Time In') {
+     if (lastAttendanceType === 'Time In') {
         return 'Time Out';
     } else {
-        // If last was Time Out or no previous record, next is Time In
-        return 'Time In';
+         return 'Time In';
     }
 }
 
-// Validate Session Time based on predefined session hours
-function validateSessionTime() {
+ function validateSessionTime() {
     const now = new Date();
     const currentTime = now.getHours() * 100 + now.getMinutes(); // Convert to HHMM format
     
-    // Get current period from global status
-    const periodInfo = currentPeriodStatus || {};
+     const periodInfo = currentPeriodStatus || {};
     
-    // Define session hours (can be configured)
-    const sessionHours = {
+     const sessionHours = {
         morning: { start: 700, end: 1200 }, // 7:00 AM - 12:00 PM
         afternoon: { start: 1300, end: 1800 } // 1:00 PM - 6:00 PM
     };
@@ -585,8 +583,7 @@ function calculateTimeRemaining(currentTime, isWithinMorning, isWithinAfternoon)
     return '0m';
 }
 
-// Display Material Design Student Card
-function displayMaterialStudentCard(parsedData) {
+ function displayMaterialStudentCard(parsedData) {
     const cardContainer = document.getElementById('material-student-card') || createMaterialCardContainer();
     
     cardContainer.innerHTML = `
@@ -628,12 +625,10 @@ function displayMaterialStudentCard(parsedData) {
         </div>
     `;
     
-    // Load student photo after card is created
-    loadStudentPhoto(parsedData);
+     loadStudentPhoto(parsedData);
 }
 
-// Update Student Photo in Card from Server Data
-function updateStudentPhotoInCard(studentData) {
+ function updateStudentPhotoInCard(studentData) {
     const photoContainer = document.getElementById('material-student-photo');
     if (!photoContainer || !studentData.picture) return;
     
@@ -645,25 +640,21 @@ function updateStudentPhotoInCard(studentData) {
     };
     
     img.onerror = function() {
-        // Keep existing placeholder if photo fails to load
-        console.log('Failed to load student photo from server data:', studentData.picture);
+         console.log('Failed to load student photo from server data:', studentData.picture);
     };
     
     img.src = `/storage/student_pictures/${studentData.picture}`;
 }
 
-// Update Material Card with Time Validation
-function updateMaterialCardWithTime(parsedData, timeValidation, attendanceType) {
+ function updateMaterialCardWithTime(parsedData, timeValidation, attendanceType) {
     const statusElement = document.getElementById('material-status');
     const cardElement = document.querySelector('.material-card');
     
-    // Always show as valid since we allow both Time In and Time Out
-    statusElement.innerHTML = `<span class="${attendanceType === 'Time In' ? 'time-in-badge' : 'time-out-badge'}">${attendanceType}</span>`;
+     statusElement.innerHTML = `<span class="${attendanceType === 'Time In' ? 'time-in-badge' : 'time-out-badge'}">${attendanceType}</span>`;
     statusElement.className = 'value valid-time';
     cardElement.className = 'material-card valid';
     
-    // Add time info
-    const timeInfo = document.createElement('div');
+     const timeInfo = document.createElement('div');
     timeInfo.className = 'info-row';
     timeInfo.innerHTML = `
         <span class="label">Time:</span>
@@ -672,32 +663,26 @@ function updateMaterialCardWithTime(parsedData, timeValidation, attendanceType) 
     document.querySelector('.student-info').appendChild(timeInfo);
 }
 
-// Record Material Design Attendance
-function recordMaterialAttendance(parsedData, attendanceType, result) {
-    // Update the card to show recording status
-    const cardElement = document.querySelector('.material-card');
+ function recordMaterialAttendance(parsedData, attendanceType, result) {
+     const cardElement = document.querySelector('.material-card');
     cardElement.className = 'material-card recording';
     
     const statusElement = document.getElementById('material-status');
     statusElement.innerHTML = `<span class="recording-badge">Recording...</span>`;
     
-    // Simulate recording animation
-    setTimeout(() => {
+     setTimeout(() => {
         cardElement.className = 'material-card recorded';
         statusElement.innerHTML = `<span class="recorded-badge">Recorded ✓</span>`;
         
-        // Update attendance list
         updateMaterialAttendanceList(parsedData, attendanceType, result.recorded_time || new Date().toLocaleTimeString());
     }, 1000);
 }
 
-// Load Student Photo
 function loadStudentPhoto(parsedData) {
     const photoContainer = document.getElementById('material-student-photo');
     if (!photoContainer) return;
     
-    // Try to get student photo from parsed data (server response)
-    if (parsedData.picture) {
+     if (parsedData.picture) {
         const img = new Image();
         img.onload = function() {
             photoContainer.innerHTML = `
@@ -712,11 +697,9 @@ function loadStudentPhoto(parsedData) {
         
         img.src = `/storage/student_pictures/${parsedData.picture}`;
     }
-    // If no picture field, keep the placeholder
-}
+ }
 
-// Updated Material Attendance List (removed tryLoadPhoto functions - simplified approach)
-function updateMaterialAttendanceList(parsedData, attendanceType, recordedTime) {
+ function updateMaterialAttendanceList(parsedData, attendanceType, recordedTime) {
     const attendanceList = document.getElementById('attendance-list');
     const attendanceCount = document.getElementById('attendance-count');
     
@@ -744,19 +727,16 @@ function updateMaterialAttendanceList(parsedData, attendanceType, recordedTime) 
     newRecord.style.animation = 'materialSlideIn 0.5s ease-out';
     attendanceList.insertBefore(newRecord, attendanceList.firstChild);
     
-    // Load photo for the record
-    loadRecordPhoto(parsedData, `record-avatar-${parsedData.student_id}`);
+     loadRecordPhoto(parsedData, `record-avatar-${parsedData.student_id}`);
     
-    // Limit to 7 records
-    const records = attendanceList.querySelectorAll('.material-attendance-record');
+     const records = attendanceList.querySelectorAll('.material-attendance-record');
     if (records.length > 7) {
         for (let i = 7; i < records.length; i++) {
             records[i].remove();
         }
     }
     
-    // Update count
-    const currentCount = parseInt(attendanceCount.textContent) + 1;
+     const currentCount = parseInt(attendanceCount.textContent) + 1;
     attendanceCount.textContent = currentCount;
 }
 
@@ -774,23 +754,20 @@ function loadRecordPhoto(parsedData, containerId) {
         };
         
         img.onerror = function() {
-            // Show first letter of name as fallback
-            photoContainer.innerHTML = parsedData.name.charAt(0).toUpperCase();
+             photoContainer.innerHTML = parsedData.name.charAt(0).toUpperCase();
             photoContainer.style.fontSize = '18px';
             photoContainer.style.fontWeight = 'bold';
         };
         
         img.src = `/storage/student_pictures/${parsedData.picture}`;
     } else {
-        // Show first letter of name if no photo
-        photoContainer.innerHTML = parsedData.name.charAt(0).toUpperCase();
+         photoContainer.innerHTML = parsedData.name.charAt(0).toUpperCase();
         photoContainer.style.fontSize = '18px';
         photoContainer.style.fontWeight = 'bold';
     }
 }
 
-// Display Material Error Card
-function displayMaterialErrorCard(errorMessage) {
+ function displayMaterialErrorCard(errorMessage) {
     const cardContainer = document.getElementById('material-student-card') || createMaterialCardContainer();
     
     cardContainer.innerHTML = `
@@ -809,16 +786,14 @@ function displayMaterialErrorCard(errorMessage) {
     `;
 }
 
-// Create Material Card Container
-function createMaterialCardContainer() {
+ function createMaterialCardContainer() {
     let container = document.getElementById('material-student-card');
     if (!container) {
         container = document.createElement('div');
         container.id = 'material-student-card';
         container.className = 'material-card-container';
         
-        // Insert into the main panel
-        const mainPanel = document.querySelector('.main-panel .panel-content') || document.body;
+         const mainPanel = document.querySelector('.main-panel .panel-content') || document.body;
         mainPanel.appendChild(container);
     }
     return container;
@@ -903,8 +878,7 @@ function resetToMaterialWaitingState() {
     }
 }
 
-// Old function compatibility (keep old functions working)
-function handleQRResult(result) {
+ function handleQRResult(result) {
     if (result.success) {
         displayStudentInfo(result.student, result);
         updateAttendanceList(result.student, result.recorded_time || new Date().toLocaleString(), result.status);
@@ -932,16 +906,15 @@ function handleQRResult(result) {
 function displayStudentInfo(student, attendanceData) {
     const isDuplicate = attendanceData.already_present || attendanceData.status?.includes('already');
     
-    updateStatusBadge(isDuplicate ? 'ALREADY RECORDED' : 'ATTENDANCE RECORDED!', isDuplicate ? '#ff9800' : '#4CAF50');
-    updateStudentPhoto(student, isDuplicate);
-    updateStudentDetails(student, isDuplicate);
-    updateInfoCards(student);
+     updateStatusBadge(isDuplicate ? 'ALREADY RECORDED' : 'ATTENDANCE RECORDED!', isDuplicate ? '#ff9800' : '#4CAF50');
+    
+     updateInfoCards(student);
     
     clearInlineNotification();
     currentStudentData = { student, attendanceData };
     
     setTimeout(() => {
-        resetToWaitingState();
+        resetToMaterialWaitingState();
     }, isDuplicate ? 5000 : 5000); // Both cases now 5 seconds
 }
 
@@ -963,68 +936,30 @@ function displayStudentInfoAlways(student, status, periodInfo) {
     }
 
     updateStatusBadge(badgeText, badgeColor);
-    updateStudentPhoto(student, false, status === 'outside_recording_period' ? 'grayscale(30%)' : '');
-    updateStudentDetails(student, false);
-    updateInfoCards(student);
+    
+     updateInfoCards(student);
     
     showInlineNotification(notificationMessage, notificationType);
     
     setTimeout(() => {
-        resetToWaitingState();
-    }, 5000); // Extended to 5 seconds
+        resetToMaterialWaitingState();
+    }, 5000); 
 }
 
 function displayErrorInfo(errorMessage) {
     updateStatusBadge('SCAN ERROR', '#f44336');
     
-    const photoElement = document.getElementById('student-photo');
-    photoElement.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #f44336; font-size: 50px;"></i>`;
-
-    const infoElement = document.getElementById('student-info');
-    infoElement.innerHTML = `
-        <div class="student-name" style="color: #f44336;">SCAN ERROR</div>
-        <div class="student-details">${errorMessage}</div>
-        <div class="student-details">Please try again</div>
-    `;
-
-    updateInfoCards({ name: 'ERROR', section: 'INVALID' }, 'FAILED');
+     updateInfoCards({ name: 'ERROR', section: 'INVALID' }, 'FAILED');
 
     setTimeout(() => {
-        resetToWaitingState();
-    }, 5000); // Extended to 5 seconds
+        resetToMaterialWaitingState();
+    }, 5000); 
 }
 
 function updateStatusBadge(text, color) {
     const statusBadge = document.getElementById('status-badge');
     statusBadge.textContent = text;
     statusBadge.style.background = color;
-}
-
-function updateStudentPhoto(student, isDuplicate, filter = '') {
-    const photoElement = document.getElementById('student-photo');
-    const color = isDuplicate ? '#ff9800' : '#4CAF50';
-    
-    if (student && student.photo) {
-        const style = `width: 100%; height: 100%; object-fit: cover; border-radius: 50%; ${filter ? `filter: ${filter};` : ''}`;
-        photoElement.innerHTML = `<img src="/storage/student_pictures/${student.photo}" alt="${student.name}" style="${style}">`;
-    } else {
-        photoElement.innerHTML = `<i class="fas fa-user-circle" style="color: ${color}; font-size: 50px;"></i>`;
-    }
-}
-
-function updateStudentDetails(student, isDuplicate) {
-    const infoElement = document.getElementById('student-info');
-    const statusText = isDuplicate ? 'Already Recorded Today' : 'Attendance Recorded';
-    const statusColor = isDuplicate ? '#ff9800' : '#4CAF50';
-    
-    infoElement.innerHTML = `
-        <div class="student-name">${student.name}</div>
-        <div class="student-details">ID: ${student.student_id || 'N/A'}</div>
-        <div class="student-details">Section: ${student.section || 'N/A'}</div>
-        <div class="student-details" style="color: ${statusColor};">
-            <u>${statusText}</u>
-        </div>
-    `;
 }
 
 function updateInfoCards(student, timeValue = null) {
@@ -1037,28 +972,6 @@ function updateInfoCards(student, timeValue = null) {
     document.getElementById('name-value').textContent = student.name || 'ERROR';
     document.getElementById('section-value').textContent = student.section || 'INVALID';
     document.getElementById('time-value').textContent = timeValue || currentTime;
-}
-
-function resetToWaitingState() {
-    clearInlineNotification();
-    
-    updateStatusBadge('WAITING TO SCAN', '#6c757d');
-    
-    const photoElement = document.getElementById('student-photo');
-    photoElement.innerHTML = `<i class="fas fa-user-circle" style="color: rgba(255,255,255,0.5); font-size: 50px;"></i>`;
-
-    const infoElement = document.getElementById('student-info');
-    infoElement.innerHTML = `
-        <div class="student-name">WAITING TO SCAN</div>
-        <div class="student-details">Point your scanner at a QR code</div>
-        <div class="student-details">to record attendance</div>
-    `;
-
-    document.getElementById('name-value').textContent = '-';
-    document.getElementById('section-value').textContent = '-';
-    document.getElementById('time-value').textContent = '-';
-
-    currentStudentData = null;
 }
 
 
@@ -1226,3 +1139,182 @@ function playNotificationSound(success) {
         
     }
 }
+
+// Success Popup Function - matches the design in the image
+function showSuccessPopup(student, attendanceType, recordedTime) {
+    // Remove any existing popup
+    const existingPopup = document.getElementById('success-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
+    // Create popup overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'success-popup';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+
+    // Create popup content
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+        background: white;
+        border-radius: 20px;
+        padding: 0;
+        width: 400px;
+        max-width: 90vw;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        transform: scale(0.8);
+        transition: transform 0.3s ease;
+        overflow: hidden;
+    `;
+
+    // Create header
+    const header = document.createElement('div');
+    header.style.cssText = `
+        background: #f8f9fa;
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid #dee2e6;
+    `;
+    header.innerHTML = `
+        <h5 style="margin: 0; color: #333; font-weight: 600;">QR CODE DETECTED</h5>
+    `;
+
+    // Create blue success section
+    const successSection = document.createElement('div');
+    successSection.style.cssText = `
+        background: linear-gradient(135deg, #4285f4, #6fa8f5);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    `;
+    
+    // Create blue rounded rectangle icon
+    const icon = document.createElement('div');
+    icon.style.cssText = `
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        margin: 0 auto 20px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    `;
+    icon.innerHTML = '<i class="fas fa-check" style="color: white;"></i>';
+    
+    successSection.appendChild(icon);
+    successSection.innerHTML += `<h4 style="margin: 0; font-weight: 600;">TIME IN/TIME OUT RECORDED!</h4>`;
+
+    // Create details table
+    const detailsTable = document.createElement('div');
+    detailsTable.style.cssText = `
+        padding: 20px;
+    `;
+    
+    const tableStyle = `
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    `;
+    
+    const cellStyle = `
+        padding: 12px;
+        border: 1px solid #dee2e6;
+        text-align: left;
+    `;
+    
+    const labelStyle = `
+        ${cellStyle}
+        background: #f8f9fa;
+        font-weight: 600;
+        width: 30%;
+    `;
+    
+    detailsTable.innerHTML = `
+        <table style="${tableStyle}">
+            <tr>
+                <td style="${labelStyle}">ID NO</td>
+                <td style="${cellStyle}">${student.student_id || student.id || 'N/A'}</td>
+            </tr>
+            <tr>
+                <td style="${labelStyle}">FULL NAME</td>
+                <td style="${cellStyle}">${student.name || 'N/A'}</td>
+            </tr>
+            <tr>
+                <td style="${labelStyle}">Section</td>
+                <td style="${cellStyle}">${student.section || 'N/A'}</td>
+            </tr>
+            <tr>
+                <td style="${labelStyle}">TIME</td>
+                <td style="${cellStyle}">${recordedTime || new Date().toLocaleString()}</td>
+            </tr>
+        </table>
+    `;
+
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.style.cssText = `
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #666;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background 0.2s;
+    `;
+    closeButton.innerHTML = '×';
+    closeButton.onmouseover = () => closeButton.style.background = '#f0f0f0';
+    closeButton.onmouseout = () => closeButton.style.background = 'none';
+
+     popup.appendChild(header);
+    popup.appendChild(successSection);
+    popup.appendChild(detailsTable);
+    popup.appendChild(closeButton);
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+
+     setTimeout(() => {
+        overlay.style.opacity = '1';
+        popup.style.transform = 'scale(1)';
+    }, 10);
+
+     const autoCloseTimer = setTimeout(() => {
+        closePopup();
+    }, 5000);
+
+     function closePopup() {
+        clearTimeout(autoCloseTimer);
+        overlay.style.opacity = '0';
+        popup.style.transform = 'scale(0.8)';
+        setTimeout(() => overlay.remove(), 300);
+    }
+
+     closeButton.onclick = closePopup;
+    overlay.onclick = (e) => {
+        if (e.target === overlay) closePopup();
+    };
+}
+
+

@@ -7,9 +7,12 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentsImport;
 use App\Models\Student;
 use App\Models\Semester;
+use App\Models\User;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+ 
 
 class ImportController extends Controller
 {
@@ -60,16 +63,29 @@ class ImportController extends Controller
             }
             
             $semesters = Semester::all();
-            
             if ($semesters->isEmpty()) {
                 Storage::disk('public')->delete($path);
                 return redirect()->back()->with('error', 'No semesters found in the system. Please create a semester first.');
             }
 
+            $user = Auth::user();
+            $teachers = [];
+            $schools = [];
+            $currentSchoolId = null;
+            if ($user->role === 'admin') {
+                $teachers = \App\Models\User::where('role', 'teacher')->get();
+                $schools = \App\Models\School::all();
+            } elseif ($user->role === 'teacher') {
+                $currentSchoolId = $user->school_id;
+            }
+
             return view('import.preview', [
-                'data' => $data[0], 
+                'data' => $data[0],
                 'file' => $path,
-                'semesters' => $semesters
+                'semesters' => $semesters,
+                'teachers' => $teachers,
+                'schools' => $schools,
+                'currentSchoolId' => $currentSchoolId
             ]);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -88,19 +104,41 @@ class ImportController extends Controller
      public function import(Request $request)
     {
         try {
+            \Log::info('Import process started', [
+                'user_id' => $request->input('user_id'),
+                'semester_id' => $request->input('semester_id'),
+                'ip' => $request->ip(),
+                'timestamp' => now()
+            ]);
+
             $students = $request->input('students');  
             $semester_id = $request->input('semester_id'); 
+            $user_id = $request->input('user_id');
 
-            if (!$students || !$semester_id) {
+
+            $school_id = User::where('id', $user_id)->value('school_id');
+            
+
+            if (!$students || !$semester_id || !$user_id) {
+                \Log::warning('Import failed: Missing students data or semester selection', [
+                    'user_id' => $user_id,
+                    'semester_id' => $semester_id
+                ]);
                 return redirect()->back()->with('error', 'Missing students data or semester selection. Please go back and try again.');
             }
 
              $semester = Semester::find($semester_id);
             if (!$semester) {
+                \Log::warning('Import failed: Selected semester does not exist', [
+                    'semester_id' => $semester_id
+                ]);
                 return redirect()->back()->with('error', 'Selected semester does not exist. Please select a valid semester.');
             }
 
              if (!Auth::check()) {
+                \Log::warning('Import failed: User not authenticated', [
+                    'user_id' => $user_id
+                ]);
                 return redirect()->route('login')->with('error', 'You must be logged in to import students.');
             }
 
@@ -117,42 +155,62 @@ class ImportController extends Controller
 
                      if (empty(trim($row[0] ?? '')) || empty(trim($row[1] ?? '')) || empty(trim($row[2] ?? '')) || empty(trim($row[3] ?? ''))) {
                         $errors[] = "Row " . ($index + 1) . ": Missing required fields (ID, Name, Gender, or Age)";
+                        \Log::warning('Import row skipped: Missing required fields', [
+                            'row' => $index + 1,
+                            'user_id' => $user_id
+                        ]);
                         continue;
                     }
 
                      $idNo = trim($row[0]);
                     if (!preg_match('/^[a-zA-Z0-9]+$/', $idNo)) {
                         $errors[] = "Row " . ($index + 1) . ": Invalid ID format. Only letters and numbers are allowed.";
+                        \Log::warning('Import row skipped: Invalid ID format', [
+                            'row' => $index + 1,
+                            'id_no' => $idNo,
+                            'user_id' => $user_id
+                        ]);
                         continue;
                     }
 
                      $age = trim($row[3]);
                     if (!is_numeric($age) || $age < 1 || $age > 100) {
                         $errors[] = "Row " . ($index + 1) . ": Invalid age. Age must be between 1 and 100.";
+                        \Log::warning('Import row skipped: Invalid age', [
+                            'row' => $index + 1,
+                            'age' => $age,
+                            'user_id' => $user_id
+                        ]);
                         continue;
                     }
 
-                    // Check if student exists and compare data for updates
                     $existingStudent = Student::where('id_no', $idNo)
                         ->where('semester_id', $semester_id)
-                        ->where('user_id', Auth::id())
+                        ->where('user_id', $user_id)
                         ->first();
 
-                    // Format phone numbers (remove tabs if present from export)
                     $cpNo = isset($row[5]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[5])) : null;
                     $contactPersonContact = isset($row[8]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[8])) : null;
 
-                    // Convert gender format
                     $gender = $this->normalizeGender($row[2]);
                     if (!in_array($gender, ['M', 'F'])) {
                         $errors[] = "Row " . ($index + 1) . ": Invalid gender format. Use M/F or Male/Female.";
+                        \Log::warning('Import row skipped: Invalid gender format', [
+                            'row' => $index + 1,
+                            'gender' => $row[2],
+                            'user_id' => $user_id
+                        ]);
                         continue;
                     }
 
-                    // Validate name length
                     $name = trim($row[1]);
                     if (strlen($name) > 255) {
                         $errors[] = "Row " . ($index + 1) . ": Name is too long (maximum 255 characters).";
+                        \Log::warning('Import row skipped: Name too long', [
+                            'row' => $index + 1,
+                            'name' => $name,
+                            'user_id' => $user_id
+                        ]);
                         continue;
                     }
 
@@ -167,37 +225,70 @@ class ImportController extends Controller
                         'contact_person_relationship'   => isset($row[7]) ? trim(substr($row[7], 0, 255)) : null,
                         'contact_person_contact'        => $contactPersonContact,
                         'semester_id'                   => $semester_id,
-                        'user_id'                       => Auth::id(),
+                        'user_id'                       => $user_id,
+                        'school_id'                     => $school_id
                     ];
 
                     if ($existingStudent) {
-                        // Check if there are any changes
                         $hasChanges = $this->hasStudentDataChanged($existingStudent, $studentData);
                         
                         if ($hasChanges) {
-                            // Update existing student
-                            $existingStudent->update($studentData);
-                            $added++; // Count as added (updated)
+                             $existingStudent->update($studentData);
+                            $added++;
                             $warnings[] = "Student with ID {$idNo} was updated with new information";
+                            \Log::info('Student updated during import', [
+                                'id_no' => $idNo,
+                                'user_id' => $user_id,
+                                'semester_id' => $semester_id
+                            ]);
                         } else {
-                            // No changes, skip
                             $skipped++;
+                            \Log::info('Student skipped (no changes)', [
+                                'id_no' => $idNo,
+                                'user_id' => $user_id,
+                                'semester_id' => $semester_id
+                            ]);
                             continue;
                         }
                     } else {
-                        // Create new student
                         Student::create($studentData);
                         $added++;
+                        \Log::info('Student created during import', [
+                            'id_no' => $idNo,
+                            'user_id' => $user_id,
+                            'semester_id' => $semester_id
+                        ]);
                     }
                     
                 } catch (\Illuminate\Database\QueryException $e) {
                     if ($e->getCode() == 23000) { 
                         $errors[] = "Row " . ($index + 1) . ": Duplicate entry or database constraint violation.";
+                        \Log::error('Import row error: Duplicate entry or constraint violation', [
+                            'row' => $index + 1,
+                            'id_no' => $idNo,
+                            'user_id' => $user_id,
+                            'semester_id' => $semester_id,
+                            'error' => $e->getMessage()
+                        ]);
                     } else {
                         $errors[] = "Row " . ($index + 1) . ": Database error - " . $e->getMessage();
+                        \Log::error('Import row error: Database error', [
+                            'row' => $index + 1,
+                            'id_no' => $idNo,
+                            'user_id' => $user_id,
+                            'semester_id' => $semester_id,
+                            'error' => $e->getMessage()
+                        ]);
                     }
                 } catch (\Exception $e) {
                     $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
+                    \Log::error('Import row error: General exception', [
+                        'row' => $index + 1,
+                        'id_no' => $idNo ?? null,
+                        'user_id' => $user_id,
+                        'semester_id' => $semester_id,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
 
@@ -218,6 +309,14 @@ class ImportController extends Controller
                     $errorMessage .= " and " . (count($errors) - 5) . " more errors.";
                 }
                 
+                \Log::warning('Import completed with errors', [
+                    'user_id' => $user_id,
+                    'semester_id' => $semester_id,
+                    'added' => $added,
+                    'skipped' => $skipped,
+                    'errors' => $errors
+                ]);
+
                 if ($added == 0) {
                     return redirect()->route('teacher.students')->with('error', 'Import failed. ' . $errorMessage);
                 } else {
@@ -226,19 +325,35 @@ class ImportController extends Controller
             }
 
             if ($added == 0 && $skipped == 0) {
+                \Log::info('Import completed: No students imported', [
+                    'user_id' => $user_id,
+                    'semester_id' => $semester_id
+                ]);
                 return redirect()->route('teacher.students')->with('error', 'No students were imported. Please check your file format and data.');
             }
 
-            return redirect()->route('teacher.students')->with('success', $message);
+            \Log::info('Import completed successfully', [
+                'user_id' => $user_id,
+                'semester_id' => $semester_id,
+                'added' => $added,
+                'skipped' => $skipped
+            ]);
+
+            $route = Auth::user()->role === 'admin' ? 'admin.manage-students' : 'teacher.students';
+            return redirect()->route($route)->with('success', $message);
             
         } catch (\Exception $e) {
             \Log::error('Import process error: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
+                'user' => Auth::id(),
+                'file' => $request->file('file')?->getClientOriginalName(),
+                'user_id' => $request->input('user_id'),
                 'semester_id' => $request->input('semester_id'),
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return redirect()->route('teacher.students')->with('error', 'An unexpected error occurred during import: ' . $e->getMessage() . '. Please try again.');
+            $route = Auth::user()->role === 'admin' ? 'admin.manage-students' : 'teacher.students';
+            return redirect()->route($route)->with('error', 'An unexpected error occurred during import: ' . $e->getMessage() . '. Please try again.');
+
         }
     }
 
@@ -251,7 +366,6 @@ class ImportController extends Controller
             return $value;
         }
         
-        // Remove leading tab character if present
         return ltrim($value, "\t");
     }
 
@@ -260,7 +374,6 @@ class ImportController extends Controller
      */
     private function hasStudentDataChanged($existingStudent, $newData)
     {
-        // Fields to compare (excluding timestamps and IDs)
         $fieldsToCompare = [
             'name', 'gender', 'age', 'address', 'cp_no',
             'contact_person_name', 'contact_person_relationship', 'contact_person_contact'
@@ -270,7 +383,6 @@ class ImportController extends Controller
             $existingValue = $existingStudent->{$field} ?? '';
             $newValue = $newData[$field] ?? '';
             
-            // Normalize empty values for comparison
             $existingValue = empty($existingValue) ? '' : (string)$existingValue;
             $newValue = empty($newValue) ? '' : (string)$newValue;
             
@@ -317,6 +429,6 @@ class ImportController extends Controller
             return 'F';
         }
         
-        return strtoupper(substr($gender, 0, 1)); // Default to first letter uppercase
+        return strtoupper(substr($gender, 0, 1));
     }
 }

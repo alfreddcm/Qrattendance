@@ -6,11 +6,133 @@
     <title>Preview Imported Students</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    <style>
+        /* Materialize-inspired compact design */
+        body {
+            background: #f5f6fa;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        .container {
+            max-width: 90%;
+            margin: 24px auto 0 auto;
+            padding: 12px 18px 18px 18px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0;
+            color: #263238;
+        }
+        .form-select, .form-control {
+            padding: 2px 8px;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            min-height: 28px;
+        }
+        .form-select-sm, .form-control-sm {
+            padding: 1px 6px;
+            font-size: 0.92rem;
+            min-height: 24px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th, .table td {
+             vertical-align: middle;
+            font-size: 0.97rem;
+        }
+        .table thead th {
+            background: #1976d2 !important;
+            color: #fff !important;
+            border-bottom: 2px solid #1565c0;
+        }
+        .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: #f0f4f8;
+        }
+        .table-secondary {
+            background: #e3eaf2 !important;
+        }
+        .btn {
+            border-radius: 4px;
+            font-size: 0.97rem;
+            padding: 4px 14px;
+            min-width: 80px;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary {
+            background: #1976d2;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+        .btn-success {
+            background: #43a047;
+            border: none;
+        }
+        .btn-success:hover {
+            background: #388e3c;
+        }
+        .btn-info {
+            background: #00bcd4;
+            border: none;
+            color: #fff;
+        }
+        .btn-info:hover {
+            background: #0097a7;
+        }
+        .btn-danger {
+            background: #e53935;
+            border: none;
+        }
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+        .btn:focus {
+            box-shadow: 0 0 0 2px #1976d2aa;
+        }
+        .alert {
+            padding: 6px 16px;
+            font-size: 0.98rem;
+            margin-bottom: 10px;
+        }
+        .d-flex {
+            gap: 8px;
+        }
+        .mb-3, .mt-4, .mb-2 {
+            margin-bottom: 10px !important;
+            margin-top: 10px !important;
+        }
+        .py-4 {
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+        }
+        .fw-bold {
+            font-weight: 500 !important;
+        }
+        .form-select, .form-control {
+            box-shadow: none;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 1.5px #1976d2aa;
+        }
+        #addRowBtn {
+            min-width: 90px;
+        }
+        @media (max-width: 900px) {
+            .container { padding: 6px 2px; }
+            .table th, .table td { font-size: 0.93rem; }
+        }
+    </style>
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 </head>
 <body>
-    <div class="container py-4">
+    <div class="container">
         {{-- Success/Error Message --}}
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -29,11 +151,27 @@
             </div>
         @endif
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3" style="gap: 0;">
             <h2>Preview & Edit Students</h2>
-            <form class="d-flex align-items-center">
-                <label for="semester" class="me-2 mb-0 fw-bold">Select Semester:</label>
-                <select id="semester" name="semester_id" class="form-select" style="width:auto;">
+            <form class="d-flex align-items-center" style="gap: 6px;">
+                @php
+                    $user = Auth::user();
+                    $teachers = \App\Models\User::where('role', 'teacher')->get();
+                @endphp
+                @if($user->role === 'admin')
+                    <label for="user_id" class="mb-0 fw-bold" style="font-size: 1rem;">Select Teacher:</label>
+                    <select id="user_id" name="user_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;">
+                        @foreach($teachers as $teacher)
+                            <option value="{{ $teacher->id }}" data-school="{{ $teacher->school_id }}">{{ $teacher->name }}</option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" name="school_id" id="school_id" value="">
+                @elseif($user->role === 'teacher')
+                    <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
+                 @endif
+
+                <label for="semester" class="mb-0 fw-bold" style="font-size: 1rem;">Select Semester:</label>
+                <select id="semester" name="semester_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;">
                     @foreach($semesters as $semester)
                         <option value="{{ $semester->id }}">{{ $semester->name }}</option>
                     @endforeach
@@ -42,16 +180,17 @@
         </div>
         <form id="studentsForm" action="{{ route('import.import') }}" method="POST">
             @csrf
+            <input type="hidden" name="user_id" id="selecteduser_id" value="{{ $user->id }}">
             <input type="hidden" name="semester_id" id="selectedSemester" value="{{ $semesters->first()->id ?? '' }}">
-            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                <table class="table table-bordered table-striped align-middle" id="studentsTable">
-                    <thead class="table-dark" style="position: sticky; top: 0; z-index: 2;">
+            <div class="table-responsive" style="height: 600px; overflow-y: auto;">
+                <table class="table table-bordered table-striped align-middle mb-0" id="studentsTable" style="border-radius: 1px; overflow: hidden;">
+                    <thead style="position: sticky; top: 0; z-index: 2;">
                         <tr>
-                            <th style="width: 40px; background: #212529; color: #fff;">#</th>
+                            <th style="width: 20px; background: #212529; color: #fff;">#</th>
                             <th style="width: 120px; background: #212529; color: #fff;">ID No</th>
                             <th style="width: 180px; background: #212529; color: #fff;">Name</th>
                             <th style="width: 80px; background: #212529; color: #fff;">Gender</th>
-                            <th style="width: 60px; background: #212529; color: #fff;">Age</th>
+                            <th style="width: 70px; background: #212529; color: #fff;">Age</th>
                             <th style="min-width: 150px; background: #212529; color: #fff;">Address</th>
                             <th style="width: 120px; background: #212529; color: #fff;">CP No</th>
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Name</th>
@@ -109,40 +248,39 @@
                     </tfoot>
                 </table>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-                <a href="{{ route('teacher.students') }}" class="btn btn-info">
-                    &larr; Return
-                </a>
-                <button type="submit" class="btn btn-success">
-                    Add to List
-                </button>
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-2" style="gap: 0;">
+                <a href="{{ route('teacher.students') }}" class="btn btn-info" style="min-width: 90px;">&larr; Return</a>
+                <button type="submit" class="btn btn-success" style="min-width: 110px;">Add to List</button>
             </div>
             </form>
     </div>
     <script>
-        // Sync semester selection with hidden input for form submission
-        document.getElementById('semester').addEventListener('change', function() {
+         document.getElementById('semester').addEventListener('change', function() {
             document.getElementById('selectedSemester').value = this.value;
         });
-
-        // Remove row logic
-        document.querySelectorAll('.remove-row').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                const row = btn.closest('tr');
-                row.parentNode.removeChild(row);
-                updateRowNumbers();
-            });
+         document.getElementById('user_id').addEventListener('change', function() {
+            document.getElementById('selecteduser_id').value = this.value;
         });
 
-        // Add Row Functionality
-        document.getElementById('addRowBtn').addEventListener('click', function() {
+         function attachRemoveEvents() {
+            document.querySelectorAll('.remove-row').forEach(function(btn) {
+                btn.onclick = function() {
+                    const row = btn.closest('tr');
+                    row.parentNode.removeChild(row);
+                    updateRowNumbers();
+                };
+            });
+        }
+        attachRemoveEvents();
+
+         document.getElementById('addRowBtn').addEventListener('click', function() {
             addNewStudentRow();
         });
 
         function addNewStudentRow() {
             let tbody = document.querySelector('#studentsTable tbody');
             let addRowBtnRow = document.getElementById('addRowBtn').closest('tr');
-            let rowCount = tbody.querySelectorAll('tr').length - 1; // exclude the add row button row
+            let rowCount = tbody.querySelectorAll('tr').length - 1; 
             let newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td class="row-number"></td>
@@ -169,11 +307,7 @@
                 </td>
             `;
             tbody.insertBefore(newRow, addRowBtnRow);
-            // Attach remove event to the new row
-            newRow.querySelector('.remove-row').addEventListener('click', function() {
-                newRow.parentNode.removeChild(newRow);
-                updateRowNumbers();
-            });
+            attachRemoveEvents();
             updateRowNumbers();
         }
 
@@ -182,10 +316,24 @@
             let rows = document.querySelectorAll('#studentsTable tbody tr');
             let total = 0;
             rows.forEach(function(row, idx) {
-                row.querySelector('.row-number').textContent = idx + 1;
+                let num = row.querySelector('.row-number');
+                if (num) num.textContent = idx + 1;
                 total++;
             });
-            document.getElementById('totalStudents').textContent = total;
+            document.getElementById('totalStudents').textContent = total - 1;
+        }
+
+        var userSelect = document.getElementById('user_id');
+        if (userSelect) {
+            userSelect.addEventListener('change', function() {
+                var selected = this.options[this.selectedIndex];
+                var schoolId = selected.getAttribute('data-school');
+                document.getElementById('school_id').value = schoolId;
+            });
+             setTimeout(function() {
+                var event = new Event('change');
+                userSelect.dispatchEvent(event);
+            }, 100);
         }
     </script>
 </body>

@@ -97,8 +97,9 @@
                     <button class="btn btn-outline-secondary btn-sm" onclick="loadMessages()" title="Refresh Messages">
                         <i class="fas fa-sync-alt me-1"></i>Refresh
                     </button>
-                    <button class="btn btn-outline-primary btn-sm" onclick="testSMSGateway()">
-                        <i class="fas fa-signal me-1"></i>Check SMS Status
+                    <button class="btn btn-outline-primary btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()">
+                        <i class="fas fa-signal me-1"></i><span id="checkSmsStatusText">Check SMS Status</span>
+                        <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
                     </button>
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal">
                         <i class="fas fa-plus me-1"></i>Send SMS
@@ -434,8 +435,7 @@ function loadStudents() {
             console.log('Students loaded:', students);
             allStudents = students;
             
-            // Populate both filter dropdown and student selector (if they exist on page load)
-            const studentFilter = $('#studentFilter');
+             const studentFilter = $('#studentFilter');
             studentFilter.empty().append('<option value="">All Students</option>');
             
             students.forEach(student => {
@@ -472,7 +472,7 @@ function loadStudents() {
             return response.json();
         })
         .then(data => {
-            console.log('API response:', data); // Debug log
+            console.log('API response:', data); 
             if (data.success) {
                 if (!data.messages || !Array.isArray(data.messages) || data.messages.length === 0) {
                     displayEmptyState('No messages found');
@@ -660,22 +660,19 @@ function loadStudents() {
                 message = message.replace(/\[STUDENT_NAME\]/g, 'your child');
             }
         } else {
-            // For all parents or custom, use generic term
-            message = message.replace(/\[STUDENT_NAME\]/g, 'your child');
+             message = message.replace(/\[STUDENT_NAME\]/g, 'your child');
         }
         
         message = message.replace(/\[SECTION\]/g, teacherInfo.section);
         
         $('#messageText').val(message).trigger('input');
         
-        // Auto-add signature if enabled
-        if ($('#autoSignature').is(':checked')) {
+         if ($('#autoSignature').is(':checked')) {
             addSignature();
         }
     }
 }
 
-// Handle student selection change
 function onStudentSelect() {
     console.log('Student selection changed');
     const studentSelect = $('#studentSelect');
@@ -683,7 +680,6 @@ function onStudentSelect() {
     const selectedOption = studentSelect.find('option:selected');
     
     if (selectedValue && selectedValue !== '') {
-        // Show info for specific student
         const studentName = selectedOption.text();
         const parentContact = selectedOption.data('parent') || 'No parent contact';
         const parentName = selectedOption.data('parent-name') || 'Unknown';
@@ -694,30 +690,25 @@ function onStudentSelect() {
         $('#studentInfoParent').text(parentName);
         $('#studentInfoPanel').show();
         
-        // Auto-fill student name in message if a template is selected
-        const currentTemplate = $('#messageTemplate').val();
+         const currentTemplate = $('#messageTemplate').val();
         if (currentTemplate) {
-            applyTemplate(); // Re-apply template with student name
+            applyTemplate(); 
         }
     } else {
-        // Hide panel when no student selected
-        $('#studentInfoPanel').hide();
+         $('#studentInfoPanel').hide();
     }
 }
 
-// Add signature to message
 function addSignature() {
     const messageArea = $('#messageText');
     let currentMessage = messageArea.val().trim();
     
-    // Remove existing signature if present
-    const signatureStart = currentMessage.lastIndexOf('\n\nFrom:');
+    const signatureStart = currentMessage.lastIndexOf('\n\nFrom:\n');
     if (signatureStart !== -1) {
         currentMessage = currentMessage.substring(0, signatureStart);
     }
     
-    // Generate new signature
-    const signature = `\n\nFrom: ${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
+    const signature = `\n\nFrom:\n ${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
     
     messageArea.val(currentMessage + signature).trigger('input');
 }
@@ -831,18 +822,31 @@ function checkMessageStatus(messageId) {
 
 // Test SMS Gateway
 function testSMSGateway() {
+    const btn = document.getElementById('checkSmsStatusBtn');
+    const text = document.getElementById('checkSmsStatusText');
+    const spinner = document.getElementById('checkSmsStatusSpinner');
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    text.textContent = 'Checking...';
     fetch('/teacher/test-sms-gateway')
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
+             if (data.status === 'success' && data.reachable === true) {
                 showAlert('SMS working!', 'success');
+            } else if (data.status === 'success' && data.reachable === false) {
+                showAlert('SMS test failed: Gateway not reachable', 'danger');
             } else {
-                showAlert('SMS test failed contact Admin : ' + data.message, 'danger');
+                showAlert('SMS test failed contact Admin : ' + (data.message || 'Unknown error'), 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showAlert('Error testing SMS gateway contact Admin', 'danger');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+            text.textContent = 'Check SMS Status';
         });
 }
 
@@ -972,17 +976,20 @@ function showAlert(message, type) {
     }
 }
 
- function addSignature() {
-    const messageArea = $('#messageText');
-    let currentMessage = messageArea.val().trim();
-    
-     const signatureStart = currentMessage.lastIndexOf('\n\nFrom:');
+function removeSignature(message) {
+    const signatureStart = message.lastIndexOf('\n\nFrom:\n');
     if (signatureStart !== -1) {
-        currentMessage = currentMessage.substring(0, signatureStart);
+        return message.substring(0, signatureStart);
     }
-    
-     const signature = `\n\nFrom: ${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
-    
+    return message;
+}
+
+function addSignature() {
+    const messageArea = $('#messageText');
+    let currentMessage = removeSignature(messageArea.val().trim());
+
+    const signature = `\n\nFrom:\n${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
+
     messageArea.val(currentMessage + signature).trigger('input');
 }
 
@@ -1028,12 +1035,9 @@ function showAlert(message, type) {
         if (this.checked) {
             addSignature();
         } else {
-             const messageArea = $('#messageText');
-            let currentMessage = messageArea.val().trim();
-            const signatureStart = currentMessage.lastIndexOf('\n\nFrom:');
-            if (signatureStart !== -1) {
-                messageArea.val(currentMessage.substring(0, signatureStart)).trigger('input');
-            }
+            const messageArea = $('#messageText');
+            let currentMessage = removeSignature(messageArea.val().trim());
+            messageArea.val(currentMessage).trigger('input');
         }
     });
     

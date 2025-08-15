@@ -129,8 +129,9 @@
 
         .sidebar h2,
         .sidebar .user-info {
+            text-align: center;
             transition: opacity 0.3s, max-height 0.3s;
-            white-space: nowrap;
+            white-space: wrap;
             overflow: hidden;
         }
 
@@ -236,7 +237,7 @@
         .sidebar .user-info {
             font-size: 0.85em;
             color: #95a5a6;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             transition: opacity 0.3s;
             font-weight: 400;
         }
@@ -710,14 +711,14 @@
                     <span class="icon"><i class="fas fa-school"></i></span> <span>Schools</span>
                 </a>
             </li>
-            <li>
-                <a href="{{ route('admin.manage-teachers') }}" class="{{ request()->routeIs('admin.manage-teachers') ? 'active' : '' }}">
-                    <span class="icon"><i class="fas fa-chalkboard-teacher"></i></span> <span>Teachers</span>
+                        <li>
+                <a href="{{ route('admin.manage-semesters') }}" class="{{ request()->routeIs('admin.manage-semesters') ? 'active' : '' }}">
+                    <span class="icon"><i class="fas fa-calendar-alt"></i></span> <span>Semesters</span>
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.manage-semesters') }}" class="{{ request()->routeIs('admin.manage-semesters') ? 'active' : '' }}">
-                    <span class="icon"><i class="fas fa-calendar-alt"></i></span> <span>Semesters</span>
+                <a href="{{ route('admin.manage-teachers') }}" class="{{ request()->routeIs('admin.manage-teachers') ? 'active' : '' }}">
+                    <span class="icon"><i class="fas fa-chalkboard-teacher"></i></span> <span>Teachers</span>
                 </a>
             </li>
             <li>

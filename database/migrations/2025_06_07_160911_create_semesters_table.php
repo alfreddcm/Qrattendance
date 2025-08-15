@@ -19,10 +19,10 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
 
-            $table->time('am_time_in_start')->nullable()->after('end_date');
-            $table->time('am_time_in_end')->nullable()->after('am_time_in_start');
-            $table->time('pm_time_out_start')->nullable()->after('am_time_in_end');
-            $table->time('pm_time_out_end')->nullable()->after('pm_time_out_start');
+            $table->time('am_time_in_start')->nullable();
+            $table->time('am_time_in_end')->nullable();
+            $table->time('pm_time_out_start')->nullable();
+            $table->time('pm_time_out_end')->nullable();
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
             $table->text('description')->nullable();
             

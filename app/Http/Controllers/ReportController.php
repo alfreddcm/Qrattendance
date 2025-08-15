@@ -19,10 +19,10 @@ class ReportController extends Controller
         $records = [];
 
         if ($semesterId) {
-            $students = Student::where('semester_id', $semesterId)->where('user_id', Auth::id())->get();
+            $students = Student::where('semester_id', $semesterId)->where('user_id', Auth::id())->orderBy('name')->get();
             $semester = Semester::find($semesterId);
         } else {
-            $students = Student::where('user_id', Auth::id())->get();
+            $students = Student::where('user_id', Auth::id())->orderBy('name')->get();
             $semester = null;
         }
 

@@ -23,11 +23,14 @@ class AndroidSmsGatewayService
     }
 
     /**
-     * Send SMS (sender ID not supported by Android SMS Gateway)
+     * Send SMS with optional sender ID support
      */
-    public function sendSms($text, $recipients)
+    public function sendSms($text, $recipients, $senderId = null)
     {
         try {
+            // Get sender ID from parameter, config, or default
+            $senderId = $senderId ?? config('sms.sender_id', 'Scan-to-notify');
+            
              if (is_string($recipients)) {
                 $recipients = [$recipients];
             }
@@ -47,13 +50,17 @@ class AndroidSmsGatewayService
             }
 
              $requestData = [
-                'textMessage' => ['text' => $text],
+                'textMessage' => [
+                    'text' => $text,
+                    'senderId' => $senderId
+                ],
                 'phoneNumbers' => $validRecipients,
             ];
 
             Log::info('Sending SMS via Android Gateway', [
                 'recipients' => $validRecipients,
                 'message_length' => strlen($text),
+                'sender_id' => $senderId,
                 'gateway_url' => $this->gatewayUrl,
                 'full_request_data' => $requestData
             ]);
@@ -67,7 +74,8 @@ class AndroidSmsGatewayService
                 
                 Log::info('SMS sent successfully', [
                     'response' => $responseData,
-                    'recipients' => $validRecipients
+                    'recipients' => $validRecipients,
+                    'sender_id' => $senderId
                 ]);
 
                 return [
@@ -83,7 +91,8 @@ class AndroidSmsGatewayService
                 Log::error('SMS sending failed', [
                     'error' => $errorMessage,
                     'status' => $response->status(),
-                    'response' => $response->body()
+                    'response' => $response->body(),
+                    'sender_id' => $senderId
                 ]);
 
                 return [
@@ -100,7 +109,7 @@ class AndroidSmsGatewayService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'recipients' => $recipients ?? null,
-                'sender_id' => $senderId
+                'sender_id' => $senderId ?? 'undefined'
             ]);
 
             return [

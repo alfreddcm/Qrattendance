@@ -59,11 +59,11 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/message', [TeacherController::class, 'message'])->name('teacher.message');
     Route::get('/attendance', [AttendanceAnalyticsController::class, 'attendanceToday'])->name('teacher.attendance');
     
-    Route::get('/analytics/statistics', [AttendanceAnalyticsController::class, 'getOverallStatistics'])->name('teacher.analytics.statistics');
-    Route::get('/analytics/daily-trends', [AttendanceAnalyticsController::class, 'getDailyTrends'])->name('teacher.analytics.daily');
-    Route::get('/analytics/patterns', [AttendanceAnalyticsController::class, 'getAttendancePatterns'])->name('teacher.analytics.patterns');
+    Route::get('/analytics/statistics', [AttendanceAnalyticsController::class, 'statistics'])->name('teacher.analytics.statistics');
+    Route::get('/analytics/daily-trends', [AttendanceAnalyticsController::class, 'dailyTrends'])->name('teacher.analytics.daily');
+    Route::get('/analytics/patterns', [AttendanceAnalyticsController::class, 'timePatterns'])->name('teacher.analytics.patterns');
     Route::get('/analytics/time-distribution', [AttendanceAnalyticsController::class, 'getTimeDistribution'])->name('teacher.analytics.time');
-    Route::get('/analytics/student-performance', [AttendanceAnalyticsController::class, 'getStudentPerformance'])->name('teacher.analytics.performance');
+    Route::get('/analytics/student-performance', [AttendanceAnalyticsController::class, 'studentForecast'])->name('teacher.analytics.performance');
     
     Route::get('/report', [ReportController::class, 'index'])->name('teacher.report');
     Route::post('/attendance/export/csv', [ReportController::class, 'exportCsv'])->name('teacher.attendance.export.csv');
@@ -86,6 +86,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/attendance-session/active', [App\Http\Controllers\AttendanceSessionController::class, 'getActiveSessions'])->name('teacher.attendance.session.active');
     Route::get('/attendance-session/today', [App\Http\Controllers\AttendanceSessionController::class, 'getTodaySession'])->name('teacher.attendance.session.today');
     Route::post('/attendance-session/{id}/close', [App\Http\Controllers\AttendanceSessionController::class, 'closeSession'])->name('teacher.attendance.session.close');
+
 });
 
     // Admin Routes
@@ -138,7 +139,6 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/attendance-reports', [AdminController::class, 'attendanceReports'])->name('admin.attendance-reports');
 });
 
-// Routes accessible by both teachers and admins
 Route::middleware(['role:teacher,admin'])->group(function () {
     Route::get('/student-id/print/{id}', [StudentIdController::class, 'printSingle'])->name('student.id.print');
     Route::get('/student-ids/print-all', [StudentIdController::class, 'printAll'])->name('student.ids.print.all');
@@ -156,4 +156,10 @@ Route::middleware(['role:teacher,admin'])->group(function () {
 Route::get('/attendance/{token}', [App\Http\Controllers\AttendanceSessionController::class, 'publicAttendance'])->name('attendance.public');
 Route::post('/attendance/{token}/qr-verify', [App\Http\Controllers\AttendanceSessionController::class, 'publicQrVerify'])->name('attendance.public.verify');
 Route::get('/attendance/{token}/status', [App\Http\Controllers\AttendanceSessionController::class, 'checkSessionStatus'])->name('attendance.public.status');
+
+// API Routes
+Route::get('/api/semester/time-sessions', [App\Http\Controllers\AttendanceSessionController::class, 'getTimeSessions']);
+
+// Attendance Forecasting
+Route::get('/teacher/attendance-forecast', [App\Http\Controllers\AttendanceForecastController::class, 'index'])->name('teacher.attendance.forecast');
 

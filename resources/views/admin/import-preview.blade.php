@@ -36,7 +36,6 @@
                     </div>
 
                     @if(count($errors) > 0)
-                        <!-- Errors Section -->
                         <div class="alert alert-danger">
                             <h6><i class="fas fa-exclamation-circle me-2"></i>Import Errors Found</h6>
                             <ul class="mb-0">
@@ -103,7 +102,6 @@
                                     <form action="{{ route('admin.students.import') }}" method="POST" class="d-inline">
                                         @csrf
                                         <input type="hidden" name="confirm_import" value="1">
-                                        <!-- You'd need to store the processed data in session or temp file -->
                                         <button type="submit" class="btn btn-success btn-lg me-2" 
                                                 @if(count($errors) > 0) disabled title="Fix errors before importing" @endif>
                                             <i class="fas fa-check me-2"></i>Confirm Import ({{ count($data) }} records)

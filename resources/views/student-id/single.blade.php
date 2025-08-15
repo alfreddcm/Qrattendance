@@ -20,8 +20,8 @@
             display: inline-block;
         }
         .student-id {
-            width: 85.6mm; /* 3.375 inches = 85.6mm */
-            height: 54mm; /* 2.125 inches = 54mm */
+            width: 85.6mm;  
+            height: 54mm;  
             border: 1px solid #333;
             background: #fff;
             padding: 0;
@@ -89,8 +89,8 @@
                 min-height: 100vh;
             }
             .student-id {
-                width: 85.6mm !important; /* 3.375 inches */
-                height: 54mm !important; /* 2.125 inches */
+                width: 85.6mm !important; 
+                height: 54mm !important; 
                 box-shadow: none;
                 border: 1px solid #000;
             }
