@@ -84,7 +84,17 @@
                                             @endif
                                         </td>
                                         <td class="py-1 fs-6">{{ $teacher->position ?? 'N/A' }}</td>
-                                        <td class="py-1 fs-6">{{ $teacher->section_name ?? 'N/A' }}</td>
+                                        <td class="py-1 fs-6">
+                                            @if($teacher->sections && $teacher->sections->count() > 0)
+                                                @foreach($teacher->sections as $section)
+                                                    <span class="badge bg-info me-1">{{ $section->name }} - Grade {{ $section->gradelevel }}</span>
+                                                @endforeach
+                                            @elseif($teacher->section)
+                                                <span class="badge bg-secondary">{{ $teacher->section->name }} - Grade {{ $teacher->section->gradelevel }}</span>
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
                                         <td class="py-1 fs-6">{{ $teacher->phone_number ?? 'N/A' }}</td>
                                         <td class="py-1">
                                             <div class="d-flex gap-1">
@@ -146,7 +156,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ route('admin.store-teacher') }}">
+            <form method="POST" action="{{ route('admin.store-teacher') }}" id="addTeacherForm">
                 @csrf
                 <div class="modal-body">
                     <div class="row">
@@ -191,10 +201,42 @@
                             <input type="text" class="form-control" id="add_position" name="position" placeholder="e.g., Math Teacher">
                         </div>
                         
-                        <!-- Section Name -->
-                        <div class="col-md-6 mb-3">
-                            <label for="add_section_name" class="form-label">Section Name</label>
-                            <input type="text" class="form-control" id="add_section_name" name="section_name" placeholder="e.g., Grade 10-A">
+                        <!-- Sections (Multiple Selection) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Available Sections</label>
+                            @if($sections->count() > 0)
+                                <div class="row">
+                                    @foreach($sections as $section)
+                                        @php
+                                            $isAssigned = in_array($section->id, $assignedSectionIds ?? []);
+                                        @endphp
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    value="{{ $section->id }}" 
+                                                    id="add_section_{{ $section->id }}" 
+                                                    name="sections[]"
+                                                    {{ $isAssigned ? 'disabled' : '' }}
+                                                >
+                                                <label class="form-check-label" for="add_section_{{ $section->id }}">
+                                                    {{ $section->name }} - Grade {{ $section->gradelevel }}
+                                                    @if($isAssigned)
+                                                        <span class="badge bg-warning ms-1">Already Assigned</span>
+                                                    @endif
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <small class="form-text text-muted">Select sections to assign to this teacher. Sections already assigned to other teachers are disabled.</small>
+                            @else
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Please add sections first before assigning teachers.
+                                </div>
+                            @endif
                         </div>
                         
                         <!-- Phone Number -->
@@ -271,12 +313,45 @@
                             <input type="text" class="form-control" id="edit_position" name="position" placeholder="e.g., Math Teacher">
                         </div>
                         
-                        <!-- Section Name -->
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_section_name" class="form-label">Section Name</label>
-                            <input type="text" class="form-control" id="edit_section_name" name="section_name" placeholder="e.g., Grade 10-A">
+                        <!-- Sections (Multiple Selection) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Available Sections</label>
+                            @if($sections->count() > 0)
+                                <div class="row" id="edit_sections_container">
+                                    @foreach($sections as $section)
+                                        @php
+                                            $isAssigned = in_array($section->id, $assignedSectionIds ?? []);
+                                        @endphp
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    value="{{ $section->id }}" 
+                                                    id="edit_section_{{ $section->id }}" 
+                                                    name="sections[]"
+                                                    data-section-id="{{ $section->id }}"
+                                                    {{ $isAssigned ? 'disabled' : '' }}
+                                                >
+                                                <label class="form-check-label" for="edit_section_{{ $section->id }}">
+                                                    {{ $section->name }} - Grade {{ $section->gradelevel }}
+                                                    @if($isAssigned)
+                                                        <span class="badge bg-warning ms-1">Already Assigned</span>
+                                                    @endif
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <small class="form-text text-muted">Select sections to assign to this teacher. Sections already assigned to other teachers are disabled.</small>
+                            @else
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Please add sections first before assigning teachers.
+                                </div>
+                            @endif
                         </div>
-                        
+     
                         <!-- Phone Number -->
                         <div class="col-md-6 mb-3">
                             <label for="edit_phone_number" class="form-label">Phone Number</label>
@@ -352,9 +427,92 @@ function editTeacher(teacherId) {
     document.getElementById('edit_password').value = '';
     document.getElementById('edit_school_id').value = teacher.school_id || '';
     document.getElementById('edit_position').value = teacher.position || '';
-    document.getElementById('edit_section_name').value = teacher.section_name || '';
     document.getElementById('edit_phone_number').value = teacher.phone_number || '';
+    
+    // Handle multiple sections selection with checkboxes
+    const editSectionsContainer = document.getElementById('edit_sections_container');
+    if (editSectionsContainer) {
+        // Clear all checkbox selections first
+        const checkboxes = editSectionsContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            // Only uncheck and enable if it's not disabled (not assigned to another teacher)
+            if (!checkbox.disabled) {
+                checkbox.checked = false;
+            }
+        });
+        
+        // Check sections that the teacher is assigned to
+        if (teacher.sections && teacher.sections.length > 0) {
+            teacher.sections.forEach(section => {
+                const checkbox = document.querySelector(`input[data-section-id="${section.id}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    // Enable the checkbox since this teacher owns this section
+                    checkbox.disabled = false;
+                    // Update label to remove "Already Assigned" badge for owned sections
+                    const label = checkbox.nextElementSibling;
+                    if (label) {
+                        const badge = label.querySelector('.badge');
+                        if (badge) {
+                            badge.remove();
+                        }
+                    }
+                }
+            });
+        }
+        // Fallback to legacy section_id if sections array is not available
+        else if (teacher.section_id) {
+            const checkbox = document.querySelector(`input[data-section-id="${teacher.section_id}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.disabled = false;
+            }
+        }
+    }
 }
+
+// Add form validation for section conflicts
+document.addEventListener('DOMContentLoaded', function() {
+    // Validate Add Teacher form
+    const addTeacherForm = document.getElementById('addTeacherForm');
+    if (addTeacherForm) {
+        addTeacherForm.addEventListener('submit', function(e) {
+            const checkedSections = addTeacherForm.querySelectorAll('input[name="sections[]"]:checked');
+            const disabledCheckedSections = Array.from(checkedSections).filter(cb => cb.disabled);
+            
+            if (disabledCheckedSections.length > 0) {
+                e.preventDefault();
+                alert('Error: You have selected sections that are already assigned to other teachers. Please uncheck disabled sections and try again.');
+                return false;
+            }
+        });
+    }
+    
+    // Validate Edit Teacher form
+    const editTeacherForm = document.getElementById('editTeacherForm');
+    if (editTeacherForm) {
+        editTeacherForm.addEventListener('submit', function(e) {
+            const checkedSections = editTeacherForm.querySelectorAll('input[name="sections[]"]:checked');
+            const disabledCheckedSections = Array.from(checkedSections).filter(cb => cb.disabled);
+            
+            if (disabledCheckedSections.length > 0) {
+                e.preventDefault();
+                alert('Error: You have selected sections that are already assigned to other teachers. Please uncheck disabled sections and try again.');
+                return false;
+            }
+        });
+    }
+    
+    // Add visual feedback for disabled checkboxes
+    const disabledCheckboxes = document.querySelectorAll('input[type="checkbox"]:disabled');
+    disabledCheckboxes.forEach(function(checkbox) {
+        const label = checkbox.nextElementSibling;
+        if (label) {
+            label.style.opacity = '0.6';
+            label.style.textDecoration = 'line-through';
+        }
+    });
+});
 </script>
 
 @endsection

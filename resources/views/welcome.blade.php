@@ -90,7 +90,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-uppercase fw-semibold mb-1">Password</label>
-                            <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                            <input type="password" name="password" class="form-control" required placeholder="Enter password">
                         </div>
                         @if($errors->has('login'))
                             <div class="alert alert-danger py-2 small mb-3">{{ $errors->first('login') }}</div>

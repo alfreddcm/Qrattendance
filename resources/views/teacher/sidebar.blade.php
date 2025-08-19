@@ -117,7 +117,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px 0 30px 0;
+            padding: 5px 0 10px 0;
             transition: width 0.3s;
             height: 100vh;
             position: fixed;
@@ -222,8 +222,8 @@
             margin: 0;
         }
         .sidebar h2 {
-            margin: 0 0 30px 0;
-            font-size: 1.5em;
+            margin: 0 0 25px 0;
+            font-size: 1.1em;
             font-weight: 600;
         }
         .sidebar ul {
@@ -241,7 +241,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            padding: 16px 30px;
+            padding: 16px 15px;
             color: #fff;
             text-decoration: none;
             transition: background 0.2s, padding 0.3s;
@@ -468,7 +468,7 @@
             </li>
             <li>
                 <a href="{{ route('teacher.semesters') }}" class="{{ request()->routeIs('teacher.semesters') ? 'active' : '' }}">
-                    <span class="icon"><i class="fas fa-layer-group"></i></span> <span>Semester</span>
+                    <span class="icon"><i class="fas fa-layer-group"></i></span> <span>Semester and Sections</span>
                 </a>
             </li>
             <li>

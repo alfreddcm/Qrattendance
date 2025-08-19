@@ -11,6 +11,7 @@ class OutboundMessage extends Model
 
     protected $fillable = [
         'teacher_id',
+        'admin_id',
         'student_id',
         'contact_number',
         'message',
@@ -33,5 +34,10 @@ class OutboundMessage extends Model
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }

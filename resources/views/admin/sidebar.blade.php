@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard')</title>
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
-    <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
+    <!-- FontAwesome from CDN with fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="{{ asset('js/all.min.js') }}"></script>
     
     <style>
@@ -145,7 +148,7 @@
 
         .sidebar h2 {
             margin: 0 0 20px 0;
-            font-size: 1.3em;
+            font-size: 1.1em;
             font-weight: 600;
             color: #ecf0f1;
         }
@@ -724,6 +727,11 @@
             <li>
                 <a href="{{ route('admin.manage-students') }}" class="{{ request()->routeIs('admin.manage-students') ? 'active' : '' }}">
                     <span class="icon"><i class="fas fa-user-graduate"></i></span> <span>Students</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.message') }}" class="{{ request()->routeIs('admin.message') ? 'active' : '' }}">
+                    <span class="icon"><i class="fas fa-comments"></i></span> <span>Message</span>
                 </a>
             </li>
             <li>

@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\Semester;
+use App\Models\Section;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -19,66 +20,48 @@ class StudentsWithAttendanceSeeder extends Seeder
             if (!$semester) {
                 throw new \Exception('No semester found.');
             }
-            $startDate = Carbon::parse($semester->start_date);
+
+            // Get sections
+            $stemSection = Section::where('name', 'STEM')->where('gradelevel', 11)->first();
+            $hummsSection = Section::where('name', 'HUMMS')->where('gradelevel', 12)->first();
+            
+            if (!$stemSection || !$hummsSection) {
+                throw new \Exception('Sections not found. Please run SectionSeeder first.');
+            }
 
             // Filipino name pools
             $lastNames = ['Dela Cruz', 'Santos', 'Reyes', 'Cruz', 'Bautista', 'Garcia', 'Mendoza', 'Torres', 'Gonzales', 'Ramos', 'Lopez', 'Aquino', 'Morales', 'Castro', 'Flores', 'Villanueva', 'Navarro', 'Domingo', 'Gutierrez', 'Silva'];
             $firstNames = ['Juan', 'Maria', 'Jose', 'Ana', 'Pedro', 'Luisa', 'Carlos', 'Angelica', 'Miguel', 'Kristine', 'Paolo', 'Emmanuel', 'Andrea', 'Marco', 'Catherine', 'Francis', 'Isabel', 'Alfred', 'Jasmine', 'Rafael'];
-            $middleInitials = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
-            $sections = ['A', 'B', 'C', 'D'];
+            $middleInitials = range('A', 'T');
             $genders = ['M', 'F'];
 
             $students = [];
-            for ($i = 1; $i <= 30; $i++) {
-                $ln = $lastNames[array_rand($lastNames)];
-                $fn = $firstNames[array_rand($firstNames)];
-                $mi = $middleInitials[array_rand($middleInitials)];
-                $name = "$ln, $fn $mi.";
-                $gender = $genders[array_rand($genders)];
-                $age = rand(16, 19);
-                $section = $sections[array_rand($sections)];
-                $id_no = str_pad($i, 4, '0', STR_PAD_LEFT);
-                $address = 'Barangay ' . chr(65 + ($i % 26)) . ', City';
-                $cp_no = '09' . rand(10, 99) . rand(1000000, 9999999);
-                $contact_person_name = $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)];
-                $contact_person_relationship = 'Parent';
-                $contact_person_contact = '09' . rand(10, 99) . rand(1000000, 9999999);
-                $picture = null;
-                $qr_code = 'QR' . $id_no;
-                $stud_code = 'STUD' . $id_no;
-                $user_id = 2;
-                $school_id = 1; 
-                $semester_id = $semester->id;
 
-                $students[] = Student::create([
-                    'id_no' => $id_no,
-                    'name' => $name,
-                    'gender' => $gender,
-                    'age' => $age,
-                    'address' => $address,
-                    'cp_no' => $cp_no,
-                    'picture' => $picture,
-                    'contact_person_name' => $contact_person_name,
-                    'contact_person_relationship' => $contact_person_relationship,
-                    'contact_person_contact' => $contact_person_contact,
-                    'semester_id' => $semester_id,
-                    'user_id' => $user_id,
-                    'school_id' => $school_id,
-                    'qr_code' => $qr_code,
-                    'stud_code' => $stud_code,
-                ]);
+            // 50 students - Grade 11 STEM
+            for ($i = 1; $i <= 50; $i++) {
+                $students[] = Student::create($this->generateStudentData($i, $semester->id, $stemSection->id, $lastNames, $firstNames, $middleInitials, $genders));
             }
 
-            $endDate = Carbon::parse($semester->end_date);
+            // 50 students - Grade 12 HUMMS
+            for ($i = 51; $i <= 100; $i++) {
+                $students[] = Student::create($this->generateStudentData($i, $semester->id, $hummsSection->id, $lastNames, $firstNames, $middleInitials, $genders));
+            }
+
+            // Attendance date range: June 2 to Aug 8
+            $startDate = Carbon::create(null, 6, 2);
+            $endDate = Carbon::create(null, 8, 8);
+            $dates = [];
             $period = $startDate->copy();
             while ($period->lte($endDate)) {
-                $dates[] = $period->copy();
+                if (!$period->isWeekend()) {
+                    $dates[] = $period->copy();
+                }
                 $period->addDay();
             }
 
             foreach ($students as $student) {
                 foreach ($dates as $date) {
-                    // Randomly decide if student is absent (20% chance)
+                    // 20% chance absent
                     if (rand(1, 100) <= 20) {
                         Attendance::create([
                             'semester_id' => $student->semester_id,
@@ -93,14 +76,16 @@ class StudentsWithAttendanceSeeder extends Seeder
                         ]);
                         continue;
                     }
-                    // Randomize lateness (30% chance late in AM)
+
+                    // 30% chance late in AM
                     $late = rand(1, 100) <= 30;
-                    $am_in_hour = $late ? rand(8, 9) : rand(7, 7);
+                    $am_in_hour = $late ? rand(8, 9) : 7;
                     $am_in_min = rand(0, 59);
                     $am_in = sprintf('%02d:%02d:00', $am_in_hour, $am_in_min);
                     $am_out = sprintf('%02d:%02d:00', rand(11, 12), rand(0, 59));
                     $pm_in = sprintf('%02d:%02d:00', rand(13, 14), rand(0, 59));
                     $pm_out = sprintf('%02d:%02d:00', rand(15, 16), rand(0, 59));
+
                     Attendance::create([
                         'semester_id' => $student->semester_id,
                         'student_id' => $student->id,
@@ -115,5 +100,37 @@ class StudentsWithAttendanceSeeder extends Seeder
                 }
             }
         });
+    }
+
+    private function generateStudentData($id, $semester_id, $section_id, $lastNames, $firstNames, $middleInitials, $genders)
+    {
+        $ln = $lastNames[array_rand($lastNames)];
+        $fn = $firstNames[array_rand($firstNames)];
+        $mi = $middleInitials[array_rand($middleInitials)];
+        $gender = $genders[array_rand($genders)];
+        $address = 'Barangay ' . chr(65 + ($id % 26)) . ', City';
+        $cp_no = '09' . rand(10, 99) . rand(1000000, 9999999);
+        $contact_person_name = $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)];
+        $contact_person_contact = '09' . rand(10, 99) . rand(1000000, 9999999);
+        $id_no = str_pad($id, 4, '0', STR_PAD_LEFT);
+
+        return [
+            'id_no' => $id_no,
+            'name' => "$ln, $fn $mi.",
+            'gender' => $gender,
+            'age' => rand(16, 19),
+            'address' => $address,
+            'cp_no' => $cp_no,
+            'picture' => null,
+            'contact_person_name' => $contact_person_name,
+            'contact_person_relationship' => 'Parent',
+            'contact_person_contact' => $contact_person_contact,
+            'semester_id' => $semester_id,
+            'section_id' => $section_id,
+            'user_id' => 2,
+            'school_id' => 1,
+            'qr_code' => 'QR' . $id_no,
+            'stud_code' => 'STUD' . $id_no,
+        ];
     }
 }

@@ -16,7 +16,6 @@ class Student extends Model
     protected $fillable = [
         'id_no', 
         'name',
-        'section', 
         'gender', 
         'age', 
         'address', 
@@ -25,17 +24,39 @@ class Student extends Model
         'contact_person_name',
         'contact_person_relationship',
         'contact_person_contact',
+        'qr_code',
+        'stud_code',
         'semester_id',
+        'section_id',
+        'remarks',
         'user_id',
         'school_id',
         'qr_code',
         'stud_code'
     ];
 
+    // Accessor for grade_level (from section relationship)
+    public function getGradeLevelAttribute()
+    {
+        return $this->section ? $this->section->gradelevel : null;
+    }
+
+    // Accessor for section name (from section relationship)
+    public function getSectionNameAttribute()
+    {
+        return $this->section ? $this->section->name : null;
+    }
+
     // Relationship: Student belongs to a Semester
     public function semester()
     {
         return $this->belongsTo(Semester::class, 'semester_id');
+    }
+
+    // Relationship: Student belongs to a Section
+    public function section()
+    {
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
     // Relationship: Student belongs to a User (Teacher)

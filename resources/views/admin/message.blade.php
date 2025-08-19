@@ -1,4 +1,4 @@
-@extends('teacher/sidebar')
+@extends('admin/sidebar')
 @section('title', 'SMS Messages')
 @section('content')
 
@@ -17,7 +17,7 @@
 </div>
 
 <div class="container mt-4">
-     <div class="row mb-4">
+    <div class="row mb-4">
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
@@ -26,9 +26,12 @@
                 <div class="card-body">
                     <form id="filterForm" class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Student</label>
-                            <select class="form-select form-select-sm" id="studentFilter">
-                                <option value="">All Students</option>
+                            <label class="form-label">Recipient Type</label>
+                            <select class="form-select form-select-sm" id="recipientTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="teacher">Teachers</option>
+                                <option value="student">Students</option>
+                                <option value="broadcast">Broadcast</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -86,30 +89,27 @@
         </div>
     </div>
 
-     <div class="card">
+    <div class="card">
         <div class="card-header">
-        <div class="row align-items-center">
-            <div class="col">
-                <h6 class="mb-0"><i class="fas fa-list me-1"></i>Message History</h6>
-            </div>
-            <div class="col text-end">
-                <div class="d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="loadMessages()" title="Refresh Messages">
-                        <i class="fas fa-sync-alt me-1"></i>Refresh
-                    </button>
-                    <button class="btn btn-outline-primary btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()">
-                        <i class="fas fa-signal me-1"></i><span id="checkSmsStatusText">Check SMS Status</span>
-                        <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
-                    </button>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal">
-                        <i class="fas fa-plus me-1"></i>Send SMS
-                    </button>
+            <div class="row align-items-center">
+                <div class="col">
+                    <h6 class="mb-0"><i class="fas fa-list me-1"></i>Message History</h6>
+                </div>
+                <div class="col text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="loadMessages()" title="Refresh Messages">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()">
+                            <i class="fas fa-signal me-1"></i><span id="checkSmsStatusText">Check SMS Status</span>
+                            <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal">
+                            <i class="fas fa-plus me-1"></i>Send SMS
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-
-
-       
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -119,7 +119,7 @@
                             <th class="py-2 small">Date</th>
                             <th class="py-2 small">Recipient</th>
                             <th class="py-2 small">Message</th>
-                            <th class="py-2 small">Teacher</th>
+                            <th class="py-2 small">Sender</th>
                             <th class="py-2 small">Status</th>
                             <th class="py-2 small">Actions</th>
                         </tr>
@@ -137,9 +137,9 @@
                 </table>
             </div>
             
-             <nav aria-label="Messages pagination" class="mt-3">
+            <nav aria-label="Messages pagination" class="mt-3">
                 <ul class="pagination pagination-sm justify-content-center" id="pagination">
-                 </ul>
+                </ul>
             </nav>
         </div>
     </div>
@@ -161,7 +161,19 @@
                         <div class="col-md-6">
                             <label class="form-label mb-1">Send To</label>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="allParentsRadio" value="all_parents" checked onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType" id="allTeachersRadio" value="all_teachers" checked onchange="toggleRecipientOptions()">
+                                <label class="form-check-label small" for="allTeachersRadio">
+                                    <i class="fas fa-chalkboard-teacher me-2"></i>All Teachers
+                                </label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="radio" name="recipientType" id="specificTeacherRadio" value="specific_teacher" onchange="toggleRecipientOptions()">
+                                <label class="form-check-label small" for="specificTeacherRadio">
+                                    <i class="fas fa-user-tie me-2"></i>Specific Teacher
+                                </label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="radio" name="recipientType" id="allParentsRadio" value="all_parents" onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="allParentsRadio">
                                     <i class="fas fa-users me-2"></i>All Student Parents
                                 </label>
@@ -169,31 +181,41 @@
                             <div class="form-check mb-1">
                                 <input class="form-check-input" type="radio" name="recipientType" id="specificStudentRadio" value="specific_student" onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="specificStudentRadio">
-                                    <i class="fas fa-user me-2"></i>Specific Student
+                                    <i class="fas fa-user-graduate me-2"></i>Specific Student
                                 </label>
                             </div>
-                          
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="recipientType" id="customNumberRadio" value="custom" onchange="toggleRecipientOptions()">
+                                <label class="form-check-label small" for="customNumberRadio">
+                                    <i class="fas fa-phone me-2"></i>Custom Number
+                                </label>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <div id="allParentsDiv">
+                            <div id="allTeachersDiv">
                                 <label class="form-label mb-1">Recipients</label>
                                 <div class="alert alert-info small py-1 px-2 mb-1">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Message will be sent to all parents of students in your class
+                                    Message will be sent to all teachers in the system
+                                </div>
+                            </div>
+                            <div id="teacherSelectDiv" style="display:none;">
+                                <label for="teacherSelect" class="form-label mb-1">Select Teacher</label>
+                                <select class="form-select form-select-sm" id="teacherSelect" onchange="onTeacherSelect()">
+                                    <option value="">Choose a teacher...</option>
+                                </select>
+                            </div>
+                            <div id="allParentsDiv" style="display:none;">
+                                <label class="form-label mb-1">Recipients</label>
+                                <div class="alert alert-info small py-1 px-2 mb-1">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Message will be sent to all parents of students in the system
                                 </div>
                             </div>
                             <div id="studentSelectDiv" style="display:none;">
                                 <label for="studentSelect" class="form-label mb-1">Select Student</label>
                                 <select class="form-select form-select-sm" id="studentSelect" onchange="onStudentSelect()">
                                     <option value="">Choose a student...</option>
-                                    @foreach($students as $student)
-                                        <option value="{{ $student->id }}" 
-                                                data-phone="{{ $student->contact_person_contact ?? '' }}" 
-                                                data-parent="{{ $student->contact_person_contact ?? '' }}" 
-                                                data-parent-name="{{ $student->contact_person_name ?? 'Unknown' }}">
-                                            {{ $student->name }}
-                                        </option>
-                                    @endforeach
                                 </select>
                             </div>
                             <div id="customNumberDiv" style="display:none;">
@@ -207,10 +229,38 @@
                         </div>
                     </div>
                     
-                     <div class="mb-2" id="studentInfoPanel" style="display:none;">
+                    <div class="mb-2" id="teacherInfoPanel" style="display:none;">
                         <div class="card border-info mb-0">
                             <div class="card-header bg-light py-1 px-2">
-                                <h6 class="mb-0 small"><i class="fas fa-user me-1"></i>Student Information</h6>
+                                <h6 class="mb-0 small"><i class="fas fa-chalkboard-teacher me-1"></i>Teacher Information</h6>
+                            </div>
+                            <div class="card-body py-1 px-2">
+                                <div class="row g-1">
+                                    <div class="col-6">
+                                        <small class="text-muted">Teacher:</small>
+                                        <div class="fw-bold small" id="teacherInfoName">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Section:</small>
+                                        <div class="fw-bold small" id="teacherInfoSection">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Contact:</small>
+                                        <div class="fw-bold small" id="teacherInfoContact">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">School:</small>
+                                        <div class="fw-bold small" id="teacherInfoSchool">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-2" id="studentInfoPanel" style="display:none;">
+                        <div class="card border-info mb-0">
+                            <div class="card-header bg-light py-1 px-2">
+                                <h6 class="mb-0 small"><i class="fas fa-user-graduate me-1"></i>Student Information</h6>
                             </div>
                             <div class="card-body py-1 px-2">
                                 <div class="row g-1">
@@ -219,8 +269,8 @@
                                         <div class="fw-bold small" id="studentInfoName">-</div>
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted">Section:</small>
-                                        <div class="fw-bold small" id="studentInfoSection">-</div>
+                                        <small class="text-muted">Teacher:</small>
+                                        <div class="fw-bold small" id="studentInfoTeacher">-</div>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted">Contact:</small>
@@ -239,13 +289,13 @@
                         <label for="messageTemplate" class="form-label mb-1">Message Template</label>
                         <select class="form-select form-select-sm" id="messageTemplate" onchange="applyTemplate()">
                             <option value="">Custom Message</option>
-                            <option value="absent">Absent Today</option>
-                            <option value="reminder">General Reminder</option>
-                            <option value="meeting">Parent Meeting</option>
-                            <option value="assignment">Assignment Reminder</option>
-                            <option value="exam">Exam Notice</option>
-                            <option value="event">School Event</option>
-                            <option value="performance">Academic Performance</option>
+                            <option value="announcement">General Announcement</option>
+                            <option value="meeting">Meeting Notice</option>
+                            <option value="reminder">Reminder</option>
+                            <option value="urgent">Urgent Notice</option>
+                            <option value="training">Training Notice</option>
+                            <option value="system">System Maintenance</option>
+                            <option value="holiday">Holiday Notice</option>
                         </select>
                     </div>
                     
@@ -269,9 +319,9 @@
                         <div class="mt-1" id="signaturePreview">
                             <small class="text-muted">Signature preview:</small>
                             <div class="p-1 bg-light rounded small" id="signatureText">
-                                <div class="fw-bold">{{ Auth::user()->name ?? 'Teacher Name' }}</div>
-                                <div>{{ Auth::user()->section_name ?? 'Section Name' }}</div>
-                                <div>{{ Auth::user()->school->name ?? 'School Name' }}</div>
+                                <div class="fw-bold">{{ Auth::user()->name ?? 'Admin' }}</div>
+                                <div>System Administrator</div>
+                                <div>{{ Auth::user()->school->name ?? 'School Administration' }}</div>
                             </div>
                         </div>
                     </div>
@@ -298,8 +348,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="messageDetailContent">
- <!-- content  -->
-        </div>
+                <!-- content -->
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -388,11 +438,13 @@
     padding: 0.5rem 1rem;
 }
 
-/* Compact Student Info */
+/* Compact Info Panels */
+#teacherInfoPanel .card-body,
 #studentInfoPanel .card-body {
     font-size: 0.875rem;
 }
 
+#teacherInfoPanel .small,
 #studentInfoPanel .small {
     font-size: 0.8rem !important;
 }
@@ -401,67 +453,89 @@
 <script>
 let currentPage = 1;
 let totalPages = 1;
+let allTeachers = [];
 let allStudents = [];
 
 const messageTemplates = {
-    absent: "Good day! Your child [STUDENT_NAME] was absent from school today ([DATE]). Please ensure they attend tomorrow with a valid excuse letter if needed.",
-    reminder: "Good day! This is a reminder about your child [STUDENT_NAME] from [SECTION]. Please check with your child for any assignments or announcements.",
-    meeting: "Good day! You are invited to a parent meeting regarding your child [STUDENT_NAME] on [DATE]. Please contact the school for more details.",
-    assignment: "Good day! Your child [STUDENT_NAME] has pending assignments. Please remind them to submit their work on time.",
-    exam: "Good day! This is to inform you that [STUDENT_NAME] has an upcoming exam. Please ensure they are well-prepared.",
-    event: "Good day! We would like to inform you about an upcoming school event involving [STUDENT_NAME]. More details will follow.",
-    performance: "Good day! We would like to discuss [STUDENT_NAME]'s academic performance with you. Please contact us at your earliest convenience."
+    announcement: "Good day! This is an important announcement from the administration. Please be informed that [DETAILS]. Thank you for your attention.",
+    meeting: "Good day! You are invited to attend a meeting on [DATE] at [TIME]. The agenda includes [AGENDA]. Please confirm your attendance.",
+    reminder: "Good day! This is a friendly reminder about [TOPIC]. Please ensure that [ACTION] is completed by [DATE].",
+    urgent: "URGENT: This is an urgent notice regarding [SUBJECT]. Immediate attention is required. Please [ACTION] as soon as possible.",
+    training: "Good day! We are pleased to inform you about an upcoming training session on [TOPIC] scheduled for [DATE]. Please [ACTION].",
+    system: "System Maintenance Notice: The attendance system will be temporarily unavailable on [DATE] from [START_TIME] to [END_TIME] for maintenance.",
+    holiday: "Holiday Notice: Please be informed that [DATE] is declared a non-working holiday. Classes and office work are suspended."
 };
 
- const teacherInfo = {
-    name: '{{ Auth::user()->name ?? "Teacher Name" }}',
-    section: '{{ Auth::user()->section_name ?? "Section Name" }}',
-    school: '{{ Auth::user()->school->name ?? "School Name" }}'
+const adminInfo = {
+    name: '{{ Auth::user()->name ?? "Administrator" }}',
+    title: 'System Administrator',
+    school: '{{ Auth::user()->school->name ?? "School Administration" }}'
 };
+
+function loadTeachers() {
+    console.log('Loading teachers...');
+    fetch('/admin/get-teachers')
+        .then(response => {
+            console.log('Teachers API response:', response);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log('Teachers loaded:', data.teachers);
+                allTeachers = data.teachers;
+                
+                const teacherSelect = $('#teacherSelect');
+                teacherSelect.empty().append('<option value="">Choose a teacher...</option>');
+                
+                data.teachers.forEach(teacher => {
+                    const option = $('<option></option>')
+                        .val(teacher.id)
+                        .data('section', teacher.section_name || '')
+                        .data('phone', teacher.phone_number || '')
+                        .data('school', teacher.school ? teacher.school.name : '')
+                        .text(teacher.name.trim());
+                    teacherSelect.append(option);
+                });
+            } else {
+                console.error('Error loading teachers:', data.message);
+                showAlert('Error loading teachers: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading teachers:', error);
+            showAlert('Error loading teachers: ' + error.message, 'danger');
+        });
+}
 
 function loadStudents() {
-    console.log('Loading students for filter and selector...');
-    fetch('/teacher/get-students')
+    console.log('Loading students...');
+    fetch('/admin/get-all-students')
         .then(response => {
             console.log('Students API response:', response);
             return response.json();
         })
-        .then(students => {
-            console.log('Students loaded:', students);
-            console.log('First student data:', students[0]);
-            allStudents = students;
-            
-            // Populate the filter dropdown
-            const studentFilter = $('#studentFilter');
-            studentFilter.empty().append('<option value="">All Students</option>');
-            
-            // Populate the select dropdown for sending messages
-            const studentSelect = $('#studentSelect');
-            studentSelect.empty().append('<option value="">Select Student</option>');
-            
-            students.forEach(student => {
-                console.log(`Student ${student.name}: section=${student.section}, grade=${student.grade_level}`);
+        .then(data => {
+            if (data.success) {
+                console.log('Students loaded:', data.students);
+                allStudents = data.students;
                 
-                // Create option for filter dropdown
-                const filterOption = $('<option></option>')
-                    .val(student.id)
-                    .text(student.name.trim());
-                studentFilter.append(filterOption);
+                const studentSelect = $('#studentSelect');
+                studentSelect.empty().append('<option value="">Choose a student...</option>');
                 
-                // Create option for select dropdown (with data attributes)
-                const selectOption = $('<option></option>')
-                    .val(student.id)
-                    .data('section', student.section || '')
-                    .data('grade', student.grade_level || '')
-                    .data('parent', student.contact_person_contact || '')
-                    .data('parent-name', student.contact_person_name || '')
-                    .text(student.name.trim());
-                console.log('Created option with data:', {
-                    section: selectOption.data('section'),
-                    grade: selectOption.data('grade')
+                data.students.forEach(student => {
+                    const option = $('<option></option>')
+                        .val(student.id)
+                        .data('teacher', student.user ? student.user.name : 'Unknown')
+                        .data('parent', student.contact_person_contact || '')
+                        .data('parent-name', student.contact_person_name || '')
+                        .data('school', student.school ? student.school.name : '')
+                        .text(student.name.trim());
+                    studentSelect.append(option);
                 });
-                studentSelect.append(selectOption);
-            });
+            } else {
+                console.error('Error loading students:', data.message);
+                showAlert('Error loading students: ' + data.message, 'danger');
+            }
         })
         .catch(error => {
             console.error('Error loading students:', error);
@@ -469,9 +543,9 @@ function loadStudents() {
         });
 }
 
- function loadMessages() {
+function loadMessages() {
     const filters = {
-        student_id: $('#studentFilter').val(),
+        recipient_type: $('#recipientTypeFilter').val(),
         status: $('#statusFilter').val(),
         start_date: $('#startDate').val(),
         end_date: $('#endDate').val(),
@@ -484,7 +558,7 @@ function loadStudents() {
     
     const queryString = new URLSearchParams(filters).toString();
     
-    fetch(`/teacher/outbound-messages?${queryString}`)
+    fetch(`/admin/outbound-messages?${queryString}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -492,7 +566,7 @@ function loadStudents() {
             return response.json();
         })
         .then(data => {
-            console.log('API response:', data); 
+            console.log('API response:', data);
             if (data.success) {
                 if (!data.messages || !Array.isArray(data.messages) || data.messages.length === 0) {
                     displayEmptyState('No messages found');
@@ -515,15 +589,15 @@ function loadStudents() {
         });
 }
 
- function displayMessages(messages) {
+function displayMessages(messages) {
     const tbody = $('#messagesTableBody');
     
-     if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
         displayEmptyState('No messages found');
         return;
     }
     
-    console.log('Displaying messages:', messages); // Debug log
+    console.log('Displaying messages:', messages);
     
     const rows = messages.map(message => {
         const statusBadge = getStatusBadge(message.status);
@@ -531,12 +605,16 @@ function loadStudents() {
         // Handle different recipient types
         let recipientDisplay = '';
         if (message.recipient_type === 'broadcast') {
-            recipientDisplay = `All Parents (${message.recipient_count || 'Multiple'})`;
+            recipientDisplay = `Broadcast (${message.recipient_count || 'Multiple'})`;
+        } else if (message.recipient_type === 'teacher') {
+            recipientDisplay = message.teacher ? `Teacher: ${message.teacher.name}` : 'Teacher';
+        } else if (message.recipient_type === 'student') {
+            recipientDisplay = message.student ? `Student: ${message.student.name}` : 'Student';
         } else {
-            recipientDisplay = message.student ? message.student.name : 'Custom Number';
+            recipientDisplay = 'Custom Number';
         }
         
-        const teacherName = message.teacher ? message.teacher.name : 'Unknown Teacher';
+        const senderName = message.admin ? message.admin.name : (message.teacher ? message.teacher.name : 'System');
         const messagePreview = message.message && message.message.length > 70 ? 
             message.message.substring(0, 70) + '...' : (message.message || 'No message');
         
@@ -549,14 +627,13 @@ function loadStudents() {
                         ${escapeHtml(messagePreview)}
                     </span>
                 </td>
-                <td class="py-1 small">${teacherName}</td>
+                <td class="py-1 small">${senderName}</td>
                 <td class="py-1">${statusBadge}</td>
                 <td class="py-1">
                     <div class="btn-group btn-group-sm" role="group">
                         <button class="btn btn-outline-primary btn-sm" onclick="viewMessage(${message.id})" title="View Details">
                             <i class="fas fa-eye"></i>
                         </button>
-                         
                     </div>
                 </td>
             </tr>
@@ -566,7 +643,7 @@ function loadStudents() {
     tbody.html(rows);
 }
 
- function displayEmptyState(message) {
+function displayEmptyState(message) {
     $('#messagesTableBody').html(`
         <tr>
             <td colspan="6" class="text-center py-4">
@@ -577,7 +654,7 @@ function loadStudents() {
     `);
 }
 
- function getStatusBadge(status) {
+function getStatusBadge(status) {
     const badges = {
         pending: '<span class="badge bg-warning">Pending</span>',
         sent: '<span class="badge bg-info">Sent</span>',
@@ -587,7 +664,7 @@ function loadStudents() {
     return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
 }
 
- function updatePagination(pagination) {
+function updatePagination(pagination) {
     if (!pagination) return;
     
     currentPage = pagination.current_page;
@@ -602,94 +679,100 @@ function loadStudents() {
     
     let paginationHtml = '';
     
-     if (currentPage > 1) {
+    if (currentPage > 1) {
         paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a></li>`;
     }
     
-     for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
         const activeClass = i === currentPage ? 'active' : '';
         paginationHtml += `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
     }
     
-     if (currentPage < totalPages) {
+    if (currentPage < totalPages) {
         paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a></li>`;
     }
     
     paginationEl.html(paginationHtml);
 }
 
- function updateStats(stats) {
+function updateStats(stats) {
     if (stats) {
         $('#totalSent').text(stats.sent || 0);
         $('#totalFailed').text(stats.failed || 0);
     }
 }
 
- function changePage(page) {
+function changePage(page) {
     currentPage = page;
     loadMessages();
 }
 
- function clearFilters() {
+function clearFilters() {
     $('#filterForm')[0].reset();
     currentPage = 1;
     loadMessages();
 }
 
- function toggleRecipientOptions() {
+function toggleRecipientOptions() {
     const selectedType = $('input[name="recipientType"]:checked').val();
     
-     $('#allParentsDiv').hide();
+    // Hide all option divs and info panels
+    $('#allTeachersDiv').hide();
+    $('#teacherSelectDiv').hide();
+    $('#allParentsDiv').hide();
     $('#studentSelectDiv').hide();
     $('#customNumberDiv').hide();
+    $('#teacherInfoPanel').hide();
     $('#studentInfoPanel').hide();
     
-     if (selectedType === 'all_parents') {
+    // Show relevant options based on selection
+    if (selectedType === 'all_teachers') {
+        $('#allTeachersDiv').show();
+    } else if (selectedType === 'specific_teacher') {
+        $('#teacherSelectDiv').show();
+        const selectedValue = $('#teacherSelect').val();
+        if (selectedValue) {
+            $('#teacherInfoPanel').show();
+            onTeacherSelect();
+        }
+    } else if (selectedType === 'all_parents') {
         $('#allParentsDiv').show();
     } else if (selectedType === 'specific_student') {
         $('#studentSelectDiv').show();
-         const selectedValue = $('#studentSelect').val();
+        const selectedValue = $('#studentSelect').val();
         if (selectedValue) {
             $('#studentInfoPanel').show();
-            onStudentSelect();  
+            onStudentSelect();
         }
     } else if (selectedType === 'custom') {
         $('#customNumberDiv').show();
     }
 }
 
- function applyTemplate() {
-    const template = $('#messageTemplate').val();
-    if (template && messageTemplates[template]) {
-        const selectedType = $('input[name="recipientType"]:checked').val();
-        let message = messageTemplates[template];
+function onTeacherSelect() {
+    console.log('Teacher selection changed');
+    const teacherSelect = $('#teacherSelect');
+    const selectedValue = teacherSelect.val();
+    const selectedOption = teacherSelect.find('option:selected');
+    
+    if (selectedValue && selectedValue !== '') {
+        const teacherName = selectedOption.text();
+        const teacherSection = selectedOption.data('section') || 'Not assigned';
+        const teacherPhone = selectedOption.data('phone') || 'No phone contact';
+        const teacherSchool = selectedOption.data('school') || 'Unknown';
         
-         const today = new Date().toLocaleDateString('en-PH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        message = message.replace(/\[DATE\]/g, today);
+        $('#teacherInfoName').text(teacherName);
+        $('#teacherInfoSection').text(teacherSection);
+        $('#teacherInfoContact').text(teacherPhone);
+        $('#teacherInfoSchool').text(teacherSchool);
+        $('#teacherInfoPanel').show();
         
-        // Replace student-specific placeholders
-        if (selectedType === 'specific_student') {
-            const selectedStudent = $('#studentSelect option:selected').text();
-            if (selectedStudent && selectedStudent !== 'Choose a student...') {
-                message = message.replace(/\[STUDENT_NAME\]/g, selectedStudent);
-            } else {
-                message = message.replace(/\[STUDENT_NAME\]/g, 'your child');
-            }
-        } else {
-             message = message.replace(/\[STUDENT_NAME\]/g, 'your child');
+        const currentTemplate = $('#messageTemplate').val();
+        if (currentTemplate) {
+            applyTemplate();
         }
-        
-        message = message.replace(/\[SECTION\]/g, teacherInfo.section);
-        
-        $('#messageText').val(message).trigger('input');
-        
-         if ($('#autoSignature').is(':checked')) {
-            addSignature();
-        }
+    } else {
+        $('#teacherInfoPanel').hide();
     }
 }
 
@@ -701,62 +784,110 @@ function onStudentSelect() {
     
     if (selectedValue && selectedValue !== '') {
         const studentName = selectedOption.text();
-        const studentSection = selectedOption.data('section') || 'Not assigned';
-        const studentGrade = selectedOption.data('grade') || '';
+        const studentTeacher = selectedOption.data('teacher') || 'Unknown';
         const parentContact = selectedOption.data('parent') || 'No parent contact';
         const parentName = selectedOption.data('parent-name') || 'Unknown';
         
-        console.log('Selected student data:', {
-            name: studentName,
-            section: studentSection,
-            grade: studentGrade,
-            rawSectionData: selectedOption.data('section'),
-            rawGradeData: selectedOption.data('grade')
-        });
-        
-        // Display combined grade and section if both are available
-        const sectionDisplay = studentGrade && studentSection && studentSection !== 'Not assigned' ? 
-            `${studentGrade} - ${studentSection}` : 
-            (studentSection || 'Not assigned');
-        
-        console.log('Final section display:', sectionDisplay);
-        
         $('#studentInfoName').text(studentName);
-        $('#studentInfoSection').text(sectionDisplay);
+        $('#studentInfoTeacher').text(studentTeacher);
         $('#studentInfoContact').text(parentContact);
         $('#studentInfoParent').text(parentName);
         $('#studentInfoPanel').show();
         
-         const currentTemplate = $('#messageTemplate').val();
+        const currentTemplate = $('#messageTemplate').val();
         if (currentTemplate) {
-            applyTemplate(); 
+            applyTemplate();
         }
     } else {
-         $('#studentInfoPanel').hide();
+        $('#studentInfoPanel').hide();
+    }
+}
+
+function applyTemplate() {
+    const template = $('#messageTemplate').val();
+    if (template && messageTemplates[template]) {
+        const selectedType = $('input[name="recipientType"]:checked').val();
+        let message = messageTemplates[template];
+        
+        const today = new Date().toLocaleDateString('en-PH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        message = message.replace(/\[DATE\]/g, today);
+        
+        // Replace placeholders based on recipient type
+        if (selectedType === 'specific_teacher') {
+            const selectedTeacher = $('#teacherSelect option:selected').text();
+            if (selectedTeacher && selectedTeacher !== 'Choose a teacher...') {
+                message = message.replace(/\[TEACHER_NAME\]/g, selectedTeacher);
+            }
+        } else if (selectedType === 'specific_student') {
+            const selectedStudent = $('#studentSelect option:selected').text();
+            if (selectedStudent && selectedStudent !== 'Choose a student...') {
+                message = message.replace(/\[STUDENT_NAME\]/g, selectedStudent);
+            }
+        }
+        
+        // Replace common placeholders with placeholder text
+        message = message.replace(/\[DETAILS\]/g, '[Please specify details]');
+        message = message.replace(/\[TIME\]/g, '[Please specify time]');
+        message = message.replace(/\[AGENDA\]/g, '[Please specify agenda]');
+        message = message.replace(/\[TOPIC\]/g, '[Please specify topic]');
+        message = message.replace(/\[ACTION\]/g, '[Please specify action]');
+        message = message.replace(/\[SUBJECT\]/g, '[Please specify subject]');
+        message = message.replace(/\[START_TIME\]/g, '[Start time]');
+        message = message.replace(/\[END_TIME\]/g, '[End time]');
+        
+        $('#messageText').val(message).trigger('input');
+        
+        if ($('#autoSignature').is(':checked')) {
+            addSignature();
+        }
     }
 }
 
 function addSignature() {
     const messageArea = $('#messageText');
-    let currentMessage = messageArea.val().trim();
+    let currentMessage = removeSignature(messageArea.val().trim());
     
-    const signatureStart = currentMessage.lastIndexOf('\n\nFrom:\n');
-    if (signatureStart !== -1) {
-        currentMessage = currentMessage.substring(0, signatureStart);
-    }
-    
-    const signature = `\n\nFrom:\n ${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
+    const signature = `\n\nFrom:\n${adminInfo.name}\n${adminInfo.title}\n${adminInfo.school}`;
     
     messageArea.val(currentMessage + signature).trigger('input');
 }
 
-// Send SMS
+function removeSignature(message) {
+    const signatureStart = message.lastIndexOf('\n\nFrom:\n');
+    if (signatureStart !== -1) {
+        return message.substring(0, signatureStart);
+    }
+    return message;
+}
+
 function sendSMS() {
     const selectedType = $('input[name="recipientType"]:checked').val();
     let phoneNumber = '';
+    let teacherId = null;
     let studentId = null;
     
-    if (selectedType === 'all_parents') {
+    if (selectedType === 'all_teachers') {
+        phoneNumber = 'all_teachers';
+    } else if (selectedType === 'specific_teacher') {
+        teacherId = $('#teacherSelect').val();
+        
+        if (!teacherId) {
+            showAlert('Please select a teacher', 'warning');
+            return;
+        }
+        
+        const selectedOption = $('#teacherSelect option:selected');
+        phoneNumber = selectedOption.data('phone');
+        
+        if (!phoneNumber) {
+            showAlert('Selected teacher has no contact number', 'warning');
+            return;
+        }
+    } else if (selectedType === 'all_parents') {
         phoneNumber = 'all_parents';
     } else if (selectedType === 'specific_student') {
         studentId = $('#studentSelect').val();
@@ -766,7 +897,7 @@ function sendSMS() {
             return;
         }
         
-         const selectedOption = $('#studentSelect option:selected');
+        const selectedOption = $('#studentSelect option:selected');
         phoneNumber = selectedOption.data('parent');
         
         if (!phoneNumber) {
@@ -795,8 +926,13 @@ function sendSMS() {
     const data = {
         number: phoneNumber,
         message: message,
-        send_to_all: selectedType === 'all_parents'
+        send_to_all: selectedType.includes('all_'),
+        recipient_type: selectedType
     };
+    
+    if (teacherId) {
+        data.teacher_id = teacherId;
+    }
     
     if (studentId) {
         data.student_id = studentId;
@@ -805,7 +941,7 @@ function sendSMS() {
     const sendBtn = $('.modal-footer .btn-primary');
     sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
     
-    fetch('/teacher/send-sms', {
+    fetch('/admin/send-sms', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -821,10 +957,9 @@ function sendSMS() {
             $('#smsForm')[0].reset();
             $('#charCount').text('0');
             $('#smsCount').text('1');
-             $('#allParentsRadio').prop('checked', true);
+            $('#allTeachersRadio').prop('checked', true);
             toggleRecipientOptions();
-            loadMessages(); 
-        
+            loadMessages();
         } else {
             showAlert('Error: ' + data.message, 'danger');
         }
@@ -834,25 +969,8 @@ function sendSMS() {
         showAlert('Error sending SMS', 'danger');
     })
     .finally(() => {
-        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Okay');
+        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Send SMS');
     });
-}
-
-function checkMessageStatus(messageId) {
-    fetch(`/teacher/message-status/${messageId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showAlert(`Message status: ${data.delivery_status}`, 'info');
-                loadMessages(); 
-            } else {
-                showAlert('Error checking status: ' + data.message, 'warning');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('Error checking message status', 'danger');
-        });
 }
 
 // Test SMS Gateway
@@ -863,20 +981,21 @@ function testSMSGateway() {
     btn.disabled = true;
     spinner.classList.remove('d-none');
     text.textContent = 'Checking...';
-    fetch('/teacher/test-sms-gateway')
+    
+    fetch('/admin/test-sms-gateway')
         .then(response => response.json())
         .then(data => {
-             if (data.status === 'success' && data.reachable === true) {
-                showAlert('SMS working!', 'success');
+            if (data.status === 'success' && data.reachable === true) {
+                showAlert('SMS gateway is working!', 'success');
             } else if (data.status === 'success' && data.reachable === false) {
                 showAlert('SMS test failed: Gateway not reachable', 'danger');
             } else {
-                showAlert('SMS test failed contact Admin : ' + (data.message || 'Unknown error'), 'danger');
+                showAlert('SMS test failed: ' + (data.message || 'Unknown error'), 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showAlert('Error testing SMS gateway contact Admin', 'danger');
+            showAlert('Error testing SMS gateway', 'danger');
         })
         .finally(() => {
             btn.disabled = false;
@@ -885,8 +1004,8 @@ function testSMSGateway() {
         });
 }
 
- function viewMessage(messageId) {
-    fetch(`/teacher/outbound-messages`)
+function viewMessage(messageId) {
+    fetch(`/admin/outbound-messages`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -902,23 +1021,26 @@ function testSMSGateway() {
         });
 }
 
- function showMessageDetails(message) {
+function showMessageDetails(message) {
     // Handle different recipient types
     let recipientDisplay = '';
     let recipientIcon = '';
     
     if (message.recipient_type === 'broadcast') {
-        recipientDisplay = `All Parents (${message.recipient_count || 'Multiple'} recipients)`;
-        recipientIcon = '<i class="fas fa-users text-primary me-1"></i>';
-    } else if (message.student) {
-        recipientDisplay = message.student.name;
-        recipientIcon = '<i class="fas fa-user text-info me-1"></i>';
+        recipientDisplay = `Broadcast (${message.recipient_count || 'Multiple'} recipients)`;
+        recipientIcon = '<i class="fas fa-broadcast-tower text-primary me-1"></i>';
+    } else if (message.recipient_type === 'teacher') {
+        recipientDisplay = message.teacher ? message.teacher.name : 'Teacher';
+        recipientIcon = '<i class="fas fa-chalkboard-teacher text-success me-1"></i>';
+    } else if (message.recipient_type === 'student') {
+        recipientDisplay = message.student ? message.student.name : 'Student';
+        recipientIcon = '<i class="fas fa-user-graduate text-info me-1"></i>';
     } else {
         recipientDisplay = 'Custom Number: ' + (message.contact_number || 'Unknown');
         recipientIcon = '<i class="fas fa-phone text-warning me-1"></i>';
     }
     
-    const teacherName = message.teacher ? message.teacher.name : 'Unknown Teacher';
+    const senderName = message.admin ? message.admin.name : (message.teacher ? message.teacher.name : 'System');
     const content = `
         <div class="row mb-3">
             <div class="col-sm-3"><strong>Date & Time:</strong></div>
@@ -929,8 +1051,8 @@ function testSMSGateway() {
             <div class="col-sm-9">${recipientIcon}${recipientDisplay}</div>
         </div>
         <div class="row mb-3">
-            <div class="col-sm-3"><strong>Teacher:</strong></div>
-            <div class="col-sm-9"><i class="fas fa-chalkboard-teacher text-success me-1"></i>${teacherName}</div>
+            <div class="col-sm-3"><strong>Sender:</strong></div>
+            <div class="col-sm-9"><i class="fas fa-user-shield text-primary me-1"></i>${senderName}</div>
         </div>
         <div class="row mb-3">
             <div class="col-sm-3"><strong>Type:</strong></div>
@@ -956,7 +1078,7 @@ function testSMSGateway() {
     $('#messageDetailModal').modal('show');
 }
 
- function formatDateTime(dateTime) {
+function formatDateTime(dateTime) {
     return new Date(dateTime).toLocaleString();
 }
 
@@ -988,11 +1110,11 @@ function escapeHtml(text) {
 }
 
 function showAlert(message, type) {
-     const modalTitle = $('#alertModalLabel');
+    const modalTitle = $('#alertModalLabel');
     const modalBody = $('#alertModalBody');
     const modal = $('#alertModal');
     
-     const titles = {
+    const titles = {
         success: '<i class="fas fa-check-circle text-success me-2"></i>Success',
         danger: '<i class="fas fa-exclamation-triangle text-danger me-2"></i>Error',
         warning: '<i class="fas fa-exclamation-triangle text-warning me-2"></i>Warning',
@@ -1001,45 +1123,26 @@ function showAlert(message, type) {
     
     modalTitle.html(titles[type] || titles.info);
     modalBody.text(message);
-   
-     modal.modal('show');
     
-     if (type === 'success') {
+    modal.modal('show');
+    
+    if (type === 'success') {
         setTimeout(() => {
             modal.modal('hide');
         }, 3000);
     }
 }
 
-function removeSignature(message) {
-    const signatureStart = message.lastIndexOf('\n\nFrom:\n');
-    if (signatureStart !== -1) {
-        return message.substring(0, signatureStart);
-    }
-    return message;
-}
-
-function addSignature() {
-    const messageArea = $('#messageText');
-    let currentMessage = removeSignature(messageArea.val().trim());
-
-    const signature = `\n\nFrom:\n${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
-
-    messageArea.val(currentMessage + signature).trigger('input');
-}
-
- function formatCustomNumber() {
+function formatCustomNumber() {
     const input = $('#customNumber');
-    let value = input.val().replace(/\D/g, '');  
+    let value = input.val().replace(/\D/g, '');
     
- 
     if (value.length > 10) {
         value = value.substring(0, 10);
     }
     
     input.val(value);
     
- 
     if (value.length === 10 && value.startsWith('9')) {
         input.removeClass('is-invalid').addClass('is-valid');
     } else if (value.length > 0) {
@@ -1049,13 +1152,17 @@ function addSignature() {
     }
 }
 
- $(document).ready(function() {
-    console.log('Document ready - initializing SMS message interface...');
+$(document).ready(function() {
+    console.log('Document ready - initializing Admin SMS message interface...');
     console.log('jQuery version:', $.fn.jquery);
-   loadStudents(); 
+    
+    // Load data
+    loadTeachers();
+    loadStudents();
     loadMessages();
     
-     $('#messageText').on('input', function() {
+    // Character count handler
+    $('#messageText').on('input', function() {
         const text = $(this).val();
         const charCount = text.length;
         const smsCount = Math.ceil(charCount / 160) || 1;
@@ -1066,7 +1173,8 @@ function addSignature() {
     
     console.log('Event handlers attached successfully');
     
-     $('#autoSignature').on('change', function() {
+    // Auto signature handler
+    $('#autoSignature').on('change', function() {
         if (this.checked) {
             addSignature();
         } else {
@@ -1076,21 +1184,30 @@ function addSignature() {
         }
     });
     
-     $('#studentSelect').on('change', function() {
+    // Selection handlers
+    $('#teacherSelect').on('change', function() {
+        onTeacherSelect();
+    });
+    
+    $('#studentSelect').on('change', function() {
         onStudentSelect();
     });
     
-     $('#customNumber').on('input', function() {
+    // Custom number formatting
+    $('#customNumber').on('input', function() {
         formatCustomNumber();
     });
     
-     $('#recipientType').on('change', function() {
+    // Recipient type change handler
+    $('input[name="recipientType"]').on('change', function() {
         toggleRecipientOptions();
     });
     
-     toggleRecipientOptions();
+    // Initialize recipient options
+    toggleRecipientOptions();
     
-     setInterval(loadMessages, 30000);
+    // Auto refresh messages every 30 seconds
+    setInterval(loadMessages, 30000);
 });
 </script>
 

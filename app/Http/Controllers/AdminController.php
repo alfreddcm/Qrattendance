@@ -7,11 +7,13 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\School;
 use App\Models\Semester;
+use App\Models\Section;
 use App\Models\Attendance;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Database\QueryException;
 use ZipArchive;
 
 class AdminController extends Controller
@@ -24,6 +26,34 @@ class AdminController extends Controller
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalStudents = Student::count();
         $totalSchools = School::count();
+        $totalSections = Section::count();
+        $attendanceToday = Attendance::whereDate('created_at', today())->count();
+
+        // Additional statistics for the dashboard
+        $studentsThisWeek = Student::where('created_at', '>=', now()->subWeek())->count();
+        $attendanceRate = $totalStudents > 0 ? round(($attendanceToday / $totalStudents) * 100) . '%' : '0%';
+        $activeTeachers = User::where('role', 'teacher')->count(); // Just count all teachers instead of last_login_at
+        $sectionsToday = Section::whereHas('students.attendances', function($query) {
+            $query->whereDate('created_at', today());
+        })->count();
+
+        // Recent activities (sample data - you can implement actual activity logging)
+        $recentActivities = [
+            [
+                'icon' => 'fa-user-plus',
+                'type' => 'success',
+                'title' => 'New Student Added',
+                'description' => 'Student registration completed',
+                'time' => '2 hours ago'
+            ],
+            [
+                'icon' => 'fa-clipboard-check',
+                'type' => 'info',
+                'title' => 'Attendance Taken',
+                'description' => 'Daily attendance recorded',
+                'time' => '4 hours ago'
+            ]
+        ];
 
          $schools = School::withCount(['users as teachers_count' => function($query) {
             $query->where('role', 'teacher');
@@ -33,8 +63,34 @@ class AdminController extends Controller
             'totalTeachers',
             'totalStudents', 
             'totalSchools',
+            'totalSections',
+            'attendanceToday',
+            'studentsThisWeek',
+            'attendanceRate',
+            'activeTeachers',
+            'sectionsToday',
+            'recentActivities',
             'schools'
         ));
+    }
+
+    /**
+     * Get dashboard statistics for AJAX updates
+     */
+    public function getDashboardStats()
+    {
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalStudents = Student::count();
+        $totalSections = Section::count();
+        $attendanceToday = Attendance::whereDate('created_at', today())->count();
+
+        return response()->json([
+            'success' => true,
+            'totalTeachers' => $totalTeachers,
+            'totalStudents' => $totalStudents,
+            'totalSections' => $totalSections,
+            'attendanceToday' => $attendanceToday
+        ]);
     }
 
     /**
@@ -176,12 +232,22 @@ class AdminController extends Controller
     public function manageTeachers()
     {
         $teachers = User::where('role', 'teacher')
-                       ->with('school')
+                       ->with(['school', 'section', 'sections'])
                        ->paginate(10);
         
         $schools = School::all();
+        $sections = Section::with(['semester'])->orderBy('name')->get();
+        
+        // Get sections that are already assigned to teachers via pivot table
+        $assignedSectionIds = \DB::table('section_teacher')->pluck('section_id')->toArray();
+        
+        // Mark sections as available or assigned
+        $sections = $sections->map(function($section) use ($assignedSectionIds) {
+            $section->is_assigned = in_array($section->id, $assignedSectionIds);
+            return $section;
+        });
 
-        return view('admin.manage-teachers', compact('teachers', 'schools'));
+        return view('admin.manage-teachers', compact('teachers', 'schools', 'sections'));
     }
 
     /**
@@ -197,22 +263,76 @@ class AdminController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:100',
             'school_id' => 'required|exists:schools,id',
-            'section_name' => 'nullable|string|max:100'
+            'sections' => 'nullable|array',
+            'sections.*' => 'exists:sections,id'
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'role' => 'teacher',
-            'phone_number' => $request->phone_number,
-            'position' => $request->position,
-            'school_id' => $request->school_id, // Now directly uses schools.id
-            'section_name' => $request->section_name
-        ]);
+        // Check if any of the selected sections are already assigned to other teachers
+        if ($request->filled('sections') && is_array($request->sections)) {
+            try {
+                $alreadyAssignedSections = \DB::table('section_teacher as st')
+                    ->whereIn('st.section_id', $request->sections)
+                    ->join('sections as s', 'st.section_id', '=', 's.id')
+                    ->join('users as u', 'st.teacher_id', '=', 'u.id')
+                    ->select('s.name', 's.gradelevel', 'u.name as teacher_name', 's.id as section_id')
+                    ->get();
 
-        return redirect()->route('admin.manage-teachers')->with('success', 'Teacher added successfully!');
+                if ($alreadyAssignedSections->isNotEmpty()) {
+                    $conflictMessage = 'The following sections are already assigned to other teachers: ';
+                    foreach ($alreadyAssignedSections as $conflict) {
+                        $conflictMessage .= "{$conflict->name} - Grade {$conflict->gradelevel} (assigned to {$conflict->teacher_name}), ";
+                    }
+                    $conflictMessage = rtrim($conflictMessage, ', ');
+                    
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['sections' => $conflictMessage]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error checking section assignments in storeTeacher: ' . $e->getMessage());
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['sections' => 'Error checking section availability. Please try again.']);
+            }
+        }
+
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'role' => 'teacher',
+                'phone_number' => $request->phone_number,
+                'position' => $request->position,
+                'school_id' => $request->school_id,
+            ]);
+
+            // Attach sections via pivot table
+            if ($request->filled('sections') && is_array($request->sections)) {
+                $user->sections()->attach($request->sections);
+            }
+
+            return redirect()->route('admin.manage-teachers')->with('success', 'Teacher added successfully!');
+        } catch (QueryException $e) {
+            \Log::error('Database error creating teacher in storeTeacher: ' . $e->getMessage());
+            
+            // Check if it's a duplicate entry error (constraint violation)
+            if ($e->getCode() == 23000) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['sections' => 'One or more selected sections are already assigned to another teacher. Please refresh the page and try again.']);
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Database error occurred. Please try again.']);
+        } catch (\Exception $e) {
+            \Log::error('Error creating teacher in storeTeacher: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to create teacher. Please try again.']);
+        }
     }
 
     /**
@@ -230,8 +350,39 @@ class AdminController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:100',
             'school_id' => 'required|exists:schools,id',
-            'section_name' => 'nullable|string|max:100'
+            'sections' => 'nullable|array',
+            'sections.*' => 'exists:sections,id'
         ]);
+
+        // Check if any of the selected sections are already assigned to other teachers (excluding current teacher)
+        if ($request->filled('sections') && is_array($request->sections)) {
+            try {
+                $alreadyAssignedSections = \DB::table('section_teacher as st')
+                    ->whereIn('st.section_id', $request->sections)
+                    ->where('st.teacher_id', '!=', $teacher->id) // Exclude current teacher
+                    ->join('sections as s', 'st.section_id', '=', 's.id')
+                    ->join('users as u', 'st.teacher_id', '=', 'u.id')
+                    ->select('s.name', 's.gradelevel', 'u.name as teacher_name', 's.id as section_id')
+                    ->get();
+
+                if ($alreadyAssignedSections->isNotEmpty()) {
+                    $conflictMessage = 'The following sections are already assigned to other teachers: ';
+                    foreach ($alreadyAssignedSections as $conflict) {
+                        $conflictMessage .= "{$conflict->name} - Grade {$conflict->gradelevel} (assigned to {$conflict->teacher_name}), ";
+                    }
+                    $conflictMessage = rtrim($conflictMessage, ', ');
+                    
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['sections' => $conflictMessage]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error checking section assignments in updateTeacher: ' . $e->getMessage());
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['sections' => 'Error checking section availability. Please try again.']);
+            }
+        }
 
         $updateData = [
             'name' => $request->name,
@@ -239,17 +390,44 @@ class AdminController extends Controller
             'username' => $request->username,
             'phone_number' => $request->phone_number,
             'position' => $request->position,
-            'school_id' => $request->school_id, 
-            'section_name' => $request->section_name
+            'school_id' => $request->school_id,
         ];
 
         if ($request->filled('password')) {
             $updateData['password'] = Hash::make($request->password);
         }
 
-        $teacher->update($updateData);
+        try {
+            $teacher->update($updateData);
 
-        return redirect()->route('admin.manage-teachers')->with('success', 'Teacher updated successfully!');
+            // Sync sections in pivot table
+            if ($request->filled('sections') && is_array($request->sections)) {
+                $teacher->sections()->sync($request->sections);
+            } else {
+                // If no sections selected, detach all sections
+                $teacher->sections()->detach();
+            }
+
+            return redirect()->route('admin.manage-teachers')->with('success', 'Teacher updated successfully!');
+        } catch (QueryException $e) {
+            \Log::error('Database error updating teacher in updateTeacher: ' . $e->getMessage());
+            
+            // Check if it's a duplicate entry error (constraint violation)
+            if ($e->getCode() == 23000) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['sections' => 'One or more selected sections are already assigned to another teacher. Please refresh the page and try again.']);
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Database error occurred. Please try again.']);
+        } catch (\Exception $e) {
+            \Log::error('Error updating teacher in updateTeacher: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to update teacher. Please try again.']);
+        }
     }
 
     /**
@@ -438,13 +616,17 @@ class AdminController extends Controller
      */
     public function manageStudents(Request $request)
     {
-        $query = Student::with(['user', 'school']);
+        $query = Student::with(['user:id,name,email', 'school:id,name,address', 'section']);
         
          if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('id_no', 'like', "%{$search}%");
+                  ->orWhere('id_no', 'like', "%{$search}%")
+                  ->orWhereHas('section', function($sectionQuery) use ($search) {
+                      $sectionQuery->where('name', 'like', "%{$search}%")
+                                  ->orWhere('gradelevel', 'like', "%{$search}%");
+                  });
             });
         }
         
@@ -453,6 +635,19 @@ class AdminController extends Controller
         }
          if ($request->filled('teacher_id')) {
             $query->where('user_id', $request->teacher_id);
+        }
+        
+        // Handle grade_section filter (format: "Grade 11|STEM")
+        if ($request->filled('grade_section')) {
+            $parts = explode('|', $request->grade_section);
+            if (count($parts) == 2) {
+                $gradeLevel = $parts[0];
+                $sectionName = $parts[1];
+                $query->whereHas('section', function($sectionQuery) use ($gradeLevel, $sectionName) {
+                    $sectionQuery->where('gradelevel', $gradeLevel)
+                                ->where('name', $sectionName);
+                });
+            }
         }
 
          if ($request->filled('qr_status')) {
@@ -463,12 +658,42 @@ class AdminController extends Controller
             }
         }
         
-        $students = $query->paginate(15);
+        // Handle sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
         
-        $schools = School::all();
-        $teachers = User::where('role', 'teacher')->get();
+        if ($sortBy === 'name') {
+            $query->orderBy('name', $sortOrder);
+        } elseif ($sortBy === 'gender') {
+            $query->orderBy('gender', $sortOrder)->orderBy('name', 'asc');
+        } elseif ($sortBy === 'age') {
+            $query->orderBy('age', $sortOrder)->orderBy('name', 'asc');
+        } elseif ($sortBy === 'created_at') {
+            $query->orderBy('created_at', $sortOrder);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        
+        $students = $query->paginate(15)->withQueryString();
+        
+        $schools = School::select('id', 'name')->orderBy('name')->get();
+        $teachers = User::select('id', 'name')->where('role', 'teacher')->orderBy('name')->get();
+        $sections = Section::select('id', 'name', 'gradelevel')->orderBy('gradelevel')->orderBy('name')->get();
+        
+        // Get grade-section options for the filter dropdown
+        $gradeSectionOptions = Student::with('section')
+            ->whereHas('section')
+            ->get()
+            ->map(function($student) {
+                return [
+                    'value' => $student->section->gradelevel . '|' . $student->section->name,
+                    'label' => 'Grade ' . $student->section->gradelevel . ' - ' . $student->section->name
+                ];
+            })
+            ->unique('value')
+            ->values();
 
-        return view('admin.manage-students', compact('students', 'schools', 'teachers'));
+        return view('admin.manage-students', compact('students', 'schools', 'teachers', 'sections', 'gradeSectionOptions'));
     }
 
     /**
@@ -520,11 +745,48 @@ class AdminController extends Controller
             'contact_person_contact' => 'nullable|string|max:15',
             'school_id' => 'nullable|exists:schools,school_id',
             'user_id' => 'nullable|exists:users,id',
+            'section_option' => 'required|string|in:existing,create',
+            'section_id' => 'required_if:section_option,existing|nullable|exists:sections,id',
+            'new_section_name' => 'required_if:section_option,create|nullable|string|max:255',
+            'new_section_gradelevel' => 'required_if:section_option,create|nullable|string|max:50',
         ]);
 
-        Student::create($request->all());
+        try {
+            \DB::beginTransaction();
+            
+            $sectionId = null;
+            
+            if ($request->section_option === 'create') {
+                // Create new section
+                $section = Section::create([
+                    'name' => $request->new_section_name,
+                    'gradelevel' => $request->new_section_gradelevel,
+                ]);
+                $sectionId = $section->id;
+            } else {
+                $sectionId = $request->section_id;
+            }
 
-        return redirect()->route('admin.manage-students')->with('success', 'Student added successfully.');
+            // Create student with section
+            $studentData = $request->only([
+                'id_no', 'name', 'gender', 'age', 'address', 'cp_no',
+                'contact_person_name', 'contact_person_relationship', 
+                'contact_person_contact', 'school_id', 'user_id'
+            ]);
+            $studentData['section_id'] = $sectionId;
+            
+            Student::create($studentData);
+            
+            \DB::commit();
+            return redirect()->route('admin.manage-students')->with('success', 'Student added successfully.');
+            
+        } catch (\Exception $e) {
+            \DB::rollback();
+            \Log::error('Error creating student: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to create student. Please try again.']);
+        }
     }
 
     /**
@@ -545,11 +807,48 @@ class AdminController extends Controller
             'contact_person_relationship' => 'nullable|string|max:255',
             'contact_person_contact' => 'nullable|string|max:15',
             'school_id' => 'nullable|exists:schools,school_id',
+            'section_option' => 'required|string|in:existing,create',
+            'section_id' => 'required_if:section_option,existing|nullable|exists:sections,id',
+            'new_section_name' => 'required_if:section_option,create|nullable|string|max:255',
+            'new_section_gradelevel' => 'required_if:section_option,create|nullable|string|max:50',
         ]);
 
-        $student->update($request->all());
+        try {
+            \DB::beginTransaction();
+            
+            $sectionId = null;
+            
+            if ($request->section_option === 'create') {
+                // Create new section
+                $section = Section::create([
+                    'name' => $request->new_section_name,
+                    'gradelevel' => $request->new_section_gradelevel,
+                ]);
+                $sectionId = $section->id;
+            } else {
+                $sectionId = $request->section_id;
+            }
 
-        return redirect()->route('admin.manage-students')->with('success', 'Student updated successfully.');
+            // Update student with section
+            $studentData = $request->only([
+                'id_no', 'name', 'gender', 'age', 'address', 'cp_no',
+                'contact_person_name', 'contact_person_relationship', 
+                'contact_person_contact', 'school_id'
+            ]);
+            $studentData['section_id'] = $sectionId;
+            
+            $student->update($studentData);
+            
+            \DB::commit();
+            return redirect()->route('admin.manage-students')->with('success', 'Student updated successfully.');
+            
+        } catch (\Exception $e) {
+            \DB::rollback();
+            \Log::error('Error updating student: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to update student. Please try again.']);
+        }
     }
 
     /**
@@ -1093,5 +1392,149 @@ class AdminController extends Controller
 
             fclose($handle);
         }, 200, $headers);
+    }
+    
+    /**
+     * Show admin message page
+     */
+    public function message()
+    {
+        $teachers = User::where('role', 'teacher')
+                       ->select('id', 'name', 'section_name')
+                       ->orderBy('name')
+                       ->get();
+        
+        $schools = School::select('id', 'name')->orderBy('name')->get();
+        
+        return view('admin.message', compact('teachers', 'schools'));
+    }
+    
+    /**
+     * Get teachers for API (for admin messaging)
+     */
+    public function getTeachersForApi()
+    {
+        try {
+            $teachers = User::where('role', 'teacher')
+                          ->select('id', 'name', 'section_name', 'phone_number', 'school_id')
+                          ->with('school:id,name')
+                          ->orderBy('name')
+                          ->get();
+            
+            return response()->json([
+                'success' => true,
+                'teachers' => $teachers
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching teachers: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get all students for API (for admin messaging)
+     */
+    public function getAllStudentsForApi()
+    {
+        try {
+            $students = Student::select('id', 'name', 'user_id', 'contact_person_name', 'contact_person_contact', 'school_id')
+                             ->with(['user:id,name,section_name', 'school:id,name'])
+                             ->orderBy('name')
+                             ->get();
+            
+            return response()->json([
+                'success' => true,
+                'students' => $students
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching students: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the new student management interface
+     */
+    public function manageStudentsNew()
+    {
+        $students = Student::with(['section', 'user'])
+            ->orderBy('name')
+            ->paginate(50);
+
+        $schools = School::all();
+        $teachers = User::where('role', 'teacher')->get();
+        $sections = Section::all();
+        $semesters = Semester::all();
+
+        // Generate grade section options
+        $gradeSectionOptions = [];
+        foreach ($sections as $section) {
+            $gradeSectionOptions[] = [
+                'value' => $section->gradelevel . '|' . $section->name,
+                'label' => $section->name . ' - Grade ' . $section->gradelevel
+            ];
+        }
+
+        return view('admin.manage-students-new', compact(
+            'students', 
+            'schools', 
+            'teachers', 
+            'sections', 
+            'semesters',
+            'gradeSectionOptions'
+        ));
+    }
+
+    /**
+     * Show attendance overview
+     */
+    public function attendance()
+    {
+        $totalAttendanceToday = Attendance::whereDate('created_at', today())->count();
+        $totalStudents = Student::count();
+        $attendanceRate = $totalStudents > 0 ? round(($totalAttendanceToday / $totalStudents) * 100) : 0;
+
+        $recentAttendance = Attendance::with(['student'])
+            ->whereDate('created_at', today())
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        return view('admin.attendance', compact(
+            'totalAttendanceToday',
+            'totalStudents', 
+            'attendanceRate',
+            'recentAttendance'
+        ));
+    }
+
+    /**
+     * Show reports overview
+     */
+    public function reports()
+    {
+        $totalStudents = Student::count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalSections = Section::count();
+        $attendanceToday = Attendance::whereDate('created_at', today())->count();
+
+        return view('admin.reports', compact(
+            'totalStudents',
+            'totalTeachers',
+            'totalSections',
+            'attendanceToday'
+        ));
+    }
+
+    /**
+     * Show settings page
+     */
+    public function settings()
+    {
+        return view('admin.settings');
     }
 }

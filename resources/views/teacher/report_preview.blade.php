@@ -34,6 +34,9 @@
                                 <div>
                                     <div class="fw-semibold">{{ $row->name }}</div>
                                     <small class="text-muted">{{ $row->id_no }}</small>
+                                    @if(isset($row->grade_level) && isset($row->section))
+                                        <br><small class="badge bg-info text-white">Grade {{ $row->grade_level }} - {{ $row->section }}</small>
+                                    @endif
                                 </div>
                             </div>
                         </td>
@@ -175,6 +178,9 @@
                                 <div>
                                     <div class="fw-semibold">{{ $row->name }}</div>
                                     <small class="text-muted">{{ $row->id_no }}</small>
+                                    @if(isset($row->grade_level) && isset($row->section))
+                                        <br><small class="badge bg-info text-white">Grade {{ $row->grade_level }} - {{ $row->section }}</small>
+                                    @endif
                                 </div>
                             </div>
                         </td>
@@ -189,7 +195,7 @@
                         </td>
                         <td class="text-center">
                             <span class="badge bg-warning">{{ $row->partial }}</span>
-                        </td>X  <i class="fa fa-xingX" aria-hidden="true"></i>
+                        </td>
                         <td class="text-center">
                             <span class="badge bg-info">{{ $row->remarks }}</span>
                         </td>
@@ -295,6 +301,9 @@
                                 <div>
                                     <div class="fw-semibold">{{ $record->name }}</div>
                                     <small class="text-muted">{{ $record->id_no }}</small>
+                                    @if(isset($record->grade_level) && isset($record->section))
+                                        <br><small class="badge bg-info text-white">Grade {{ $record->grade_level }} - {{ $record->section }}</small>
+                                    @endif
                                 </div>
                             </div>
                         </td>

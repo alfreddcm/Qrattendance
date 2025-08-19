@@ -8,25 +8,24 @@ use Carbon\Carbon;
 class Semester extends Model
 {
     protected $fillable = [
+        'id',
         'name',
+        'school_id',
         'start_date',
         'end_date',
+        'morning_period_start',
+        'morning_period_end',
+        'afternoon_period_start',
+        'afternoon_period_end',
         'status',
-        'school_id',
-        'weekdays',
-        'am_time_in_start',
-        'am_time_in_end',
-        'pm_time_out_start',
-        'pm_time_out_end',
-        'am_time_in_start_input',
-        'am_time_in_end_input',
-        'pm_time_out_start_input',
-        'pm_time_out_end_input',
-        'am_time_in_start_display',
-        'am_time_in_end_display',
-        'pm_time_out_start_display',
-        'pm_time_out_end_display',
+        'description',
     ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
+
 
      public function school()
     {
@@ -53,6 +52,26 @@ class Semester extends Model
     public function getAmTimeInEndInputAttribute()
     {
         return $this->am_time_in_end ? Carbon::createFromFormat('H:i:s', $this->am_time_in_end)->format('H:i') : '07:30';
+    }
+
+    public function getAmTimeOutStartInputAttribute()
+    {
+        return $this->am_time_out_start ? Carbon::createFromFormat('H:i:s', $this->am_time_out_start)->format('H:i') : '11:30';
+    }
+
+    public function getAmTimeOutEndInputAttribute()
+    {
+        return $this->am_time_out_end ? Carbon::createFromFormat('H:i:s', $this->am_time_out_end)->format('H:i') : '12:00';
+    }
+
+    public function getPmTimeInStartInputAttribute()
+    {
+        return $this->pm_time_in_start ? Carbon::createFromFormat('H:i:s', $this->pm_time_in_start)->format('H:i') : '13:00';
+    }
+
+    public function getPmTimeInEndInputAttribute()
+    {
+        return $this->pm_time_in_end ? Carbon::createFromFormat('H:i:s', $this->pm_time_in_end)->format('H:i') : '13:30';
     }
 
     public function getPmTimeOutStartInputAttribute()
@@ -82,6 +101,8 @@ class Semester extends Model
     {
         $periods = [
             'AM Time In' => ['start' => $this->am_time_in_start, 'end' => $this->am_time_in_end],
+            'AM Time Out' => ['start' => $this->am_time_out_start, 'end' => $this->am_time_out_end],
+            'PM Time In' => ['start' => $this->pm_time_in_start, 'end' => $this->pm_time_in_end],
             'PM Time Out' => ['start' => $this->pm_time_out_start, 'end' => $this->pm_time_out_end],
         ];
 
@@ -98,5 +119,133 @@ class Semester extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Determine attendance status based on current time and configured periods
+     */
+    public function getAttendanceStatus($currentTime = null)
+    {
+        $now = $currentTime ? Carbon::parse($currentTime) : Carbon::now();
+        $timeString = $now->format('H:i:s');
+
+        // Define all periods with their statuses
+        $periods = [
+            'am_time_in' => [
+                'start' => $this->am_time_in_start,
+                'end' => $this->am_time_in_end,
+                'status' => 'present',
+                'period_name' => 'AM Time In'
+            ],
+            'am_time_out' => [
+                'start' => $this->am_time_out_start,
+                'end' => $this->am_time_out_end,
+                'status' => 'present',
+                'period_name' => 'AM Time Out'
+            ],
+            'pm_time_in' => [
+                'start' => $this->pm_time_in_start,
+                'end' => $this->pm_time_in_end,
+                'status' => 'present',
+                'period_name' => 'PM Time In'
+            ],
+            'pm_time_out' => [
+                'start' => $this->pm_time_out_start,
+                'end' => $this->pm_time_out_end,
+                'status' => 'present',
+                'period_name' => 'PM Time Out'
+            ]
+        ];
+
+        foreach ($periods as $period => $config) {
+            if ($config['start'] && $config['end']) {
+                if ($timeString >= $config['start'] && $timeString <= $config['end']) {
+                    return [
+                        'status' => $config['status'],
+                        'period' => $period,
+                        'period_name' => $config['period_name'],
+                        'start_time' => $config['start'],
+                        'end_time' => $config['end']
+                    ];
+                }
+            }
+        }
+
+        return [
+            'status' => 'outside_hours',
+            'period' => null,
+            'period_name' => 'Outside Operating Hours',
+            'start_time' => null,
+            'end_time' => null
+        ];
+    }
+
+    /**
+     * Validate time ranges to prevent overlapping
+     */
+    public function validateTimeRanges()
+    {
+        $timeRanges = [];
+        
+        // Collect all time ranges
+        if ($this->am_time_in_start && $this->am_time_in_end) {
+            $timeRanges[] = [
+                'name' => 'AM Time In',
+                'start' => $this->am_time_in_start,
+                'end' => $this->am_time_in_end
+            ];
+        }
+        
+        if ($this->am_time_out_start && $this->am_time_out_end) {
+            $timeRanges[] = [
+                'name' => 'AM Time Out',
+                'start' => $this->am_time_out_start,
+                'end' => $this->am_time_out_end
+            ];
+        }
+        
+        if ($this->pm_time_in_start && $this->pm_time_in_end) {
+            $timeRanges[] = [
+                'name' => 'PM Time In',
+                'start' => $this->pm_time_in_start,
+                'end' => $this->pm_time_in_end
+            ];
+        }
+        
+        if ($this->pm_time_out_start && $this->pm_time_out_end) {
+            $timeRanges[] = [
+                'name' => 'PM Time Out',
+                'start' => $this->pm_time_out_start,
+                'end' => $this->pm_time_out_end
+            ];
+        }
+
+        // Check for overlaps
+        for ($i = 0; $i < count($timeRanges); $i++) {
+            for ($j = $i + 1; $j < count($timeRanges); $j++) {
+                $range1 = $timeRanges[$i];
+                $range2 = $timeRanges[$j];
+                
+                // Check if ranges overlap
+                if (($range1['start'] < $range2['end'] && $range1['end'] > $range2['start'])) {
+                    return [
+                        'valid' => false,
+                        'message' => "Time ranges '{$range1['name']}' and '{$range2['name']}' overlap. Please adjust the times."
+                    ];
+                }
+            }
+        }
+
+        // Check if start time is before end time for each range
+        foreach ($timeRanges as $range) {
+            if ($range['start'] >= $range['end']) {
+                return [
+                    'valid' => false,
+                    'message' => "In '{$range['name']}' period, start time must be before end time."
+                ];
+            }
+        }
+
+        return ['valid' => true, 'message' => 'All time ranges are valid.'];
     }
 }

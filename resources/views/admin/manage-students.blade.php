@@ -2,74 +2,105 @@
 @section('title', 'Manage Students')
 @section('content')
 
-<div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h4 class="fs-5 mb-1">
-                <i class="fas fa-user-graduate me-2"></i>
-                Manage Students
-            </h4>
-            <p class="subtitle fs-6 mb-0">View and manage student records across all schools</p>
+<link rel="stylesheet" href="{{ asset('css/compact-layout.css') }}">
+
+<div class="compact-layout">
+    <div class="sticky-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1">
+                    <i class="fas fa-user-graduate me-2"></i>
+                    Manage Students
+                </h4>
+                <p class="subtitle mb-0">View and manage student records with section assignment</p>
+            </div>
+            <div class="page-actions">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i class="fas fa-plus me-1"></i>Add Student
+                </button>
+            </div>
         </div>
-        
     </div>
-</div>
 
-<div class="container-fluid">
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <div class="container-fluid">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-    <!-- Search   -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body p-2">
-                    <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterForm">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-3">
-                                <label for="search" class="form-label small fw-semibold fs-6">Search Students</label>
-                                <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control form-control-sm" value="{{ request('search') }}" oninput="debounceSubmit()">
-                            </div>
-                            <div class="col-md-2">
-                                <label for="school_id" class="form-label small fw-semibold fs-6">School</label>
-                                <select name="school_id" id="school_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">All Schools</option>
-                                    @foreach($schools as $school)
-                                        <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
-                                            {{ $school->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="teacher_id" class="form-label small fw-semibold fs-6">Teacher</label>
-                                <select name="teacher_id" id="teacher_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">All Teachers</option>
-                                    @foreach($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                            {{ $teacher->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="qr_status" class="form-label small fw-semibold">QR Status</label>
-                                <select name="qr_status" id="qr_status" class="form-select" onchange="this.form.submit()">
-                                    <option value="">All Status</option>
-                                    <option value="with_qr" {{ request('qr_status') == 'with_qr' ? 'selected' : '' }}>With QR</option>
-                                    <option value="without_qr" {{ request('qr_status') == 'without_qr' ? 'selected' : '' }}>Without QR</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary flex-fill">
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Please fix the following errors:</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <!-- Search and Filters -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-search me-1"></i>Search & Filter
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterForm">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search Students</label>
+                            <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control" value="{{ request('search') }}" oninput="debounceSubmit()">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="school_id" class="form-label">School</label>
+                            <select name="school_id" id="school_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Schools</option>
+                                @foreach($schools as $school)
+                                    <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
+                                        {{ $school->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="teacher_id" class="form-label">Teacher</label>
+                            <select name="teacher_id" id="teacher_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Teachers</option>
+                                @foreach($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                                        {{ $teacher->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="grade_section" class="form-label">Grade & Section</label>
+                            <select name="grade_section" id="grade_section" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Grade & Section</option>
+                                @foreach($gradeSectionOptions as $option)
+                                    <option value="{{ $option['value'] }}" {{ request('grade_section') == $option['value'] ? 'selected' : '' }}>
+                                        {{ $option['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="qr_status" class="form-label">QR Status</label>
+                            <select name="qr_status" id="qr_status" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Status</option>
+                                <option value="with_qr" {{ request('qr_status') == 'with_qr' ? 'selected' : '' }}>With QR</option>
+                                <option value="without_qr" {{ request('qr_status') == 'without_qr' ? 'selected' : '' }}>Without QR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <div class="d-flex gap-1">
+                                <button type="submit" class="btn btn-primary btn-sm flex-fill">
                                         <i class="fas fa-search me-1"></i>Filter
                                     </button>
-                                    @if(request()->hasAny(['search', 'school_id', 'teacher_id', 'qr_status']))
+                                    @if(request()->hasAny(['search', 'school_id', 'teacher_id', 'grade_section', 'qr_status']))
                                         <a href="{{ route('admin.manage-students') }}" class="btn btn-outline-secondary">
                                             <i class="fas fa-times"></i>
                                         </a>
@@ -155,10 +186,44 @@
                             <i class="fas fa-list me-2"></i>
                             Students List
                         </h5>
-                        <span class="badge bg-light text-dark">{{ $students->total() }} total</span>
+                        <span class="badge bg-light text-dark me-3">{{ $students->total() }} total</span>
+                        
+                        
+                      
                     </div>
                     
                     <div class="d-flex gap-2">
+                          <span> Sort by: </span>
+                        <form method="GET" action="{{ route('admin.manage-students') }}" class="d-flex align-items-center gap-1" id="sortForm">
+                            <!-- Preserve existing filters -->
+                            @if(request('search'))
+                                <input type="hidden" name="search" value="{{ request('search') }}">
+                            @endif
+                            @if(request('school_id'))
+                                <input type="hidden" name="school_id" value="{{ request('school_id') }}">
+                            @endif
+                            @if(request('teacher_id'))
+                                <input type="hidden" name="teacher_id" value="{{ request('teacher_id') }}">
+                            @endif
+                            @if(request('grade_section'))
+                                <input type="hidden" name="grade_section" value="{{ request('grade_section') }}">
+                            @endif
+                            @if(request('qr_status'))
+                                <input type="hidden" name="qr_status" value="{{ request('qr_status') }}">
+                            @endif
+                            
+                            <select name="sort_by" class="form-select form-select-sm"  onchange="this.form.submit()">
+                                <option value="name" {{ request('sort_by', 'name') == 'name' ? 'selected' : '' }}>Name</option>
+                                <option value="gender" {{ request('sort_by') == 'gender' ? 'selected' : '' }}>Gender</option>
+                                <option value="age" {{ request('sort_by') == 'age' ? 'selected' : '' }}>Age</option>
+                                <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Recent</option>
+                            </select>
+                            
+                            <select name="sort_order" class="form-select form-select-sm"  onchange="this.form.submit()">
+                                <option value="asc" {{ request('sort_order', 'asc') == 'asc' ? 'selected' : '' }}>A-Z</option>
+                                <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Z-A</option>
+                            </select>
+                        </form>
                          <div class="dropdown">
                             <button class="btn btn-light dropdown-toggle" type="button" id="quickActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-bars me-1"></i>Actions
@@ -208,7 +273,8 @@
                                         <th style="border: none;">Contact Person</th>
                                         <th style="border: none;">SCHOOL</th>
                                         <th style="border: none;">QR STATUS</th>
-                                        <th style="border: none;">Profile status</th>
+                                        <th style="border: none;">
+                                            Profile Missing
                                         <th style="width: 120px; text-align: center; border: none;">Action</th>
                                     </tr>
                                 </thead>
@@ -239,12 +305,16 @@
                                                 <strong style="color: #2c3e50;">{{ $student->name }}</strong>
                                                 <br>
                                                 <small class="text-muted">
-                                                     {{ $student->user->section_name ?? 'N/A' }}
+                                                    @if($student->section)
+                                                        {{ $student->section->name }} - Grade {{ $student->section->gradelevel }}
+                                                    @else
+                                                        {{ ($student->section_name ?? 'N/A') }} - Grade {{ ($student->grade_level ?? 'N/A') }}
+                                                    @endif
                                                     @if($student->age)
                                                         <br>Age: {{ $student->age }}
                                                     @endif
-                                                    @if($student->id_no)
-                                                        <br>Number: {{ $student->id_no }}
+                                                    @if($student->gender)
+                                                        <br>Gender: {{ $student->gender == 'M' ? 'Male' : ($student->gender == 'F' ? 'Female' : $student->gender) }}
                                                     @endif
                                                 </small>
                                             </div>
@@ -387,8 +457,41 @@
                         </div>
                         
                         <!-- Pagination -->
-                        <div class="card-footer">
-                            {{ $students->links() }}
+                        <div class="card-footer d-flex justify-content-between align-items-center bg-light">
+                            <div class="text-muted small">
+                                Showing {{ $students->firstItem() ?: 0 }} to {{ $students->lastItem() ?: 0 }} 
+                                of {{ $students->total() }} students
+                            </div>
+                            <div class="pagination-wrapper">
+                                @if($students->hasPages())
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            {{-- Previous Page Link --}}
+                                            @if ($students->onFirstPage())
+                                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                                            @else
+                                                <li class="page-item"><a class="page-link" href="{{ $students->appends(request()->query())->previousPageUrl() }}">Previous</a></li>
+                                            @endif
+
+                                            {{-- Pagination Elements --}}
+                                            @foreach ($students->appends(request()->query())->getUrlRange(1, $students->lastPage()) as $page => $url)
+                                                @if ($page == $students->currentPage())
+                                                    <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                                                @else
+                                                    <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
+                                                @endif
+                                            @endforeach
+
+                                            {{-- Next Page Link --}}
+                                            @if ($students->hasMorePages())
+                                                <li class="page-item"><a class="page-link" href="{{ $students->appends(request()->query())->nextPageUrl() }}">Next</a></li>
+                                            @else
+                                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                                            @endif
+                                        </ul>
+                                    </nav>
+                                @endif
+                            </div>
                         </div>
                     @else
                         <div class="text-center py-5">
@@ -581,6 +684,22 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label for="edit_section_{{ $student->id }}" class="form-label">Section</label>
+                            <input type="text" class="form-control" id="edit_section_{{ $student->id }}" name="section" value="{{ $student->section }}" placeholder="e.g., A, B, C">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_grade_level_{{ $student->id }}" class="form-label">Grade Level</label>
+                            <input type="text" class="form-control" id="edit_grade_level_{{ $student->id }}" name="grade_level" value="{{ $student->grade_level }}" placeholder="e.g., Grade 7, Grade 8">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_section_{{ $student->id }}" class="form-label">Section</label>
+                            <input type="text" class="form-control" id="edit_section_{{ $student->id }}" name="section" value="{{ $student->section }}" placeholder="e.g., A, B, C">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_grade_level_{{ $student->id }}" class="form-label">Grade Level</label>
+                            <input type="text" class="form-control" id="edit_grade_level_{{ $student->id }}" name="grade_level" value="{{ $student->grade_level }}" placeholder="e.g., Grade 7, Grade 8">
+                        </div>
                         <div class="col-md-12">
                             <label for="edit_address_{{ $student->id }}" class="form-label">Address</label>
                             <textarea class="form-control" id="edit_address_{{ $student->id }}" name="address" rows="2">{{ $student->address }}</textarea>
@@ -666,6 +785,14 @@
                                     <option value="{{ $school->id }}">{{ $school->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="section" class="form-label">Section</label>
+                            <input type="text" class="form-control" id="section" name="section" placeholder="e.g., A, B, C">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="grade_level" class="form-label">Grade Level</label>
+                            <input type="text" class="form-control" id="grade_level" name="grade_level" placeholder="e.g., Grade 7, Grade 8">
                         </div>
                         <div class="col-md-12">
                             <label for="teacher_id" class="form-label">Teacher</label>

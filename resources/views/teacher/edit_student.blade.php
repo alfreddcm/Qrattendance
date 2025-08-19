@@ -165,7 +165,7 @@
                 <div class="col-md-12">
                      <div class="page-actions">
             <a href="{{ route('teacher.students') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Students
+                <i class="fas fa-arrow-left me-1"></i> Return
             </a>
         </div>
                     <label for="picture" class="form-label">Student Picture</label>
@@ -237,6 +237,16 @@
                 <div class="col-md-6">
                     <label for="age" class="form-label">Age</label>
                     <input type="number" class="form-control" id="age" name="age" value="{{ $student->age }}" required>
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="section" class="form-label">Section</label>
+                    <input type="text" class="form-control" id="section" name="section" value="{{ $student->section_name }}" placeholder="e.g., A, B, C">
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="grade_level" class="form-label">Grade Level</label>
+                    <input type="text" class="form-control" id="grade_level" name="grade_level" value="{{ $student->grade_level }}" placeholder="e.g., Grade 7, Grade 8">
                 </div>
                 
                 <div class="col-md-12">

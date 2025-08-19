@@ -16,6 +16,7 @@ return new class extends Migration
     Schema::create('outbound_messages', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('teacher_id');
+        $table->unsignedBigInteger('admin_id')->nullable();
         $table->enum('recipient_type', ['individual', 'broadcast'])->default('individual');
         $table->integer('recipient_count')->nullable();
         $table->unsignedBigInteger('student_id')->nullable();
@@ -27,6 +28,7 @@ return new class extends Migration
         
         // Foreign keys
         $table->foreign('teacher_id')->references('id')->on('users')->onDelete('cascade');
+        $table->foreign('admin_id')->references('id')->on('users')->onDelete('set null');
         $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
         
         // Indexes

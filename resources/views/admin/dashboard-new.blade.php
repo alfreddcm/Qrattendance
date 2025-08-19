@@ -15,9 +15,7 @@
                 <p class="subtitle mb-0">System overview and quick actions</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#quickAddModal">
-                    <i class="fas fa-plus me-1"></i>Quick Add
-                </button>
+               
                 <button class="btn btn-outline-secondary btn-sm" onclick="refreshDashboard()">
                     <i class="fas fa-refresh me-1"></i>Refresh
                 </button>
@@ -246,35 +244,7 @@
     </div>
 </div>
 
-<!-- Quick Add Modal -->
-<div class="modal fade" id="quickAddModal" tabindex="-1" aria-labelledby="quickAddModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="quickAddModalLabel">
-                    <i class="fas fa-plus me-2"></i>Quick Add
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ route('admin.manage-students-new') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-user-graduate me-2"></i>Add Student
-                    </a>
-                    <button class="btn btn-outline-success" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
-                        <i class="fas fa-chalkboard-teacher me-2"></i>Add Teacher
-                    </button>
-                    <button class="btn btn-outline-info" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                        <i class="fas fa-users me-2"></i>Create Section
-                    </button>
-                    <a href="{{ route('admin.manage-semesters') }}" class="btn btn-outline-warning">
-                        <i class="fas fa-calendar me-2"></i>Manage Semester
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+ 
 
 <!-- Add Section Modal -->
 <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
@@ -364,8 +334,10 @@ function openSettings() {
     window.location.href = '{{ route("admin.settings") }}';
 }
 
- setInterval(function() {
-     fetch('{{ route("admin.dashboard.stats") }}')
+// Auto-refresh dashboard every 5 minutes
+setInterval(function() {
+    // Update stats without full page reload
+    fetch('{{ route("admin.dashboard.stats") }}')
         .then(response => response.json())
         .then(data => {
             if (data.success) {

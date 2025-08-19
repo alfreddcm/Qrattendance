@@ -21,6 +21,9 @@ return new class extends Migration
             $table->time('time_out_am')->nullable();
             $table->time('time_in_pm')->nullable();
             $table->time('time_out_pm')->nullable();
+            $table->enum('am_status', ['Early', 'On Time', 'Tardy', 'Late'])->nullable();
+            $table->enum('pm_status', ['Early', 'On Time', 'Tardy', 'Late'])->nullable();
+            $table->text('remarks')->nullable();
             $table->unsignedBigInteger('teacher_id')->nullable();
 
             $table->timestamps();

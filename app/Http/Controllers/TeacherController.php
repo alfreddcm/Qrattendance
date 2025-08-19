@@ -39,9 +39,32 @@ class TeacherController extends Controller
         $semesters = Semester::orderBy('start_date')->get();
         $selectedSemester = $request->get('semester', $this->getCurrentSemesterId());
 
-        $studentCount = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->count();
+        // Get all section IDs that the teacher is assigned to via pivot table
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        // Also include students directly assigned to this teacher (legacy support)
+        $directStudentCount = Student::where('semester_id', $selectedSemester)
+            ->where('user_id', Auth::id())
+            ->count();
+            
+        // Get students from assigned sections
+        $sectionStudentCount = Student::where('semester_id', $selectedSemester)
+            ->whereIn('section_id', $teacherSectionIds)
+            ->count();
+            
+        $studentCount = $directStudentCount + $sectionStudentCount;
 
-        $students = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->get();
+        // Get all students (both direct and from sections)
+        $directStudents = Student::where('semester_id', $selectedSemester)
+            ->where('user_id', Auth::id())
+            ->get();
+            
+        $sectionStudents = Student::where('semester_id', $selectedSemester)
+            ->whereIn('section_id', $teacherSectionIds)
+            ->where('user_id', '!=', Auth::id()) // Avoid duplicates
+            ->get();
+            
+        $students = $directStudents->merge($sectionStudents);
 
         $attendancesToday = Attendance::where('semester_id', $selectedSemester)
             ->whereDate('date', now()->toDateString())
@@ -53,7 +76,10 @@ class TeacherController extends Controller
 
         
         $studentsWithMissingInfo = Student::where('semester_id', $selectedSemester)
-            ->where('user_id', Auth::id())
+            ->where(function($query) use ($teacherSectionIds) {
+                $query->where('user_id', Auth::id())
+                      ->orWhereIn('section_id', $teacherSectionIds);
+            })
             ->where(function($query) {
                 $query->whereNull('picture')
                       ->orWhereNull('qr_code')
@@ -76,6 +102,8 @@ class TeacherController extends Controller
         $mostAbsent = null;
         $totalDays = now()->diffInDays($semesters->where('id', $selectedSemester)->first()?->start_date ?? now()) + 1;
         
+        // Calculate attendance counts for all students (needed for both mostAbsent/mostPunctual and section analytics)
+        $studentAttendanceCounts = collect();
         if ($totalDays > 0) {
             $studentAttendanceCounts = Attendance::where('semester_id', $selectedSemester)
                 ->whereIn('student_id', $students->pluck('id'))
@@ -105,12 +133,6 @@ class TeacherController extends Controller
         
         $mostPunctual = null;
         if ($totalDays > 0) {
-            $studentAttendanceCounts = Attendance::where('semester_id', $selectedSemester)
-                ->whereIn('student_id', $students->pluck('id'))
-                ->selectRaw('student_id, COUNT(*) as attendance_count')
-                ->groupBy('student_id')
-                ->pluck('attendance_count', 'student_id');
-
             $highestRate = 0;
             $mostPunctualStudentId = null;
             
@@ -146,9 +168,88 @@ class TeacherController extends Controller
 
         // --- Add chart objects for statistics include ---
         $analytics = app(\App\Http\Controllers\AttendanceAnalyticsController::class);
-    $chartRequest = new \Illuminate\Http\Request();
-    $chartRequest->replace($request->all());
-    $chartData = $analytics->getChartData($chartRequest);
+        $chartRequest = new \Illuminate\Http\Request();
+        $chartRequest->replace($request->all());
+        $chartData = $analytics->getChartData($chartRequest);
+
+        // Section-based analytics
+        $sectionAnalytics = [];
+        if ($currentSemester) {
+            $sections = $students->groupBy(function($student) {
+                return $student->grade_level . '|' . $student->section_name;
+            });
+
+            foreach ($sections as $sectionKey => $sectionStudents) {
+                $parts = explode('|', $sectionKey);
+                $gradeLevel = $parts[0] ?? '';
+                $section = $parts[1] ?? '';
+                $sectionName = "Grade {$gradeLevel} - {$section}";
+
+                $sectionAttendanceToday = $sectionStudents->whereIn('id', $attendancesToday);
+                $sectionPresentCount = $sectionAttendanceToday->count();
+                $sectionAbsentCount = $sectionStudents->count() - $sectionPresentCount;
+
+                // Calculate section percentage
+                $sectionTotalStudents = $sectionStudents->count();
+                $sectionAttendanceRate = $sectionTotalStudents > 0 ? round(($sectionPresentCount / $sectionTotalStudents) * 100, 1) : 0;
+
+                // Find most punctual student in section
+                $sectionMostPunctual = null;
+                $sectionHighestRate = 0;
+                
+                foreach ($sectionStudents as $student) {
+                    $attendanceCount = $studentAttendanceCounts->get($student->id, 0) ?? 0;
+                    $punctualityRate = $totalDays > 0 ? ($attendanceCount / $totalDays) * 100 : 0;
+                    
+                    if ($punctualityRate > $sectionHighestRate) {
+                        $sectionHighestRate = $punctualityRate;
+                        $sectionMostPunctual = $student;
+                        $sectionMostPunctual->punctuality_rate = round($punctualityRate, 1);
+                    }
+                }
+
+                // Find most absent student in section
+                $sectionMostAbsent = null;
+                $sectionMaxAbsences = 0;
+                
+                foreach ($sectionStudents as $student) {
+                    $attendanceCount = $studentAttendanceCounts->get($student->id, 0) ?? 0;
+                    $absenceCount = max($totalDays - $attendanceCount, 0);
+                    
+                    if ($absenceCount > $sectionMaxAbsences) {
+                        $sectionMaxAbsences = $absenceCount;
+                        $sectionMostAbsent = $student;
+                        $sectionMostAbsent->absence_count = $absenceCount;
+                    }
+                }
+
+                $sectionAnalytics[] = [
+                    'name' => $sectionName,
+                    'grade_level' => $gradeLevel,
+                    'section' => $section,
+                    'total_students' => $sectionTotalStudents,
+                    'present_count' => $sectionPresentCount,
+                    'absent_count' => $sectionAbsentCount,
+                    'attendance_rate' => $sectionAttendanceRate,
+                    'most_punctual' => $sectionMostPunctual,
+                    'most_absent' => $sectionMostAbsent,
+                ];
+            }
+        }
+
+        // Add dashboard stats variables (same as getDashboardStats method)
+        $myStudents = $studentCount; // Already calculated above
+        $mySections = count($teacherSectionIds);
+        $todayPresent = $presentCount; // Already calculated above
+        $attendanceRate = $myStudents > 0 ? round(($todayPresent / $myStudents) * 100) . '%' : '0%';
+
+        // Get teacher sections with additional data
+        $teacherSections = Auth::user()->sections()->withCount('students')->get();
+        foreach ($teacherSections as $section) {
+            $section->present_today = Attendance::whereHas('student', function($query) use ($section) {
+                $query->where('section_id', $section->id);
+            })->whereDate('created_at', today())->count();
+        }
 
         return view('teacher.dashboard', array_merge(compact(
             'semesters',
@@ -160,7 +261,13 @@ class TeacherController extends Controller
             'studentsWithMissingInfo',
             'mostAbsent',
             'mostPunctual',
-            'todaySession'
+            'todaySession',
+            'sectionAnalytics',
+            'myStudents',
+            'mySections', 
+            'todayPresent',
+            'attendanceRate',
+            'teacherSections'
         ), $chartData));
     }
 
@@ -169,8 +276,15 @@ class TeacherController extends Controller
     {
         $selectedSemester = $this->getCurrentSemesterId();
         
-        $students = Student::where('user_id', Auth::id())
-            ->where('semester_id', $selectedSemester)
+        // Get all section IDs that the teacher is assigned to via pivot table
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        // Get students from both direct assignment and section assignment
+        $students = Student::where('semester_id', $selectedSemester)
+            ->where(function($query) use ($teacherSectionIds) {
+                $query->where('user_id', Auth::id())
+                      ->orWhereIn('section_id', $teacherSectionIds);
+            })
             ->orderBy('id_no')
             ->get();
         
@@ -181,8 +295,15 @@ class TeacherController extends Controller
     {
         $selectedSemester = $this->getCurrentSemesterId();
         
-        $students = Student::where('user_id', Auth::id())
-            ->where('semester_id', $selectedSemester)
+        // Get all section IDs that the teacher is assigned to via pivot table
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        // Get students from both direct assignment and section assignment
+        $students = Student::where('semester_id', $selectedSemester)
+            ->where(function($query) use ($teacherSectionIds) {
+                $query->where('user_id', Auth::id())
+                      ->orWhereIn('section_id', $teacherSectionIds);
+            })
             ->orderBy('name')
             ->get();
         
@@ -195,128 +316,6 @@ class TeacherController extends Controller
         $semesters = Semester::orderBy('start_date', 'desc')->get();
         return view('teacher.semester', compact('semesters'));
     }
-
-    /*
-    public function addSemester(Request $request)
-    {
-        Log::info('Semester creation request', [
-            'teacher_id' => Auth::id(),
-            'semester_name' => $request->name,
-            'status' => $request->status,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-        ]);
-
-        try {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'status' => 'required|in:active,inactive',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-                'am_time_in_start' => 'required|date_format:H:i',
-                'am_time_in_end' => 'required|date_format:H:i',
-                'pm_time_out_start' => 'required|date_format:H:i',
-                'pm_time_out_end' => 'required|date_format:H:i',
-            ]);
-        } catch (\Exception $e) {
-            Log::warning('Semester validation failed', [
-                'teacher_id' => Auth::id(),
-                'semester_name' => $request->name,
-                'validation_errors' => $e->getMessage(),
-            ]);
-            throw $e;
-        }
-
-        
-        $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
-        $weekdays = 0;
-        
-        $current = $startDate->copy();
-        while ($current->lte($endDate)) {
-            if ($current->isWeekday()) { 
-                $weekdays++;
-            }
-            $current->addDay();
-        }
-
-        
-        if ($weekdays < 5) {
-            return back()->withErrors([
-                'end_date' => "Semester must have at least 1 week (5 weekdays). Currently has {$weekdays} weekdays."
-            ])->withInput();
-        }
-
-        
-        $warningMessage = '';
-        if ($weekdays < 400) {
-            $weeks = round($weekdays / 5, 1);
-            $warningMessage = " Note: Current semester is {$weeks} weeks. Recommended duration is at least 80 weeks for a full academic semester.";
-        }
-
-        
-        if ($request->status === 'active') {
-            
-            $activeSemester = Semester::where('school_id', auth()->user()->school_id)
-                ->where('status', 'active')
-                ->first();
-
-            if ($activeSemester) {
-                return back()->withErrors([
-                    'status' => "Cannot create active semester. '{$activeSemester->name}' is already active. Please deactivate it first or set this semester as inactive."
-                ])->withInput();
-            }
-        }
-        
-        
-        $overlapping = Semester::where('school_id', auth()->user()->school_id)
-            ->where(function($query) use ($request) {
-                $query->whereBetween('start_date', [$request->start_date, $request->end_date])
-                      ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
-                      ->orWhere(function($q) use ($request) {
-                          $q->where('start_date', '<=', $request->start_date)
-                            ->where('end_date', '>=', $request->end_date);
-                      });
-            })
-            ->first();
-
-        if ($overlapping) {
-            return back()->withErrors([
-                'start_date' => "Date range conflicts with existing semester '{$overlapping->name}' ({$overlapping->start_date} to {$overlapping->end_date})."
-            ])->withInput();
-        }
-        
-        
-        if ($request->am_time_in_start >= $request->am_time_in_end) {
-            return back()->withErrors(['am_time_in_end' => 'AM time in end must be after start time.'])->withInput();
-        }
-        
-        if ($request->pm_time_out_start >= $request->pm_time_out_end) {
-            return back()->withErrors(['pm_time_out_end' => 'Afternoon time out end must be after start time.'])->withInput();
-        }
-        
-        $semester = new Semester([
-            'name' => $request->name,
-            'status' => $request->status,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'school_id' => auth()->user()->school_id,
-            'am_time_in_start' => Carbon::createFromFormat('H:i', $request->am_time_in_start)->format('H:i:s'),
-            'am_time_in_end' => Carbon::createFromFormat('H:i', $request->am_time_in_end)->format('H:i:s'),
-            'pm_time_out_start' => Carbon::createFromFormat('H:i', $request->pm_time_out_start)->format('H:i:s'),
-            'pm_time_out_end' => Carbon::createFromFormat('H:i', $request->pm_time_out_end)->format('H:i:s'),
-        ]);
-        
-        $semester->save();
-        
-        $successMessage = "Semester created successfully with {$weekdays} weekdays!";
-        if (!empty($warningMessage)) {
-            $successMessage .= $warningMessage;
-        }
-        
-        return redirect()->route('teacher.semesters')->with('success', $successMessage);
-    } 
-    */
 
     
     public function updateSemesterStatus(Request $request)
@@ -473,5 +472,35 @@ class TeacherController extends Controller
         return redirect()->route('teacher.account')->with('success', 'Password updated successfully!');
     }
 
-    
+    /**
+     * Get dashboard statistics for AJAX updates
+     */
+    public function getDashboardStats()
+    {
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        $myStudents = Student::where(function($query) use ($teacherSectionIds) {
+            $query->where('user_id', Auth::id())
+                  ->orWhereIn('section_id', $teacherSectionIds);
+        })->count();
+
+        $mySections = count($teacherSectionIds);
+
+        $todayPresent = Attendance::whereHas('student', function($query) use ($teacherSectionIds) {
+            $query->where(function($subQuery) use ($teacherSectionIds) {
+                $subQuery->where('user_id', Auth::id())
+                         ->orWhereIn('section_id', $teacherSectionIds);
+            });
+        })->whereDate('created_at', today())->count();
+
+        $attendanceRate = $myStudents > 0 ? round(($todayPresent / $myStudents) * 100) . '%' : '0%';
+
+        return response()->json([
+            'success' => true,
+            'myStudents' => $myStudents,
+            'mySections' => $mySections,
+            'todayPresent' => $todayPresent,
+            'attendanceRate' => $attendanceRate
+        ]);
+    }
 }

@@ -19,10 +19,12 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
 
-            $table->time('am_time_in_start')->nullable();
-            $table->time('am_time_in_end')->nullable();
-            $table->time('pm_time_out_start')->nullable();
-            $table->time('pm_time_out_end')->nullable();
+            // Period boundaries for the semester
+            $table->time('morning_period_start')->nullable();
+            $table->time('morning_period_end')->nullable();
+            $table->time('afternoon_period_start')->nullable();
+            $table->time('afternoon_period_end')->nullable();
+
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
             $table->text('description')->nullable();
             

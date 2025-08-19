@@ -156,7 +156,7 @@
                             <div class="info-line">Student ID: {{ $student->id_no }}</div>
                             <div class="student-name">{{ $student->name }}</div>
                             <div class="info-line">School: {{ $student->school->name ?? 'SGVS' }}</div>
-                            <div class="info-line">Section: {{ $student->user->section_name ?? 'N/A' }}</div>
+                            <div class="info-line">Grade and Section: @if($student->section){{ $student->section->name }} - Grade {{ $student->section->gradelevel }}@else{{ ($student->section_name ?? 'N/A') }} - Grade {{ ($student->grade_level ?? 'N/A') }}@endif</div>
                         </td>
                     </tr>
                 </table>

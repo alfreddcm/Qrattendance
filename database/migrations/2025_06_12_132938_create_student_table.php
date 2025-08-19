@@ -24,8 +24,10 @@ return new class extends Migration
             $table->string('contact_person_relationship')->nullable();
             $table->string('contact_person_contact', 20)->nullable();
             $table->string('qr_code')->nullable()->unique();
-             $table->string('stud_code')->nullable()->unique();
+            $table->string('stud_code')->nullable()->unique();
             $table->unsignedBigInteger('semester_id');
+            $table->foreignId('section_id')->nullable()->constrained('sections')->onDelete('cascade');
+            $table->text('remarks')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('school_id')->nullable();
 

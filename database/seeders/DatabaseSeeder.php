@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UsersSeeder::class);
         $this->call([
             SemesterSeeder::class,
+            SectionSeeder::class,  // Add sections after semesters
         ]);
 
         $semester = Semester::first();

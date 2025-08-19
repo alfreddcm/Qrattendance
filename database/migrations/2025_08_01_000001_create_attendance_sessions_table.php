@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('session_token', 100)->unique();  
             $table->foreignId('teacher_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
+            $table->foreignId('section_id')->nullable()->constrained('sections')->onDelete('set null');
             $table->string('session_name')->nullable();  
             $table->enum('status', ['active', 'expired', 'closed'])->default('active');
             // Removed expires_at

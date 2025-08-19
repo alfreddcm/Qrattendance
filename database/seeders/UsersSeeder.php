@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\School;
+use App\Models\User;
 
 class UsersSeeder extends Seeder
 {
@@ -14,8 +15,10 @@ class UsersSeeder extends Seeder
         $school = School::where('id', '1')->first();
         $schoolId = $school ? $school->id : '1';
 
-        DB::table('users')->insert([
+        // Clear existing pivot relationships first (optional)
+        // DB::table('section_teacher')->truncate();
 
+         $users = [
             [
                 'name' => 'Admin User',
                 'username' => 'adminuser',
@@ -25,10 +28,8 @@ class UsersSeeder extends Seeder
                 'phone_number' => '09123456789',
                 'position' => 'Administrator',
                 'school_id' => $schoolId,
-                'section_name' => 'Admin Section',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],[
+            ],
+            [
                 'name' => 'Pagalan, Mark Anthony',
                 'username' => 'mark',
                 'email' => 'teacher1@sgvs.edu',
@@ -37,9 +38,6 @@ class UsersSeeder extends Seeder
                 'phone_number' => '09987654321',
                 'position' => 'Teacher',
                 'school_id' => $schoolId,
-                'section_name' => 'Grade 1-A',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'name' => 'Teacher Two',
@@ -50,9 +48,6 @@ class UsersSeeder extends Seeder
                 'phone_number' => '09111222333',
                 'position' => 'Teacher',
                 'school_id' => $schoolId,
-                'section_name' => 'Grade 2-B',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'name' => 'Teacher Three',
@@ -63,10 +58,19 @@ class UsersSeeder extends Seeder
                 'phone_number' => '09444555666',
                 'position' => 'Teacher',
                 'school_id' => $schoolId,
-                'section_name' => 'Grade 3-C',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
-        ]);
+        ];
+
+         foreach ($users as $userData) {
+            User::updateOrCreate(
+                ['username' => $userData['username']],  
+                $userData  
+            );
+        }
+
+         $teacher = User::where('username', 'mark')->first();
+        if ($teacher && $teacher->role === 'teacher') {
+             $teacher->sections()->sync([1, 2]);
+        }
     }
 }

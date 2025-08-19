@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Semester;
 use App\Models\Attendance;
 use App\Models\Student;
+use App\Services\SF2TemplateService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -15,18 +16,60 @@ class ReportController extends Controller
     {
         $type = $request->input('type', 'daily');
         $semesterId = $request->input('semester_id');
+        $gradeSection = $request->input('grade_section');
         $semesters = Semester::all();
         $records = [];
 
+        // Base student query with section relationship
+        $studentQuery = Student::with('section')->where('user_id', Auth::id());
+        
         if ($semesterId) {
-            $students = Student::where('semester_id', $semesterId)->where('user_id', Auth::id())->orderBy('name')->get();
+            $studentQuery->where('semester_id', $semesterId);
             $semester = Semester::find($semesterId);
         } else {
-            $students = Student::where('user_id', Auth::id())->orderBy('name')->get();
             $semester = null;
         }
 
+        // Apply grade_section filter if provided
+        if ($gradeSection) {
+            $parts = explode('|', $gradeSection);
+            if (count($parts) == 2) {
+                $gradeLevel = $parts[0];
+                $section = $parts[1];
+                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $section) {
+                    $query->where('gradelevel', $gradeLevel)->where('name', $section);
+                });
+            }
+        }
 
+        $students = $studentQuery->orderBy('name')->get();
+
+        // Get grade section options for the dropdown
+        $gradeSectionOptionsQuery = Student::where('user_id', Auth::id());
+        if ($semesterId) {
+            $gradeSectionOptionsQuery->where('students.semester_id', $semesterId);
+        }
+        
+        $gradeSectionOptions = $gradeSectionOptionsQuery
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->whereNotNull('sections.gradelevel')
+            ->whereNotNull('sections.name')
+            ->where('sections.gradelevel', '>', 0)
+            ->where('sections.name', '!=', '')
+            ->where('sections.name', '!=', '-')
+            ->select('sections.gradelevel', 'sections.name as section_name')
+            ->distinct()
+            ->orderBy('sections.gradelevel')
+            ->orderBy('sections.name')
+            ->get()
+            ->filter(function($item) {
+                return !empty(trim($item->gradelevel)) && !empty(trim($item->section_name));
+            })
+            ->map(function ($item) {
+                return $item->gradelevel . '|' . $item->section_name;
+            })
+            ->unique()
+            ->values();
 
         if ($type === 'daily') {
 
@@ -37,7 +80,7 @@ class ReportController extends Controller
                 $semester_end = \Carbon\Carbon::parse($semester->end_date)->toDateString();
                 if ($date < $semester_start || $date > $semester_end) {
                      $records = collect();
-                    return view('teacher.report', compact('semesters', 'records', 'semester_start', 'semester_end'));
+                    return view('teacher.report', compact('semesters', 'records', 'semester_start', 'semester_end', 'gradeSectionOptions'));
                 }
             }
 
@@ -62,6 +105,8 @@ class ReportController extends Controller
                     'date'      => $date,
                     'id_no'     => $student->id_no,
                     'name'      => $student->name,
+                    'grade_level' => $student->section ? $student->section->gradelevel : '',
+                    'section'   => $student->section ? $student->section->name : '',
                     'am_in'     => $att && $att->time_in_am ? \Carbon\Carbon::parse($att->time_in_am)->setTimezone('Asia/Manila')->format('h:i A') : null,
                     'am_out'    => $att && $att->time_out_am ? \Carbon\Carbon::parse($att->time_out_am)->setTimezone('Asia/Manila')->format('h:i A') : null,
                     'pm_in'     => $att && $att->time_in_pm ? \Carbon\Carbon::parse($att->time_in_pm)->setTimezone('Asia/Manila')->format('h:i A') : null,
@@ -104,6 +149,8 @@ class ReportController extends Controller
                     return (object)[
                         'id_no'      => $student->id_no,
                         'name'       => $student->name,
+                        'grade_level' => $student->section ? $student->section->gradelevel : '',
+                        'section'    => $student->section ? $student->section->name : '',
                         'total_day'  => 0,
                         'present'    => 0,
                         'absent'     => 0,
@@ -148,6 +195,8 @@ class ReportController extends Controller
                     return (object)[
                         'id_no'      => $student->id_no,
                         'name'       => $student->name,
+                        'grade_level' => $student->section ? $student->section->gradelevel : '',
+                        'section'    => $student->section ? $student->section->name : '',
                         'total_day'  => $totalDays,
                         'present'    => $present,
                         'absent'     => $absent,
@@ -173,6 +222,8 @@ class ReportController extends Controller
                 return (object)[
                 'id_no'    => $student->id_no,
                 'name'     => $student->name,
+                'grade_level' => $student->section ? $student->section->gradelevel : '',
+                'section'  => $student->section ? $student->section->name : '',
                 'checks'   => [],
                 ];
             });
@@ -203,6 +254,8 @@ class ReportController extends Controller
                 return (object)[
                 'id_no'    => $student->id_no,
                 'name'     => $student->name,
+                'grade_level' => $student->section ? $student->section->gradelevel : '',
+                'section'  => $student->section ? $student->section->name : '',
                 'checks'   => $checks,
                 ];
             });
@@ -213,22 +266,39 @@ class ReportController extends Controller
         $semester_start = $semester ? $semester->start_date : null;
         $semester_end = $semester ? $semester->end_date : null;
 
-        return view('teacher.report', compact('semesters', 'records', 'semester_start', 'semester_end'));
+        return view('teacher.report', compact('semesters', 'records', 'semester_start', 'semester_end', 'gradeSectionOptions'));
     }
 
     public function exportCsv(Request $request)
     {
         $type = $request->input('type', 'daily');
         $semesterId = $request->input('semester_id');
+        $gradeSection = $request->input('grade_section');
         $semesters = Semester::all();
 
+        // Base student query with section relationship
+        $studentQuery = Student::with('section')->where('user_id', Auth::id());
+        
         if ($semesterId) {
-            $students = Student::where('semester_id', $semesterId)->where('user_id', Auth::id())->get();
+            $studentQuery->where('semester_id', $semesterId);
             $semester = Semester::find($semesterId);
         } else {
-            $students = Student::where('user_id', Auth::id())->get();
             $semester = null;
         }
+
+        // Apply grade_section filter if provided
+        if ($gradeSection) {
+            $parts = explode('|', $gradeSection);
+            if (count($parts) == 2) {
+                $gradeLevel = $parts[0];
+                $section = $parts[1];
+                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $section) {
+                    $query->where('gradelevel', $gradeLevel)->where('name', $section);
+                });
+            }
+        }
+
+        $students = $studentQuery->get();
 
         $filename = 'attendance_report_' . now()->format('Ymd_His') . '.csv';
 
@@ -401,6 +471,248 @@ class ReportController extends Controller
             'Content-Type' => 'text/csv',
             'Cache-Control' => 'no-store, no-cache',
         ]);
+    }
+
+    /**
+     * Generate SF2 Form
+     */
+    public function generateSF2(Request $request)
+    {
+        $request->validate([
+            'semester_id' => 'required|exists:semesters,id',
+            'grade_section' => 'nullable|string',
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2020|max:2030',
+            'teacher_id' => 'nullable|integer|exists:users,id' // Optional teacher ID for admin use
+        ]);
+
+        try {
+            $semester = Semester::find($request->semester_id);
+            $month = $request->month;
+            $year = $request->year;
+
+            // Get semester information to derive school year
+            $semesterName = $semester->name;
+            $schoolYear = $this->extractSchoolYearFromSemester($semesterName);
+            
+            // Parse grade_section parameter (format: "Grade 11|STEM")
+            $gradeLevel = null;
+            $section = null;
+            
+            if ($request->grade_section) {
+                $parts = explode('|', $request->grade_section);
+                if (count($parts) == 2) {
+                    $gradeLevel = $parts[0];
+                    $section = $parts[1];
+                }
+            }
+
+            $sf2Service = new SF2TemplateService();
+            
+            $result = $sf2Service->generateSF2([
+                'semester_id' => $request->semester_id,
+                'school_year' => $schoolYear,
+                'grade_level' => $gradeLevel ?: $semesterName,
+                'section' => $section ?: 'All Students',
+                'month' => $month,
+                'year' => $year,
+                'filter_grade_level' => $gradeLevel,
+                'filter_section' => $section,
+                'teacher_id' => $request->teacher_id ?? null // Accept teacher_id from frontend
+            ]);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'SF2 generated successfully!',
+                    'download_url' => $result['download_url'],
+                    'filename' => $result['filename'],
+                    'student_count' => $result['student_count']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error generating SF2: ' . $result['error']
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating SF2: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Extract school year from semester name
+     */
+    private function extractSchoolYearFromSemester($semesterName)
+    {
+        // Try to extract year from semester name (e.g., "1st Semester 2025" -> "2024-2025")
+        if (preg_match('/(\d{4})/', $semesterName, $matches)) {
+            $year = (int)$matches[1];
+            return ($year - 1) . '-' . $year;
+        }
+        
+        // Fallback to current academic year
+        $currentYear = Carbon::now()->year;
+        $currentMonth = Carbon::now()->month;
+        
+        // If we're in the first half of the year (Jan-June), it's the previous academic year
+        if ($currentMonth <= 6) {
+            return ($currentYear - 1) . '-' . $currentYear;
+        } else {
+            return $currentYear . '-' . ($currentYear + 1);
+        }
+    }
+
+    /**
+     * Generate PDF version of SF2
+     */
+    public function generateSF2PDF(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|string'
+        ]);
+
+        try {
+            $sf2Service = new SF2TemplateService();
+            $excelPath = storage_path('app/public/generated/SF2/' . $request->excel_file);
+            
+            if (!file_exists($excelPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Excel file not found'
+                ], 404);
+            }
+
+            $result = $sf2Service->generatePDF($excelPath);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PDF generated successfully!',
+                    'download_url' => $result['download_url']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error generating PDF: ' . $result['error']
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get SF2 form options for dropdown
+     */
+    public function getSF2Options()
+    {
+        // Get available semesters for the current user
+        $semesters = Semester::whereHas('students', function($query) {
+            $query->where('user_id', Auth::id());
+        })->select('id', 'name', 'start_date', 'end_date')->orderBy('created_at', 'desc')->get();
+
+        // Add semester date information for month filtering
+        $semestersWithDates = $semesters->map(function($semester) {
+            return [
+                'id' => $semester->id,
+                'name' => $semester->name,
+                'start_date' => $semester->start_date,
+                'end_date' => $semester->end_date,
+                'start_month' => \Carbon\Carbon::parse($semester->start_date)->month,
+                'start_year' => \Carbon\Carbon::parse($semester->start_date)->year,
+                'end_month' => \Carbon\Carbon::parse($semester->end_date)->month,
+                'end_year' => \Carbon\Carbon::parse($semester->end_date)->year
+            ];
+        });
+
+        // Get combined grade level and section options with better error handling
+        $gradeSection = collect();
+        
+        try {
+            $rawData = Student::where('user_id', Auth::id())
+                ->join('sections', 'students.section_id', '=', 'sections.id')
+                ->select('sections.gradelevel', 'sections.name as section_name', 'sections.id as section_id')
+                ->distinct()
+                ->orderBy('sections.gradelevel')
+                ->orderBy('sections.name')
+                ->get();
+
+            $gradeSection = $rawData
+                ->filter(function($item) {
+                    // More comprehensive validation
+                    $grade = trim((string)$item->gradelevel);
+                    $name = trim((string)$item->section_name);
+                    
+                    return !empty($grade) && 
+                           !empty($name) && 
+                           is_numeric($grade) && 
+                           $grade > 0 &&
+                           $name !== '-' &&
+                           strlen($name) > 0;
+                })
+                ->map(function($item) {
+                    return [
+                        'value' => $item->gradelevel . '|' . $item->section_name,
+                        'label' => 'Grade ' . $item->gradelevel . ' - ' . $item->section_name
+                    ];
+                })
+                ->unique('value')
+                ->values();
+                
+        } catch (\Exception $e) {
+            \Log::error('Error fetching grade section options: ' . $e->getMessage());
+        }
+
+        // Debug logging
+        \Log::info('SF2 Grade Section Options', [
+            'user_id' => Auth::id(),
+            'count' => $gradeSection->count(),
+            'options' => $gradeSection->toArray()
+        ]);
+
+        // All months (will be filtered on frontend based on semester selection)
+        $months = [
+            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+            5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+            9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+        ];
+
+        return response()->json([
+            'semesters' => $semestersWithDates,
+            'grade_section_options' => $gradeSection,
+            'months' => $months
+        ]);
+    }
+
+    /**
+     * Get list of generated SF2 files
+     */
+    public function getGeneratedSF2Files()
+    {
+        try {
+            $sf2Service = new SF2TemplateService();
+            $files = $sf2Service->getGeneratedFiles();
+
+            return response()->json([
+                'success' => true,
+                'files' => $files
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving files: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 

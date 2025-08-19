@@ -2,97 +2,109 @@
 @section('title', 'Dashboard')
 @section('content')
 
-<style>
-.compact-card {
-    height: 100px !important;
-    min-height: 100px !important;
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dashboard Functions
+function refreshDashboard() {
+    location.reload();
 }
 
-.compact-card .card-body {
-    padding: 12px !important;
-}
-
-.fs-7 {
-    font-size: 0.8rem !important;
-}
-
-.fs-8 {
-    font-size: 0.7rem !important;
-}
-
-.table-compact {
-    font-size: 0.8rem;
-}
-
-.table-compact th,
-.table-compact td {
-    padding: 0.4rem !important;
-}
-
-.btn-compact {
-    padding: 0.2rem 0.4rem !important;
-    font-size: 0.7rem !important;
-}
-
-.card-compact {
-    margin-bottom: 0.75rem !important;
-}
-
-.container-fluid {
-    padding: 0.75rem !important;
-}
-
-.school-logo-circle {
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.school-logo-circle:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.school-logo-img {
-    transition: all 0.3s ease;
-}
-
-.school-logo-img:hover {
-    transform: scale(1.1);
-}
-
-/* Responsive adjustments for logo */
-@media (max-width: 768px) {
-    .school-logo-circle {
-        width: 60px !important;
-        height: 60px !important;
-        top: 10px !important;
-        right: 10px !important;
-    }
+function filterActivity(type) {
+    // Implementation for filtering activities
+    console.log('Filter activity by:', type);
     
-    .school-logo-circle i {
-        font-size: 1.5rem !important;
-    }
-    
-    .col-md-6[style*="padding-right"] {
-        padding-right: 80px !important;
+    const activities = document.querySelectorAll('.activity-item');
+    activities.forEach(activity => {
+        if (type === 'all') {
+            activity.style.display = 'flex';
+        } else {
+            // Show/hide based on activity type
+            const hasType = activity.dataset.type === type;
+            activity.style.display = hasType ? 'flex' : 'none';
+        }
+    });
+}
+
+function generateQRCodes() {
+    if (confirm('Generate QR codes for all students in your sections?')) {
+        fetch('{{ route("teacher.generate-qr-codes") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('QR codes generated successfully!');
+                location.reload();
+            } else {
+                alert('Error generating QR codes: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating QR codes');
+        });
     }
 }
 
-@media (max-width: 576px) {
-    .school-logo-circle {
-        width: 50px !important;
-        height: 50px !important;
+// Attendance Chart
+@if(isset($attendanceChartData))
+const ctx = document.getElementById('attendanceChart').getContext('2d');
+const attendanceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {!! json_encode($attendanceChartData['labels'] ?? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']) !!},
+        datasets: [{
+            label: 'Attendance Rate',
+            data: {!! json_encode($attendanceChartData['data'] ?? [0, 0, 0, 0, 0]) !!},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
     }
-    
-    .school-logo-circle i {
-        font-size: 1.2rem !important;
-    }
-    
-    .col-md-6[style*="padding-right"] {
-        padding-right: 60px !important;
-    }
-}
-</style>
+});
+@endif
+
+// Auto-refresh stats every 5 minutes
+setInterval(function() {
+    fetch('{{ route("teacher.dashboard.stats") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('myStudents').textContent = data.myStudents;
+                document.getElementById('mySections').textContent = data.mySections;
+                document.getElementById('todayPresent').textContent = data.todayPresent;
+                document.getElementById('attendanceRate').textContent = data.attendanceRate;
+            }
+        })
+        .catch(error => console.error('Error updating stats:', error));
+}, 300000); // 5 minutes
+</script>
+
 
 @php
      $today = \Carbon\Carbon::now();
@@ -132,10 +144,14 @@
         'school_name' => auth()->user()->school ? auth()->user()->school->name : 'N/A',
         'school_year' => $isActiveSemester ? \Carbon\Carbon::parse($currentSemester->start_date)->format('Y') . ' - ' . \Carbon\Carbon::parse($currentSemester->end_date)->format('Y') : 'N/A',
         'date_range' => $isActiveSemester ? \Carbon\Carbon::parse($currentSemester->start_date)->format('M j, Y') . ' – ' . \Carbon\Carbon::parse($currentSemester->end_date)->format('M j, Y') : 'Not Available',
-        'am_time_in_start_display' => $isActiveSemester ? ($currentSemester->am_time_in_start_display ?? '7:00 AM') : 'N/A',
-        'am_time_in_end_display' => $isActiveSemester ? ($currentSemester->am_time_in_end_display ?? '7:30 AM') : 'N/A',
-        'pm_time_out_start_display' => $isActiveSemester ? ($currentSemester->pm_time_out_start_display ?? '4:30 PM') : 'N/A',
-        'pm_time_out_end_display' => $isActiveSemester ? ($currentSemester->pm_time_out_end_display ?? '5:00 PM') : 'N/A',
+        'am_time_in_start_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->am_time_in_start ?? '07:00:00')->format('g:i A')) : 'N/A',
+        'am_time_in_end_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->am_time_in_end ?? '07:30:00')->format('g:i A')) : 'N/A',
+        'am_time_out_start_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->am_time_out_start ?? '11:30:00')->format('g:i A')) : 'N/A',
+        'am_time_out_end_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->am_time_out_end ?? '12:00:00')->format('g:i A')) : 'N/A',
+        'pm_time_in_start_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->pm_time_in_start ?? '13:00:00')->format('g:i A')) : 'N/A',
+        'pm_time_in_end_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->pm_time_in_end ?? '13:30:00')->format('g:i A')) : 'N/A',
+        'pm_time_out_start_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->pm_time_out_start ?? '16:30:00')->format('g:i A')) : 'N/A',
+        'pm_time_out_end_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->pm_time_out_end ?? '17:00:00')->format('g:i A')) : 'N/A',
         'student_count' => $isActiveSemester ? ($studentCount ?? 0) : 0,
         'present_count' => $isActiveSemester ? ($presentCount ?? 0) : 0,
         'absent_count' => $isActiveSemester ? ($absentCount ?? 0) : 0,
@@ -155,7 +171,7 @@
                 <span class="me-2">🏠</span>
                 Dashboard
             </h2>
-            <p class="subtitle">Welcome back! Here's your attendance overview</p>
+                <p class="subtitle mb-0">Welcome back, {{ Auth::user()->name ?? 'Teacher' }}!</p>
         </div>
         <div class="page-actions">
 
@@ -184,11 +200,17 @@
                                     <p class="mb-1"><strong>School:</strong> {{ $displayData['school_name'] }}</p>
                                     <p class="mb-0"><strong>Year:</strong> {{ $displayData['school_year'] }}</p>
                                     <p class="mb-0"><strong>Period:</strong> {{ $displayData['date_range'] }}</p>
-                                  <p class="mb-1"><strong>AM Time In:</strong> 
+                                    <p class="mb-1"><strong>AM Time In:</strong> 
                                         <span class="badge bg-success">{{ $displayData['am_time_in_start_display'] }} - {{ $displayData['am_time_in_end_display'] }}</span>
                                     </p>
+                                    <p class="mb-1"><strong>AM Time Out:</strong> 
+                                        <span class="badge bg-info">{{ $displayData['am_time_out_start_display'] }} - {{ $displayData['am_time_out_end_display'] }}</span>
+                                    </p>
+                                    <p class="mb-1"><strong>PM Time In:</strong> 
+                                        <span class="badge bg-warning">{{ $displayData['pm_time_in_start_display'] }} - {{ $displayData['pm_time_in_end_display'] }}</span>
+                                    </p>
                                     <p class="mb-1"><strong>PM Time Out:</strong> 
-                                        <span class="badge bg-warning">{{ $displayData['pm_time_out_start_display'] }} - {{ $displayData['pm_time_out_end_display'] }}</span>
+                                        <span class="badge bg-danger">{{ $displayData['pm_time_out_start_display'] }} - {{ $displayData['pm_time_out_end_display'] }}</span>
                                     </p>
                             </div>
                         </div>
@@ -269,103 +291,145 @@
     </div>
     @endif
 
-    <div class="row g-3 mb-3">
-         <div class="col-lg-3 col-md-6">
-            <div class="card text-center shadow-sm border-primary compact-card">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title text-primary mb-0 fs-7">Total Students</h6>
-                        <i class="fas fa-users text-primary fs-5"></i>
+    <div class="container-fluid">
+        <!-- Quick Stats -->
+        <div class="row g-3 mb-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card text-white bg-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="h4 mb-0" id="myStudents">{{ $myStudents ?? 0 }}</div>
+                                <small>My Students</small>
+                            </div>
+                            <i class="fas fa-user-graduate fa-2x opacity-75"></i>
+                        </div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-white" style="width: 100%"></div>
+                        </div>
                     </div>
-                    <h3 class="text-primary mb-1">{{ $displayData['student_count'] }}</h3>
-                    <small class="text-muted fs-8">{{ $isActiveSemester ? 'Enrolled this semester' : 'No active semester' }}</small>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card text-white bg-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="h4 mb-0" id="mySections">{{ $mySections ?? 0 }}</div>
+                                <small>My Sections</small>
+                            </div>
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-white" style="width: {{ $mySections > 0 ? min(($mySections / 5) * 100, 100) : 0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card text-white bg-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="h4 mb-0" id="todayPresent">{{ $todayPresent ?? 0 }}</div>
+                                <small>Present Today</small>
+                            </div>
+                            <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                        </div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-white" style="width: {{ $todayPresent > 0 && $myStudents > 0 ? min(($todayPresent / $myStudents) * 100, 100) : 0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card text-white bg-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="h4 mb-0" id="attendanceRate">{{ $attendanceRate ?? '0%' }}</div>
+                                <small>Attendance Rate</small>
+                            </div>
+                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                        </div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-white" style="width: {{ str_replace('%', '', $attendanceRate ?? '0') }}%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-         <div class="col-lg-3 col-md-6">
-            <div class="card text-center shadow-sm border-success compact-card">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title text-success mb-0 fs-7">Present Today</h6>
-                        <i class="fas fa-check-circle text-success fs-5"></i>
+
+        <!-- My Sections Overview -->
+        @if(isset($teacherSections) && $teacherSections->count() > 0)
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="fas fa-chalkboard me-1"></i>My Sections
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach($teacherSections as $section)
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card section-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ $section->name }}</h6>
+                                        <small class="text-muted">{{ $section->name }} - Grade {{ $section->gradelevel }}</small>
+                                    </div>
+                                    <span class="badge bg-primary">{{ $section->students_count ?? 0 }} students</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        Today: {{ $section->present_today ?? 0 }}/{{ $section->students_count ?? 0 }}
+                                    </small>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('teacher.students', ['section_id' => $section->id]) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-users"></i>
+                                        </a>
+                                        <a href="{{ route('teacher.attendance', ['section_id' => $section->id]) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <h3 class="text-success mb-1">{{ $displayData['present_count'] }}</h3>
-                    <small class="text-muted fs-8">{{ $isActiveSemester ? 'Students attended' : 'No active semester' }}</small>
+                    @endforeach
                 </div>
             </div>
         </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="card text-center shadow-sm border-danger compact-card">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title text-danger mb-0 fs-7">Absent Today</h6>
-                        <i class="fas fa-times-circle text-danger fs-5"></i>
-                    </div>
-                    <h3 class="text-danger mb-1">{{ $displayData['absent_count'] }}</h3>
-                    <small class="text-muted fs-8">{{ $isActiveSemester ? 'Students missing' : 'No active semester' }}</small>
-                </div>
+        @else
+        <div class="card mb-3">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h5 class="text-muted">No Sections Assigned</h5>
+                <p class="text-muted">Please contact the administrator to assign sections to your account.</p>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    <i class="fas fa-refresh me-1"></i>Check Again
+                </button>
             </div>
         </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="card text-center shadow-sm border-warning compact-card">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title text-warning mb-0 fs-7">Incomplete Profiles</h6>
-                        <i class="fas fa-exclamation-triangle text-warning fs-5"></i>
-                    </div>
-                    <h3 class="text-warning mb-1">{{ $displayData['incomplete_profiles_count'] }}</h3>
-                    <small class="text-muted fs-8">{{ $isActiveSemester ? 'Need updates' : 'No active semester' }}</small>
-                </div>
+        @endif
+
+        <!-- Attendance Summary Chart -->
+        @if(isset($attendanceChartData))
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-1"></i>Weekly Attendance Trend
+            </div>
+            <div class="card-body">
+                <canvas id="attendanceChart" height="60"></canvas>
             </div>
         </div>
+        @endif
     </div>
 
-    <!-- Performance Insight Cards -->
-    <div class="row g-3 mb-3">
-        <!-- Most Punctual Student Card -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-success compact-card">
-                <div class="card-header bg-light border-success py-2">
-                    <h6 class="mb-0 text-success fs-7">
-                        <i class="fas fa-trophy me-2"></i>Most Punctual Student
-                    </h6>
-                </div>
-                <div class="card-body text-center p-3">
-                    @if($isActiveSemester && $displayData['most_punctual'])
-                        <h6 class="text-success mb-1">{{ $displayData['most_punctual']->name }}</h6>
-                        <small class="text-muted fs-8">{{ $displayData['most_punctual']->punctuality_rate ?? 0 }}% attendance rate</small>
-                    @else
-                        <h6 class="text-muted mb-1">{{ $isActiveSemester ? 'No data available' : 'No active semester' }}</h6>
-                        <small class="text-muted fs-8">{{ $isActiveSemester ? 'Attendance data needed' : 'Current date outside semester range' }}</small>
-                    @endif
-                </div>
-            </div>
-        </div>
-        
-        <!-- Most Absent Student Card -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-danger compact-card">
-                <div class="card-header bg-light border-danger py-2">
-                    <h6 class="mb-0 text-danger fs-7">
-                        <i class="fas fa-exclamation-circle me-2"></i>Most Absent Student
-                    </h6>
-                </div>
-                <div class="card-body text-center p-3">
-                    @if($isActiveSemester && $displayData['most_absent'])
-                        <h6 class="text-danger mb-1">{{ $displayData['most_absent']->name }}</h6>
-                        <span class="badge bg-danger fs-8">{{ $displayData['most_absent']->absence_count ?? 0 }} days</span>
-                    @else
-                        <h6 class="text-muted mb-1">{{ $isActiveSemester ? 'No data available' : 'No active semester' }}</h6>
-                        <small class="text-muted fs-8">{{ $isActiveSemester ? 'Attendance data needed' : 'Current date outside semester range' }}</small>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
+    
+    
     <!-- Students with Missing Information Section -->
     @if($isActiveSemester && $displayData['students_with_missing_info']->count() > 0)
     <div class="row mb-3">
@@ -905,11 +969,9 @@ async function createSession() {
         const result = await response.json();
         
         if (result.success) {
-            // Close create modal
-            bootstrap.Modal.getInstance(document.getElementById('createSessionModal')).hide();
+             bootstrap.Modal.getInstance(document.getElementById('createSessionModal')).hide();
             
-            // Show success modal with details
-            showSessionCreated(result.session);
+             showSessionCreated(result.session);
         } else {
             console.error('Server error:', result);
             alert('Error: ' + (result.message || 'Unknown error occurred'));
@@ -942,6 +1004,10 @@ function showSessionCreated(session) {
     
     const modal = new bootstrap.Modal(document.getElementById('sessionCreatedModal'));
     modal.show();
+    // Reload the page to show updated session
+    setTimeout(() => {
+        location.reload();
+    }, 1500);
 }
 
 async function loadActiveSessions() {

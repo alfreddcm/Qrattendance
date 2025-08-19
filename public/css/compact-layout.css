@@ -1,0 +1,249 @@
+/* Compact Design Styles */
+.compact-layout {
+    --bs-body-font-size: 0.875rem;
+    --bs-body-line-height: 1.4;
+}
+
+.compact-layout .card {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.compact-layout .card-header {
+    padding: 0.5rem 0.75rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.compact-layout .card-body {
+    padding: 0.75rem;
+}
+
+.compact-layout .btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border-radius: 6px;
+}
+
+.compact-layout .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.compact-layout .form-control,
+.compact-layout .form-select {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+}
+
+.compact-layout .form-control-sm,
+.compact-layout .form-select-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.compact-layout .modal-header {
+    padding: 0.75rem 1rem;
+}
+
+.compact-layout .modal-body {
+    padding: 1rem;
+}
+
+.compact-layout .modal-footer {
+    padding: 0.75rem 1rem;
+}
+
+.compact-layout .table {
+    font-size: 0.875rem;
+}
+
+.compact-layout .table th,
+.compact-layout .table td {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.compact-layout .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.compact-layout .sticky-header {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.compact-layout .sticky-header h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.compact-layout .subtitle {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+.compact-layout .alert {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+}
+
+.compact-layout .pagination {
+    font-size: 0.875rem;
+}
+
+.compact-layout .pagination .page-link {
+    padding: 0.375rem 0.75rem;
+}
+
+/* Section creation inline form */
+.section-creation-form {
+    background-color: #f8f9fa;
+    border: 1px dashed #6c757d;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.section-creation-form .form-control,
+.section-creation-form .form-select {
+    font-size: 0.8125rem;
+}
+
+/* Teacher section assignment notice */
+.section-assignment-notice {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.section-assignment-notice .icon {
+    font-size: 2rem;
+    color: #f59e0b;
+    margin-bottom: 0.5rem;
+}
+
+/* Import section handling */
+.import-section-options {
+    background-color: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+/* Dashboard Enhancements */
+.sticky-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    border-bottom: 1px solid #e3e6f0;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0;
+}
+
+/* Missing Profile Badges */
+.missing-info-badge {
+    display: inline-block;
+    padding: 0.2rem 0.4rem;
+    margin: 0.1rem;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.missing-photo { background-color: #f8d7da; color: #721c24; }
+.missing-qr { background-color: #fff3cd; color: #856404; }
+.missing-phone { background-color: #cce5ff; color: #004085; }
+.missing-address { background-color: #d4edda; color: #155724; }
+.missing-contact { background-color: #e2e3e5; color: #383d41; }
+.missing-gender { background-color: #f4cccc; color: #5a1a01; }
+.missing-age { background-color: #ead1dc; color: #7b1a7b; }
+
+/* Session Cards */
+.session-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.session-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+}
+
+.session-url-display {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+}
+
+.copy-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.copy-btn:hover {
+    background: rgba(255,255,255,0.3);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.session-actions .btn {
+    transition: all 0.3s ease;
+}
+
+.session-actions .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Stat Cards */
+.stat-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .session-url-display {
+        font-size: 0.7rem;
+    }
+    
+    .missing-info-badge {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.3rem;
+    }
+}

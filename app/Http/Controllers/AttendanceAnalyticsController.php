@@ -384,15 +384,18 @@ class AttendanceAnalyticsController extends Controller {
             $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
             $attendance = Attendance::selectRaw('
-                    users.section_name as subject_code, DATE(attendances.date) as attendance_date, COUNT(DISTINCT attendances.student_id) as students_present
+                    CONCAT(sections.name, " - Grade ", sections.gradelevel) as subject_code, 
+                    DATE(attendances.date) as attendance_date, 
+                    COUNT(DISTINCT attendances.student_id) as students_present
                 ')
-                ->join('users', 'attendances.teacher_id', '=', 'users.id')
+                ->join('students', 'attendances.student_id', '=', 'students.id')
+                ->join('sections', 'students.section_id', '=', 'sections.id')
                 ->where('attendances.teacher_id', $teacherId)
                 ->whereBetween('attendances.date', [$startDate, $endDate])
                 ->where(function($q){
                     $q->whereNotNull('attendances.time_in_am')->orWhereNotNull('attendances.time_in_pm');
                 })
-                ->groupBy('users.section_name', 'attendance_date')
+                ->groupBy('sections.id', 'sections.name', 'sections.gradelevel', 'attendance_date')
                 ->orderBy('attendance_date')
                 ->get();
 

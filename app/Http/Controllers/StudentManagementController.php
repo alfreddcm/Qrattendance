@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Student;
+use App\Models\Section;
+use App\Models\Semester;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
@@ -14,22 +16,67 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class StudentManagementController extends Controller
 {
+    /**
+     * Get query for students assigned to the current teacher
+     * Includes both direct assignments and section-based assignments
+     */
+    private function getTeacherStudentsQuery()
+    {
+        // Get all section IDs that the teacher is assigned to via pivot table
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        return Student::where(function($query) use ($teacherSectionIds) {
+            $query->where('user_id', Auth::id())
+                  ->orWhereIn('section_id', $teacherSectionIds);
+        });
+    }
      
     private function getCurrentSemesterId()
     {
-        $semesters = \App\Models\Semester::orderBy('start_date')->get();
+        $semesters = Semester::orderBy('start_date')->get();
         return $semesters->last()?->id;
     }
 
     public function index(Request $request)
     {
-        $query = Student::where('user_id', Auth::id());
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        if (empty($teacherSectionIds)) {
+            // No sections assigned - show message
+            return view('teacher.students', [
+                'students' => collect(),
+                'noSectionsAssigned' => true,
+                'teacherSections' => collect(),
+                'gradeSectionOptions' => collect(),
+                'selectedGradeSection' => null,
+            ]);
+        }
+        
+        $query = $this->getTeacherStudentsQuery()->with('section');
+        $selectedGradeSection = null;
+        
+        // Handle section_id parameter from URL
+        if ($request->filled('section_id') && !$request->filled('grade_section')) {
+            $sectionId = $request->section_id;
+            // Verify the section belongs to this teacher
+            if (in_array($sectionId, $teacherSectionIds)) {
+                $section = Section::find($sectionId);
+                if ($section) {
+                    $selectedGradeSection = $section->gradelevel . '|' . $section->name;
+                    $query->where('section_id', $sectionId);
+                }
+            }
+        }
         
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('id_no', 'like', "%{$search}%");
+                  ->orWhere('id_no', 'like', "%{$search}%")
+                  ->orWhereHas('section', function($sectionQuery) use ($search) {
+                      $sectionQuery->where('name', 'like', "%{$search}%")
+                                  ->orWhere('gradelevel', 'like', "%{$search}%");
+                  });
              
             });
         }
@@ -43,6 +90,19 @@ class StudentManagementController extends Controller
             }
         }
         
+         if ($request->filled('grade_section')) {
+            $selectedGradeSection = $request->grade_section;
+            $parts = explode('|', $request->grade_section);
+            if (count($parts) == 2) {
+                $gradeLevel = $parts[0];
+                $sectionName = $parts[1];
+                $query->whereHas('section', function($sectionQuery) use ($gradeLevel, $sectionName) {
+                    $sectionQuery->where('gradelevel', $gradeLevel)
+                                ->where('name', $sectionName);
+                });
+            }
+        }
+        
         if ($request->filled('qr_status')) {
             if ($request->qr_status == 'with_qr') {
                 $query->whereNotNull('qr_code');
@@ -51,13 +111,56 @@ class StudentManagementController extends Controller
             }
         }
         
-        $students =$query->orderBy('name', 'asc')->get();
+        // Handle sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
         
-        return view('teacher.students', compact('students'));
+        if ($sortBy === 'name') {
+            $query->orderBy('name', $sortOrder);
+        } elseif ($sortBy === 'gender') {
+            $query->orderBy('gender', $sortOrder)->orderBy('name', 'asc');
+        } elseif ($sortBy === 'age') {
+            $query->orderBy('age', $sortOrder)->orderBy('name', 'asc');
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        
+        $students = $query->with('section')->get();
+        
+        // Get grade-section options for the filter dropdown
+        $gradeSectionOptions = $this->getTeacherStudentsQuery()
+            ->with('section')
+            ->whereHas('section')
+            ->get()
+            ->map(function($student) {
+                return [
+                    'value' => $student->section->gradelevel . '|' . $student->section->name,
+                    'label' => 'Grade ' . $student->section->gradelevel . ' - ' . $student->section->name
+                ];
+            })
+            ->unique('value')
+            ->values();
+        
+        // Get semesters for the dropdown
+        $semesters = Semester::all();
+        
+         $teacherSections = Auth::user()->sections()->get();
+        
+        return view('teacher.students', compact('students', 'gradeSectionOptions', 'semesters', 'teacherSections', 'selectedGradeSection'));
     }
 
     public function addStudent(Request $request)
     {
+        // Check if teacher has assigned sections
+        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+        
+        if (empty($teacherSectionIds)) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Please contact the administrator to assign a section before adding students.'
+            ], 403);
+        }
+
         Log::info('Student add request received', [
             'teacher_id' => Auth::id(),
             'student_id_no' => $request->id_no,
@@ -71,6 +174,10 @@ class StudentManagementController extends Controller
             $request->validate([
                 'id_no' => 'required|string|max:255|unique:students,id_no',
                 'name' => 'required|string|max:255',
+                'section_option' => 'required|string|in:existing,create',
+                'section_id' => 'required_if:section_option,existing|nullable|exists:sections,id',
+                'new_section_name' => 'required_if:section_option,create|nullable|string|max:255',
+                'new_section_gradelevel' => 'required_if:section_option,create|nullable|string|max:50',
                 'gender' => 'required|string|max:1',
                 'age' => 'required|integer',
                 'address' => 'required|string|max:255',
@@ -82,6 +189,12 @@ class StudentManagementController extends Controller
                 'contact_person_contact' => 'nullable|string|max:15',
                 'semester_id' => 'required|integer',
             ]);
+            
+            // Additional validation: if creating new section, teacher must have at least one section assigned
+            if ($request->section_option === 'create' && empty($teacherSectionIds)) {
+                throw new \Exception('You must have at least one assigned section before creating new sections.');
+            }
+            
         } catch (\Exception $e) {
             Log::warning('Student add validation failed', [
                 'teacher_id' => Auth::id(),
@@ -91,10 +204,39 @@ class StudentManagementController extends Controller
             throw $e;
         }
 
-        $studentData = $request->all();
-        $studentData['user_id'] = Auth::id(); 
-
         try {
+            \DB::beginTransaction();
+            
+            $sectionId = null;
+            
+            if ($request->section_option === 'create') {
+                // Create new section and assign it to the teacher
+                $section = Section::create([
+                    'name' => $request->new_section_name,
+                    'gradelevel' => $request->new_section_gradelevel,
+                ]);
+                
+                // Assign the new section to the teacher via pivot table
+                Auth::user()->sections()->attach($section->id);
+                $sectionId = $section->id;
+                
+                Log::info('New section created and assigned to teacher', [
+                    'teacher_id' => Auth::id(),
+                    'section_id' => $section->id,
+                    'section_name' => $section->name,
+                ]);
+            } else {
+                // Validate that the selected section is assigned to this teacher
+                if (!in_array($request->section_id, $teacherSectionIds)) {
+                    throw new \Exception('You can only add students to sections assigned to you.');
+                }
+                $sectionId = $request->section_id;
+            }
+
+            $studentData = $request->except(['section_option', 'section_id', 'new_section_name', 'new_section_gradelevel']);
+            $studentData['user_id'] = Auth::id();
+            $studentData['section_id'] = $sectionId; 
+
             if ($request->hasFile('picture')) {
                 $picture = $request->file('picture');
                 $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
@@ -149,15 +291,57 @@ class StudentManagementController extends Controller
 
     public function edit($id)
     {
-        $student = Student::where('user_id', Auth::id())->findOrFail($id);
-        return view('teacher.edit_student', compact('student'));
+        $student = Student::with('section')->where('user_id', Auth::id())->findOrFail($id);
+        
+        // Get available sections from all students
+        $availableSections = $this->getAvailableSections();
+        
+        // Get semesters for dropdown
+        $semesters = Semester::all();
+        
+        return view('teacher.edit_student', compact('student', 'availableSections', 'semesters'));
     }
+
+    /**
+     * Get available sections from student data
+     */
+    public function getAvailableSections()
+    {
+        return Student::where('user_id', Auth::id())
+            ->with('section')
+            ->whereHas('section')
+            ->get()
+            ->groupBy(function($student) {
+                return $student->section->gradelevel;
+            })
+            ->map(function($students, $gradeLevel) {
+                return [
+                    'grade_level' => $gradeLevel,
+                    'sections' => $students->pluck('section.name')->unique()->sort()->values()
+                ];
+            })
+            ->values();
+    }
+
+    /**
+     * API endpoint to get sections for AJAX calls
+     */
+    public function getSections()
+    {
+        return response()->json($this->getAvailableSections());
+    }
+
+    /**
+     * Update student with enhanced section management
+     */
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'id_no' => 'required|string|max:255',
             'name' => 'required|string|max:255',
+            'section' => 'required|string|max:255',
+            'grade_level' => 'required|string|max:255',
             'gender' => 'required|string|max:1',
             'age' => 'required|integer',
             'address' => 'required|string|max:255',
@@ -171,8 +355,18 @@ class StudentManagementController extends Controller
         ]);
 
         $student = Student::where('user_id', Auth::id())->findOrFail($id);
-        $studentData = $request->all();
-        $studentData['user_id'] = Auth::id(); 
+        
+        // Find or create the section
+        $section = Section::firstOrCreate([
+            'name' => $request->section,
+            'gradelevel' => (int) filter_var($request->grade_level, FILTER_EXTRACT_NUMBER_INT),
+            'teacher_id' => Auth::id(),
+            'semester_id' => $request->semester_id
+        ]);
+
+        $studentData = $request->except(['grade_level', 'section']);
+        $studentData['user_id'] = Auth::id();
+        $studentData['section_id'] = $section->id; 
 
          $this->clearStudentQrCode($student);
         $studentData['qr_code'] = null;
@@ -203,6 +397,79 @@ class StudentManagementController extends Controller
         $student->update($studentData);
 
         return redirect()->route('teacher.students')->with('success', 'Student updated successfully.');
+    }
+
+    /**
+     * Quick update for inline editing
+     */
+    public function quickUpdate(Request $request, $id)
+    {
+        try {
+            $student = Student::where('user_id', Auth::id())->findOrFail($id);
+            
+            // Validate the specific field being updated
+            $rules = [];
+            if ($request->has('name')) {
+                $rules['name'] = 'required|string|max:255';
+            }
+            if ($request->has('section')) {
+                $rules['section'] = 'required|string|max:255';
+            }
+            if ($request->has('grade_level')) {
+                $rules['grade_level'] = 'required|string|max:255';
+            }
+            
+            $request->validate($rules);
+            
+            // Handle section and grade_level changes
+            if ($request->has('section') || $request->has('grade_level')) {
+                $currentSection = $student->section;
+                $newSectionName = $request->get('section', $currentSection->name);
+                $newGradeLevel = $request->get('grade_level', $currentSection->gradelevel);
+                
+                // Find or create the section
+                $section = Section::firstOrCreate([
+                    'name' => $newSectionName,
+                    'gradelevel' => (int) filter_var($newGradeLevel, FILTER_EXTRACT_NUMBER_INT),
+                    'teacher_id' => Auth::id(),
+                    'semester_id' => $student->semester_id
+                ]);
+                
+                $student->section_id = $section->id;
+                $this->clearStudentQrCode($student);
+                $student->qr_code = null;
+            }
+            
+            // Update other fields
+            if ($request->has('name')) {
+                $student->name = $request->name;
+            }
+            
+            $student->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Student information updated successfully',
+                'student' => $student->load('section')
+            ]);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: ' . implode(', ', $e->validator->errors()->all())
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Quick update failed', [
+                'student_id' => $id,
+                'teacher_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update student information'
+            ], 500);
+        }
 }
 
 public function destroy($id)
@@ -547,6 +814,8 @@ public function bulkDelete(Request $request)
              fputcsv($handle, [
                 'ID No',
                 'Name',
+                'Section',
+                'Grade Level',
                 'Gender',
                 'Age',
                 'Address',
@@ -580,6 +849,8 @@ public function bulkDelete(Request $request)
                 fputcsv($handle, [
                     str_pad($student->id_no, 4, '0', STR_PAD_LEFT),
                     $student->name,
+                    $student->section_name ?? '',
+                    $student->grade_level ?? '',
                     $student->gender == 'M' ? 'Male' : ($student->gender == 'F' ? 'Female' : $student->gender),
                     $student->age,
                     $student->address,
@@ -613,6 +884,8 @@ public function bulkDelete(Request $request)
             $headerMapping = [
                 'id_no' => 'ID No',
                 'name' => 'Student Name(LN, FN MI.)', 
+                'section' => 'Section',
+                'grade_level' => 'Grade Level',
                 'gender' => 'Gender (M/F)',
                 'age' => 'Age',
                 'address' => 'Address',
@@ -634,6 +907,8 @@ public function bulkDelete(Request $request)
             $exampleData = [
                 '0001', 
                 'Juan Dela Cruz', 
+                'Section A',
+                'Grade 11',
                 'M',   
                 '17', 
                 'Barangay Example, San Guillermo, Isabela',  
@@ -649,6 +924,8 @@ public function bulkDelete(Request $request)
              $exampleData2 = [
                 '0002', 
                 'Maria Santos', 
+                'Section B',
+                'Grade 12',
                 'F', 
                 '16', 
                 'Zone 2, San Guillermo, Isabela',  
@@ -664,6 +941,8 @@ public function bulkDelete(Request $request)
              $exampleData3 = [
                 '0003',  
                 'Ana Rodriguez',  
+                'Section A',
+                'Grade 10',
                 'F',  
                 '18',  
                 'Poblacion, San Guillermo, Isabela',  
@@ -711,10 +990,84 @@ public function bulkDelete(Request $request)
             $query->where('semester_id', $selectedSemester);
         }
         
-         $students = $query->select('id', 'name', 'cp_no', 'contact_person_contact', 'contact_person_name', 'id_no')
+         $students = $query->with('section')
+                         ->select('id', 'name', 'cp_no', 'contact_person_contact', 'contact_person_name', 'id_no', 'section_id')
                          ->orderBy('name')
                          ->get();
         
         return response()->json($students);
+    }
+
+    /**
+     * Show the import students page
+     */
+    public function showImport()
+    {
+        $semesters = Semester::orderBy('created_at', 'desc')->get();
+        return view('teacher.import-students', compact('semesters'));
+    }
+
+    /**
+     * Import students from Excel/CSV
+     */
+    public function importStudents(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
+            'semester_id' => 'required|exists:semesters,id'
+        ]);
+
+        try {
+            $import = new \App\Imports\StudentsImport(Auth::id(), $request->semester_id);
+            \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('import_file'));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Students imported successfully',
+                'imported' => 1, // You can track this in the import class
+                'errors' => $import->getErrors(),
+                'created_sections' => $import->getCreatedSections(),
+                'total_processed' => 1,
+                'sections_created' => count($import->getCreatedSections())
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Generate QR codes for all students
+     */
+    public function generateAllQrCodes()
+    {
+        try {
+            $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
+            $students = Student::whereIn('section_id', $teacherSectionIds)
+                ->whereNull('qr_code')
+                ->get();
+
+            $generated = 0;
+            foreach ($students as $student) {
+                $qrCode = QrCode::format('png')->size(200)->generate($student->id_no);
+                $fileName = 'qr_codes/' . $student->id_no . '_qr.png';
+                Storage::disk('public')->put($fileName, $qrCode);
+                
+                $student->update(['qr_code' => $fileName]);
+                $generated++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Generated {$generated} QR codes successfully"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating QR codes: ' . $e->getMessage()
+            ]);
+        }
     }
 }

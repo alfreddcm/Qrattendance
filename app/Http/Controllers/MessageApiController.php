@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OutboundMessage;
 use App\Models\Student;
+use App\Models\User;
 use App\Services\AndroidSmsGatewayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,11 @@ class MessageApiController extends Controller
                 'number' => 'required|string',
                 'message' => 'required|string|max:1000',
                 'student_id' => 'nullable|exists:students,id',
-                'send_to_all' => 'boolean'
+                'teacher_id' => 'nullable|exists:users,id',
+                'send_to_all' => 'boolean',
+                'send_to_all_teachers' => 'boolean',
+                'send_to_teacher' => 'boolean',
+                'recipient_type' => 'nullable|string|in:all_teachers,specific_teacher,all_parents,specific_student,custom'
             ]);
 
             if ($validator->fails()) {
@@ -57,7 +62,33 @@ class MessageApiController extends Controller
             $number = $request->input('number');
             $message = $request->input('message');
             $studentId = $request->input('student_id');
+            $teacherId = $request->input('teacher_id');
             $sendToAll = $request->input('send_to_all', false);
+            $sendToAllTeachers = $request->input('send_to_all_teachers', false);
+            $sendToTeacher = $request->input('send_to_teacher', false);
+            $recipientType = $request->input('recipient_type');
+
+            // Handle new admin frontend recipient types
+            if ($recipientType === 'all_teachers' || $number === 'all_teachers') {
+                return $this->sendToAllTeachers($message);
+            }
+
+            if ($recipientType === 'specific_teacher' && $teacherId) {
+                return $this->sendToSpecificTeacher($message, $teacherId);
+            }
+
+            if ($recipientType === 'all_parents' || $number === 'all_parents') {
+                return $this->sendToAllParents($message);
+            }
+
+            // Handle legacy options for backward compatibility
+            if ($sendToAllTeachers) {
+                return $this->sendToAllTeachers($message);
+            }
+
+            if ($sendToTeacher && $teacherId) {
+                return $this->sendToSpecificTeacher($message, $teacherId);
+            }
 
             if ($sendToAll) {
                 return $this->sendToAllParents($message);
@@ -81,6 +112,7 @@ class MessageApiController extends Controller
 
             $outboundMessage = OutboundMessage::create([
                 'teacher_id' => $this->teacherId ?? auth()->id(),
+                'admin_id' => auth()->user()->role === 'admin' ? auth()->id() : null,
                 'student_id' => $studentId,
                 'contact_number' => $normalizedNumber,
                 'message' => $message,
@@ -327,9 +359,23 @@ class MessageApiController extends Controller
     public function getOutboundMessages(Request $request)
     {
         try {
-            $query = OutboundMessage::with(['student', 'teacher'])
-                ->where('teacher_id', auth()->id())
-                ->orderBy('created_at', 'desc');
+            $user = auth()->user();
+            
+            // Build query based on user role
+            if ($user->role === 'admin') {
+                // Admin can see all messages or filter by admin_id
+                $query = OutboundMessage::with(['student', 'teacher', 'admin'])
+                    ->where(function($q) use ($user) {
+                        $q->where('admin_id', $user->id)
+                          ->orWhereNull('admin_id'); // Include messages sent by teachers if needed
+                    })
+                    ->orderBy('created_at', 'desc');
+            } else {
+                // Teacher can only see their own messages
+                $query = OutboundMessage::with(['student', 'teacher'])
+                    ->where('teacher_id', $user->id)
+                    ->orderBy('created_at', 'desc');
+            }
 
              if ($request->has('student_id') && $request->student_id) {
                 $query->where('student_id', $request->student_id);
@@ -337,6 +383,18 @@ class MessageApiController extends Controller
 
              if ($request->has('status') && $request->status) {
                 $query->where('status', $request->status);
+            }
+
+            // Add recipient_type filter for admin
+            if ($request->has('recipient_type') && $request->recipient_type) {
+                $recipientType = $request->recipient_type;
+                if ($recipientType === 'teacher') {
+                    $query->where('recipient_type', 'teacher');
+                } elseif ($recipientType === 'student') {
+                    $query->where('student_id', '!=', null);
+                } elseif ($recipientType === 'broadcast') {
+                    $query->where('recipient_type', 'like', '%broadcast%');
+                }
             }
 
              if ($request->has('start_date') && $request->start_date) {
@@ -349,6 +407,19 @@ class MessageApiController extends Controller
 
             $messages = $query->paginate(20);
 
+            // Calculate stats based on user role
+            if ($user->role === 'admin') {
+                $stats = [
+                    'sent' => OutboundMessage::where('admin_id', $user->id)->where('status', 'sent')->count(),
+                    'failed' => OutboundMessage::where('admin_id', $user->id)->where('status', 'failed')->count()
+                ];
+            } else {
+                $stats = [
+                    'sent' => OutboundMessage::where('teacher_id', $user->id)->where('status', 'sent')->count(),
+                    'failed' => OutboundMessage::where('teacher_id', $user->id)->where('status', 'failed')->count()
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'messages' => $messages->items(),  
@@ -358,10 +429,7 @@ class MessageApiController extends Controller
                     'per_page' => $messages->perPage(),
                     'total' => $messages->total()
                 ],
-                'stats' => [
-                    'sent' => OutboundMessage::where('teacher_id', auth()->id())->where('status', 'sent')->count(),
-                    'failed' => OutboundMessage::where('teacher_id', auth()->id())->where('status', 'failed')->count()
-                ]
+                'stats' => $stats
             ]);
 
         } catch (Exception $e) {
@@ -410,6 +478,191 @@ class MessageApiController extends Controller
                 'error' => $e->getMessage()
             ]);
             return false;
+        }
+    }
+
+    /**
+     * Send SMS to all teachers
+     */
+    private function sendToAllTeachers($message)
+    {
+        try {
+            // Get all users with teacher role that have contact numbers
+            $teachers = User::where('role', 'teacher')
+                ->whereNotNull('contact_number')
+                ->where('contact_number', '!=', '')
+                ->get();
+
+            if ($teachers->isEmpty()) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'No teachers with contact numbers found.'
+                ], 404);
+            }
+
+            $recipients = [];
+            foreach ($teachers as $teacher) {
+                $contactNumber = trim($teacher->contact_number);
+                if ($this->isValidPhoneNumber($contactNumber)) {
+                    $recipients[] = [
+                        'teacher' => $teacher,
+                        'number' => $this->normalizePhoneNumber($contactNumber)
+                    ];
+                }
+            }
+
+            if (empty($recipients)) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'No teachers with valid contact numbers found.'
+                ], 404);
+            }
+
+            $successCount = 0;
+            $failCount = 0;
+            $messageIds = [];
+
+            foreach ($recipients as $recipient) {
+                $teacher = $recipient['teacher'];
+                $normalizedNumber = $recipient['number'];
+
+                $result = $this->smsService->sendSms($message, $normalizedNumber);
+
+                if ($result['success']) {
+                    $successCount++;
+                    if (isset($result['message_id'])) {
+                        $messageIds[] = $result['message_id'];
+                    }
+                } else {
+                    $failCount++;
+                }
+            }
+
+            // Create outbound message record for broadcast
+            $outboundMessage = OutboundMessage::create([
+                'admin_id' => auth()->id(),
+                'contact_number' => 'ALL_TEACHERS',
+                'message' => $message,
+                'status' => $successCount > 0 ? 'sent' : 'failed',
+                'recipient_type' => 'teachers_broadcast',
+                'recipient_count' => count($recipients)
+            ]);
+
+            Log::info('Admin SMS broadcast to teachers completed', [
+                'success_count' => $successCount,
+                'fail_count' => $failCount,
+                'total_recipients' => count($recipients),
+                'outbound_message_id' => $outboundMessage->id
+            ]);
+
+            return response()->json([
+                'status' => $successCount > 0 ? 'success' : 'fail',
+                'message' => "SMS broadcast completed. Sent: {$successCount}, Failed: {$failCount}",
+                'success_count' => $successCount,
+                'fail_count' => $failCount,
+                'total_recipients' => count($recipients),
+                'message_ids' => $messageIds,
+                'outbound_message_id' => $outboundMessage->id
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Admin SMS broadcast to teachers error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'An error occurred while sending SMS to teachers'
+            ], 500);
+        }
+    }
+
+    /**
+     * Send SMS to a specific teacher
+     */
+    private function sendToSpecificTeacher($message, $teacherId)
+    {
+        try {
+            $teacher = User::where('id', $teacherId)
+                ->where('role', 'teacher')
+                ->first();
+
+            if (!$teacher) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Teacher not found.'
+                ], 404);
+            }
+
+            if (empty($teacher->contact_number)) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Teacher does not have a contact number.'
+                ], 404);
+            }
+
+            $contactNumber = trim($teacher->contact_number);
+            if (!$this->isValidPhoneNumber($contactNumber)) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Teacher has invalid contact number format.'
+                ], 422);
+            }
+
+            $normalizedNumber = $this->normalizePhoneNumber($contactNumber);
+            $result = $this->smsService->sendSms($message, $normalizedNumber);
+
+            $outboundMessage = OutboundMessage::create([
+                'admin_id' => auth()->id(),
+                'teacher_id' => $teacherId,
+                'contact_number' => $normalizedNumber,
+                'message' => $message,
+                'message_id' => $result['message_id'] ?? null,
+                'status' => $result['status'] ?? 'pending',
+                'recipient_type' => 'teacher',
+                'recipient_count' => 1
+            ]);
+
+            if ($result['success']) {
+                Log::info('Admin SMS to teacher sent successfully', [
+                    'teacher_id' => $teacherId,
+                    'message_id' => $result['message_id'],
+                    'outbound_message_id' => $outboundMessage->id
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'SMS sent to teacher successfully',
+                    'message_id' => $result['message_id'],
+                    'outbound_message_id' => $outboundMessage->id
+                ]);
+            } else {
+                Log::error('Admin SMS to teacher failed', [
+                    'teacher_id' => $teacherId,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'outbound_message_id' => $outboundMessage->id
+                ]);
+
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed to send SMS to teacher: ' . ($result['error'] ?? 'Unknown error'),
+                    'message_id' => $result['message_id'] ?? null,
+                    'outbound_message_id' => $outboundMessage->id
+                ], 500);
+            }
+
+        } catch (Exception $e) {
+            Log::error('Admin SMS to teacher error', [
+                'teacher_id' => $teacherId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'An error occurred while sending SMS to teacher'
+            ], 500);
         }
     }
 
