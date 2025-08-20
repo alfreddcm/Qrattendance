@@ -267,7 +267,7 @@
                     <button class="btn btn-outline-info" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#addSectionModal">
                         <i class="fas fa-users me-2"></i>Create Section
                     </button>
-                    <a href="{{ route('admin.manage-semesters') }}" class="btn btn-outline-warning">
+                    <a href="{{ route('admin.semester') }}" class="btn btn-outline-warning">
                         <i class="fas fa-calendar me-2"></i>Manage Semester
                     </a>
                 </div>

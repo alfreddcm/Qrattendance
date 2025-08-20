@@ -1,5 +1,5 @@
 <div class="container">
-    <h2>Attendance Statistics Dashboard</h2>
+    <h2>Attendance Statistics</h2>
     <div class="row" style="margin-top:0;">
         <div class="col s12 m6 l4">
             <div class="card z-depth-2" style="padding:20px 16px 16px 16px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); background:#fff; min-height:340px; max-width:100%; display:flex; flex-direction:column; align-items:center; margin-bottom:16px;">

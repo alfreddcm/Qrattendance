@@ -114,18 +114,15 @@ class SF2TemplateService
             }
             
             if ($filterGradeLevel) {
-                $studentsQuery->whereHas('section', function($query) use ($filterGradeLevel) {
-                    $query->where('gradelevel', $filterGradeLevel);
-                });
+                $studentsQuery->where('grade_level', $filterGradeLevel);
             }
             
             if ($filterSection) {
-                $studentsQuery->whereHas('section', function($query) use ($filterSection) {
-                    $query->where('name', $filterSection);
-                });
+                $studentsQuery->where('section', $filterSection);
             }
             
-            $students = $studentsQuery->with('section')
+            $students = $studentsQuery->orderBy('grade_level')
+                                   ->orderBy('section')
                                    ->orderBy('name')
                                    ->get();
 
@@ -215,11 +212,14 @@ class SF2TemplateService
         $startDate = Carbon::create($year, $month, 1);
         $endDate = $startDate->copy()->endOfMonth();
         
-         $baseColumns = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB'];
+        // Base columns - will extend if needed
+        $baseColumns = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB'];
         
-         $weekdays = [];
+        // Get all weekdays in the month
+        $weekdays = [];
         for ($date = $startDate->copy(); $date <= $endDate; $date->addDay()) {
-             if ($date->dayOfWeek >= 1 && $date->dayOfWeek <= 5) {
+            // Only include weekdays (Monday=1 to Friday=5)
+            if ($date->dayOfWeek >= 1 && $date->dayOfWeek <= 5) {
                 $weekdays[] = $date->copy();
             }
         }

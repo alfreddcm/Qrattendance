@@ -20,8 +20,8 @@ class ReportController extends Controller
         $semesters = Semester::all();
         $records = [];
 
-        // Base student query with section relationship
-        $studentQuery = Student::with('section')->where('user_id', Auth::id());
+        // Base student query
+        $studentQuery = Student::where('user_id', Auth::id());
         
         if ($semesterId) {
             $studentQuery->where('semester_id', $semesterId);
@@ -36,9 +36,7 @@ class ReportController extends Controller
             if (count($parts) == 2) {
                 $gradeLevel = $parts[0];
                 $section = $parts[1];
-                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $section) {
-                    $query->where('gradelevel', $gradeLevel)->where('name', $section);
-                });
+                $studentQuery->where('grade_level', $gradeLevel)->where('section', $section);
             }
         }
 
@@ -47,26 +45,17 @@ class ReportController extends Controller
         // Get grade section options for the dropdown
         $gradeSectionOptionsQuery = Student::where('user_id', Auth::id());
         if ($semesterId) {
-            $gradeSectionOptionsQuery->where('students.semester_id', $semesterId);
+            $gradeSectionOptionsQuery->where('semester_id', $semesterId);
         }
         
         $gradeSectionOptions = $gradeSectionOptionsQuery
-            ->join('sections', 'students.section_id', '=', 'sections.id')
-            ->whereNotNull('sections.gradelevel')
-            ->whereNotNull('sections.name')
-            ->where('sections.gradelevel', '>', 0)
-            ->where('sections.name', '!=', '')
-            ->where('sections.name', '!=', '-')
-            ->select('sections.gradelevel', 'sections.name as section_name')
+            ->select('grade_level', 'section')
             ->distinct()
-            ->orderBy('sections.gradelevel')
-            ->orderBy('sections.name')
+            ->orderBy('grade_level')
+            ->orderBy('section')
             ->get()
-            ->filter(function($item) {
-                return !empty(trim($item->gradelevel)) && !empty(trim($item->section_name));
-            })
             ->map(function ($item) {
-                return $item->gradelevel . '|' . $item->section_name;
+                return $item->grade_level . '|' . $item->section;
             })
             ->unique()
             ->values();
@@ -105,8 +94,8 @@ class ReportController extends Controller
                     'date'      => $date,
                     'id_no'     => $student->id_no,
                     'name'      => $student->name,
-                    'grade_level' => $student->section ? $student->section->gradelevel : '',
-                    'section'   => $student->section ? $student->section->name : '',
+                    'grade_level' => $student->grade_level,
+                    'section'   => $student->section_name,
                     'am_in'     => $att && $att->time_in_am ? \Carbon\Carbon::parse($att->time_in_am)->setTimezone('Asia/Manila')->format('h:i A') : null,
                     'am_out'    => $att && $att->time_out_am ? \Carbon\Carbon::parse($att->time_out_am)->setTimezone('Asia/Manila')->format('h:i A') : null,
                     'pm_in'     => $att && $att->time_in_pm ? \Carbon\Carbon::parse($att->time_in_pm)->setTimezone('Asia/Manila')->format('h:i A') : null,
@@ -149,8 +138,8 @@ class ReportController extends Controller
                     return (object)[
                         'id_no'      => $student->id_no,
                         'name'       => $student->name,
-                        'grade_level' => $student->section ? $student->section->gradelevel : '',
-                        'section'    => $student->section ? $student->section->name : '',
+                        'grade_level' => $student->grade_level,
+                        'section'    => $student->section_name,
                         'total_day'  => 0,
                         'present'    => 0,
                         'absent'     => 0,
@@ -195,8 +184,8 @@ class ReportController extends Controller
                     return (object)[
                         'id_no'      => $student->id_no,
                         'name'       => $student->name,
-                        'grade_level' => $student->section ? $student->section->gradelevel : '',
-                        'section'    => $student->section ? $student->section->name : '',
+                        'grade_level' => $student->grade_level,
+                        'section'    => $student->section_name,
                         'total_day'  => $totalDays,
                         'present'    => $present,
                         'absent'     => $absent,
@@ -222,8 +211,8 @@ class ReportController extends Controller
                 return (object)[
                 'id_no'    => $student->id_no,
                 'name'     => $student->name,
-                'grade_level' => $student->section ? $student->section->gradelevel : '',
-                'section'  => $student->section ? $student->section->name : '',
+                'grade_level' => $student->grade_level,
+                'section'  => $student->section_name,
                 'checks'   => [],
                 ];
             });
@@ -254,8 +243,8 @@ class ReportController extends Controller
                 return (object)[
                 'id_no'    => $student->id_no,
                 'name'     => $student->name,
-                'grade_level' => $student->section ? $student->section->gradelevel : '',
-                'section'  => $student->section ? $student->section->name : '',
+                'grade_level' => $student->grade_level,
+                'section'  => $student->section_name,
                 'checks'   => $checks,
                 ];
             });
@@ -276,8 +265,8 @@ class ReportController extends Controller
         $gradeSection = $request->input('grade_section');
         $semesters = Semester::all();
 
-        // Base student query with section relationship
-        $studentQuery = Student::with('section')->where('user_id', Auth::id());
+        // Base student query
+        $studentQuery = Student::where('user_id', Auth::id());
         
         if ($semesterId) {
             $studentQuery->where('semester_id', $semesterId);
@@ -292,9 +281,7 @@ class ReportController extends Controller
             if (count($parts) == 2) {
                 $gradeLevel = $parts[0];
                 $section = $parts[1];
-                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $section) {
-                    $query->where('gradelevel', $gradeLevel)->where('name', $section);
-                });
+                $studentQuery->where('grade_level', $gradeLevel)->where('section', $section);
             }
         }
 
@@ -634,50 +621,21 @@ class ReportController extends Controller
             ];
         });
 
-        // Get combined grade level and section options with better error handling
-        $gradeSection = collect();
-        
-        try {
-            $rawData = Student::where('user_id', Auth::id())
-                ->join('sections', 'students.section_id', '=', 'sections.id')
-                ->select('sections.gradelevel', 'sections.name as section_name', 'sections.id as section_id')
-                ->distinct()
-                ->orderBy('sections.gradelevel')
-                ->orderBy('sections.name')
-                ->get();
-
-            $gradeSection = $rawData
-                ->filter(function($item) {
-                    // More comprehensive validation
-                    $grade = trim((string)$item->gradelevel);
-                    $name = trim((string)$item->section_name);
-                    
-                    return !empty($grade) && 
-                           !empty($name) && 
-                           is_numeric($grade) && 
-                           $grade > 0 &&
-                           $name !== '-' &&
-                           strlen($name) > 0;
-                })
-                ->map(function($item) {
-                    return [
-                        'value' => $item->gradelevel . '|' . $item->section_name,
-                        'label' => 'Grade ' . $item->gradelevel . ' - ' . $item->section_name
-                    ];
-                })
-                ->unique('value')
-                ->values();
-                
-        } catch (\Exception $e) {
-            \Log::error('Error fetching grade section options: ' . $e->getMessage());
-        }
-
-        // Debug logging
-        \Log::info('SF2 Grade Section Options', [
-            'user_id' => Auth::id(),
-            'count' => $gradeSection->count(),
-            'options' => $gradeSection->toArray()
-        ]);
+        // Get combined grade level and section options
+        $gradeSection = Student::where('user_id', Auth::id())
+            ->whereNotNull('grade_level')
+            ->whereNotNull('section')
+            ->select('grade_level', 'section')
+            ->distinct()
+            ->orderBy('grade_level')
+            ->orderBy('section')
+            ->get()
+            ->map(function($student) {
+                return [
+                    'value' => $student->grade_level . '|' . $student->section_name,
+                    'label' => $student->grade_level . ' - ' . $student->section_name
+                ];
+            });
 
         // All months (will be filtered on frontend based on semester selection)
         $months = [

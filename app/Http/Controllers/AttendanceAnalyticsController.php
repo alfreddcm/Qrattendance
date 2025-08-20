@@ -247,6 +247,7 @@ class AttendanceAnalyticsController extends Controller {
     {
         $date = now()->toDateString(); 
         $search = $request->get('search', '');
+        $sectionFilter = $request->get('section_filter', '');
 
         $currentSemester = Semester::where('status', 'active')->first() ?? Semester::latest()->first();
 
@@ -267,11 +268,18 @@ class AttendanceAnalyticsController extends Controller {
                            ->orderBy('name')
                            ->get();
 
-        $students = Student::where('user_id', Auth::id())
+        $students = Student::with('section')
+            ->where('user_id', Auth::id())
             ->where('semester_id', $currentSemester->id ?? 0)
             ->when($search, function ($query, $search) {
                 return $query->where('name', 'like', "%$search%");
-            })->orderBy('name')->get();
+            })
+            ->when($sectionFilter, function ($query, $sectionFilter) {
+                return $query->whereHas('section', function ($q) use ($sectionFilter) {
+                    $q->where('name', $sectionFilter);
+                });
+            })
+            ->orderBy('name')->get();
 
         $attendances = Attendance::whereIn('student_id', $students->pluck('id'))
             ->whereDate('date', $date)
@@ -298,6 +306,7 @@ class AttendanceAnalyticsController extends Controller {
             'attendanceList' => $attendanceList,
             'date' => $date,
             'search' => $search,
+            'sectionFilter' => $sectionFilter,
             'totalPresent' => $totalPresent,
             'totalAbsent' => $totalAbsent,
             'totalStudents' => $attendanceList->count(),
@@ -384,18 +393,15 @@ class AttendanceAnalyticsController extends Controller {
             $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
             $attendance = Attendance::selectRaw('
-                    CONCAT(sections.name, " - Grade ", sections.gradelevel) as subject_code, 
-                    DATE(attendances.date) as attendance_date, 
-                    COUNT(DISTINCT attendances.student_id) as students_present
+                    sections.name as subject_code, DATE(attendances.date) as attendance_date, COUNT(DISTINCT attendances.student_id) as students_present
                 ')
-                ->join('students', 'attendances.student_id', '=', 'students.id')
-                ->join('sections', 'students.section_id', '=', 'sections.id')
+                ->join('sections', 'attendances.teacher_id', '=', 'sections.teacher_id')
                 ->where('attendances.teacher_id', $teacherId)
                 ->whereBetween('attendances.date', [$startDate, $endDate])
                 ->where(function($q){
                     $q->whereNotNull('attendances.time_in_am')->orWhereNotNull('attendances.time_in_pm');
                 })
-                ->groupBy('sections.id', 'sections.name', 'sections.gradelevel', 'attendance_date')
+                ->groupBy('sections.name', 'attendance_date')
                 ->orderBy('attendance_date')
                 ->get();
 

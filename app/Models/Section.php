@@ -34,20 +34,11 @@ class Section extends Model
     }
 
     /**
-     * Relationship: Section belongs to a Teacher (User) - single teacher (legacy)
+     * Relationship: Section belongs to a Teacher (User)
      */
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
-    }
-
-    /**
-     * Relationship: Section belongs to many Teachers (many-to-many via pivot)
-     */
-    public function teachers()
-    {
-        return $this->belongsToMany(User::class, 'section_teacher', 'section_id', 'teacher_id')
-                    ->withTimestamps();
     }
 
     /**
@@ -64,16 +55,6 @@ class Section extends Model
     public function attendances()
     {
         return $this->hasManyThrough(Attendance::class, Student::class, 'section_id', 'student_id');
-    }
-
-    /**
-     * Relationship: Section belongs to many Subjects
-     */
-    public function subjects()
-    {
-        return $this->belongsToMany(Subject::class, 'subject_sections')
-                    ->withPivot('schedule_day', 'start_time', 'end_time', 'room')
-                    ->withTimestamps();
     }
 
     /**

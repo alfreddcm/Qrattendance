@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Section;
 use App\Models\Semester;
-use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,41 +12,6 @@ use Illuminate\Support\Facades\Validator;
 
 class SectionController extends Controller
 {
-    /**
-     * Display a listing of sections for the current school.
-     */
-    public function index()
-    {
-        try {
-            $user = auth()->user();
-            
-            // Get sections for the current user's school with relationships (through semester)
-            $sections = Section::whereHas('semester', function ($query) use ($user) {
-                    $query->where('school_id', $user->school_id);
-                })
-                ->with(['teacher:id,name', 'semester:id,name'])
-                ->withCount('students')
-                ->orderBy('gradelevel')
-                ->orderBy('name')
-                ->get([
-                    'id', 'gradelevel', 'name', 'teacher_id', 'semester_id',
-                    'am_time_in_start', 'am_time_in_end', 'am_time_out_start', 'am_time_out_end',
-                    'pm_time_in_start', 'pm_time_in_end', 'pm_time_out_start', 'pm_time_out_end'
-                ]);
-
-            return response()->json([
-                'success' => true,
-                'sections' => $sections,
-                'message' => 'Sections retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve sections: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
     /**
      * Store a newly created section in storage.
      */
@@ -58,18 +22,17 @@ class SectionController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
-            'semester_id' => 'nullable|exists:semesters,id',
-            'teacher_id' => 'nullable|exists:users,id',
-            'am_time_in_start' => 'nullable|date_format:H:i',
-            'am_time_in_end' => 'nullable|date_format:H:i|after:am_time_in_start',
-            'am_time_out_start' => 'nullable|date_format:H:i',
-            'am_time_out_end' => 'nullable|date_format:H:i|after:am_time_out_start',
-            'pm_time_in_start' => 'nullable|date_format:H:i',
-            'pm_time_in_end' => 'nullable|date_format:H:i|after:pm_time_in_start',
-            'pm_time_out_start' => 'nullable|date_format:H:i',
-            'pm_time_out_end' => 'nullable|date_format:H:i|after:pm_time_out_start',
+            'semester_id' => 'required|exists:semesters,id',
+            'teacher_id' => 'required|exists:users,id',
+            'am_time_in_start' => 'required|date_format:H:i',
+            'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',
+            'am_time_out_start' => 'required|date_format:H:i|after:am_time_in_end',
+            'am_time_out_end' => 'required|date_format:H:i|after:am_time_out_start',
+            'pm_time_in_start' => 'required|date_format:H:i|after:am_time_out_end',
+            'pm_time_in_end' => 'required|date_format:H:i|after:pm_time_in_start',
+            'pm_time_out_start' => 'required|date_format:H:i|after:pm_time_in_end',
+            'pm_time_out_end' => 'required|date_format:H:i|after:pm_time_out_start',
         ]);
-
 
         if ($validator->fails()) {
             return response()->json([
@@ -93,40 +56,23 @@ class SectionController extends Controller
                 ], 409);
             }
 
-            // Verify teacher exists and has teacher role (if teacher_id is provided)
-            if ($request->teacher_id) {
-                // If authenticated user is a teacher, they can only assign themselves
-                if (auth()->user()->role === 'teacher') {
-                    if ($request->teacher_id != auth()->id()) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Teachers can only assign themselves to sections.'
-                        ], 403);
-                    }
-                    $teacher_id = auth()->id();
-                } else {
-                    // If admin, accept the requested teacher_id
-                    $teacher = User::where('id', $request->teacher_id)
-                        ->where('role', 'teacher')
-                        ->first();
+            // Verify teacher exists and has teacher role
+            $teacher = User::where('id', $request->teacher_id)
+                ->where('role', 'teacher')
+                ->first();
 
-                    if (!$teacher) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Selected teacher is not valid.'
-                        ], 400);
-                    }
-                    $teacher_id = $request->teacher_id;
-                }
-            } else {
-                $teacher_id = null;
+            if (!$teacher) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected teacher is not valid.'
+                ], 400);
             }
 
             $section = Section::create([
                 'name' => $request->name,
                 'gradelevel' => $request->gradelevel,
                 'semester_id' => $request->semester_id,
-                'teacher_id' => $teacher_id,
+                'teacher_id' => $request->teacher_id,
                 'am_time_in_start' => $request->am_time_in_start,
                 'am_time_in_end' => $request->am_time_in_end,
                 'am_time_out_start' => $request->am_time_out_start,
@@ -184,7 +130,7 @@ class SectionController extends Controller
                 'id' => $section->id,
                 'name' => $section->name,
                 'gradelevel' => $section->gradelevel,
-                'teacher_id' => $section->teacher_id ,
+                'teacher_id' => $section->teacher_id,
                 'semester_id' => $section->semester_id,
                 'am_time_in_start' => $section->am_time_in_start,
                 'am_time_in_end' => $section->am_time_in_end,
@@ -244,7 +190,8 @@ class SectionController extends Controller
         }
 
         try {
-             $existingSection = Section::where('name', $request->name)
+            // Check if section name already exists for the same semester and grade (excluding current section)
+            $existingSection = Section::where('name', $request->name)
                 ->where('gradelevel', $request->gradelevel)
                 ->where('semester_id', $request->semester_id)
                 ->where('id', '!=', $section->id)

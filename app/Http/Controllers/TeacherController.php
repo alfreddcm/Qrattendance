@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Attendance;
+use App\Models\Section;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -39,32 +40,9 @@ class TeacherController extends Controller
         $semesters = Semester::orderBy('start_date')->get();
         $selectedSemester = $request->get('semester', $this->getCurrentSemesterId());
 
-        // Get all section IDs that the teacher is assigned to via pivot table
-        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
-        
-        // Also include students directly assigned to this teacher (legacy support)
-        $directStudentCount = Student::where('semester_id', $selectedSemester)
-            ->where('user_id', Auth::id())
-            ->count();
-            
-        // Get students from assigned sections
-        $sectionStudentCount = Student::where('semester_id', $selectedSemester)
-            ->whereIn('section_id', $teacherSectionIds)
-            ->count();
-            
-        $studentCount = $directStudentCount + $sectionStudentCount;
+        $studentCount = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->count();
 
-        // Get all students (both direct and from sections)
-        $directStudents = Student::where('semester_id', $selectedSemester)
-            ->where('user_id', Auth::id())
-            ->get();
-            
-        $sectionStudents = Student::where('semester_id', $selectedSemester)
-            ->whereIn('section_id', $teacherSectionIds)
-            ->where('user_id', '!=', Auth::id()) // Avoid duplicates
-            ->get();
-            
-        $students = $directStudents->merge($sectionStudents);
+        $students = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->get();
 
         $attendancesToday = Attendance::where('semester_id', $selectedSemester)
             ->whereDate('date', now()->toDateString())
@@ -74,12 +52,17 @@ class TeacherController extends Controller
         $presentCount = $students->whereIn('id', $attendancesToday)->count();
         $absentCount = max($students->count() - $presentCount, 0);
 
+        // Get teacher's sections for current semester to use their time periods
+        $teacherSections = Section::where('teacher_id', Auth::id())
+            ->where('semester_id', $selectedSemester)
+            ->get();
+        
+        // Use the first section's time periods as default, or fallback to semester defaults
+        $timePeriodsSource = $teacherSections->first();
+        $currentSemester = $semesters->where('id', $selectedSemester)->first();
         
         $studentsWithMissingInfo = Student::where('semester_id', $selectedSemester)
-            ->where(function($query) use ($teacherSectionIds) {
-                $query->where('user_id', Auth::id())
-                      ->orWhereIn('section_id', $teacherSectionIds);
-            })
+            ->where('user_id', Auth::id())
             ->where(function($query) {
                 $query->whereNull('picture')
                       ->orWhereNull('qr_code')
@@ -154,6 +137,28 @@ class TeacherController extends Controller
 
         
         $currentSemester = $semesters->where('id', $selectedSemester)->first();
+        
+        // Override semester time periods with section time periods if available
+        if ($timePeriodsSource && $currentSemester) {
+            $currentSemester->am_time_in_start = $timePeriodsSource->am_time_in_start;
+            $currentSemester->am_time_in_end = $timePeriodsSource->am_time_in_end;
+            $currentSemester->am_time_out_start = $timePeriodsSource->am_time_out_start;
+            $currentSemester->am_time_out_end = $timePeriodsSource->am_time_out_end;
+            $currentSemester->pm_time_in_start = $timePeriodsSource->pm_time_in_start;
+            $currentSemester->pm_time_in_end = $timePeriodsSource->pm_time_in_end;
+            $currentSemester->pm_time_out_start = $timePeriodsSource->pm_time_out_start;
+            $currentSemester->pm_time_out_end = $timePeriodsSource->pm_time_out_end;
+        } elseif ($currentSemester) {
+            // Provide fallback time periods if no sections are configured
+            $currentSemester->am_time_in_start = $currentSemester->am_time_in_start ?? '07:00:00';
+            $currentSemester->am_time_in_end = $currentSemester->am_time_in_end ?? '07:30:00';
+            $currentSemester->am_time_out_start = $currentSemester->am_time_out_start ?? '11:30:00';
+            $currentSemester->am_time_out_end = $currentSemester->am_time_out_end ?? '12:00:00';
+            $currentSemester->pm_time_in_start = $currentSemester->pm_time_in_start ?? '13:00:00';
+            $currentSemester->pm_time_in_end = $currentSemester->pm_time_in_end ?? '13:30:00';
+            $currentSemester->pm_time_out_start = $currentSemester->pm_time_out_start ?? '16:30:00';
+            $currentSemester->pm_time_out_end = $currentSemester->pm_time_out_end ?? '17:00:00';
+        }
 
         
         $todaySession = null;
@@ -237,19 +242,23 @@ class TeacherController extends Controller
             }
         }
 
-        // Add dashboard stats variables (same as getDashboardStats method)
-        $myStudents = $studentCount; // Already calculated above
-        $mySections = count($teacherSectionIds);
-        $todayPresent = $presentCount; // Already calculated above
-        $attendanceRate = $myStudents > 0 ? round(($todayPresent / $myStudents) * 100) . '%' : '0%';
-
-        // Get teacher sections with additional data
-        $teacherSections = Auth::user()->sections()->withCount('students')->get();
-        foreach ($teacherSections as $section) {
-            $section->present_today = Attendance::whereHas('student', function($query) use ($section) {
-                $query->where('section_id', $section->id);
-            })->whereDate('created_at', today())->count();
-        }
+        // Additional variables for dashboard view compatibility
+        $myStudents = $studentCount;
+        $mySections = $teacherSections->count();
+        $todayPresent = $presentCount;
+        $attendanceRate = $studentCount > 0 ? round(($presentCount / $studentCount) * 100, 1) . '%' : '0%';
+        
+        // Add student counts to teacher sections
+        $teacherSections = $teacherSections->map(function($section) use ($selectedSemester) {
+            $section->students_count = $section->students()->where('semester_id', $selectedSemester)->count();
+            $section->present_today = $section->students()
+                ->where('semester_id', $selectedSemester)
+                ->whereHas('attendances', function($query) {
+                    $query->whereDate('date', now()->toDateString());
+                })
+                ->count();
+            return $section;
+        });
 
         return view('teacher.dashboard', array_merge(compact(
             'semesters',
@@ -264,7 +273,7 @@ class TeacherController extends Controller
             'todaySession',
             'sectionAnalytics',
             'myStudents',
-            'mySections', 
+            'mySections',
             'todayPresent',
             'attendanceRate',
             'teacherSections'
@@ -276,15 +285,8 @@ class TeacherController extends Controller
     {
         $selectedSemester = $this->getCurrentSemesterId();
         
-        // Get all section IDs that the teacher is assigned to via pivot table
-        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
-        
-        // Get students from both direct assignment and section assignment
-        $students = Student::where('semester_id', $selectedSemester)
-            ->where(function($query) use ($teacherSectionIds) {
-                $query->where('user_id', Auth::id())
-                      ->orWhereIn('section_id', $teacherSectionIds);
-            })
+        $students = Student::where('user_id', Auth::id())
+            ->where('semester_id', $selectedSemester)
             ->orderBy('id_no')
             ->get();
         
@@ -295,15 +297,8 @@ class TeacherController extends Controller
     {
         $selectedSemester = $this->getCurrentSemesterId();
         
-        // Get all section IDs that the teacher is assigned to via pivot table
-        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
-        
-        // Get students from both direct assignment and section assignment
-        $students = Student::where('semester_id', $selectedSemester)
-            ->where(function($query) use ($teacherSectionIds) {
-                $query->where('user_id', Auth::id())
-                      ->orWhereIn('section_id', $teacherSectionIds);
-            })
+        $students = Student::where('user_id', Auth::id())
+            ->where('semester_id', $selectedSemester)
             ->orderBy('name')
             ->get();
         
@@ -314,7 +309,15 @@ class TeacherController extends Controller
     public function semesters()
     {
         $semesters = Semester::orderBy('start_date', 'desc')->get();
-        return view('teacher.semester', compact('semesters'));
+        
+        // Get teacher's sections
+        $sections = \App\Models\Section::where('teacher_id', Auth::id())
+            ->with(['semester'])
+            ->orderBy('gradelevel')
+            ->orderBy('name')
+            ->get();
+            
+        return view('teacher.semester', compact('semesters', 'sections'));
     }
 
     
@@ -472,35 +475,5 @@ class TeacherController extends Controller
         return redirect()->route('teacher.account')->with('success', 'Password updated successfully!');
     }
 
-    /**
-     * Get dashboard statistics for AJAX updates
-     */
-    public function getDashboardStats()
-    {
-        $teacherSectionIds = Auth::user()->sections()->pluck('sections.id')->toArray();
-        
-        $myStudents = Student::where(function($query) use ($teacherSectionIds) {
-            $query->where('user_id', Auth::id())
-                  ->orWhereIn('section_id', $teacherSectionIds);
-        })->count();
-
-        $mySections = count($teacherSectionIds);
-
-        $todayPresent = Attendance::whereHas('student', function($query) use ($teacherSectionIds) {
-            $query->where(function($subQuery) use ($teacherSectionIds) {
-                $subQuery->where('user_id', Auth::id())
-                         ->orWhereIn('section_id', $teacherSectionIds);
-            });
-        })->whereDate('created_at', today())->count();
-
-        $attendanceRate = $myStudents > 0 ? round(($todayPresent / $myStudents) * 100) . '%' : '0%';
-
-        return response()->json([
-            'success' => true,
-            'myStudents' => $myStudents,
-            'mySections' => $mySections,
-            'todayPresent' => $todayPresent,
-            'attendanceRate' => $attendanceRate
-        ]);
-    }
+    
 }

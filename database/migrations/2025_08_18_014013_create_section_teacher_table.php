@@ -13,12 +13,7 @@ return new class extends Migration
     {
         Schema::create('section_teacher', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('section_id')->constrained('sections')->onDelete('cascade');
-            $table->foreignId('teacher_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
-            
-            // Ensure each teacher-section pair is unique
-            $table->unique(['section_id', 'teacher_id']);
         });
     }
 

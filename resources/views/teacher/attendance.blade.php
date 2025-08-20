@@ -2,12 +2,81 @@
 @section('title', 'Attendance')
 @section('content')
 
-@php
-    // Get teacher's sections if not already provided
-    if (!isset($teacherSections)) {
-        $teacherSections = \App\Models\Section::where('teacher_id', auth()->id())->get();
-    }
-@endphp
+<style>
+/* Table styling improvements */
+.table-light {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-hover > tbody > tr:hover > td {
+    background-color: rgba(13, 110, 253, 0.04);
+}
+
+.sortable {
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.sortable:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
+}
+
+.sortable i {
+    transition: transform 0.2s ease;
+    opacity: 0.6;
+}
+
+.sortable:hover i {
+    opacity: 1;
+}
+
+.sortable.sort-asc i::before {
+    content: "\f0de"; /* fa-sort-up */
+}
+
+.sortable.sort-desc i::before {
+    content: "\f0dd"; /* fa-sort-down */
+}
+
+.sortable.sort-asc i,
+.sortable.sort-desc i {
+    color: #ffc107;
+    opacity: 1;
+}
+
+/* Enhanced badge styling */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Table cell enhancements */
+.table td {
+    padding: 0.6rem 0.4rem;
+    vertical-align: middle;
+    border-color: #e9ecef;
+}
+
+.table th {
+    padding: 0.8rem 0.4rem;
+    font-weight: 600;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-color: #dee2e6;
+}
+
+/* Sticky header enhancement */
+.sticky-top {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
 
 <div class="sticky-header">
     <div class="d-flex justify-content-between align-items-center">
@@ -50,7 +119,7 @@
                     @if(count($activeSessions) > 0)
                     <div class="table-responsive">
                         <table class="table table-sm">
-                            <thead class="table sticky-top" style="top: 0; z-index: 1;">
+                            <thead class="table-dark sticky-top" style="top: 0; z-index: 1;">
                                 <tr>
                                     <th class="py-1 fs-6" style="max-width: 150px; white-space: normal; word-break: break-word;">Session</th>
                                     <th class="py-1 fs-6">Date Created</th>
@@ -235,9 +304,9 @@
 
                                     <input type="radio" class="btn-check" name="scannerMode" id="webcamMode"
                                         autocomplete="off">
-                                    <!-- <label class="btn btn-outline-secondary" for="webcamMode">
+                                    <label class="btn btn-outline-secondary" for="webcamMode">
                                         <i class="fas fa-camera me-2"></i>Webcam (Secondary)
-                                    </label> -->
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -440,169 +509,147 @@
                         <h5 class="mb-0">
                             <i class="fas fa-calendar-check me-2"></i>Today's Recorded Attendance
                             <span class="badge bg-light text-primary ms-2">{{ date('M j, Y') }}</span>
-                            @if(request('section_filter') || request('search'))
-                                <span class="badge bg-warning text-dark ms-1">
-                                    <i class="fas fa-filter me-1"></i>Filtered
-                                </span>
-                            @endif
                         </h5>
-                        <div class="d-flex align-items-center flex-wrap gap-2">
-                            @if(request('section_filter') || request('search'))
-                                <small class="text-light">
-                                    @if(request('section_filter'))
-                                        @php
-                                            $selectedSection = collect($teacherSections ?? [])->firstWhere('id', request('section_filter'));
-                                        @endphp
-                                        Section: {{ $selectedSection ? $selectedSection->name . ' - Grade ' . $selectedSection->gradelevel : 'Unknown' }}
-                                    @endif
-                                    @if(request('search'))
-                                        @if(request('section_filter')) | @endif
-                                        Search: "{{ request('search') }}"
-                                    @endif
-                                </small>
-                            @endif
-                            <div class="d-flex gap-2">
-                                <span class="badge bg-success">Present: {{ $totalPresent }}</span>
-                                <span class="badge bg-danger">Absent: {{ $totalAbsent }}</span>
-                                <span class="badge bg-info">Total: {{ $totalPresent }}/{{ $totalStudents }}</span>
-                            </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2">Present: {{ $totalPresent }}</span>
+                            <span class="badge bg-danger me-2">Absent: {{ $totalAbsent }}</span>
+                            <span class="badge bg-info">Total: {{ $totalPresent }}/{{ $totalStudents }}</span>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- Search and Filter Section -->
+                    <!-- Search Section -->
                     <div class="row mb-3">
-                        <div class="col-md-12">
-                            <form class="d-flex flex-wrap gap-2 align-items-center" method="GET" action="{{ route('teacher.attendance') }}">
-                                <div class="flex-grow-1" style="min-width: 200px;">
-                                    <input type="text" name="search" class="form-control" placeholder="Search student..."
-                                        value="{{ $search ?? '' }}">
-                                </div>
-                                <div>
-                                    <select name="section_filter" class="form-select" style="min-width: 200px;">
-                                        <option value="">All Sections</option>
-                                        @if(isset($teacherSections))
-                                            @foreach($teacherSections as $section)
-                                                <option value="{{ $section->id }}" {{ request('section_filter') == $section->id ? 'selected' : '' }}>
-                                                    {{ $section->name }} - Grade {{ $section->gradelevel }}
-                                                </option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-                                <div>
-                                    <button class="btn btn-outline-primary" type="submit">
-                                        <i class="fas fa-search me-1"></i>Filter
-                                    </button>
-                                </div>
+                        <div class="col-md-8">
+                            <form class="d-flex align-items-center gap-2" method="GET" action="{{ route('teacher.attendance') }}">
+                                <input type="text" name="search" class="form-control" placeholder="Search student..."
+                                    value="{{ $search ?? '' }}" style="min-width: 200px;">
+                                <button class="btn btn-outline-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                
+                                <!-- Section Selector -->
+                                <select name="section_filter" class="form-select" style="min-width: 150px;" onchange="this.form.submit()">
+                                    <option value="">All Sections</option>
+                                    @php
+                                        $sections = \App\Models\Student::where('user_id', Auth::id())
+                                            ->with('section')
+                                            ->whereHas('section')
+                                            ->get()
+                                            ->pluck('section')
+                                            ->unique('id')
+                                            ->sortBy('name');
+                                    @endphp
+                                    @foreach($sections as $section)
+                                        <option value="{{ $section->name }}" {{ request('section_filter') == $section->name ? 'selected' : '' }}>
+                                            {{ $section->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                
                                 @if(request('search') || request('section_filter'))
-                                <div>
-                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-1"></i>Clear
+                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-secondary" title="Clear filters">
+                                        <i class="fas fa-times"></i>
                                     </a>
-                                </div>
                                 @endif
                             </form>
                         </div>
-                    </div>
-                    
-                    <!-- Filter Results Summary -->
-                    @if(request('search') || request('section_filter'))
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="alert alert-info mb-0 py-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Filter Applied:</strong>
-                                        @if(request('search'))
-                                            Search: "{{ request('search') }}"
-                                        @endif
-                                        @if(request('section_filter'))
-                                            @php
-                                                $selectedSection = collect($teacherSections ?? [])->firstWhere('id', request('section_filter'));
-                                            @endphp
-                                            @if(request('search')) | @endif
-                                            Section: {{ $selectedSection ? $selectedSection->name . ' - Grade ' . $selectedSection->gradelevel : 'Unknown' }}
-                                        @endif
-                                    </div>
-                                    <div class="text-end">
-                                        <small>Showing {{ count($attendanceList) }} of {{ $totalStudents }} students</small>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted">
+                                @if(request('search') || request('section_filter'))
+                                    Filtered results
+                                @endif
+                            </small>
                         </div>
                     </div>
-                    @endif
                     <!-- Attendance Table -->
                     <div class="table-responsive">
                         <div style="max-height: 420px; overflow-y: auto; width: 100%;">
-                            <table class="table table-hover table-light align-middle">
-                                <thead class="table">
+                            <table class="table table table-striped align-middle bg-white">
+                                <thead class="table-light sticky-top" style="top: 0; z-index: 1;">
                                     <tr>
-                                        <th style="width: 40px;">#</th>
-                                        <th class="text-start sortable" data-sort="name">
+                                        <th style="width: 40px; white-space: nowrap;">#</th>
+                                        <th class="text-start sortable" data-sort="name" style="cursor: pointer; min-width: 150px;">
                                             Student Name
-                                            <i class="fas fa-sort ms-1 sort-icon"></i>
+                                            <i class="fas fa-sort ms-1" aria-hidden="true"></i>
                                         </th>
-                                        <th style="width: 120px;" class="sortable" data-sort="section">
+                                        <th class="text-center sortable" data-sort="section" style="cursor: pointer; width: 90px; white-space: nowrap;">
                                             Section
-                                            <i class="fas fa-sort ms-1 sort-icon"></i>
+                                            <i class="fas fa-sort ms-1" aria-hidden="true"></i>
                                         </th>
-                                        <th style="width: 100px;" class="sortable" data-sort="status">
+                                        <th class="text-center sortable" data-sort="status" style="width: 90px; cursor: pointer; white-space: nowrap;">
                                             Status
-                                            <i class="fas fa-sort ms-1 sort-icon"></i>
+                                            <i class="fas fa-sort ms-1" aria-hidden="true"></i>
                                         </th>
-                                        <th style="width: 80px;">AM IN</th>
-                                        <th style="width: 80px;">AM OUT</th>
-                                        <th style="width: 80px;">PM IN</th>
-                                        <th style="width: 80px;">PM OUT</th>
+                                        <th class="text-center" style="width: 70px; white-space: nowrap;">
+                                            <div>AM</div>
+                                            <div style="font-size: 0.75em;">IN</div>
+                                        </th>
+                                        <th class="text-center" style="width: 70px; white-space: nowrap;">
+                                            <div>AM</div>
+                                            <div style="font-size: 0.75em;">OUT</div>
+                                        </th>
+                                        <th class="text-center" style="width: 70px; white-space: nowrap;">
+                                            <div>PM</div>
+                                            <div style="font-size: 0.75em;">IN</div>
+                                        </th>
+                                        <th class="text-center" style="width: 70px; white-space: nowrap;">
+                                            <div>PM</div>
+                                            <div style="font-size: 0.75em;">OUT</div>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendance-table-body">
                                     @forelse($attendanceList as $i => $row)
                                     <tr>
-                                        <td>{{ $i + 1 }}</td>
-                                        <td class="text-start">
-                                            <strong>{{ $row['student']->name }}</strong>
-                                            <br><small class="text-muted">ID: {{ $row['student']->id_no }}</small>
-                                        </td>
-                                        <td>
-                                            @if(isset($row['student']->section))
-                                                <span class="badge bg-primary">{{ $row['student']->section->name }}</span>
-                                                <br><small class="text-muted">Grade {{ $row['student']->section->gradelevel }}</small>
+                                        <td class="text-center">{{ $i + 1 }}</td>
+                                        <td class="text-start">{{ $row['student']->name }}</td>
+                                        <td class="text-center">
+                                            @if($row['student']->section)
+                                                <span class="badge bg-primary text-white" style="font-size: 0.7em;">
+                                                    {{ $row['student']->section->name }}
+                                                </span>
                                             @else
-                                                <span class="badge bg-warning">No Section</span>
+                                                <span class="text-muted" style="font-size: 0.8em;">-</span>
                                             @endif
                                         </td>
                                         
-                                        <td>
+                                        <td class="text-center">
                                             @php
                                                 $hasTimeIn = $row['time_in_am'] || $row['time_in_pm'];
                                                 $hasTimeOut = $row['time_out_am'] || $row['time_out_pm'];
                                             @endphp
                                             
                                             @if($hasTimeIn && $hasTimeOut)
-                                                <span class="badge bg-success">Present</span>
-                                                <br><small class="badge bg-info mt-1">Complete</small>
+                                                <span class="badge bg-success" style="font-size: 0.7em;">Present</span>
                                             @elseif($hasTimeIn)
-                                                <span class="badge bg-warning">Time In Only</span>
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.7em;">Partial</span>
                                             @elseif($hasTimeOut)
-                                                <span class="badge bg-secondary">Time Out Only</span>
+                                                <span class="badge bg-secondary" style="font-size: 0.7em;">Time Out Only</span>
                                             @else
-                                                <span class="badge bg-danger">Absent</span>
+                                                <span class="badge bg-danger" style="font-size: 0.7em;">Absent</span>
                                             @endif
                                         </td>
-                                        <td>{{ $row['time_in_am'] ?? '-' }}</td>
-                                        <td>{{ $row['time_out_am'] ?? '-' }}</td>
-                                        <td>{{ $row['time_in_pm'] ?? '-' }}</td>
-                                        <td>{{ $row['time_out_pm'] ?? '-' }}</td>
+                                        <td class="text-center" style="font-size: 0.8em;">
+                                            {{ $row['time_in_am'] ? \Carbon\Carbon::parse($row['time_in_am'])->format('H:i') : '-' }}
+                                        </td>
+                                        <td class="text-center" style="font-size: 0.8em;">
+                                            {{ $row['time_out_am'] ? \Carbon\Carbon::parse($row['time_out_am'])->format('H:i') : '-' }}
+                                        </td>
+                                        <td class="text-center" style="font-size: 0.8em;">
+                                            {{ $row['time_in_pm'] ? \Carbon\Carbon::parse($row['time_in_pm'])->format('H:i') : '-' }}
+                                        </td>
+                                        <td class="text-center" style="font-size: 0.8em;">
+                                            {{ $row['time_out_pm'] ? \Carbon\Carbon::parse($row['time_out_pm'])->format('H:i') : '-' }}
+                                        </td>
                                         
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted">No attendance records found for
-                                            today</td>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
+                                            No attendance records found for today
+                                        </td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -674,44 +721,6 @@
 
     .border-secondary {
         border-width: 1px !important;
-    }
-
-    /* Sortable table headers */
-    .sortable {
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-        transition: background-color 0.2s ease;
-    }
-
-    .sortable:hover {
-        background-color: rgba(255,255,255,.1) !important;
-    }
-
-    .sortable .sort-icon {
-        opacity: 0.3;
-        transition: opacity 0.2s ease;
-    }
-
-    .sortable:hover .sort-icon {
-        opacity: 0.8;
-    }
-
-    .sortable.sort-asc .sort-icon::before {
-        content: "\f0de"; /* fa-sort-up */
-        opacity: 1;
-        color: #17a2b8;
-    }
-
-    .sortable.sort-desc .sort-icon::before {
-        content: "\f0dd"; /* fa-sort-down */
-        opacity: 1;
-        color: #17a2b8;
-    }
-
-    .sortable.sort-asc .sort-icon,
-    .sortable.sort-desc .sort-icon {
-        opacity: 1;
     }
     </style>
 
@@ -965,9 +974,6 @@
         document.getElementById('createSessionBtn').addEventListener('click', function() {
             createSession();
         });
-
-        // Initialize table sorting
-        initializeAttendanceTableSorting();
 
         // Event delegation for copy and close buttons
         document.addEventListener('click', function(e) {
@@ -1249,42 +1255,15 @@
         }, 5000);
     }
 
-    // Table sorting functionality for attendance table
-    function initializeAttendanceTableSorting() {
-        const table = document.querySelector('.table.table-hover.table-dark');
-        console.log('Looking for table with classes: .table.table-hover.table-dark');
-        console.log('Table found:', !!table);
-        
-        if (!table) {
-            console.log('Trying alternative selector...');
-            const altTable = document.querySelector('.table.table-hover');
-            console.log('Alternative table found:', !!altTable);
-            if (altTable) {
-                initializeSortingForTable(altTable);
-                return;
-            }
-        } else {
-            initializeSortingForTable(table);
-        }
-    }
-    
-    function initializeSortingForTable(table) {
-        const sortableHeaders = table.querySelectorAll('.sortable');
-        console.log('Sortable headers found:', sortableHeaders.length);
-        
-        if (sortableHeaders.length === 0) {
-            console.log('No sortable headers found');
-            return;
-        }
+    // Table sorting functionality
+    function initializeTableSorting() {
+        const sortableHeaders = document.querySelectorAll('.sortable');
         
         sortableHeaders.forEach(header => {
             header.addEventListener('click', function() {
-                console.log('Sorting by:', this.dataset.sort);
                 const sortColumn = this.dataset.sort;
                 const currentSort = this.classList.contains('sort-asc') ? 'asc' : 
                                    this.classList.contains('sort-desc') ? 'desc' : 'none';
-                
-                console.log('Current sort:', currentSort);
                 
                 // Remove sort classes from all headers
                 sortableHeaders.forEach(h => {
@@ -1297,53 +1276,45 @@
                     newSort = 'desc';
                 } else if (currentSort === 'desc') {
                     newSort = 'asc';
-                } else {
-                    newSort = 'asc'; // Default to ascending for first click
                 }
-                
-                console.log('New sort direction:', newSort);
                 
                 // Add sort class to current header
                 this.classList.add(`sort-${newSort}`);
                 
                 // Sort the table
-                sortAttendanceTable(table, sortColumn, newSort);
+                sortTable(sortColumn, newSort === 'asc');
             });
         });
     }
 
-    function sortAttendanceTable(table, column, direction) {
-        console.log('sortAttendanceTable called:', column, direction);
-        const tbody = table.querySelector('tbody');
+    function sortTable(column, ascending = true) {
+        const tbody = document.querySelector('.table tbody');
+        if (!tbody) return;
+        
         const rows = Array.from(tbody.querySelectorAll('tr'));
         
-        console.log('Found rows to sort:', rows.length);
-        
         const sortedRows = rows.sort((a, b) => {
-            let aVal = getAttendanceCellValue(a, column);
-            let bVal = getAttendanceCellValue(b, column);
-            
-            console.log('Comparing:', aVal, 'vs', bVal);
+            let aVal = getCellValue(a, column);
+            let bVal = getCellValue(b, column);
             
             // Handle different data types
             if (column === 'status') {
-                // Sort by status priority: Present > Time In Only > Time Out Only > Absent
+                // Sort by status priority: Present > Partial > Time Out Only > Absent
                 const statusPriority = {
                     'Present': 4,
-                    'Time In Only': 3,
+                    'Partial': 3,
                     'Time Out Only': 2,
                     'Absent': 1
                 };
                 aVal = statusPriority[aVal] || 0;
                 bVal = statusPriority[bVal] || 0;
             } else {
-                // For text columns, convert to lowercase for case-insensitive sorting
                 aVal = aVal.toLowerCase();
                 bVal = bVal.toLowerCase();
             }
             
-            if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-            if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+            if (aVal < bVal) return ascending ? -1 : 1;
+            if (aVal > bVal) return ascending ? 1 : -1;
             return 0;
         });
         
@@ -1358,11 +1329,11 @@
         });
     }
 
-    function getAttendanceCellValue(row, column) {
+    function getCellValue(row, column) {
         const columnMap = {
-            'name': 1,
-            'section': 2,
-            'status': 3
+            'name': 1,      // Student Name
+            'section': 2,   // Section 
+            'status': 3     // Status
         };
         
         const columnIndex = columnMap[column];
@@ -1373,8 +1344,8 @@
         
         // Handle special cases
         if (column === 'name') {
-            const strong = cell.querySelector('strong');
-            return strong ? strong.textContent.trim() : cell.textContent.trim();
+            // Extract text content from the cell
+            return cell.textContent.trim();
         } else if (column === 'section') {
             const badge = cell.querySelector('.badge');
             return badge ? badge.textContent.trim() : cell.textContent.trim();
@@ -1385,11 +1356,9 @@
             return cell.textContent.trim();
         }
     }
-
     // Initialize table sorting when document is ready
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, initializing attendance table sorting...');
-        initializeAttendanceTableSorting();
+        initializeTableSorting();
     });
     </script>
 

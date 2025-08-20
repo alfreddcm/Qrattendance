@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Semester;
 use App\Models\School;
-use App\Models\Section;
-use App\Models\User;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,56 +33,34 @@ class SemesterController extends Controller
                     
                 // Get all schools for admin dropdown
                 $schools = School::orderBy('name')->get();
-                
-                // Get all sections with their relationships for section management
-                $sections = Section::with(['teacher', 'semester', 'students'])
-                    ->orderBy('semester_id', 'desc')
-                    ->orderBy('gradelevel')
-                    ->orderBy('name')
-                    ->get();
-                
-                // Get all teachers for section assignment
-                $teachers = User::where('role', 'teacher')->orderBy('name')->get();
                     
                 Log::info('Admin viewing all semesters', [
                     'user_id' => $user->id,
-                    'semesters_count' => $semesters->count(),
-                    'sections_count' => $sections->count()
+                    'semesters_count' => $semesters->count()
                 ]);
 
-                return view('admin.manage-semesters', compact('semesters', 'schools', 'sections', 'teachers'));
+                return view('admin.manage-semesters', compact('semesters', 'schools'));
             } else {
                 // Teachers can only see semesters from their school
                 $semesters = Semester::with('school')
                     ->where('school_id', $user->school_id)
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
-                
-                // Get sections for teacher's school only (through semester relationship)
-                $sections = Section::with(['teacher:id,name', 'semester:id,name'])
-                    ->withCount('students')
-                    ->whereHas('semester', function ($query) use ($user) {
-                        $query->where('school_id', $user->school_id);
-                    })
-                    ->orderBy('semester_id', 'desc')
-                    ->orderBy('gradelevel')
-                    ->orderBy('name')
-                    ->get();
-                
-                // Get teachers from same school only
-                $teachers = User::where('role', 'teacher')
-                    ->where('school_id', $user->school_id)
-                    ->orderBy('name')
-                    ->get();
                     
                 Log::info('Teacher viewing school semesters', [
                     'user_id' => $user->id,
                     'school_id' => $user->school_id,
-                    'semesters_count' => $semesters->count(),
-                    'sections_count' => $sections->count()
+                    'semesters_count' => $semesters->count()
                 ]);
 
-                return view('teacher.semester', compact('semesters', 'sections', 'teachers'));
+                // Get teacher's sections
+                $sections = \App\Models\Section::where('teacher_id', $user->id)
+                    ->with(['semester'])
+                    ->orderBy('gradelevel')
+                    ->orderBy('name')
+                    ->get();
+
+                return view('teacher.semester', compact('semesters', 'sections'));
             }
             
         } catch (\Exception $e) {
@@ -152,10 +128,14 @@ class SemesterController extends Controller
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
                 'status' => 'required|in:active,inactive',
-                'morning_period_start' => 'nullable|date_format:H:i',
-                'morning_period_end' => 'nullable|date_format:H:i|after:morning_period_start',
-                'afternoon_period_start' => 'nullable|date_format:H:i',
-                'afternoon_period_end' => 'nullable|date_format:H:i|after:afternoon_period_start',
+                'am_time_in_start' => 'nullable|date_format:H:i',
+                'am_time_in_end' => 'nullable|date_format:H:i|after:am_time_in_start',
+                'am_time_out_start' => 'nullable|date_format:H:i',
+                'am_time_out_end' => 'nullable|date_format:H:i|after:am_time_out_start',
+                'pm_time_in_start' => 'nullable|date_format:H:i',
+                'pm_time_in_end' => 'nullable|date_format:H:i|after:pm_time_in_start',
+                'pm_time_out_start' => 'nullable|date_format:H:i',
+                'pm_time_out_end' => 'nullable|date_format:H:i|after:pm_time_out_start',
             ]);
 
             // Check user permissions
@@ -168,6 +148,13 @@ class SemesterController extends Controller
                 ]);
                 
                 return redirect()->back()->with('error', 'You can only create semesters for your school.');
+            }
+
+            // Validate time ranges for overlaps
+            $tempSemester = new Semester($validated);
+            $validation = $tempSemester->validateTimeRanges();
+            if (!$validation['valid']) {
+                return redirect()->back()->with('error', $validation['message'])->withInput();
             }
 
             // If setting this semester as active, deactivate others in the same school
@@ -286,6 +273,14 @@ class SemesterController extends Controller
                 'start_date' => $semester->start_date,
                 'end_date' => $semester->end_date,
                 'school_id' => $semester->school_id,
+                'am_time_in_start' => $semester->am_time_in_start,
+                'am_time_in_end' => $semester->am_time_in_end,
+                'am_time_out_start' => $semester->am_time_out_start,
+                'am_time_out_end' => $semester->am_time_out_end,
+                'pm_time_in_start' => $semester->pm_time_in_start,
+                'pm_time_in_end' => $semester->pm_time_in_end,
+                'pm_time_out_start' => $semester->pm_time_out_start,
+                'pm_time_out_end' => $semester->pm_time_out_end,
                 'am_time_in_start_input' => $semester->am_time_in_start ? \Carbon\Carbon::parse($semester->am_time_in_start)->format('H:i') : '',
                 'am_time_in_end_input' => $semester->am_time_in_end ? \Carbon\Carbon::parse($semester->am_time_in_end)->format('H:i') : '',
                 'am_time_out_start_input' => $semester->am_time_out_start ? \Carbon\Carbon::parse($semester->am_time_out_start)->format('H:i') : '',
@@ -342,10 +337,14 @@ class SemesterController extends Controller
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
                 'status' => 'required|in:active,inactive',
-                'morning_period_start' => 'nullable|date_format:H:i',
-                'morning_period_end' => 'nullable|date_format:H:i|after:morning_period_start',
-                'afternoon_period_start' => 'nullable|date_format:H:i',
-                'afternoon_period_end' => 'nullable|date_format:H:i|after:afternoon_period_start',
+                'am_time_in_start' => 'nullable|date_format:H:i',
+                'am_time_in_end' => 'nullable|date_format:H:i|after:am_time_in_start',
+                'am_time_out_start' => 'nullable|date_format:H:i',
+                'am_time_out_end' => 'nullable|date_format:H:i|after:am_time_out_start',
+                'pm_time_in_start' => 'nullable|date_format:H:i',
+                'pm_time_in_end' => 'nullable|date_format:H:i|after:pm_time_in_start',
+                'pm_time_out_start' => 'nullable|date_format:H:i',
+                'pm_time_out_end' => 'nullable|date_format:H:i|after:pm_time_out_start',
             ]);
 
              if ($user->role !== 'admin' && $validated['school_id'] != $user->school_id) {

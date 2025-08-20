@@ -2,102 +2,101 @@
 @section('title', 'Manage Students')
 @section('content')
 
-<link rel="stylesheet" href="{{ asset('css/compact-layout.css') }}">
+<style>
+.pagination-wrapper .pagination {
+    margin-bottom: 0;
+}
+.pagination-wrapper .page-link {
+    color: #667eea;
+    border-color: #dee2e6;
+}
+.pagination-wrapper .page-item.active .page-link {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+.pagination-wrapper .page-link:hover {
+    color: #764ba2;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+</style>
 
-<div class="compact-layout">
-    <div class="sticky-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="mb-1">
-                    <i class="fas fa-user-graduate me-2"></i>
-                    Manage Students
-                </h4>
-                <p class="subtitle mb-0">View and manage student records with section assignment</p>
-            </div>
-            <div class="page-actions">
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                    <i class="fas fa-plus me-1"></i>Add Student
-                </button>
-            </div>
+<div class="sticky-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fs-5 mb-1">
+                <i class="fas fa-user-graduate me-2"></i>
+                Manage Students
+            </h4>
+            <p class="subtitle fs-6 mb-0">View and manage student records across all schools</p>
         </div>
+        
     </div>
+</div>
 
-    <div class="container-fluid">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+<div class="container-fluid">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-        @if($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Please fix the following errors:</strong>
-                <ul class="mb-0 mt-2">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        <!-- Search and Filters -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-search me-1"></i>Search & Filter
-            </div>
-            <div class="card-body">
-                <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterForm">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-3">
-                            <label for="search" class="form-label">Search Students</label>
-                            <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control" value="{{ request('search') }}" oninput="debounceSubmit()">
-                        </div>
-                        <div class="col-md-2">
-                            <label for="school_id" class="form-label">School</label>
-                            <select name="school_id" id="school_id" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Schools</option>
-                                @foreach($schools as $school)
-                                    <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
-                                        {{ $school->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="teacher_id" class="form-label">Teacher</label>
-                            <select name="teacher_id" id="teacher_id" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Teachers</option>
-                                @foreach($teachers as $teacher)
-                                    <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                        {{ $teacher->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="grade_section" class="form-label">Grade & Section</label>
-                            <select name="grade_section" id="grade_section" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Grade & Section</option>
-                                @foreach($gradeSectionOptions as $option)
-                                    <option value="{{ $option['value'] }}" {{ request('grade_section') == $option['value'] ? 'selected' : '' }}>
-                                        {{ $option['label'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="qr_status" class="form-label">QR Status</label>
-                            <select name="qr_status" id="qr_status" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Status</option>
-                                <option value="with_qr" {{ request('qr_status') == 'with_qr' ? 'selected' : '' }}>With QR</option>
-                                <option value="without_qr" {{ request('qr_status') == 'without_qr' ? 'selected' : '' }}>Without QR</option>
-                            </select>
-                        </div>
-                        <div class="col-md-1">
-                            <div class="d-flex gap-1">
-                                <button type="submit" class="btn btn-primary btn-sm flex-fill">
+    <!-- Search   -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body p-2">
+                    <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterForm">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label for="search" class="form-label small fw-semibold fs-6">Search Students</label>
+                                <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control form-control-sm" value="{{ request('search') }}" oninput="debounceSubmit()">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="school_id" class="form-label small fw-semibold fs-6">School</label>
+                                <select name="school_id" id="school_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="">All Schools</option>
+                                    @foreach($schools as $school)
+                                        <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
+                                            {{ $school->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="teacher_id" class="form-label small fw-semibold fs-6">Teacher</label>
+                                <select name="teacher_id" id="teacher_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="">All Teachers</option>
+                                    @foreach($teachers as $teacher)
+                                        <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                                            {{ $teacher->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="grade_section" class="form-label small fw-semibold fs-6">Grade & Section</label>
+                                <select name="grade_section" id="grade_section" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="">All Grade & Section</option>
+                                    @foreach($gradeSectionOptions as $option)
+                                        <option value="{{ $option['value'] }}" {{ request('grade_section') == $option['value'] ? 'selected' : '' }}>
+                                            {{ $option['label'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="qr_status" class="form-label small fw-semibold">QR Status</label>
+                                <select name="qr_status" id="qr_status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="">All Status</option>
+                                    <option value="with_qr" {{ request('qr_status') == 'with_qr' ? 'selected' : '' }}>With QR</option>
+                                    <option value="without_qr" {{ request('qr_status') == 'without_qr' ? 'selected' : '' }}>Without QR</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary flex-fill">
                                         <i class="fas fa-search me-1"></i>Filter
                                     </button>
                                     @if(request()->hasAny(['search', 'school_id', 'teacher_id', 'grade_section', 'qr_status']))
@@ -188,13 +187,8 @@
                         </h5>
                         <span class="badge bg-light text-dark me-3">{{ $students->total() }} total</span>
                         
-                        
-                      
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                          <span> Sort by: </span>
-                        <form method="GET" action="{{ route('admin.manage-students') }}" class="d-flex align-items-center gap-1" id="sortForm">
+                        <!-- Sorting Controls -->
+                        <form method="GET" action="{{ route('admin.manage-students') }}" class="d-flex align-items-center gap-2" id="sortForm">
                             <!-- Preserve existing filters -->
                             @if(request('search'))
                                 <input type="hidden" name="search" value="{{ request('search') }}">
@@ -212,18 +206,21 @@
                                 <input type="hidden" name="qr_status" value="{{ request('qr_status') }}">
                             @endif
                             
-                            <select name="sort_by" class="form-select form-select-sm"  onchange="this.form.submit()">
+                            <select name="sort_by" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
                                 <option value="name" {{ request('sort_by', 'name') == 'name' ? 'selected' : '' }}>Name</option>
                                 <option value="gender" {{ request('sort_by') == 'gender' ? 'selected' : '' }}>Gender</option>
                                 <option value="age" {{ request('sort_by') == 'age' ? 'selected' : '' }}>Age</option>
                                 <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Recent</option>
                             </select>
                             
-                            <select name="sort_order" class="form-select form-select-sm"  onchange="this.form.submit()">
+                            <select name="sort_order" class="form-select form-select-sm" style="width: 80px;" onchange="this.form.submit()">
                                 <option value="asc" {{ request('sort_order', 'asc') == 'asc' ? 'selected' : '' }}>A-Z</option>
                                 <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Z-A</option>
                             </select>
                         </form>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
                          <div class="dropdown">
                             <button class="btn btn-light dropdown-toggle" type="button" id="quickActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-bars me-1"></i>Actions
@@ -305,11 +302,7 @@
                                                 <strong style="color: #2c3e50;">{{ $student->name }}</strong>
                                                 <br>
                                                 <small class="text-muted">
-                                                    @if($student->section)
-                                                        {{ $student->section->name }} - Grade {{ $student->section->gradelevel }}
-                                                    @else
-                                                        {{ ($student->section_name ?? 'N/A') }} - Grade {{ ($student->grade_level ?? 'N/A') }}
-                                                    @endif
+                                                    Section: {{ $student->section_name ?? 'N/A' }} | Grade: {{ $student->grade_level ?? 'N/A' }}
                                                     @if($student->age)
                                                         <br>Age: {{ $student->age }}
                                                     @endif

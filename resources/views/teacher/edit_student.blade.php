@@ -165,7 +165,7 @@
                 <div class="col-md-12">
                      <div class="page-actions">
             <a href="{{ route('teacher.students') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Return
+                <i class="fas fa-arrow-left me-1"></i>Back to Students
             </a>
         </div>
                     <label for="picture" class="form-label">Student Picture</label>
@@ -239,14 +239,40 @@
                     <input type="number" class="form-control" id="age" name="age" value="{{ $student->age }}" required>
                 </div>
                 
-                <div class="col-md-6">
-                    <label for="section" class="form-label">Section</label>
-                    <input type="text" class="form-control" id="section" name="section" value="{{ $student->section_name }}" placeholder="e.g., A, B, C">
-                </div>
-                
-                <div class="col-md-6">
-                    <label for="grade_level" class="form-label">Grade Level</label>
-                    <input type="text" class="form-control" id="grade_level" name="grade_level" value="{{ $student->grade_level }}" placeholder="e.g., Grade 7, Grade 8">
+                <div class="col-md-12">
+                    <label for="section_dropdown" class="form-label">Grade Level & Section</label>
+                    <select class="form-select" id="section_dropdown" name="section_id" required>
+                        <option value="">Select Grade Level & Section</option>
+                        @php
+                            $teacherSections = App\Models\Section::where('teacher_id', auth()->id())
+                                ->orderBy('gradelevel')
+                                ->orderBy('name')
+                                ->get();
+                            $studentHasValidSection = $student->section_id && $teacherSections->contains('id', $student->section_id);
+                        @endphp
+                        
+                        @if($student->section && !$studentHasValidSection)
+                            {{-- Show current section even if it's not in teacher's sections (for reference) --}}
+                            <option value="{{ $student->section_id }}" selected class="text-warning">
+                                Grade {{ $student->section->gradelevel }} - {{ $student->section->name }} (Current - Not in your sections)
+                            </option>
+                            <option disabled>──────────────</option>
+                        @endif
+                        
+                        @foreach($teacherSections as $section)
+                            <option value="{{ $section->id }}" 
+                                    {{ $student->section_id == $section->id ? 'selected' : '' }}>
+                                Grade {{ $section->gradelevel }} - {{ $section->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="form-text text-muted">
+                        Select the grade level and section for this student. 
+                        @if(!$studentHasValidSection && $student->section)
+                            <span class="text-warning">Note: This student's current section is not in your managed sections.</span>
+                        @endif
+                        If you need to add a new section, please use the <a href="{{ route('teacher.semester') }}" class="text-primary">Semester Management</a> page first.
+                    </small>
                 </div>
                 
                 <div class="col-md-12">

@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('section_teacher', function (Blueprint $table) {
-            // Add unique constraint on section_id to ensure one teacher per section
-            $table->unique('section_id', 'unique_section_per_teacher');
+            //
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('section_teacher', function (Blueprint $table) {
-            // Drop the unique constraint
-            $table->dropUnique('unique_section_per_teacher');
+            //
         });
     }
 };

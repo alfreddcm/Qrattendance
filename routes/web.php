@@ -44,29 +44,12 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/semester/active', [SemesterController::class, 'getActiveSemester'])->name('teacher.semester.active');
 
     // Section Management for Teachers (limited to their school)
-    Route::get('/sections/list', [SectionController::class, 'index'])->name('teacher.section.list');
     Route::post('/sections/store', [SectionController::class, 'store'])->name('teacher.section.store');
     Route::get('/sections/{section}/edit', [SectionController::class, 'edit'])->name('teacher.section.edit');
     Route::put('/sections/{section}', [SectionController::class, 'update'])->name('teacher.section.update');
     Route::delete('/sections/{section}', [SectionController::class, 'destroy'])->name('teacher.section.destroy');
 
-    // Subject Management for Teachers
-    Route::get('/subjects/list', [SubjectController::class, 'index'])->name('teacher.subject.list');
-    Route::post('/subjects/store', [SubjectController::class, 'store'])->name('teacher.subject.store');
-    Route::get('/subjects/{subject}/edit', [SubjectController::class, 'edit'])->name('teacher.subject.edit');
-    Route::put('/subjects/{subject}', [SubjectController::class, 'update'])->name('teacher.subject.update');
-    Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy'])->name('teacher.subject.destroy');
-    Route::post('/subjects/{subject}/assign-section', [SubjectController::class, 'assignSection'])->name('teacher.subject.assign.section');
-    Route::put('/subjects/{subject}/sections/{section}/schedule', [SubjectController::class, 'updateSectionSchedule'])->name('teacher.subject.section.schedule');
-    Route::delete('/subjects/{subject}/sections/{section}', [SubjectController::class, 'detachSection'])->name('teacher.subject.detach.section');
-
     Route::get('/students', [StudentManagementController::class, 'index'])->name('teacher.students');
-    Route::get('/students-new', [StudentManagementController::class, 'index'])->name('teacher.students-new');
-    Route::get('/import-students', [StudentManagementController::class, 'showImport'])->name('teacher.import-students');
-    Route::post('/students/import', [StudentManagementController::class, 'importStudents'])->name('teacher.students.import');
-    Route::post('/generate-qr-codes', [StudentManagementController::class, 'generateAllQrCodes'])->name('teacher.generate-qr-codes');
-    Route::get('/dashboard/stats', [TeacherController::class, 'getDashboardStats'])->name('teacher.dashboard.stats');
-    Route::get('/reports', [ReportController::class, 'index'])->name('teacher.reports');
     Route::post('/students/add', [StudentManagementController::class, 'addStudent'])->name('teacher.students.add');
     Route::get('/students/{id}/edit', [StudentManagementController::class, 'edit'])->name('teacher.students.edit');
     Route::put('/students/{id}', [StudentManagementController::class, 'update'])->name('teacher.students.update');
@@ -124,7 +107,6 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     // Admin Routes
 Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/dashboard/stats', [AdminController::class, 'getDashboardStats'])->name('admin.dashboard.stats');
     
     // School Management
     Route::get('/manage-schools', [AdminController::class, 'manageSchools'])->name('admin.manage-schools');
@@ -151,19 +133,13 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/semester/active', [SemesterController::class, 'getActiveSemester'])->name('admin.semester.active');
     
     // Section Management
-    Route::post('/sections/store', [SectionController::class, 'store'])->name('admin.sections.store');
+    Route::post('/sections/store', [SectionController::class, 'store'])->name('admin.section.store');
     Route::get('/sections/{section}/edit', [SectionController::class, 'edit'])->name('admin.section.edit');
     Route::put('/sections/{section}', [SectionController::class, 'update'])->name('admin.section.update');
     Route::delete('/sections/{section}', [SectionController::class, 'destroy'])->name('admin.section.destroy');
     
-    // Additional Admin Routes
-    Route::get('/attendance', [AdminController::class, 'attendance'])->name('admin.attendance');
-    Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
-    Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
-    
     // Student Management
     Route::get('/manage-students', [AdminController::class, 'manageStudents'])->name('admin.manage-students');
-    Route::get('/manage-students-new', [AdminController::class, 'manageStudentsNew'])->name('admin.manage-students-new');
     Route::post('/students/store', [AdminController::class, 'storeStudent'])->name('admin.students.store');
     Route::put('/students/{id}', [AdminController::class, 'updateStudent'])->name('admin.students.update');
     Route::delete('/students/{id}', [AdminController::class, 'deleteStudent'])->name('admin.students.destroy');
