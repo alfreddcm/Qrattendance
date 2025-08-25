@@ -1089,9 +1089,7 @@
                     <div class="row">
                         <div class="col-4"><strong>Session Name:</strong></div>
                         <div class="col-8">${data.session.name}</div>
-                        <div class="col-4"><strong>Status:</strong></div>
-                        <div class="col-8">${data.session.expires_at || 'Permanent Link'}</div>
-                        <div class="col-4"><strong>Public URL:</strong></div>
+                         
                         <div class="col-8">
                             <div class="input-group input-group-sm">
                                 <input type="text" class="form-control" value="${data.session.public_url}" id="sessionUrlInput" readonly>
@@ -1106,8 +1104,7 @@
 
                     showSuccessModal('Daily Session Ready', successMessage);
 
-                    // Reload page after modal is closed
-                    document.getElementById('successModal').addEventListener('hidden.bs.modal', function() {
+                     document.getElementById('successModal').addEventListener('hidden.bs.modal', function() {
                         location.reload();
                     }, {
                         once: true
@@ -1121,8 +1118,7 @@
                 showErrorModal('Error', 'An error occurred while getting today\'s session. Please try again.');
             })
             .finally(() => {
-                // Restore button state
-                createBtn.innerHTML = originalText;
+                 createBtn.innerHTML = originalText;
                 createBtn.disabled = false;
             });
     }

@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Section;
 use App\Models\Semester;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Concerns\ValidatesForResponse;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class StudentManagementController extends Controller
 {
+    use ValidatesForResponse;
      
     private function getCurrentSemesterId()
     {
@@ -103,7 +105,12 @@ class StudentManagementController extends Controller
         // Get semesters for the dropdown
         $semesters = Semester::all();
         
-        return view('teacher.students', compact('students', 'gradeSectionOptions', 'semesters'));
+        // Get sections assigned to the authenticated teacher
+        $teacherSections = \App\Models\Section::where('teacher_id', Auth::id())
+            ->with('students')
+            ->get();
+        
+        return view('teacher.students', compact('students', 'gradeSectionOptions', 'semesters', 'teacherSections'));
     }
 
     public function addStudent(Request $request)
@@ -118,11 +125,21 @@ class StudentManagementController extends Controller
         ]);
 
         try {
-            $request->validate([
+            $validated = $this->validateForResponse($request, [
                 'id_no' => 'required|string|max:255|unique:students,id_no',
                 'name' => 'required|string|max:255',
-                'section' => 'required|string|max:255',
-                'grade_level' => 'required|string|max:255',
+                'section_id' => [
+                    'required',
+                    'exists:sections,id',
+                    function ($attribute, $value, $fail) {
+                        $section = \App\Models\Section::where('id', $value)
+                            ->where('teacher_id', Auth::id())
+                            ->first();
+                        if (!$section) {
+                            $fail('The selected section is not assigned to you.');
+                        }
+                    },
+                ],
                 'gender' => 'required|string|max:1',
                 'age' => 'required|integer',
                 'address' => 'required|string|max:255',
@@ -134,6 +151,10 @@ class StudentManagementController extends Controller
                 'contact_person_contact' => 'nullable|string|max:15',
                 'semester_id' => 'required|integer',
             ]);
+
+            if (is_object($validated)) {
+                return $validated;
+            }
         } catch (\Exception $e) {
             Log::warning('Student add validation failed', [
                 'teacher_id' => Auth::id(),
@@ -143,17 +164,17 @@ class StudentManagementController extends Controller
             throw $e;
         }
 
-        // Find or create the section
-        $section = Section::firstOrCreate([
-            'name' => $request->section,
-            'gradelevel' => (int) filter_var($request->grade_level, FILTER_EXTRACT_NUMBER_INT),
-            'teacher_id' => Auth::id(),
-            'semester_id' => $request->semester_id
-        ]);
+        // Verify the section is assigned to the authenticated teacher
+        $section = Section::where('id', $request->section_id)
+            ->where('teacher_id', Auth::id())
+            ->first();
+            
+        if (!$section) {
+            return back()->withErrors(['section_id' => 'Selected section is not assigned to you.'])->withInput();
+        }
 
-        $studentData = $request->except(['grade_level', 'section']);
-        $studentData['user_id'] = Auth::id();
-        $studentData['section_id'] = $section->id; 
+        $studentData = $request->except(['_token']);
+        $studentData['user_id'] = Auth::id(); 
 
         try {
             if ($request->hasFile('picture')) {
@@ -256,7 +277,7 @@ class StudentManagementController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $this->validateForResponse($request, [
             'id_no' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'section_id' => 'required|integer',
@@ -272,6 +293,10 @@ class StudentManagementController extends Controller
             'semester_id' => 'required|integer',
         ]);
 
+        if (is_object($validated)) {
+            return $validated;
+        }
+
         $student = Student::where('user_id', Auth::id())->findOrFail($id);
         
         // Verify that the selected section exists and belongs to this teacher
@@ -283,9 +308,8 @@ class StudentManagementController extends Controller
             return redirect()->back()->withErrors(['section_id' => 'The selected section is not valid or does not belong to you.'])->withInput();
         }
 
-        $studentData = $request->except(['section', 'grade_level']);
-        $studentData['user_id'] = Auth::id();
-        $studentData['section_id'] = $request->section_id; 
+        $studentData = $request->except(['_token', '_method']);
+        $studentData['user_id'] = Auth::id(); 
 
          $this->clearStudentQrCode($student);
         $studentData['qr_code'] = null;
@@ -338,23 +362,21 @@ class StudentManagementController extends Controller
                 $rules['grade_level'] = 'required|string|max:255';
             }
             
-            $request->validate($rules);
+            $validated = $this->validateForResponse($request, $rules);
+            if (is_object($validated)) {
+                return $validated;
+            }
             
-            // Handle section and grade_level changes
-            if ($request->has('section') || $request->has('grade_level')) {
-                $currentSection = $student->section;
-                $newSectionName = $request->get('section', $currentSection->name);
-                $newGradeLevel = $request->get('grade_level', $currentSection->gradelevel);
+             if ($request->has('section_id') && $request->section_id != $student->section_id) {
+                 $newSection = Section::where('id', $request->section_id)
+                    ->where('teacher_id', Auth::id())
+                    ->first();
+                    
+                if (!$newSection) {
+                    return redirect()->back()->withErrors(['section_id' => 'The selected section is not assigned to you.'])->withInput();
+                }
                 
-                // Find or create the section
-                $section = Section::firstOrCreate([
-                    'name' => $newSectionName,
-                    'gradelevel' => (int) filter_var($newGradeLevel, FILTER_EXTRACT_NUMBER_INT),
-                    'teacher_id' => Auth::id(),
-                    'semester_id' => $student->semester_id
-                ]);
-                
-                $student->section_id = $section->id;
+                $student->section_id = $newSection->id;
                 $this->clearStudentQrCode($student);
                 $student->qr_code = null;
             }
@@ -391,7 +413,7 @@ class StudentManagementController extends Controller
         }
 }
 
-public function destroy($id)
+    public function destroy($id)
 {
     Log::info('Student delete request', [
         'student_id' => $id,
@@ -786,98 +808,78 @@ public function bulkDelete(Request $request)
 
     public function downloadTemplate()
     {
+        return $this->generateStandardTemplate();
+    }
+
+    /**
+     * Generate standard student import template
+     */
+    private function generateStandardTemplate()
+    {
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="student_import_template.csv"',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+            'Pragma' => 'public',
         ];
 
-        return response()->stream(function() {
+        return response()->stream(function () {
             $handle = fopen('php://output', 'w');
             
-            $student = new Student();
-            $fillableFields = $student->getFillable();
+            // Standard headers matching ImportController expected order
+            fputcsv($handle, [
+                'ID No',
+                'Name',
+                'Gender',
+                'Age',
+                'Address',
+                'CP No',
+                'Contact Person Name',
+                'Contact Person Phone',
+                'Relationship'
+            ]);
             
-            $excludedFields = ['picture', 'user_id', 'school_id','semester_id'];
-            $requiredFields = array_diff($fillableFields, $excludedFields);
+            // Add example data rows
+            fputcsv($handle, [
+                '0001',
+                'Juan Dela Cruz',
+                'M',
+                '17',
+                'Barangay Example, San Guillermo, Isabela',
+                "\t09171234567",
+                'Maria Dela Cruz',
+                "\t09987654321",
+                'Mother'
+            ]);
             
-            $headerMapping = [
-                'id_no' => 'ID No',
-                'name' => 'Student Name(LN, FN MI.)', 
-                'section' => 'Section',
-                'grade_level' => 'Grade Level',
-                'gender' => 'Gender (M/F)',
-                'age' => 'Age',
-                'address' => 'Address',
-                'cp_no' => 'Contact Phone',
-                'contact_person_name' => 'Emergency Contact Name',
-                'contact_person_relationship' => 'Relationship (Parent/Guardian/etc)',
-                'contact_person_contact' => 'Emergency Contact Phone',
-            ];
+            fputcsv($handle, [
+                '0002',
+                'Maria Santos',
+                'F',
+                '16',
+                'Zone 2, San Guillermo, Isabela',
+                "\t09281234567",
+                'Jose Santos',
+                "\t09123456789",
+                'Father'
+            ]);
             
-            $csvHeaders = [];
-            foreach ($requiredFields as $field) {
-                if (isset($headerMapping[$field])) {
-                    $csvHeaders[] = $headerMapping[$field];
-                }
-            }
+            fputcsv($handle, [
+                '0003',
+                'Ana Rodriguez',
+                'F',
+                '18',
+                'Poblacion, San Guillermo, Isabela',
+                "\t09123456789",
+                'Carlos Rodriguez',
+                "\t09234567890",
+                'Father'
+            ]);
             
-             fputcsv($handle, $csvHeaders);
-
-            $exampleData = [
-                '0001', 
-                'Juan Dela Cruz', 
-                'Section A',
-                'Grade 11',
-                'M',   
-                '17', 
-                'Barangay Example, San Guillermo, Isabela',  
-                "\t09171234567",  
-                'Maria Dela Cruz',  
-                'Mother',  
-                "\t09987654321",  
-            ];
-            
-            $filteredExampleData = array_slice($exampleData, 0, count($csvHeaders));
-            fputcsv($handle, $filteredExampleData);
-
-             $exampleData2 = [
-                '0002', 
-                'Maria Santos', 
-                'Section B',
-                'Grade 12',
-                'F', 
-                '16', 
-                'Zone 2, San Guillermo, Isabela',  
-                "\t09281234567",  
-                'Jose Santos',  
-                'Father',  
-                "\t09123456789",  
-            ];
-            
-            $filteredExampleData2 = array_slice($exampleData2, 0, count($csvHeaders));
-            fputcsv($handle, $filteredExampleData2);
-
-             $exampleData3 = [
-                '0003',  
-                'Ana Rodriguez',  
-                'Section A',
-                'Grade 10',
-                'F',  
-                '18',  
-                'Poblacion, San Guillermo, Isabela',  
-                "\t09123456789", 
-                'Carlos Rodriguez',  
-                'Father',  
-                "\t09876543210", 
-            ];
-            
-            $filteredExampleData3 = array_slice($exampleData3, 0, count($csvHeaders));
-            fputcsv($handle, $filteredExampleData3);
-
             fclose($handle);
         }, 200, $headers);
     }
-
 
     private function clearStudentQrCode(Student $student)
     {

@@ -2,22 +2,15 @@
 @section('title', 'Attendance Reports')
 @section('content')
 
-<div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
+<div class="sticky-header"  >
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-chart-bar me-2"></i>
                 Attendance Reports
             </h4>
-            <p class="subtitle fs-6 mb-0">Generate and view attendance reports across schools and teachers</p>
+            <p class="subtitle fs-6 mb-0">View and analyze attendance data</p>
         </div>
-        <div class="page-actions">
-            @if(isset($attendanceData) && $attendanceData->count() > 0)
-                <button type="button" class="btn btn-success btn-sm px-2 py-1" onclick="exportReport()">
-                    <i class="fas fa-download me-1"></i>Export Report
-                </button>
-            @endif
-        </div>
+        
     </div>
 </div>
 
@@ -28,6 +21,25 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
+    <!-- Compact Header -->
+    <div class="header-row">
+        <div class="header-content">
+            <div class="header-left">
+                <i class="fas fa-chart-bar me-2"></i>
+                <span class="header-title">Attendance Reports</span>
+                <span class="header-count">Analytics & Insights</span>
+            </div>
+            
+            <div class="header-right">
+                @if(isset($attendanceData) && $attendanceData->count() > 0)
+                    <button class="btn-compact-primary" onclick="exportReport()">
+                        <i class="fas fa-download me-1"></i>Export Report
+                    </button>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <!-- Filters Card -->
     <div class="row mb-3">

@@ -27,8 +27,7 @@ class AttendanceController extends Controller
         $qrData = $request->qr_data;
         $scannerType = $this->detectScannerType($request);
 
-        // Log the incoming QR data for debugging
-        Log::info('QR scan attempt', [
+         Log::info('QR scan attempt', [
             'qr_data' => $qrData,
             'qr_data_length' => strlen($qrData),
             'qr_data_type' => gettype($qrData),
@@ -36,8 +35,7 @@ class AttendanceController extends Controller
             'user_id' => Auth::id(),
         ]);
 
-        // Validate and find student by stud_code
-        if (empty($qrData) || strlen($qrData) < 3) {
+         if (empty($qrData) || strlen($qrData) < 3) {
             Log::warning('Invalid QR data format', [
                 'scanner_type' => $scannerType,
                 'qr_data' => $qrData,
@@ -48,16 +46,14 @@ class AttendanceController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid QR code format.']);
         }
 
-        // Find student by stud_code with additional verification
-        $student = Student::with('user')
+         $student = Student::with('user')
                          ->where('user_id', Auth::id())
                          ->where('stud_code', $qrData)
                          ->whereNotNull('stud_code')
                          ->where('stud_code', '!=', '')
                          ->first();
 
-        // Log search results
-        Log::info('Student search results', [
+         Log::info('Student search results', [
             'scanner_type' => $scannerType,
             'stud_code' => $qrData,
             'student_found' => $student ? true : false,
@@ -65,8 +61,7 @@ class AttendanceController extends Controller
         ]);
 
         if (!$student) {
-            // Try to find any student with this stud_code (for debugging)
-            $anyStudent = Student::where('stud_code', $qrData)->first();
+             $anyStudent = Student::where('stud_code', $qrData)->first();
             
             Log::warning('Student not found with stud_code', [
                 'scanner_type' => $scannerType,
@@ -102,7 +97,7 @@ class AttendanceController extends Controller
             return response()->json(['success' => false, 'message' => 'No active semester.']);
         }
 
-        $attendance = Attendance::firstOrCreate([
+         $attendance = Attendance::firstOrCreate([
             'student_id' => $student->id,
             'semester_id' => $semester->id,
             'date' => Carbon::now()->toDateString(),
@@ -112,104 +107,86 @@ class AttendanceController extends Controller
         ]);
 
         $now = Carbon::now();
-        $time = $now->format('H:i:s');  
+        $currentTime = $now->format('H:i:s');
         
-        $periods = [
-            'AM Time In' => ['start' => $semester->am_time_in_start,  'end' => $semester->am_time_in_end,  'field' => 'time_in_am',  'requires' => null],
-            'AM Time Out'=> ['start' => $semester->am_time_out_start,'end' => $semester->am_time_out_end,'field' => 'time_out_am','requires' => null],
-            'PM Time In' => ['start' => $semester->pm_time_in_start,  'end' => $semester->pm_time_in_end,  'field' => 'time_in_pm',  'requires' => null],
-            'PM Time Out'=> ['start' => $semester->pm_time_out_start,'end' => $semester->pm_time_out_end,'field' => 'time_out_pm','requires' => null],
+         $section = $student->section;
+        $timeSource = $section ?: $semester;
+        
+         $periods = [
+            'am_time_in' => [
+                'start' => $timeSource->am_time_in_start ?? $semester->am_time_in_start,
+                'end' => $timeSource->am_time_in_end ?? $semester->am_time_in_end,
+                'field' => 'time_in_am',
+                'status_field' => 'am_status',
+                'label' => 'AM Time In'
+            ],
+            'am_time_out' => [
+                'start' => $timeSource->am_time_out_start ?? $semester->am_time_out_start,
+                'end' => $timeSource->am_time_out_end ?? $semester->am_time_out_end,
+                'field' => 'time_out_am',
+                'status_field' => 'am_status',
+                'label' => 'AM Time Out'
+            ],
+            'pm_time_in' => [
+                'start' => $timeSource->pm_time_in_start ?? $semester->pm_time_in_start,
+                'end' => $timeSource->pm_time_in_end ?? $semester->pm_time_in_end,
+                'field' => 'time_in_pm',
+                'status_field' => 'pm_status',
+                'label' => 'PM Time In'
+            ],
+            'pm_time_out' => [
+                'start' => $timeSource->pm_time_out_start ?? $semester->pm_time_out_start,
+                'end' => $timeSource->pm_time_out_end ?? $semester->pm_time_out_end,
+                'field' => 'time_out_pm',
+                'status_field' => 'pm_status',
+                'label' => 'PM Time Out'
+            ],
         ];
 
-        foreach ($periods as $label => $details) {
-            if (!$details['start'] || !$details['end']) continue;
-
-            $start = Carbon::createFromFormat('H:i:s', $details['start']);
-            $end = Carbon::createFromFormat('H:i:s', $details['end']);
-
-            if ($now->between($start, $end)) {
-                if ($attendance->{$details['field']}) {
-                    // Get the recorded time and format it safely
-                    $existingTime = $attendance->{$details['field']};
-                    if ($existingTime) {
-                        try {
-                            $recordedTime = Carbon::createFromFormat('H:i:s', $existingTime)->format('g:i:s A');
-                        } catch (Exception $e) {
-                            // Fallback if format fails
-                            $recordedTime = $existingTime;
-                        }
-                    } else {
-                        $recordedTime = 'Unknown time';
-                    }
-                    
-                    Log::info('Duplicate scan', [
-                        'scanner_type' => $scannerType,
-                        'student_name' => $student->name,
-                        'student_id_no' => $student->id_no,
-                        'period' => $label,
-                        'already_recorded_time' => $recordedTime,
-                    ]);
-                    
-                    return response()->json([
-                        'success' => true, 
-                        'attendance_recorded' => false,
-                        'message' => "$label already recorded at " . $recordedTime, 
-                        'period' => $label,
-                        'student' => [
-                            'id_no' => $student->id_no,
-                            'name' => $student->name,
-                            'picture' => $student->picture,
-                            'section' => $student->user ? $student->user->section_name : 'No Section',
-                            'semester' => $semester->name ?? "Semester {$student->semester_id}",
-                        ],
-                        'status' => "$label already recorded!",
-                        'time_period' => $label,
-                        'recorded_time' => $recordedTime,
-                    ]); 
-                }
-
-                $attendance->{$details['field']} = $time;
-                $attendance->save();
-
-                // Record session activity if there's an active session
-                $activeSession = AttendanceSession::where('teacher_id', Auth::id())
-                                                 ->active()
-                                                 ->first();
-                if ($activeSession) {
-                    $activeSession->recordAttendance();
-                }
-
-
-                // Send SMS notification to parent/guardian ONLY if newly recorded
-                $this->sendAttendanceNotification($student, $label, $now->format('g:i A'));
-
-                Log::info('Attendance recorded', [
-                    'scanner_type' => $scannerType,
-                    'student_name' => $student->name,
-                    'student_id_no' => $student->id_no,
-                    'period' => $label,
-                    'recorded_time' => $now->format('g:i:s A'),
-                    'user_id' => Auth::id(),
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'attendance_recorded' => true,
-                    'student' => [
-                        'id_no' => $student->id_no,
-                        'name' => $student->name,
-                        'picture' => $student->picture,
-                        'section' => $student->user ? $student->user->section_name : 'No Section',
-                        'semester' => $semester->name ?? "Semester {$student->semester_id}",
-                    ],
-                    'status' => "$label recorded successfully!",
-                    'time_period' => $label,
-                    'recorded_time' => $now->format('g:i:s A'), // Display in 12-hour format
-                ]);
+         $recordedPeriod = $this->determineAndRecordAttendance($attendance, $periods, $currentTime, $now);
+        
+        if ($recordedPeriod) {
+             $this->updateAttendanceStatus($attendance);
+            
+             $activeSession = AttendanceSession::where('teacher_id', Auth::id())
+                                             ->where('status', 'active')
+                                             ->whereDate('started_at', Carbon::today('Asia/Manila'))
+                                             ->first();
+            if ($activeSession) {
+                $activeSession->recordAttendance();
             }
+
+             $this->sendAttendanceNotification($student, $recordedPeriod['label'], $now->format('g:i A'));
+
+            Log::info('Attendance recorded with new system', [
+                'scanner_type' => $scannerType,
+                'student_name' => $student->name,
+                'student_id_no' => $student->id_no,
+                'period' => $recordedPeriod['label'],
+                'status' => $recordedPeriod['status'],
+                'recorded_time' => $now->format('g:i:s A'),
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'attendance_recorded' => true,
+                'student' => [
+                    'id_no' => $student->id_no,
+                    'name' => $student->name,
+                    'picture' => $student->picture,
+                    'section' => $student->section ? $student->section->name : 'No Section',
+                    'semester' => $semester->name ?? "Semester {$student->semester_id}",
+                ],
+                'status' => $recordedPeriod['message'],
+                'time_period' => $recordedPeriod['label'],
+                'attendance_status' => $recordedPeriod['status'],
+                'recorded_time' => $now->format('g:i:s A'),
+                'remarks' => $attendance->remarks,
+            ]);
         }
 
-        Log::warning('Scan outside time period', [
+         Log::warning('No period matched - should not happen with flexible system', [
             'scanner_type' => $scannerType,
             'student_name' => $student->name,
             'current_time' => $now->format('g:i:s A'),
@@ -218,15 +195,15 @@ class AttendanceController extends Controller
 
         return response()->json([
             'success' => false, 
-            'message' => 'Attendance not allowed at this time.',
+            'message' => 'Unable to determine attendance period. Please contact your teacher.',
             'student' => [
                 'id_no' => $student->id_no,
                 'name' => $student->name,
                 'picture' => $student->picture,
-                'section' => $student->user ? $student->user->section_name : 'No Section',
+                'section' => $student->section ? $student->section->name : 'No Section',
                 'semester' => $semester->name ?? "Semester {$student->semester_id}",
             ],
-            'status' => 'Outside recording hours',
+            'status' => 'Period determination failed',
             'current_time' => $now->format('g:i:s A'),
         ]);
     }
@@ -246,14 +223,10 @@ class AttendanceController extends Controller
         
          return 'Webcam/USB Scanner';
     }
-
-    /**
-     * Verify student information and data integrity
-     */
+ 
     private function verifyStudentInfo(Student $student)
     {
-        // Check if student has required fields
-        if (empty($student->name) || empty($student->id_no)) {
+         if (empty($student->name) || empty($student->id_no)) {
             Log::warning('Student missing required information', [
                 'student_id' => $student->id,
                 'has_name' => !empty($student->name),
@@ -263,8 +236,7 @@ class AttendanceController extends Controller
             return false;
         }
 
-        // Check if student has valid stud_code
-        if (empty($student->stud_code)) {
+         if (empty($student->stud_code)) {
             Log::warning('Student missing stud_code', [
                 'student_id' => $student->id,
                 'student_name' => $student->name,
@@ -273,8 +245,7 @@ class AttendanceController extends Controller
             return false;
         }
 
-        // Verify stud_code format (should be id_no + underscore + 10 characters)
-        $expectedPrefix = $student->id_no . '_';
+         $expectedPrefix = $student->id_no . '_';
         if (substr($student->stud_code, 0, strlen($expectedPrefix)) !== $expectedPrefix) {
             Log::warning('Student stud_code format invalid', [
                 'student_id' => $student->id,
@@ -286,8 +257,7 @@ class AttendanceController extends Controller
             return false;
         }
 
-        // Check if stud_code has correct length (id_no + _ + 10 random chars)
-        $expectedLength = strlen($student->id_no) + 1 + 10; // id_no + underscore + 10 chars
+         $expectedLength = strlen($student->id_no) + 1 + 10;  
         if (strlen($student->stud_code) !== $expectedLength) {
             Log::warning('Student stud_code length invalid', [
                 'student_id' => $student->id,
@@ -300,8 +270,7 @@ class AttendanceController extends Controller
             return false;
         }
 
-        // Check if student belongs to current teacher
-        if ($student->user_id !== Auth::id()) {
+         if ($student->user_id !== Auth::id()) {
             Log::warning('Student does not belong to current teacher', [
                 'student_id' => $student->id,
                 'student_name' => $student->name,
@@ -311,8 +280,7 @@ class AttendanceController extends Controller
             return false;
         }
 
-        // Check if student has valid semester
-        if (empty($student->semester_id)) {
+         if (empty($student->semester_id)) {
             Log::warning('Student missing semester assignment', [
                 'student_id' => $student->id,
                 'student_name' => $student->name,
@@ -324,14 +292,11 @@ class AttendanceController extends Controller
         return true;
     }
 
-    /**
-     * Send SMS notification for attendance recording
-     */
+ 
     private function sendAttendanceNotification($student, $attendanceStatus, $recordedTime)
     {
         try {
-            // Check if student has a valid contact number
-            if (!$student->contact_person_contact) {
+             if (!$student->contact_person_contact) {
                 Log::info('No contact number for student, skipping SMS', [
                     'student_id' => $student->id,
                     'student_name' => $student->name
@@ -339,15 +304,12 @@ class AttendanceController extends Controller
                 return;
             }
 
-            // Generate the attendance message
-            $message = $this->generateAttendanceMessage($student, $attendanceStatus, $recordedTime);
+             $message = $this->generateAttendanceMessage($student, $attendanceStatus, $recordedTime);
 
-            // Send SMS using the service
-            $smsService = new AndroidSmsGatewayService();
+             $smsService = new AndroidSmsGatewayService();
             $result = $smsService->sendSms($message, $student->contact_person_contact);
 
-            // Record the SMS in OutboundMessage table
-            $outboundMessage = OutboundMessage::create([
+             $outboundMessage = OutboundMessage::create([
                 'teacher_id' => Auth::id(),
                 'student_id' => $student->id,
                 'contact_number' => $student->contact_person_contact,
@@ -386,22 +348,146 @@ class AttendanceController extends Controller
         }
     }
 
-    /**
-     * Generate attendance message for SMS
-     */
+ 
     private function generateAttendanceMessage($student, $status, $time)
     {
-        // Determine if it's Time In or Time Out based on status
-        if (stripos($status, 'IN') !== false) {
+         if (stripos($status, 'IN') !== false) {
             $attendanceType = 'Time In';
         } elseif (stripos($status, 'OUT') !== false) {
             $attendanceType = 'Time Out';
         } else {
-            $attendanceType = $status; // fallback
+            $attendanceType = $status;  
         }
         
         $timeFormatted = \Carbon\Carbon::parse($time)->format('g:i A');
         
         return "Your child {$student->name} {$attendanceType} attendance recorded at {$timeFormatted}";
+    }
+
+ 
+    private function determineAndRecordAttendance($attendance, $periods, $currentTime, $now)
+    {
+         foreach ($periods as $periodKey => $period) {
+            if (!$period['start'] || !$period['end']) continue;
+            
+            $start = Carbon::createFromFormat('H:i:s', $period['start']);
+            $end = Carbon::createFromFormat('H:i:s', $period['end']);
+            
+            if ($now->between($start, $end)) {
+                return $this->recordPeriodAttendance($attendance, $period, $currentTime, 'On Time', $now);
+            }
+        }
+        
+         $bestMatch = $this->findClosestPeriod($periods, $currentTime);
+        
+        if ($bestMatch) {
+            $status = $this->determineAttendanceStatus($bestMatch, $currentTime);
+            return $this->recordPeriodAttendance($attendance, $bestMatch, $currentTime, $status, $now);
+        }
+        
+        return null;
+    }
+
+  
+    private function findClosestPeriod($periods, $currentTime)
+    {
+        $currentMinutes = $this->timeToMinutes($currentTime);
+        $closestPeriod = null;
+        $smallestDifference = PHP_INT_MAX;
+        
+        foreach ($periods as $periodKey => $period) {
+            if (!$period['start'] || !$period['end']) continue;
+            
+            $startMinutes = $this->timeToMinutes($period['start']);
+            $endMinutes = $this->timeToMinutes($period['end']);
+            $periodMiddle = ($startMinutes + $endMinutes) / 2;
+            
+            $difference = abs($currentMinutes - $periodMiddle);
+            
+            if ($difference < $smallestDifference) {
+                $smallestDifference = $difference;
+                $closestPeriod = $period;
+            }
+        }
+        
+        return $closestPeriod;
+    }
+
+ 
+    private function determineAttendanceStatus($period, $currentTime)
+    {
+        $currentMinutes = $this->timeToMinutes($currentTime);
+        $startMinutes = $this->timeToMinutes($period['start']);
+        $endMinutes = $this->timeToMinutes($period['end']);
+        
+         if ($currentMinutes < $startMinutes - 30) {
+            return 'Early';
+        }
+        
+         if ($currentMinutes >= $startMinutes - 15 && $currentMinutes <= $endMinutes + 15) {
+            return 'On Time';
+        }
+        
+         if ($currentMinutes > $endMinutes + 15 && $currentMinutes <= $endMinutes + 60) {
+            return 'Tardy';
+        }
+        
+         return 'Late';
+    }
+ 
+    private function recordPeriodAttendance($attendance, $period, $currentTime, $status, $now)
+    {
+         if ($attendance->{$period['field']}) {
+            $existingTime = $attendance->{$period['field']};
+            try {
+                $recordedTime = Carbon::createFromFormat('H:i:s', $existingTime)->format('g:i:s A');
+            } catch (Exception $e) {
+                $recordedTime = $existingTime;
+            }
+            
+            return [
+                'label' => $period['label'],
+                'status' => $status,
+                'message' => "{$period['label']} already recorded at {$recordedTime}",
+                'already_recorded' => true,
+                'recorded_time' => $recordedTime
+            ];
+        }
+        
+         $attendance->{$period['field']} = $currentTime;
+        $attendance->{$period['status_field']} = $status;
+        $attendance->save();
+        
+        return [
+            'label' => $period['label'],
+            'status' => $status,
+            'message' => "{$period['label']} recorded successfully! Status: {$status}",
+            'already_recorded' => false,
+            'recorded_time' => $now->format('g:i:s A')
+        ];
+    }
+
+    
+    private function updateAttendanceStatus($attendance)
+    {
+        $hasAM = $attendance->time_in_am || $attendance->time_out_am;
+        $hasPM = $attendance->time_in_pm || $attendance->time_out_pm;
+        
+         if ($hasAM && $hasPM) {
+            $attendance->remarks = 'Present';
+        } elseif ($hasAM || $hasPM) {
+            $attendance->remarks = 'Partial';
+        } else {
+            $attendance->remarks = 'Absent';
+        }
+        
+        $attendance->save();
+    }
+
+ 
+    private function timeToMinutes($time)
+    {
+        $parts = explode(':', $time);
+        return ($parts[0] * 60) + $parts[1];
     }
 }

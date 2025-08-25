@@ -356,11 +356,6 @@ async function processQRCode(qrData, scannerType) {
         
         // Display parsed data immediately (Material Design card)
         displayMaterialStudentCard(parsedData);
-        
-         const timeValidation = validateSessionTime();
-         const attendanceType = determineAttendanceType(parsedData, timeValidation);
-        
-         updateMaterialCardWithTime(parsedData, timeValidation, attendanceType);
 
         console.log('Sending request to:', `/attendance/${window.sessionToken}/qr-verify`);
 
@@ -374,8 +369,7 @@ async function processQRCode(qrData, scannerType) {
                 qr_data: qrData.trim(),
                 scanner_type: scannerType,
                 scan_timestamp: new Date().toISOString(),
-                parsed_data: parsedData,
-                time_validation: timeValidation
+                parsed_data: parsedData
             })
         });
 
@@ -393,10 +387,17 @@ async function processQRCode(qrData, scannerType) {
             updateStudentPhotoInCard(result.student);
         }
         
-        // Record attendance - allow both Time In and Time Out
+        // Record attendance with server-determined information
         if (result.success) {
-            recordMaterialAttendance(parsedData, attendanceType, result);
-            showMaterialSnackbar(`✅ ${attendanceType} recorded successfully!`, 'success');
+            // Update the card with server response data
+            updateMaterialCardWithServerResponse(parsedData, result);
+            
+            recordMaterialAttendance(parsedData, result);
+            
+            // Show detailed success message with status and period info
+            const statusText = result.attendance_status || 'Present';
+            const periodText = result.period_recorded || 'Current Period';
+            showMaterialSnackbar(`✅ Attendance recorded: ${statusText} (${periodText})`, 'success');
             
             // Show success popup with student details
             showSuccessPopup(result.student || parsedData, attendanceType, result.recorded_time);
@@ -663,7 +664,60 @@ function calculateTimeRemaining(currentTime, isWithinMorning, isWithinAfternoon)
     document.querySelector('.student-info').appendChild(timeInfo);
 }
 
- function recordMaterialAttendance(parsedData, attendanceType, result) {
+function updateMaterialCardWithServerResponse(parsedData, result) {
+    const statusElement = document.getElementById('material-status');
+    const cardElement = document.querySelector('.material-card');
+    
+    // Determine badge class based on attendance status
+    let badgeClass = 'status-badge';
+    if (result.attendance_status) {
+        switch(result.attendance_status.toLowerCase()) {
+            case 'on time':
+                badgeClass = 'on-time-badge';
+                break;
+            case 'early':
+                badgeClass = 'early-badge';
+                break;
+            case 'tardy':
+                badgeClass = 'tardy-badge';
+                break;
+            case 'late':
+                badgeClass = 'late-badge';
+                break;
+            default:
+                badgeClass = 'status-badge';
+        }
+    }
+    
+    // Update status with attendance information
+    const statusText = result.attendance_status || 'Present';
+    const periodText = result.period_recorded || 'Current Period';
+    statusElement.innerHTML = `<span class="${badgeClass}">${statusText} - ${periodText}</span>`;
+    statusElement.className = 'value valid-time';
+    cardElement.className = 'material-card valid';
+    
+    // Add time and remarks information
+    const timeInfo = document.createElement('div');
+    timeInfo.className = 'info-row';
+    timeInfo.innerHTML = `
+        <span class="label">Time:</span>
+        <span class="value">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+    `;
+    document.querySelector('.student-info').appendChild(timeInfo);
+    
+    // Add remarks if available
+    if (result.remarks) {
+        const remarksInfo = document.createElement('div');
+        remarksInfo.className = 'info-row';
+        remarksInfo.innerHTML = `
+            <span class="label">Remarks:</span>
+            <span class="value">${result.remarks}</span>
+        `;
+        document.querySelector('.student-info').appendChild(remarksInfo);
+    }
+}
+
+ function recordMaterialAttendance(parsedData, result) {
      const cardElement = document.querySelector('.material-card');
     cardElement.className = 'material-card recording';
     
@@ -674,7 +728,11 @@ function calculateTimeRemaining(currentTime, isWithinMorning, isWithinAfternoon)
         cardElement.className = 'material-card recorded';
         statusElement.innerHTML = `<span class="recorded-badge">Recorded ✓</span>`;
         
-        updateMaterialAttendanceList(parsedData, attendanceType, result.recorded_time || new Date().toLocaleTimeString());
+        // Use server response data for attendance list
+        const attendanceType = result.period_recorded || 'Attendance';
+        const recordedTime = result.recorded_time || new Date().toLocaleTimeString();
+        
+        updateMaterialAttendanceList(parsedData, result, recordedTime);
     }, 1000);
 }
 
@@ -699,9 +757,32 @@ function loadStudentPhoto(parsedData) {
     }
  }
 
- function updateMaterialAttendanceList(parsedData, attendanceType, recordedTime) {
+ function updateMaterialAttendanceList(parsedData, result, recordedTime) {
     const attendanceList = document.getElementById('attendance-list');
     const attendanceCount = document.getElementById('attendance-count');
+    
+    // Determine badge class and text from server response
+    const attendanceStatus = result.attendance_status || 'Present';
+    const periodRecorded = result.period_recorded || 'Attendance';
+    const remarks = result.remarks || '';
+    
+    let badgeClass = 'status-badge';
+    switch(attendanceStatus.toLowerCase()) {
+        case 'on time':
+            badgeClass = 'on-time-badge';
+            break;
+        case 'early':
+            badgeClass = 'early-badge';
+            break;
+        case 'tardy':
+            badgeClass = 'tardy-badge';
+            break;
+        case 'late':
+            badgeClass = 'late-badge';
+            break;
+        default:
+            badgeClass = 'status-badge';
+    }
     
     const newRecord = document.createElement('div');
     newRecord.className = 'material-attendance-record';
@@ -714,11 +795,13 @@ function loadStudentPhoto(parsedData) {
                 <div class="record-name">${parsedData.name}</div>
                 <div class="record-id">ID: ${parsedData.id_no}</div>
                 <div class="record-section">${parsedData.section}</div>
+                ${remarks ? `<div class="record-remarks">${remarks}</div>` : ''}
             </div>
             <div class="record-badge">
-                <span class="${attendanceType === 'Time In' ? 'time-in-badge' : 'time-out-badge'}">
-                    ${attendanceType}
+                <span class="${badgeClass}">
+                    ${attendanceStatus}
                 </span>
+                <div class="record-period">${periodRecorded}</div>
                 <div class="record-time">${recordedTime}</div>
             </div>
         </div>

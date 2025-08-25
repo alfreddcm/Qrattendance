@@ -137,11 +137,9 @@
                                                                     title="Copy URL">
                                                                     <i class="fas fa-copy"></i>
                                                                 </button>
-                                                                <button class="btn btn-outline-danger btn-compact" 
-                                                                    data-session-id="{{ $todaySession->id }}" data-action="close" 
-                                                                    title="Close Session">
-                                                                    <i class="fas fa-stop"></i>
-                                                                </button>
+                                                                <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-compact" title="View details">
+                                                                    <i class="fas fa-eye"></i> View details
+                                                                </a>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -159,9 +157,9 @@
                                     @else
                                         <div class="text-center py-2">
                                             <p class="text-dark mb-2 fs-7">No active session</p>
-                                            <button class="btn btn-success btn-compact me-2" onclick="showCreateSessionModal()">
-                                                <i class="fas fa-plus me-1"></i>Get Link
-                                            </button>
+                                            <a href="{{ route('teacher.attendance') }}" class="btn btn-success btn-compact me-2">
+                                                <i class="fas fa-plus me-1"></i>Create Session
+                                            </a>
                                             <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-dark btn-compact">
                                                 <i class="fas fa-eye me-1"></i>View All
                                             </a>
@@ -410,20 +408,10 @@
         @include('teacher.statistics')
 
    
-        @if(isset($attendanceChartData))
-        <div class="card mt-3">
-            <div class="card-header">
-                <i class="fas fa-chart-line me-1"></i>Weekly Attendance Trend
-            </div>
-            <div class="card-body">
-                <canvas id="attendanceChart" height="60"></canvas>
-            </div>
-        </div>
-        @endif
+      
     </div>
 </div>
 
-@include('teacher.statistics')
 
 <style>
 .missing-info-badges .badge {
@@ -507,82 +495,6 @@
     font-size: 0.875rem;
 }
 </style>
-
-<!-- Create Attendance Session Modal -->
-<div class="modal fade" id="createSessionModal" tabindex="-1" aria-labelledby="createSessionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createSessionModalLabel">
-                    <i class="fas fa-qrcode me-2"></i>Create Attendance Session
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="createSessionForm">
-                    @csrf
-                    <input type="hidden" id="semester_id" name="semester_id" value="{{ $isActiveSemester ? $currentSemester->id : '' }}">
-                    
-                    <div class="mb-3">
-                        <label for="session_name" class="form-label">Session Name (Optional)</label>
-                        <input type="text" class="form-control" id="session_name" name="session_name" 
-                               placeholder="e.g., Morning Attendance - Aug 1, 2025">
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> This will create or retrieve today's permanent attendance link.
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="createSession()">
-                    <i class="fas fa-plus me-1"></i>Create Session
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Session Created Success Modal -->
-<div class="modal fade" id="sessionCreatedModal" tabindex="-1" aria-labelledby="sessionCreatedModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="sessionCreatedModalLabel">
-                    <i class="fas fa-check-circle me-2"></i>Session Created Successfully!
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="sessionDetails"></div>
-                
-                <div class="mt-3">
-                    <label class="form-label"><strong>Public Attendance Link:</strong></label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="publicUrl" readonly>
-                        <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Important:</strong> Share this link with students or open it on any device. 
-                    The link will expire automatically after the set duration.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="openPublicLink()">
-                    <i class="fas fa-external-link-alt me-1"></i>Open Attendance Page
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Success Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
@@ -714,91 +626,7 @@ const attendanceChart = new Chart(ctx, {
 });
 @endif
 
-// Session Management Functions
-function createSession() {
-    const form = document.getElementById('createSessionForm');
-    const formData = new FormData(form);
-    
-    // Use the correct attendance session route
-    fetch('{{ route("teacher.attendance.session.create") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Hide create modal
-            bootstrap.Modal.getInstance(document.getElementById('createSessionModal')).hide();
-            
-            // Show success modal with details
-            document.getElementById('sessionDetails').innerHTML = `
-                <div class="alert alert-success">
-                    <h6><i class="fas fa-calendar me-2"></i>Session Details:</h6>
-                    <p><strong>Name:</strong> ${data.session.name || 'Default Session'}</p>
-                    <p><strong>Date:</strong> ${data.session.date}</p>
-                    <p><strong>Time Created:</strong> ${data.session.created_at}</p>
-                    <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
-                </div>
-            `;
-            
-            document.getElementById('publicUrl').value = data.public_url;
-            
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('sessionCreatedModal')).show();
-            
-            // Optionally refresh page after delay
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
-        } else {
-            showError(data.message || 'Failed to create session');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError('An error occurred while creating the session');
-    });
-}
-
-function showCreateSessionModal() {
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('createSessionModal')).show();
-}
-
-function copyToClipboard() {
-    const urlInput = document.getElementById('publicUrl');
-    urlInput.select();
-    urlInput.setSelectionRange(0, 99999); // For mobile devices
-    
-    try {
-        document.execCommand('copy');
-        
-        // Provide visual feedback
-        const copyBtn = event.target.closest('button');
-        const originalHtml = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        copyBtn.classList.remove('btn-outline-secondary');
-        copyBtn.classList.add('btn-success');
-        
-        setTimeout(() => {
-            copyBtn.innerHTML = originalHtml;
-            copyBtn.classList.remove('btn-success');
-            copyBtn.classList.add('btn-outline-secondary');
-        }, 2000);
-        
-    } catch (err) {
-        console.error('Failed to copy: ', err);
-        showError('Failed to copy link to clipboard');
-    }
-}
-
-function openPublicLink() {
-    const url = document.getElementById('publicUrl').value;
-    if (url) {
-        window.open(url, '_blank');
-    }
-}
+// Session Management Functions - Removed (redirecting to teacher.attendance)
 
 // Utility Functions
 function showSuccess(message) {

@@ -68,8 +68,7 @@ class MessageApiController extends Controller
             $sendToTeacher = $request->input('send_to_teacher', false);
             $recipientType = $request->input('recipient_type');
 
-            // Handle new admin frontend recipient types
-            if ($recipientType === 'all_teachers' || $number === 'all_teachers') {
+             if ($recipientType === 'all_teachers' || $number === 'all_teachers') {
                 return $this->sendToAllTeachers($message);
             }
 
@@ -81,8 +80,7 @@ class MessageApiController extends Controller
                 return $this->sendToAllParents($message);
             }
 
-            // Handle legacy options for backward compatibility
-            if ($sendToAllTeachers) {
+             if ($sendToAllTeachers) {
                 return $this->sendToAllTeachers($message);
             }
 
@@ -167,14 +165,11 @@ class MessageApiController extends Controller
         }
     }
 
-    /**
-     * Send SMS to all parents of students in teacher's class
-     */
+ 
     private function sendToAllParents($message)
     {
         try {
-            // Get all students with parent contact numbers for the current teacher
-            $students = Student::where('user_id', auth()->id())
+             $students = Student::where('user_id', auth()->id())
                 ->whereNotNull('contact_person_contact')
                 ->where('contact_person_contact', '!=', '')
                 ->get();
@@ -306,11 +301,9 @@ class MessageApiController extends Controller
                 ], 400);
             }
 
-            // Get status from SMS gateway
-            $statusResult = $this->smsService->getStatus($outboundMessage->message_id);
+             $statusResult = $this->smsService->getStatus($outboundMessage->message_id);
 
-            // Update the outbound message status
-            if ($statusResult['success']) {
+             if ($statusResult['success']) {
                 $outboundMessage->update([
                     'status' => $statusResult['status']
                 ]);
@@ -353,26 +346,21 @@ class MessageApiController extends Controller
         }
     }
 
-    /**
-     * Get outbound messages history
-     */
+ 
     public function getOutboundMessages(Request $request)
     {
         try {
             $user = auth()->user();
             
-            // Build query based on user role
-            if ($user->role === 'admin') {
-                // Admin can see all messages or filter by admin_id
-                $query = OutboundMessage::with(['student', 'teacher', 'admin'])
+             if ($user->role === 'admin') {
+                 $query = OutboundMessage::with(['student', 'teacher', 'admin'])
                     ->where(function($q) use ($user) {
                         $q->where('admin_id', $user->id)
-                          ->orWhereNull('admin_id'); // Include messages sent by teachers if needed
+                          ->orWhereNull('admin_id');  
                     })
                     ->orderBy('created_at', 'desc');
             } else {
-                // Teacher can only see their own messages
-                $query = OutboundMessage::with(['student', 'teacher'])
+                 $query = OutboundMessage::with(['student', 'teacher'])
                     ->where('teacher_id', $user->id)
                     ->orderBy('created_at', 'desc');
             }
@@ -385,8 +373,7 @@ class MessageApiController extends Controller
                 $query->where('status', $request->status);
             }
 
-            // Add recipient_type filter for admin
-            if ($request->has('recipient_type') && $request->recipient_type) {
+             if ($request->has('recipient_type') && $request->recipient_type) {
                 $recipientType = $request->recipient_type;
                 if ($recipientType === 'teacher') {
                     $query->where('recipient_type', 'teacher');
@@ -407,8 +394,7 @@ class MessageApiController extends Controller
 
             $messages = $query->paginate(20);
 
-            // Calculate stats based on user role
-            if ($user->role === 'admin') {
+             if ($user->role === 'admin') {
                 $stats = [
                     'sent' => OutboundMessage::where('admin_id', $user->id)->where('status', 'sent')->count(),
                     'failed' => OutboundMessage::where('admin_id', $user->id)->where('status', 'failed')->count()
@@ -481,14 +467,11 @@ class MessageApiController extends Controller
         }
     }
 
-    /**
-     * Send SMS to all teachers
-     */
+    
     private function sendToAllTeachers($message)
     {
         try {
-            // Get all users with teacher role that have contact numbers
-            $teachers = User::where('role', 'teacher')
+             $teachers = User::where('role', 'teacher')
                 ->whereNotNull('contact_number')
                 ->where('contact_number', '!=', '')
                 ->get();
@@ -538,8 +521,7 @@ class MessageApiController extends Controller
                 }
             }
 
-            // Create outbound message record for broadcast
-            $outboundMessage = OutboundMessage::create([
+             $outboundMessage = OutboundMessage::create([
                 'admin_id' => auth()->id(),
                 'contact_number' => 'ALL_TEACHERS',
                 'message' => $message,
@@ -578,9 +560,7 @@ class MessageApiController extends Controller
         }
     }
 
-    /**
-     * Send SMS to a specific teacher
-     */
+ 
     private function sendToSpecificTeacher($message, $teacherId)
     {
         try {
@@ -671,8 +651,7 @@ class MessageApiController extends Controller
      */
     private function generateAttendanceMessage($student, $status, $time)
     {
-        // Determine if it's Time In or Time Out based on status
-        if (stripos($status, 'IN') !== false) {
+         if (stripos($status, 'IN') !== false) {
             $attendanceType = 'Time In';
         } elseif (stripos($status, 'OUT') !== false) {
             $attendanceType = 'Time Out';
@@ -685,51 +664,39 @@ class MessageApiController extends Controller
         return "Your child {$student->name} {$attendanceType} attendance recorded at {$timeFormatted}";
     }
 
-    /**
-     * Validate Philippine phone number format
-     */
+  
     private function isValidPhoneNumber($number)
     {
-        // Remove spaces and dashes
-        $cleaned = preg_replace('/[\s\-]/', '', $number);
+         $cleaned = preg_replace('/[\s\-]/', '', $number);
         
-        // Check for +63 format (13 digits total)
-        if (preg_match('/^\+639\d{9}$/', $cleaned)) {
+         if (preg_match('/^\+639\d{9}$/', $cleaned)) {
             return true;
         }
         
-        // Check for 09 format (11 digits total)
-        if (preg_match('/^09\d{9}$/', $cleaned)) {
+         if (preg_match('/^09\d{9}$/', $cleaned)) {
             return true;
         }
         
         return false;
     }
 
-    /**
-     * Normalize phone number to +63 format
-     */
+ 
     private function normalizePhoneNumber($number)
     {
-        // Remove spaces and dashes
-        $cleaned = preg_replace('/[\s\-]/', '', $number);
+         $cleaned = preg_replace('/[\s\-]/', '', $number);
         
-        // If starts with 09, convert to +63
-        if (preg_match('/^09(\d{9})$/', $cleaned, $matches)) {
+         if (preg_match('/^09(\d{9})$/', $cleaned, $matches)) {
             return '+639' . $matches[1];
         }
         
-        // If already in +63 format, return as is
-        if (preg_match('/^\+639\d{9}$/', $cleaned)) {
+         if (preg_match('/^\+639\d{9}$/', $cleaned)) {
             return $cleaned;
         }
         
-        return $number; // Return original if no match
+        return $number;  
     }
 
-    /**
-     * Test SMS gateway connectivity
-     */
+   
     public function testGateway()
     {
         try {

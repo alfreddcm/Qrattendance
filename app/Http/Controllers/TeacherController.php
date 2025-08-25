@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Concerns\ValidatesForResponse;
 use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Attendance;
@@ -14,6 +15,7 @@ use Carbon\Carbon;
 
 class TeacherController extends Controller
 {
+    use ValidatesForResponse;
      
     private function getCurrentSemesterId()
     {
@@ -434,13 +436,17 @@ class TeacherController extends Controller
     {
         $teacher = Auth::user();
         
-        $request->validate([
+        $validated = $this->validateForResponse($request, [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->id,
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:100',
             'section_name' => 'nullable|string|max:100',
         ]);
+
+        if (is_object($validated)) {
+            return $validated;
+        }
 
         $teacher->update([
             'name' => $request->name,
@@ -457,10 +463,14 @@ class TeacherController extends Controller
     {
         $teacher = Auth::user();
         
-        $request->validate([
+        $validated = $this->validateForResponse($request, [
             'current_password' => 'required',
             'new_password' => 'required|string|min:8|confirmed',
         ]);
+
+        if (is_object($validated)) {
+            return $validated;
+        }
 
         // Check if current password is correct
         if (!Hash::check($request->current_password, $teacher->password)) {

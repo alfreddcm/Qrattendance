@@ -2,20 +2,16 @@
 @section('title', 'Manage Schools')
 @section('content')
 
-<div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
+<div class="sticky-header" >
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-school me-2"></i>
                 Manage Schools
             </h4>
-            <p class="subtitle fs-6 mb-0">Create and manage schools in the system</p>
+            <p class="subtitle fs-6 mb-0">Add, edit, and manage schools</p>
         </div>
-        <div class="page-actions">
-            <button class="btn btn-primary btn-sm px-2 py-1" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
-                <i class="fas fa-plus me-1"></i>Add School
-            </button>
-        </div>
+        
     </div>
 </div>
 
@@ -46,8 +42,25 @@
         </div>
     @endif
 
+    <!-- Compact Header -->
+    <div class="header-row">
+        <div class="header-content">
+            <div class="header-left">
+                <i class="fas fa-school me-2"></i>
+                <span class="header-title">Schools</span>
+                <span class="header-count">{{ $schools->count() }} total</span>
+            </div>
+            
+            <div class="header-right">
+                <button class="btn-compact-primary" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
+                    <i class="fas fa-plus me-1"></i>Add School
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Schools Table -->
-    <div class="card shadow-sm">
+    <div class="table-container">
         <div class="card-header bg-primary text-white p-2">
             <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>All Schools</h6>
         </div>

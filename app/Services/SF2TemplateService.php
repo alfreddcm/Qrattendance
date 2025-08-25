@@ -100,7 +100,7 @@ class SF2TemplateService
             $this->populateClassInfo($worksheet, $gradeLevel, $section, $month, $year, $schoolYear);
 
             // Get students for the specified semester with optional grade/section filtering
-            $studentsQuery = Student::where('semester_id', $semesterId);
+            $studentsQuery = Student::with('section')->where('semester_id', $semesterId);
             
             // Add user filter based on context
             if ($teacherId) {
@@ -114,17 +114,26 @@ class SF2TemplateService
             }
             
             if ($filterGradeLevel) {
-                $studentsQuery->where('grade_level', $filterGradeLevel);
+                $studentsQuery->whereHas('section', function($query) use ($filterGradeLevel) {
+                    $query->where('gradelevel', $filterGradeLevel);
+                });
             }
             
             if ($filterSection) {
-                $studentsQuery->where('section', $filterSection);
+                $studentsQuery->whereHas('section', function($query) use ($filterSection) {
+                    $query->where('name', $filterSection);
+                });
             }
             
-            $students = $studentsQuery->orderBy('grade_level')
-                                   ->orderBy('section')
-                                   ->orderBy('name')
-                                   ->get();
+            $students = $studentsQuery->with('section')
+                                   ->get()
+                                   ->sortBy(function($student) {
+                                       return [
+                                           $student->section ? $student->section->gradelevel : 0,
+                                           $student->section ? $student->section->name : '',
+                                           $student->name
+                                       ];
+                                   });
 
             // Check if any students were found
             if ($students->isEmpty()) {

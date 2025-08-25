@@ -156,32 +156,83 @@
             <form class="d-flex align-items-center" style="gap: 6px;">
                 @php
                     $user = Auth::user();
-                    $teachers = \App\Models\User::where('role', 'teacher')->get();
+                    $userSections = $user->role === 'teacher' ? \App\Models\Section::where('teacher_id', $user->id)->get() : collect();
                 @endphp
+                
                 @if($user->role === 'admin')
-                    <label for="user_id" class="mb-0 fw-bold" style="font-size: 1rem;">Select Teacher:</label>
-                    <select id="user_id" name="user_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;">
-                        @foreach($teachers as $teacher)
-                            <option value="{{ $teacher->id }}" data-school="{{ $teacher->school_id }}">{{ $teacher->name }}</option>
+                    <!-- Admin Cascading Dropdowns: School -> Semester -> Teacher -> Section -->
+                    <label for="admin_school_id" class="mb-0 fw-bold" style="font-size: 1rem;">School:</label>
+                    <select id="admin_school_id" name="school_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;" onchange="loadSchoolData()">
+                        <option value="">Select School</option>
+                        @foreach($schools as $school)
+                            <option value="{{ $school->id }}">{{ $school->name }}</option>
                         @endforeach
                     </select>
-                    <input type="hidden" name="school_id" id="school_id" value="">
-                @elseif($user->role === 'teacher')
-                    <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
-                 @endif
 
-                <label for="semester" class="mb-0 fw-bold" style="font-size: 1rem;">Select Semester:</label>
-                <select id="semester" name="semester_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;">
-                    @foreach($semesters as $semester)
-                        <option value="{{ $semester->id }}">{{ $semester->name }}</option>
-                    @endforeach
-                </select>
+                    <label for="admin_semester_id" class="mb-0 fw-bold" style="font-size: 1rem;">Semester:</label>
+                    <select id="admin_semester_id" name="semester_id" class="form-select form-select-sm" style="width: auto; min-width: 150px;" onchange="loadTeachersBySchool()">
+                        <option value="">Select Semester</option>
+                        @foreach($semesters as $semester)
+                            <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                        @endforeach
+                    </select>
+
+                    <label for="admin_teacher_id" class="mb-0 fw-bold" style="font-size: 1rem;">Teacher:</label>
+                    <select id="admin_teacher_id" name="user_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;" onchange="loadSectionsByTeacher()" disabled>
+                        <option value="">Select Teacher</option>
+                    </select>
+
+                    <label for="admin_section_id" class="mb-0 fw-bold" style="font-size: 1rem;">Section:</label>
+                    <select id="admin_section_id" name="section_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;" onchange="updateSectionInfo()" disabled>
+                        <option value="">Select Section</option>
+                    </select>
+                    
+                @elseif($user->role === 'teacher')
+                    <!-- Teacher: Auto-populated School and Teacher, Selectable Semester and Section -->
+                    <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
+                    
+                    <label for="teacher_school" class="mb-0 fw-bold" style="font-size: 1rem;">School:</label>
+                    <input type="text" id="teacher_school" class="form-control form-control-sm" style="width: auto; min-width: 170px; background-color: #f8f9fa;" value="{{ $user->school->name ?? 'No School Assigned' }}" readonly>
+                    
+                    <label for="teacher_name" class="mb-0 fw-bold" style="font-size: 1rem;">Teacher:</label>
+                    <input type="text" id="teacher_name" class="form-control form-control-sm" style="width: auto; min-width: 170px; background-color: #f8f9fa;" value="{{ $user->name }}" readonly>
+                    
+                    <label for="teacher_semester" class="mb-0 fw-bold" style="font-size: 1rem;">Semester:</label>
+                    <select id="teacher_semester" name="semester_id" class="form-select form-select-sm" style="width: auto; min-width: 150px;" onchange="updateTeacherSections()">
+                        <option value="">Select Semester</option>
+                        @foreach($semesters as $semester)
+                            <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                        @endforeach
+                    </select>
+
+                    <label for="teacher_section" class="mb-0 fw-bold" style="font-size: 1rem;">Section:</label>
+                    <select id="teacher_section" name="section_id" class="form-select form-select-sm" style="width: auto; min-width: 170px;" onchange="updateTeacherSectionInfo()">
+                        <option value="">Select Section</option>
+                        @if($userSections->count() > 0)
+                            @foreach($userSections as $section)
+                                <option value="{{ $section->id }}" data-teacher="{{ $section->teacher_id }}" data-semester="{{ $section->semester_id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">
+                                    Grade {{ $section->gradelevel }} - {{ $section->name }}
+                                </option>
+                            @endforeach
+                        @else
+                            <option value="">No sections assigned</option>
+                        @endif
+                    </select>
+                @endif
             </form>
         </div>
         <form id="studentsForm" action="{{ route('import.import') }}" method="POST">
             @csrf
-            <input type="hidden" name="user_id" id="selecteduser_id" value="{{ $user->id }}">
-            <input type="hidden" name="semester_id" id="selectedSemester" value="{{ $semesters->first()->id ?? '' }}">
+            @if(auth()->user()->role === 'admin')
+                <input type="hidden" name="user_id" id="selectedUserId" value="">
+                <input type="hidden" name="semester_id" id="selectedSemesterId" value="">
+                <input type="hidden" name="section_id" id="selectedSectionId" value="">
+                <input type="hidden" name="school_id" id="selectedSchoolId" value="">
+            @else
+                <input type="hidden" name="user_id" id="selecteduser_id" value="{{ $user->id }}">
+                <input type="hidden" name="semester_id" id="selectedSemester" value="">
+                <input type="hidden" name="section_id" id="selectedSection" value="">
+            @endif
             <div class="table-responsive" style="height: 600px; overflow-y: auto;">
                 <table class="table table-bordered table-striped align-middle mb-0" id="studentsTable" style="border-radius: 1px; overflow: hidden;">
                     <thead style="position: sticky; top: 0; z-index: 2;">
@@ -196,6 +247,8 @@
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Name</th>
                             <th style="width: 100px; background: #212529; color: #fff;">Relationship</th>
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Phone</th>
+                            <th style="width: 100px; background: #212529; color: #fff;">Grade Level</th>
+                            <th style="width: 120px; background: #212529; color: #fff;">Section Name</th>
                             <th style="width: 60px; background: #212529; color: #fff;">Action</th>
                         </tr>
                     </thead>
@@ -220,6 +273,12 @@
                                 <td><input type="text" name="students[{{ $i }}][6]" value="{{ $row[6] ?? '' }}" class="form-control form-control-sm w-100"></td>
                                 <td><input type="text" name="students[{{ $i }}][7]" value="{{ $row[7] ?? '' }}" class="form-control form-control-sm w-100"></td>
                                 <td><input type="text" name="students[{{ $i }}][8]" value="{{ $row[8] ?? '' }}" class="form-control form-control-sm w-100"></td>
+                                <td class="grade-level-cell">
+                                    <span class="text-muted">Select section</span>
+                                </td>
+                                <td class="section-name-cell">
+                                    <span class="text-muted">Select section</span>
+                                </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm remove-row" title="Remove">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -231,7 +290,7 @@
                             @endif
                         @endforeach
                         <tr>
-                            <td colspan="11" class="text-center">
+                            <td colspan="13" class="text-center">
                                 <button type="button" class="btn btn-primary btn-sm" id="addRowBtn">
                                     Add Row
                                 </button>
@@ -240,7 +299,7 @@
                     </tbody>
                     <tfoot>
                         <tr class="table-secondary" style="position: sticky; bottom: 0; z-index: 2;">
-                            <td colspan="11" class="text-end fw-bold">
+                            <td colspan="13" class="text-end fw-bold">
                                 Total Students: <span id="totalStudents">{{ $total }}</span>
                             </td>
                             
@@ -255,12 +314,185 @@
             </form>
     </div>
     <script>
-         document.getElementById('semester').addEventListener('change', function() {
+        // Teacher-specific functions
+        @if($user->role === 'teacher')
+        document.getElementById('teacher_semester').addEventListener('change', function() {
             document.getElementById('selectedSemester').value = this.value;
+            updateTeacherSections();
         });
-         document.getElementById('user_id').addEventListener('change', function() {
-            document.getElementById('selecteduser_id').value = this.value;
+        
+        document.getElementById('teacher_section').addEventListener('change', function() {
+            document.getElementById('selectedSection').value = this.value;
+            updateTeacherSectionInfo();
         });
+
+        function updateTeacherSections() {
+            const semesterSelect = document.getElementById('teacher_semester');
+            const sectionSelect = document.getElementById('teacher_section');
+            const selectedSemesterId = semesterSelect.value;
+            
+            if (!selectedSemesterId) {
+                sectionSelect.innerHTML = '<option value="">Select Semester first</option>';
+                return;
+            }
+            
+            // Filter sections by selected semester
+            sectionSelect.innerHTML = '<option value="">Select Section</option>';
+            @foreach($userSections as $section)
+                if ('{{ $section->semester_id }}' === selectedSemesterId) {
+                    sectionSelect.innerHTML += '<option value="{{ $section->id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">Grade {{ $section->gradelevel }} - {{ $section->name }}</option>';
+                }
+            @endforeach
+        }
+
+        function updateTeacherSectionInfo() {
+            const sectionSelect = document.getElementById('teacher_section');
+            const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                const gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
+                const sectionName = selectedOption.getAttribute('data-name') || 'N/A';
+                
+                // Update all existing rows with section info
+                document.querySelectorAll('.grade-level-cell').forEach(cell => {
+                    cell.textContent = gradeLevel;
+                });
+                document.querySelectorAll('.section-name-cell').forEach(cell => {
+                    cell.textContent = sectionName;
+                });
+            } else {
+                document.querySelectorAll('.grade-level-cell').forEach(cell => {
+                    cell.innerHTML = '<span class="text-muted">Select section</span>';
+                });
+                document.querySelectorAll('.section-name-cell').forEach(cell => {
+                    cell.innerHTML = '<span class="text-muted">Select section</span>';
+                });
+            }
+        }
+        @endif
+
+        // Admin-specific functions
+        @if($user->role === 'admin')
+        function loadSchoolData() {
+            const schoolSelect = document.getElementById('admin_school_id');
+            const semesterSelect = document.getElementById('admin_semester_id');
+            const teacherSelect = document.getElementById('admin_teacher_id');
+            const sectionSelect = document.getElementById('admin_section_id');
+            
+            document.getElementById('selectedSchoolId').value = schoolSelect.value;
+            
+            if (!schoolSelect.value) {
+                resetDropdown(teacherSelect, 'Select School first');
+                resetDropdown(sectionSelect, 'Select Teacher first');
+                return;
+            }
+            
+            // Enable semester if school is selected
+            semesterSelect.disabled = false;
+            loadTeachersBySchool();
+        }
+        
+        function loadTeachersBySchool() {
+            const schoolSelect = document.getElementById('admin_school_id');
+            const semesterSelect = document.getElementById('admin_semester_id');
+            const teacherSelect = document.getElementById('admin_teacher_id');
+            const sectionSelect = document.getElementById('admin_section_id');
+            
+            document.getElementById('selectedSemesterId').value = semesterSelect.value;
+            
+            if (!schoolSelect.value || !semesterSelect.value) {
+                resetDropdown(teacherSelect, 'Select School and Semester first');
+                resetDropdown(sectionSelect, 'Select Teacher first');
+                return;
+            }
+            
+            // Show loading state
+            teacherSelect.innerHTML = '<option value="">Loading teachers...</option>';
+            teacherSelect.disabled = true;
+            resetDropdown(sectionSelect, 'Select Teacher first');
+            
+            // Fetch teachers for the selected school
+            fetch(`/admin/schools/${schoolSelect.value}/teachers`)
+                .then(response => response.json())
+                .then(data => {
+                    teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
+                    data.forEach(teacher => {
+                        teacherSelect.innerHTML += `<option value="${teacher.id}">${teacher.name}</option>`;
+                    });
+                    teacherSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading teachers:', error);
+                    teacherSelect.innerHTML = '<option value="">Error loading teachers</option>';
+                    teacherSelect.disabled = false;
+                });
+        }
+        
+        function loadSectionsByTeacher() {
+            const teacherSelect = document.getElementById('admin_teacher_id');
+            const semesterSelect = document.getElementById('admin_semester_id');
+            const sectionSelect = document.getElementById('admin_section_id');
+            
+            document.getElementById('selectedUserId').value = teacherSelect.value;
+            
+            if (!teacherSelect.value) {
+                resetDropdown(sectionSelect, 'Select Teacher first');
+                return;
+            }
+            
+            // Show loading state
+            sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+            sectionSelect.disabled = true;
+            
+            // Fetch sections for the selected teacher and semester
+            fetch(`/admin/teachers/${teacherSelect.value}/sections?semester_id=${semesterSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    sectionSelect.innerHTML = '<option value="">Select Section</option>';
+                    data.forEach(section => {
+                        sectionSelect.innerHTML += `<option value="${section.id}" data-gradelevel="${section.gradelevel}" data-name="${section.name}">Grade ${section.gradelevel} - ${section.name}</option>`;
+                    });
+                    sectionSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading sections:', error);
+                    sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+                    sectionSelect.disabled = false;
+                });
+        }
+        
+        function updateSectionInfo() {
+            const sectionSelect = document.getElementById('admin_section_id');
+            const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
+            
+            document.getElementById('selectedSectionId').value = sectionSelect.value;
+            
+            if (selectedOption && selectedOption.value) {
+                const gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
+                const sectionName = selectedOption.getAttribute('data-name') || 'N/A';
+                
+                // Update all existing rows with section info
+                document.querySelectorAll('.grade-level-cell').forEach(cell => {
+                    cell.textContent = gradeLevel;
+                });
+                document.querySelectorAll('.section-name-cell').forEach(cell => {
+                    cell.textContent = sectionName;
+                });
+            } else {
+                document.querySelectorAll('.grade-level-cell').forEach(cell => {
+                    cell.innerHTML = '<span class="text-muted">Select section</span>';
+                });
+                document.querySelectorAll('.section-name-cell').forEach(cell => {
+                    cell.innerHTML = '<span class="text-muted">Select section</span>';
+                });
+            }
+        }
+        
+        function resetDropdown(selectElement, placeholder) {
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            selectElement.disabled = true;
+        }
+        @endif
 
          function attachRemoveEvents() {
             document.querySelectorAll('.remove-row').forEach(function(btn) {
@@ -281,6 +513,27 @@
             let tbody = document.querySelector('#studentsTable tbody');
             let addRowBtnRow = document.getElementById('addRowBtn').closest('tr');
             let rowCount = tbody.querySelectorAll('tr').length - 1; 
+            
+            // Get current section info for new rows
+            let gradeLevel = 'N/A';
+            let sectionName = 'N/A';
+            
+            @if(auth()->user()->role === 'admin')
+                const sectionSelect = document.getElementById('admin_section_id');
+                if (sectionSelect && sectionSelect.value) {
+                    const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
+                    gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
+                    sectionName = selectedOption.getAttribute('data-name') || 'N/A';
+                }
+            @else
+                const sectionSelect = document.getElementById('teacher_section');
+                if (sectionSelect && sectionSelect.value) {
+                    const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
+                    gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
+                    sectionName = selectedOption.getAttribute('data-name') || 'N/A';
+                }
+            @endif
+            
             let newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td class="row-number"></td>
@@ -298,6 +551,8 @@
                 <td><input type="text" name="students[new_${rowCount}][6]" class="form-control form-control-sm w-100"></td>
                 <td><input type="text" name="students[new_${rowCount}][7]" class="form-control form-control-sm w-100"></td>
                 <td><input type="text" name="students[new_${rowCount}][8]" class="form-control form-control-sm w-100"></td>
+                <td class="grade-level-cell text-center">${gradeLevel}</td>
+                <td class="section-name-cell text-center">${sectionName}</td>
                 <td class="text-center">
                     <button type="button" class="btn btn-danger btn-sm remove-row" title="Remove">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -317,23 +572,12 @@
             let total = 0;
             rows.forEach(function(row, idx) {
                 let num = row.querySelector('.row-number');
-                if (num) num.textContent = idx + 1;
-                total++;
+                if (num) {
+                    num.textContent = idx + 1;
+                    total++;
+                }
             });
-            document.getElementById('totalStudents').textContent = total - 1;
-        }
-
-        var userSelect = document.getElementById('user_id');
-        if (userSelect) {
-            userSelect.addEventListener('change', function() {
-                var selected = this.options[this.selectedIndex];
-                var schoolId = selected.getAttribute('data-school');
-                document.getElementById('school_id').value = schoolId;
-            });
-             setTimeout(function() {
-                var event = new Event('change');
-                userSelect.dispatchEvent(event);
-            }, 100);
+            document.getElementById('totalStudents').textContent = total - 1; // Subtract 1 for the "Add Row" button row
         }
     </script>
 </body>

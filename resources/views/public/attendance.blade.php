@@ -5,20 +5,46 @@ $semester = $session->semester;
 $school = $semester->school ?? null;
 $now = Carbon::now('Asia/Manila');
 
+// Build comprehensive time schedule with all 4 periods
 $timeSchedules = [];
 if ($semester) {
+    // AM Time In
     if ($semester->am_time_in_start && $semester->am_time_in_end) {
         $timeSchedules[] = [
-            'label' => 'AM Period (Time In/Out)',
+            'label' => 'AM Time In',
             'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_start)->format('g:i A'),
             'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_end)->format('g:i A'),
             'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start),
             'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end)
         ];
     }
+    
+    // AM Time Out
+    if ($semester->am_time_out_start && $semester->am_time_out_end) {
+        $timeSchedules[] = [
+            'label' => 'AM Time Out',
+            'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_start)->format('g:i A'),
+            'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_end)->format('g:i A'),
+            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_start),
+            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_end)
+        ];
+    }
+    
+    // PM Time In
+    if ($semester->pm_time_in_start && $semester->pm_time_in_end) {
+        $timeSchedules[] = [
+            'label' => 'PM Time In',
+            'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_start)->format('g:i A'),
+            'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_end)->format('g:i A'),
+            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_start),
+            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_end)
+        ];
+    }
+    
+    // PM Time Out
     if ($semester->pm_time_out_start && $semester->pm_time_out_end) {
         $timeSchedules[] = [
-            'label' => 'PM Period (Time In/Out)', 
+            'label' => 'PM Time Out', 
             'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_start)->format('g:i A'),
             'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_end)->format('g:i A'),
             'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start),
@@ -27,9 +53,9 @@ if ($semester) {
     }
 }
 
-// Get attendance status
+// Get attendance status - now always allowed with flexible system
 $attendanceStatus = $session->isAttendanceAllowed();
-$isWithinAllowedTime = $attendanceStatus['allowed'];
+$isWithinAllowedTime = $attendanceStatus['allowed']; // Should always be true now
 
 // Get recent attendance records
 $recentAttendance = collect();
@@ -47,10 +73,18 @@ if (isset($session)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>QR Attendance System</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <link href="{{ asset('css/attendance.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -58,7 +92,7 @@ if (isset($session)) {
         <div class="school-info">
             <div class="school-logo">
                 @if($school && $school->logo)
-                    <img src="{{ asset('storage/school_logos/' . $school->logo) }}" alt="{{ $school->name ?? 'School Logo' }}" style="max-width: 100%; height: auto;">
+                    <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name ?? 'School Logo' }}" style="max-width: 100%; height: auto;" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-graduation-cap fa-3x\'></i>';">
                 @else
                     <i class="fas fa-graduation-cap fa-3x"></i>
                 @endif
@@ -223,10 +257,10 @@ if (isset($session)) {
         </div>
 
          <div class="attendance-panel">
-            <div class="card" style="width:100%; margin-bottom: 15px;">
-                <div class="card-body">
-                    <h5 class="card-title">Teacher Assigned</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ $teacher_name }}</h6>
+            <div class="custom-card" style="width:100%; margin-bottom: 15px;">
+                <div class="custom-card-body">
+                    <h5 class="custom-card-title">Teacher Assigned</h5>
+                    <h6 class="custom-card-subtitle mb-2 text-muted">{{ $teacher_name }}</h6>
                     
                     <div class="session-item">
                         <div class="session-label">Session</div>

@@ -2,33 +2,14 @@
 @section('title', 'Manage Students')
 @section('content')
 
-<style>
-.pagination-wrapper .pagination {
-    margin-bottom: 0;
-}
-.pagination-wrapper .page-link {
-    color: #667eea;
-    border-color: #dee2e6;
-}
-.pagination-wrapper .page-item.active .page-link {
-    background-color: #667eea;
-    border-color: #667eea;
-}
-.pagination-wrapper .page-link:hover {
-    color: #764ba2;
-    background-color: #e9ecef;
-    border-color: #dee2e6;
-}
-</style>
-
-<div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
+<div class="sticky-header" >
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;">
         <div>
             <h4 class="fs-5 mb-1">
-                <i class="fas fa-user-graduate me-2"></i>
+                <i class="fas fa-chalkboard-teacher me-2"></i>
                 Manage Students
             </h4>
-            <p class="subtitle fs-6 mb-0">View and manage student records across all schools</p>
+            <p class="subtitle fs-6 mb-0">Add, edit, and manage Student informations</p>
         </div>
         
     </div>
@@ -42,465 +23,361 @@
         </div>
     @endif
 
-    <!-- Search   -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body p-2">
-                    <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterForm">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-3">
-                                <label for="search" class="form-label small fw-semibold fs-6">Search Students</label>
-                                <input type="text" name="search" id="search" placeholder="Name or ID..." class="form-control form-control-sm" value="{{ request('search') }}" oninput="debounceSubmit()">
-                            </div>
-                            <div class="col-md-2">
-                                <label for="school_id" class="form-label small fw-semibold fs-6">School</label>
-                                <select name="school_id" id="school_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">All Schools</option>
-                                    @foreach($schools as $school)
-                                        <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
-                                            {{ $school->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="teacher_id" class="form-label small fw-semibold fs-6">Teacher</label>
-                                <select name="teacher_id" id="teacher_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">All Teachers</option>
-                                    @foreach($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                            {{ $teacher->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="grade_section" class="form-label small fw-semibold fs-6">Grade & Section</label>
-                                <select name="grade_section" id="grade_section" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">All Grade & Section</option>
-                                    @foreach($gradeSectionOptions as $option)
-                                        <option value="{{ $option['value'] }}" {{ request('grade_section') == $option['value'] ? 'selected' : '' }}>
-                                            {{ $option['label'] }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="qr_status" class="form-label small fw-semibold">QR Status</label>
-                                <select name="qr_status" id="qr_status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">All Status</option>
-                                    <option value="with_qr" {{ request('qr_status') == 'with_qr' ? 'selected' : '' }}>With QR</option>
-                                    <option value="without_qr" {{ request('qr_status') == 'without_qr' ? 'selected' : '' }}>Without QR</option>
-                                </select>
-                            </div>
-                            <div class="col-md-1">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary flex-fill">
-                                        <i class="fas fa-search me-1"></i>Filter
-                                    </button>
-                                    @if(request()->hasAny(['search', 'school_id', 'teacher_id', 'grade_section', 'qr_status']))
-                                        <a href="{{ route('admin.manage-students') }}" class="btn btn-outline-secondary">
-                                            <i class="fas fa-times"></i>
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+      <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterFormTop" class="row g-2 align-items-center">
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">School</label>
+                    <select name="school_id" class="form-select form-select-sm">
+                        <option value="">All Schools</option>
+                        @foreach($schools ?? [] as $school)
+                            <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
-            </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">Semester</label>
+                    <select name="semester_id" class="form-select form-select-sm">
+                        <option value="">All Semesters</option>
+                        @foreach($semesters ?? [] as $sem)
+                            <option value="{{ $sem->id }}" {{ request('semester_id') == $sem->id ? 'selected' : '' }}>{{ $sem->name ?? $sem->term ?? 'Semester' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">Teacher</label>
+                    <select name="teacher_id" id="filterTeacher" class="form-select form-select-sm">
+                        <option value="">All Teachers</option>
+                        @foreach($teachers ?? [] as $t)
+                            @php
+                                $label = $t->name;
+                            @endphp
+                            <option value="{{ $t->id }}" data-sections='@json($t->sections ?? [])' {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">Section</label>
+                    <select name="section_id" id="filterSection" class="form-select form-select-sm">
+                        <option value="">All Sections</option>
+                        @if(request('teacher_id'))
+                            @php
+                                $selectedTeacher = $teachers->firstWhere('id', request('teacher_id'));
+                            @endphp
+                            @if($selectedTeacher && $selectedTeacher->sections)
+                                @foreach($selectedTeacher->sections as $sec)
+                                    <option value="{{ $sec->id }}" {{ request('section_id') == $sec->id ? 'selected' : '' }}>{{ $sec->section_name ?? $sec->name }} (Grade {{ $sec->gradelevel ?? $sec->grade_level }})</option>
+                                @endforeach
+                            @endif
+                        @endif
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end justify-content-end gap-2">
+                    <button type="submit" class="btn btn-sm btn-success">Apply Filters</button>
+                    <a href="{{ route('admin.manage-students') }}" class="btn btn-sm btn-secondary">Reset</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!--   Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="card shadow-sm h-100 border-0 border-start border-primary border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-start">
-                            <h6 class="card-title text-primary mb-1 fw-semibold">Total Students</h6>
-                            <h2 class="mb-0 text-primary fw-bold">{{ $students->total() }}</h2>
-                        </div>
-                        <div class="text-primary">
-                            <i class="fas fa-users fa-2x opacity-75"></i>
-                        </div>
-                    </div>
+     <!-- Main Header -->
+    <div class="card shadow-sm sticky-card" style="margin-left: 1rem; margin-right: 1rem;">
+        <div class="card-header bg-primary text-white p-3 sticky-card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center">
+                    <h6 class="mb-0 fs-6 me-3">
+                        <span class="me-1">👨‍🎓</span>
+                        Student List
+                    </h6>
+                    <span class="badge bg-light text-primary fs-6">{{ $students->count() }} total</span>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="card shadow-sm h-100 border-0 border-start border-success border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-start">
-                            <h6 class="card-title text-success mb-1 fw-semibold">Schools</h6>
-                            <h2 class="mb-0 text-success fw-bold">{{ $schools->count() }}</h2>
-                            <small class="text-muted">With students</small>
-                        </div>
-                        <div class="text-success">
-                            <i class="fas fa-school fa-2x opacity-75"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="card shadow-sm h-100 border-0 border-start border-info border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-start">
-                            <h6 class="card-title text-info mb-1 fw-semibold"> Teachers</h6>
-                            <h2 class="mb-0 text-info fw-bold">{{ $teachers->count() }}</h2>
-                            <small class="text-muted">Managing students</small>
-                        </div>
-                        <div class="text-info">
-                            <i class="fas fa-chalkboard-teacher fa-2x opacity-75"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-              
-            </div>
-        </div>
-    </div>
-
-    <!-- Students List -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center sticky-top custom-sticky" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <div class="d-flex align-items-center">
-                        <h5 class="mb-0 me-3">
-                            <i class="fas fa-list me-2"></i>
-                            Students List
-                        </h5>
-                        <span class="badge bg-light text-dark me-3">{{ $students->total() }} total</span>
-                        
-                        <!-- Sorting Controls -->
-                        <form method="GET" action="{{ route('admin.manage-students') }}" class="d-flex align-items-center gap-2" id="sortForm">
-                            <!-- Preserve existing filters -->
-                            @if(request('search'))
-                                <input type="hidden" name="search" value="{{ request('search') }}">
-                            @endif
-                            @if(request('school_id'))
-                                <input type="hidden" name="school_id" value="{{ request('school_id') }}">
-                            @endif
-                            @if(request('teacher_id'))
-                                <input type="hidden" name="teacher_id" value="{{ request('teacher_id') }}">
-                            @endif
-                            @if(request('grade_section'))
-                                <input type="hidden" name="grade_section" value="{{ request('grade_section') }}">
-                            @endif
-                            @if(request('qr_status'))
-                                <input type="hidden" name="qr_status" value="{{ request('qr_status') }}">
-                            @endif
-                            
-                            <select name="sort_by" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
-                                <option value="name" {{ request('sort_by', 'name') == 'name' ? 'selected' : '' }}>Name</option>
-                                <option value="gender" {{ request('sort_by') == 'gender' ? 'selected' : '' }}>Gender</option>
-                                <option value="age" {{ request('sort_by') == 'age' ? 'selected' : '' }}>Age</option>
-                                <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Recent</option>
-                            </select>
-                            
-                            <select name="sort_order" class="form-select form-select-sm" style="width: 80px;" onchange="this.form.submit()">
-                                <option value="asc" {{ request('sort_order', 'asc') == 'asc' ? 'selected' : '' }}>A-Z</option>
-                                <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Z-A</option>
-                            </select>
-                        </form>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                         <div class="dropdown">
-                            <button class="btn btn-light dropdown-toggle" type="button" id="quickActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bars me-1"></i>Actions
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="quickActionsDropdown">
-                                <li><h6 class="dropdown-header">All Students Actions</h6></li>
-                                <li>
-                                    <form method="POST" action="{{ route('admin.students.generateQrs') }}" class="generate-qr-form m-0">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fas fa-magic me-2 text-primary"></i>Generate All QR Codes
-                                        </button>
-                                    </form>
-                                </li>
-                              
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('student.ids.print.all') }}" target="_blank">
-                                        <i class="fas fa-print me-2 text-success"></i>Print All Student IDs
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('admin.students.export') }}">
-                                        <i class="fas fa-file-excel me-2 text-info"></i>Export Student Data
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        
-                        <a class="btn btn-success text-dark" href="#" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                            <i class="fas fa-user-plus me-2 text-dark"></i>Add Student
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body p-0">
-                    @if($students->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead style="background-color: #5b73e8; color: white;">
-                                    <tr>
-                                        <th style="width: 40px; border: none;">
-
-                                        </th>
-                                        <th style="width: 80px; text-align: center; border: none;">Photo</th>
-                                        <th style="border: none;">Student ID</th>
-                                        <th style="border: none;">STUDENT INFO</th>
-                                        <th style="border: none;">Contact Person</th>
-                                        <th style="border: none;">SCHOOL</th>
-                                        <th style="border: none;">QR STATUS</th>
-                                        <th style="border: none;">
-                                            Profile Missing
-                                        <th style="width: 120px; text-align: center; border: none;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($students as $student)
-                                    <tr style="border-bottom: 1px solid #e9ecef;">
-                                        <td style="vertical-align: middle;">
-                                        </td>
-                                        <td style="text-align: center; vertical-align: middle;">
-                                             
-                                            @if($student->picture)
-                                                <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" 
-                                                     alt="{{ $student->name }}" 
-                                                     class="rounded" 
-                                                     style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dee2e6;">
-                                            @else
-                                                <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto" 
-                                                     style="width: 50px; height: 50px; border: 2px solid #dee2e6;">
-                                                    <i class="fas fa-user text-muted"></i>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td style="vertical-align: middle;">
-                                            <strong style="color: #2c3e50;">{{ $student->id_no ?? 'N/A' }}</strong>
-                                        </td>
-                                        <td style="vertical-align: middle;">
-                                            <div>
-                                                <strong style="color: #2c3e50;">{{ $student->name }}</strong>
-                                                <br>
-                                                <small class="text-muted">
-                                                    Section: {{ $student->section_name ?? 'N/A' }} | Grade: {{ $student->grade_level ?? 'N/A' }}
-                                                    @if($student->age)
-                                                        <br>Age: {{ $student->age }}
-                                                    @endif
-                                                    @if($student->gender)
-                                                        <br>Gender: {{ $student->gender == 'M' ? 'Male' : ($student->gender == 'F' ? 'Female' : $student->gender) }}
-                                                    @endif
-                                                </small>
-                                            </div>
-                                        </td>
-                                        <td style="vertical-align: middle;">
-                                            @if($student->cp_no)
-                                                <div>
-                                                    <strong>{{ $student->contact_person_name ?? 'N/A' }}</strong>
-                                                    <br>
-                                                    <small class="text-muted">{{ $student->contact_person_contact }}</small>
-                                                    @if($student->contact_person_relation)
-                                                        <br>
-                                                        <small class="text-muted">{{ $student->contact_person_relation }}</small>
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No contact</span>
-                                            @endif
-                                        </td>
-                                        <td style="vertical-align: middle;">
-                                            <div style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
-                                                <strong style="color: #2c3e50;">{{ $student->school->name ?? 'N/A' }}</strong>
-                                            </div>
-                                        </td>
-                                        <td style="vertical-align: middle; text-align: center;">
-                                            
-                                        
-                                @php
-                                $hasQrCode = false;
-                                $qrImagePath = '';
-
-                                if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
-                                    $hasQrCode = true;
-                                    $qrImagePath = $student->qr_code;
-                                } else {
-                                    $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
-                                    $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
-                                    $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
-                                    if ($qrSvgExists) {
-                                    $hasQrCode = true;
-                                    $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
-                                    } elseif ($qrPngExists) {
-                                    $hasQrCode = true;
-                                    $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
-                                    }
-                                }
-                                @endphp
-
-                                @if($hasQrCode)
-                                <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
-                                    class="qr-code-display"
-                                    style="width: 5em; height: 5em; object-fit: contain;"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#qrModal{{ $student->id }}"
-                                    title="Click to view larger QR code">
-                                @else
-                                <form action="{{ route('admin.students.generateQr', $student->id) }}" method="POST" class="generate-qr-form d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-warning btn-sm">
-                                        <i class="fas fa-qrcode me-1"></i>Generate
-                                    </button>
-                                </form>
-                                @endif
-
-
- 
-                                        </td>
-                                        <td style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
-                                            @php
-                                                $missingFields = [];
-                                                if(!$student->picture) $missingFields[] = 'Photo';
-                                                if(!$student->qr_code) $missingFields[] = 'QR';
-                                                if(!$student->cp_no) $missingFields[] = 'Contact';
-                                                if(!$student->address) $missingFields[] = 'Address';
-                                                if(!$student->gender) $missingFields[] = 'Gender';
-                                                if(!$student->age) $missingFields[] = 'Age';
-                                                if(!$student->id_no) $missingFields[] = 'Student ID';
-                                                if(!$student->name) $missingFields[] = 'Name';
-                                                if(!$student->contact_person_name) $missingFields[] = 'Emergency Contact';
-                                                if(!$student->contact_person_relationship) $missingFields[] = 'Relationship';
-                                                if(!$student->contact_person_contact) $missingFields[] = 'Emergency Phone';
-                                                if(!$student->school_id) $missingFields[] = 'School';
-                                                if(!$student->user_id) $missingFields[] = 'Teacher';
-                                            @endphp
-                                            
-                                            @if(count($missingFields) == 0)
-                                                <span class="badge bg-success">Complete</span>
-                                            @else
-                                                <span class="badge bg-warning" title="Missing: {{ implode(', ', $missingFields) }}">
-                                                    {{ implode(', ', $missingFields) }}
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td style="vertical-align: middle; text-align: center;">
-                                            <div class="dropdown">
-                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                                    Actions
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li>
-                                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}">
-                                                            <i class="fas fa-eye text-primary me-2"></i>View Details
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal{{ $student->id }}">
-                                                            <i class="fas fa-edit text-warning me-2"></i>Edit Student
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="{{ route('student.id.print', $student->id) }}" target="_blank">
-                                                            <i class="fas fa-print text-info me-2"></i>Print ID
-                                                        </a>
-                                                    </li>
-                                                    @if(!$student->qr_code)
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li>
-                                                            <form action="{{ route('admin.students.generateQr', $student->id) }}" method="POST" class="generate-qr-form m-0">
-                                                                @csrf
-                                                                <button type="submit" class="dropdown-item" style="background: none; border: none; width: 100%; text-align: left;">
-                                                                    <i class="fas fa-qrcode text-success me-2"></i>Generate QR Code
-                                                                </button>
-                                                            </form>
-                                                        </li>
-                                                    @endif
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <a class="dropdown-item text-danger" href="#" onclick="deleteStudent({{ $student->id }}, '{{ $student->name }}')">
-                                                            <i class="fas fa-trash text-danger me-2"></i>Delete Student
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Pagination -->
-                        <div class="card-footer d-flex justify-content-between align-items-center bg-light">
-                            <div class="text-muted small">
-                                Showing {{ $students->firstItem() ?: 0 }} to {{ $students->lastItem() ?: 0 }} 
-                                of {{ $students->total() }} students
-                            </div>
-                            <div class="pagination-wrapper">
-                                @if($students->hasPages())
-                                    <nav aria-label="Page navigation">
-                                        <ul class="pagination pagination-sm mb-0">
-                                            {{-- Previous Page Link --}}
-                                            @if ($students->onFirstPage())
-                                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
-                                            @else
-                                                <li class="page-item"><a class="page-link" href="{{ $students->appends(request()->query())->previousPageUrl() }}">Previous</a></li>
-                                            @endif
-
-                                            {{-- Pagination Elements --}}
-                                            @foreach ($students->appends(request()->query())->getUrlRange(1, $students->lastPage()) as $page => $url)
-                                                @if ($page == $students->currentPage())
-                                                    <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
-                                                @else
-                                                    <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
-                                                @endif
-                                            @endforeach
-
-                                            {{-- Next Page Link --}}
-                                            @if ($students->hasMorePages())
-                                                <li class="page-item"><a class="page-link" href="{{ $students->appends(request()->query())->nextPageUrl() }}">Next</a></li>
-                                            @else
-                                                <li class="page-item disabled"><span class="page-link">Next</span></li>
-                                            @endif
-                                        </ul>
-                                    </nav>
-                                @endif
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-5">
-                            <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No students found</h5>
-                            <p class="text-muted">Students will appear here once teachers add them to their classes.</p>
-                        </div>
-                    @endif
                 
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    
+                    
+                    <!-- Action Buttons -->
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class="fas fa-plus me-1"></i>Add Student
+                    </button>
+                    
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#importStudentsModal">
+                        <i class="fas fa-magic me-1"></i>Generate All QR Codes
+                    </button>
+                    
+                    <button class="btn btn-info btn-sm" onclick="window.open('{{ route('student.ids.print.all') }}', '_blank')">
+                        <i class="fas fa-print me-1"></i>Print All Student IDs
+                    </button>
+                    
                 </div>
             </div>
+        </div>
+        
+        <!-- Stats Row -->
+        @php
+            // Note: these counts compute on all students (pagination removed).
+            $completeCount = $students->filter(function($s){
+                return $s->picture && ($s->qr_code || ($s->id_no && $s->name)) && $s->cp_no;
+            })->count();
+            $missingCount = $students->count() - $completeCount;
+        @endphp
+        <div class="p-3 bg-light border-bottom">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded p-2 me-3">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5">{{ $students->count() }}</div>
+                            <small class="text-muted">Total students</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success text-white rounded p-2 me-3">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5 text-success">{{ $completeCount }}</div>
+                            <small class="text-muted">Complete profiles</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning text-white rounded p-2 me-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5 text-warning">{{ $missingCount }}</div>
+                            <small class="text-muted">Missing Profile</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+   
+        <div class="card-body p-0">
+            @if($students->count() > 0)
+                <div class="table-responsive" style="max-height: 73vh; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="text-center" style="width: 60px;">#</th>
+                                <th class="text-center" style="width: 80px;">Photo</th>
+                                <th>Name & ID</th>
+                                <th>Section</th>
+                                <th class="text-center" style="width: 100px;">Gender</th>
+                                <th class="text-center" style="width: 80px;">Age</th>
+                                <th>Contact Details</th>
+                                <th>School & Teacher</th>
+                                <th class="text-center" style="width: 100px;">QR Code</th>
+                                <th class="text-center" style="width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($students as $index => $student)
+                            <tr>
+                                <td class="text-center fw-bold">{{ $loop->iteration }}</td>
+                                
+                                <!-- Photo Column -->
+                                <td class="text-center align-middle">
+                                    @php
+                                        $hasValidImage = false;
+                                        $imageUrl = '';
+                                        
+                                        if($student->picture) {
+                                            // Check storage disk first
+                                            if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+                                                $hasValidImage = true;
+                                                $imageUrl = Storage::url('student_pictures/' . $student->picture);
+                                            }
+                                            // Fallback to public path check
+                                            elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
+                                                $hasValidImage = true;
+                                                $imageUrl = asset('storage/student_pictures/' . $student->picture);
+                                            }
+                                        }
+                                    @endphp
+
+                                    @if($hasValidImage)
+                                        <img src="{{ $imageUrl }}" alt="Student Picture" 
+                                             class="rounded-circle" 
+                                             style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dee2e6;">
+                                    @else
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px; border: 2px solid #dee2e6;">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </div>
+                                    @endif
+                                </td>
+                                
+                                <!-- Name & ID Column -->
+                                <td>
+                                    <div class="fw-bold">{{ $student->name }}</div>
+                                    <small class="text-muted">ID: {{ $student->id_no ?? 'N/A' }}</small>
+                                </td>
+                                
+                                <!-- Section Column -->
+                                <td>
+                                    @if($student->section)
+                                        <span class="badge bg-primary">{{ $student->section->name }}</span><br>
+                                        <small class="text-muted">Grade {{ $student->section->gradelevel }}</small>
+                                    @else
+                                        <span class="badge bg-secondary">{{ $student->section_name ?? 'N/A' }}</span><br>
+                                        <small class="text-muted">Grade {{ $student->grade_level ?? 'N/A' }}</small>
+                                    @endif
+                                </td>
+                                
+                                <!-- Gender Column -->
+                                <td class="text-center">
+                                    @if($student->gender == 'M')
+                                        <span>Male</span>
+                                    @elseif($student->gender == 'F')
+                                        <span>Female</span>
+                                    @else
+                                        <span>{{ $student->gender ?? 'N/A' }}</span>
+                                    @endif
+                                </td>
+                                
+                                <!-- Age Column -->
+                                <td class="text-center">
+                                    <span>{{ $student->age ?? 'N/A' }}</span>
+                                </td>
+                                
+                                <!-- Contact Details Column -->
+                                <td>
+                                    <div class="small">
+                                        @if($student->cp_no)
+                                            <div><i class="fas fa-phone text-muted me-1"></i>{{ $student->cp_no }}</div>
+                                        @endif
+                                        @if($student->address)
+                                            <div class="text-truncate" style="max-width: 150px;" title="{{ $student->address }}">
+                                                <i class="fas fa-map-marker-alt text-muted me-1"></i>{{ $student->address }}
+                                            </div>
+                                        @endif
+                                        @if($student->contact_person_name)
+                                            <div class="text-muted small">
+                                                <i class="fas fa-user-friends text-muted me-1"></i>{{ $student->contact_person_name }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                                
+                                <!-- School & Teacher Column -->
+                                <td>
+                                    <div class="small">
+                                        @if($student->section && $student->section->teacher)
+                                            <div class="fw-semibold text-primary">
+                                                <i class="fas fa-chalkboard-teacher text-muted me-1"></i>{{ $student->section->teacher->name }}
+                                            </div>
+                                        @elseif($student->section && $student->section->teachers->count() > 0)
+                                            <div class="fw-semibold text-primary">
+                                                <i class="fas fa-chalkboard-teacher text-muted me-1"></i>{{ $student->section->teachers->first()->name }}
+                                                @if($student->section->teachers->count() > 1)
+                                                    <small class="text-muted">(+{{ $student->section->teachers->count() - 1 }} more)</small>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        <div class="text-muted">
+                                            <i class="fas fa-school text-muted me-1"></i>{{ $student->school->name ?? 'San Guillermo Vocational and Industrial High School' }}
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- QR Code Column -->
+                                <td class="text-center">
+                                    @php
+                                        $hasQrCode = false;
+                                        $qrImagePath = '';
+
+                                        if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+                                            $hasQrCode = true;
+                                            $qrImagePath = $student->qr_code;
+                                        } else {
+                                            $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+                                            $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
+                                            $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
+                                            if ($qrSvgExists) {
+                                                $hasQrCode = true;
+                                                $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
+                                            } elseif ($qrPngExists) {
+                                                $hasQrCode = true;
+                                                $qrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
+                                            }
+                                        }
+                                    @endphp
+
+                                    @if($hasQrCode)
+                                        <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code" 
+                                             style="width: 40px; height: 40px; border-radius: 4px;" 
+                                             data-bs-toggle="modal" data-bs-target="#qrModal{{ $student->id }}" 
+                                             class="cursor-pointer">
+                                    @else
+                                        <button class="btn btn-outline-warning btn-sm" onclick="generateQr({{ $student->id }})" title="Generate QR Code">
+                                            <i class="fas fa-qrcode"></i>
+                                        </button>
+                                    @endif
+                                </td>
+                                
+                                <!-- Actions Column -->
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}">
+                                                    <i class="fas fa-eye me-2"></i>View Details
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">
+                                                    <i class="fas fa-edit me-2"></i>Edit Student
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('student.id.print', $student->id) }}" target="_blank">
+                                                    <i class="fas fa-print me-2"></i>Print ID
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-users text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">No students found</h4>
+                    <p class="text-muted mb-4">No students match the current filters. Try adjusting your search criteria.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class="fas fa-plus me-1"></i>Add Student
+                    </button>
+                </div>
+            @endif
         </div>
     </div>
 </div>
 
- 
+<!-- Student Modals -->
 @foreach($students as $student)
 <div class="modal fade" id="infoModal{{ $student->id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ $student->id }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -511,227 +388,294 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-4 text-center">
-                        @if($student->picture)
-                            <img src="{{ asset('storage/student_pictures/' . $student->picture)  }}" alt="Student Picture" 
-                                 class="img-fluid rounded-circle mb-3" 
-                                 style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6;">
-                        @else
-                            <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
-                                 style="width: 150px; height: 150px; border: 3px solid #dee2e6;">
-                                <i class="fas fa-user text-muted" style="font-size: 48px;"></i>
-                            </div>
-                        @endif
-                        
-                        <div class="text-center">
-                            <h5 class="mb-1">{{ $student->name }}</h5>
-                            <span class="badge bg-secondary">{{ $student->id_no }}</span>
-                        </div>
-                        <div class="text-center mt-2">
-                            
-                         <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6 class="card-title mb-2">
-                                            <i class="fas fa-qrcode me-2"></i>QR Code
-                                        </h6>
-                                        @if($student->qr_code)
-                                            <img src="{{ asset('storage/' . $student->qr_code) }}" alt="QR Code" 
-                                                 style="width: 120px; height: 120px; border: 2px solid #dee2e6; border-radius: 10px;">
-                                        @else
-                                            <div class="text-muted">
-                                                <i class="fas fa-qrcode fa-3x mb-2"></i>
-                                                <div>No QR Code available</div>
-                                            </div>
-                                        @endif
+            <div class="modal-body p-3">
+                <div class="row g-3">
+                    <!-- Left Column - Photo & QR -->
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-body text-center p-3">
+                                @php
+                                    $hasValidModalImage = false;
+                                    $modalImageUrl = '';
+                                    
+                                    if($student->picture) {
+                                        if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+                                            $hasValidModalImage = true;
+                                            $modalImageUrl = Storage::url('student_pictures/' . $student->picture);
+                                        }
+                                        elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
+                                            $hasValidModalImage = true;
+                                            $modalImageUrl = asset('storage/student_pictures/' . $student->picture);
+                                        }
+                                    }
+                                @endphp
+
+                                <!-- Student Photo -->
+                                @if($hasValidModalImage)
+                                    <img src="{{ $modalImageUrl }}" alt="Student Picture" 
+                                         class="rounded-circle mb-3" 
+                                         style="width: 200px; height: 200px; object-fit: cover; border: 3px solid #6366f1;">
+                                @else
+                                    <div class="bg-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                         style="width: 200px; height: 200px; border: 3px solid #dee2e6;">
+                                        <i class="fas fa-user text-muted" style="font-size: 60px;"></i>
                                     </div>
+                                @endif
+                                
+                                <!-- Student Name & ID -->
+                                <h6 class="mb-1 fw-bold">{{ $student->name }}</h6>
+                                <div class="badge bg-primary mb-3">{{ $student->id_no ?? 'N/A' }}</div>
+
+                                <!-- QR Code Section -->
+                                <div class="border-top pt-3">
+                                    <div class="mb-2">
+                                        <small class="text-muted fw-bold"><i class="fas fa-qrcode me-1"></i>QR Code</small>
+                                    </div>
+                                    @php
+                                        $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+                                        $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
+                                        $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
+                                    @endphp
+                                    @if($qrSvgExists)
+                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code" 
+                                             class="border rounded" style="width: 180px; height: 180px;">
+                                    @elseif($qrPngExists)
+                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code" 
+                                             class="border rounded" style="width: 180px; height: 180px;">
+                                    @else
+                                        <div class="text-muted">
+                                            <i class="fas fa-qrcode fa-5x mb-1"></i>
+                                            <div><small>No QR Code</small></div>
+                                        </div>
+                                    @endif
                                 </div>
+                            </div>
                         </div>
                     </div>
-                   
+
+                    <!-- Right Column - Information -->
                     <div class="col-md-8">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="card bg-light">
+                        <div class="row g-2">
+                            <!-- Personal Information -->
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-header bg-primary text-white py-2">
+                                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                                    </div>
                                     <div class="card-body p-3">
-                                        <h6 class="card-title mb-2">
-                                            <i class="fas fa-info-circle me-2"></i>Personal Info
-                                        </h6>
-                                        <div class="info-item">
-                                            <strong>Gender:</strong> 
-                                            @if($student->gender == 'M')
-                                                <span class="badge bg-info">Male</span>
-                                            @elseif($student->gender == 'F')
-                                                <span class="badge bg-pink">Female</span>
-                                            @else
-                                                <span class="badge bg-secondary">{{ $student->gender }}</span>
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 70px;">Section:</small>
+                                                    <span class="badge bg-primary">{{ $student->section->name ?? $student->section_name ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 50px;">Grade:</small>
+                                                    <span class="fw-semibold">{{ $student->section->gradelevel ?? $student->grade_level ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 70px;">Gender:</small>
+                                                    <span class="fw-semibold">
+                                                        @if($student->gender == 'M') Male
+                                                        @elseif($student->gender == 'F') Female
+                                                        @else {{ $student->gender ?? 'N/A' }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 50px;">Age:</small>
+                                                    <span class="fw-semibold">{{ $student->age ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Academic Information -->
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-header bg-info text-white py-2">
+                                        <h6 class="mb-0"><i class="fas fa-school me-2"></i>Academic Information</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-start py-1">
+                                                    <small class="text-muted me-3" style="min-width: 60px;">School:</small>
+                                                    <span class="fw-semibold">{{ $student->school->name ?? 'San Guillermo Vocational and Industrial High School' }}</span>
+                                                </div>
+                                            </div>
+                                            @if($student->section && $student->section->teacher)
+                                                <div class="col-12">
+                                                    <div class="d-flex align-items-start py-1">
+                                                        <small class="text-muted me-3" style="min-width: 60px;">Teacher:</small>
+                                                        <span class="fw-semibold">{{ $student->section->teacher->name }}</span>
+                                                    </div>
+                                                </div>
+                                            @elseif($student->section && $student->section->teachers->count() > 0)
+                                                <div class="col-12">
+                                                    <div class="d-flex align-items-start py-1">
+                                                        <small class="text-muted me-3" style="min-width: 60px;">Teachers:</small>
+                                                        <div class="fw-semibold">
+                                                            @foreach($student->section->teachers as $teacher)
+                                                                <div>{{ $teacher->name }}</div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            @if($student->semester)
+                                                <div class="col-12">
+                                                    <div class="d-flex align-items-start py-1">
+                                                        <small class="text-muted me-3" style="min-width: 60px;">Semester:</small>
+                                                        <span class="fw-semibold">{{ $student->semester->name ?? 'N/A' }}</span>
+                                                    </div>
+                                                </div>
                                             @endif
                                         </div>
-                                        <div class="info-item">
-                                            <strong>Age:</strong> 
-                                            <span class="badge bg-secondary">{{ $student->age }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <strong>School:</strong> 
-                                            <span class="badge bg-primary">{{ optional($student->school)->name ?? 'N/A' }}</span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light">
+
+                            <!-- Contact Information -->
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-header bg-success text-white py-2">
+                                        <h6 class="mb-0"><i class="fas fa-phone me-2"></i>Contact Information</h6>
+                                    </div>
                                     <div class="card-body p-3">
-                                        <h6 class="card-title mb-2">
-                                            <i class="fas fa-phone me-2"></i>Contact Info
-                                        </h6>
-                                        <div class="info-item">
-                                            <strong>Phone:</strong> {{ $student->cp_no }}
-                                        </div>
-                                        <div class="info-item">
-                                            <strong>Address:</strong> {{ $student->address }}
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-start py-1">
+                                                    <small class="text-muted me-3" style="min-width: 60px;">Phone:</small>
+                                                    <span class="fw-semibold">{{ $student->cp_no ?: 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-start py-1">
+                                                    <small class="text-muted me-3" style="min-width: 60px;">Address:</small>
+                                                    <span class="fw-semibold">{{ $student->address ?: 'N/A' }}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <div class="card bg-light">
+
+                            <!-- Emergency Contact -->
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-header bg-warning text-dark py-2">
+                                        <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Emergency Contact</h6>
+                                    </div>
                                     <div class="card-body p-3">
-                                        <h6 class="card-title mb-2">
-                                            <i class="fas fa-users me-2"></i>Emergency Contact
-                                        </h6>
-                                        <div class="info-item">
-                                            <strong>Name:</strong> {{ $student->contact_person_name ?? 'N/A' }}
-                                        </div>
-                                        <div class="info-item">
-                                            <strong>Relationship:</strong> {{ $student->contact_person_relationship ?? 'N/A' }}
-                                        </div>
-                                        <div class="info-item">
-                                            <strong>Contact:</strong> {{ $student->contact_person_contact ?? 'N/A' }}
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 80px;">Name:</small>
+                                                    <span class="fw-semibold">{{ $student->contact_person_name ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 90px;">Relationship:</small>
+                                                    <span class="fw-semibold">{{ $student->contact_person_relationship ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center py-1">
+                                                    <small class="text-muted me-3" style="min-width: 60px;">Contact:</small>
+                                                    <span class="fw-semibold">{{ $student->contact_person_contact ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                             
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <a href="{{ route('student.id.print', $student->id) }}" class="btn btn-outline-info" target="_blank">
+            <div class="modal-footer bg-light py-2">
+                <a href="{{ route('student.id.print', $student->id) }}" class="btn btn-outline-primary btn-sm" title="Print Student ID" target="_blank">
                     <i class="fas fa-print me-1"></i>Print ID
                 </a>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ $student->id }}">
-                    <i class="fas fa-edit me-2"></i>Edit Student
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Close
+                <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Close
                 </button>
             </div>
         </div>
     </div>
 </div>
+@endforeach
 
-<!-- Edit Student Modal -->
-<div class="modal fade" id="editModal{{ $student->id }}" tabindex="-1" aria-labelledby="editModalLabel{{ $student->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <form method="POST" action="{{ route('admin.students.update', $student->id) }}">
-            @csrf
-            @method('PUT')
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel{{ $student->id }}">
-                        <i class="fas fa-user-edit me-2"></i>Edit Student - {{ $student->name }}
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="edit_id_no_{{ $student->id }}" class="form-label">Student ID <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_id_no_{{ $student->id }}" name="id_no" value="{{ $student->id_no }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_name_{{ $student->id }}" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_name_{{ $student->id }}" name="name" value="{{ $student->name }}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_gender_{{ $student->id }}" class="form-label">Gender <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_gender_{{ $student->id }}" name="gender" required>
-                                <option value="">Select Gender</option>
-                                <option value="M" {{ $student->gender == 'M' ? 'selected' : '' }}>Male</option>
-                                <option value="F" {{ $student->gender == 'F' ? 'selected' : '' }}>Female</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_age_{{ $student->id }}" class="form-label">Age <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="edit_age_{{ $student->id }}" name="age" value="{{ $student->age }}" min="1" max="100" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_school_{{ $student->id }}" class="form-label">School</label>
-                            <select class="form-select" id="edit_school_{{ $student->id }}" name="school_id">
-                                <option value="">Select School</option>
-                                @foreach($schools as $school)                                <option value="{{ $school->id }}" {{ $student->school_id == $school->id ? 'selected' : '' }}>
-                                    {{ $school->name }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_section_{{ $student->id }}" class="form-label">Section</label>
-                            <input type="text" class="form-control" id="edit_section_{{ $student->id }}" name="section" value="{{ $student->section }}" placeholder="e.g., A, B, C">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_grade_level_{{ $student->id }}" class="form-label">Grade Level</label>
-                            <input type="text" class="form-control" id="edit_grade_level_{{ $student->id }}" name="grade_level" value="{{ $student->grade_level }}" placeholder="e.g., Grade 7, Grade 8">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_section_{{ $student->id }}" class="form-label">Section</label>
-                            <input type="text" class="form-control" id="edit_section_{{ $student->id }}" name="section" value="{{ $student->section }}" placeholder="e.g., A, B, C">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="edit_grade_level_{{ $student->id }}" class="form-label">Grade Level</label>
-                            <input type="text" class="form-control" id="edit_grade_level_{{ $student->id }}" name="grade_level" value="{{ $student->grade_level }}" placeholder="e.g., Grade 7, Grade 8">
-                        </div>
-                        <div class="col-md-12">
-                            <label for="edit_address_{{ $student->id }}" class="form-label">Address</label>
-                            <textarea class="form-control" id="edit_address_{{ $student->id }}" name="address" rows="2">{{ $student->address }}</textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_cp_no_{{ $student->id }}" class="form-label">Contact Number</label>
-                            <input type="tel" class="form-control" id="edit_cp_no_{{ $student->id }}" name="cp_no" value="{{ $student->cp_no }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_contact_person_name_{{ $student->id }}" class="form-label">Emergency Contact Name</label>
-                            <input type="text" class="form-control" id="edit_contact_person_name_{{ $student->id }}" name="contact_person_name" value="{{ $student->contact_person_name }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_contact_person_relationship_{{ $student->id }}" class="form-label">Relationship</label>
-                            <select class="form-select" id="edit_contact_person_relationship_{{ $student->id }}" name="contact_person_relationship">
-                                <option value="">Select Relationship</option>
-                                <option value="Parent" {{ $student->contact_person_relationship == 'Parent' ? 'selected' : '' }}>Parent</option>
-                                <option value="Guardian" {{ $student->contact_person_relationship == 'Guardian' ? 'selected' : '' }}>Guardian</option>
-                                <option value="Sibling" {{ $student->contact_person_relationship == 'Sibling' ? 'selected' : '' }}>Sibling</option>
-                                <option value="Relative" {{ $student->contact_person_relationship == 'Relative' ? 'selected' : '' }}>Relative</option>
-                                <option value="Other" {{ $student->contact_person_relationship == 'Other' ? 'selected' : '' }}>Other</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_contact_person_contact_{{ $student->id }}" class="form-label">Emergency Contact Number</label>
-                            <input type="tel" class="form-control" id="edit_contact_person_contact_{{ $student->id }}" name="contact_person_contact" value="{{ $student->contact_person_contact }}">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>Update Student
-                    </button>
-                </div>
+<!-- QR Code Modals -->
+@foreach($students as $student)
+<div class="modal fade" id="qrModal{{ $student->id }}" tabindex="-1" aria-labelledby="qrModalLabel{{ $student->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="qrModalLabel{{ $student->id }}">
+                    <i class="fas fa-qrcode me-2"></i>QR Code - {{ $student->name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </form>
+            <div class="modal-body text-center">
+                @php
+                    $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+                    $modalHasQrCode = false;
+                    $modalQrImagePath = '';
+                    
+                    if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+                        $modalHasQrCode = true;
+                        $modalQrImagePath = $student->qr_code;
+                    } else {
+                        $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
+                        $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
+                        if ($qrSvgExists) {
+                            $modalHasQrCode = true;
+                            $modalQrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
+                        } elseif ($qrPngExists) {
+                            $modalHasQrCode = true;
+                            $modalQrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
+                        }
+                    }
+                @endphp
+                @if($modalHasQrCode)
+                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
+                    <div class="mt-3">
+                        <h6>{{ $student->name }}</h6>
+                        <p class="text-muted mb-0">ID: {{ $student->id_no ?? 'N/A' }}</p>
+                    </div>
+                @else
+                    <div class="text-muted">
+                        <i class="fas fa-qrcode fa-5x mb-3"></i>
+                        <h5>No QR Code Available</h5>
+                        <p>QR Code has not been generated for this student yet.</p>
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer">
+                @if($modalHasQrCode)
+                    <a href="{{ asset('storage/' . $modalQrImagePath) }}" download="{{ $student->name }}_QR.png" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-1"></i>Download QR
+                    </a>
+                @endif
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Close
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 @endforeach
@@ -739,24 +683,126 @@
 <!-- Add Student Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form method="POST" action="{{ route('admin.students.store') }}">
+        <form method="POST" action="{{ route('admin.students.store') }}" enctype="multipart/form-data">
             @csrf
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="addStudentModalLabel">
                         <i class="fas fa-user-plus me-2"></i>Add New Student
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="id_no" name="id_no" required>
+                        <!-- Student Picture Section -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-secondary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <h6 class="mb-0 text-secondary fw-bold">Student Picture</h6>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="student-photo-placeholder mb-2" onclick="document.getElementById('picture').click();" style="width: 100px; height: 100px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 2px dashed #6c757d; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; cursor: pointer; position: relative;">
+                                        <i class="fas fa-user-circle" style="font-size: 2rem; margin-bottom: 5px; opacity: 0.7;"></i>
+                                        <span style="font-size: 0.7rem; font-weight: 500; text-align: center;">No Photo<br><small>Click to add</small></span>
+                                        <div style="position: absolute; top: 5px; right: 5px; background: #007bff; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">
+                                            <i class="fas fa-plus"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <div id="photo-controls" class="d-flex gap-2 mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="openCameraModal()">
+                                            <i class="fa fa-camera me-1"></i>Take Photo
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('picture').click()">
+                                            <i class="fa fa-upload me-1"></i>Upload File
+                                        </button>
+                                    </div>
+                                    
+                                    <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
+                                    <input type="hidden" id="captured_image" name="captured_image">
+                                    <div id="image-preview" class="mt-2" style="display: none;">
+                                        <img id="preview-img" src="" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; border: 3px solid #28a745;">
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="removePhoto()">
+                                                <i class="fa fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Upload a student photo or take a photo with camera</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <h6 class="mb-0 text-primary fw-bold">Basic Information</h6>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+                            <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 2024-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M.">
+                        </div>
+                        
+                        <!-- Academic Information -->
+                        <div class="col-12 mt-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <h6 class="mb-0 text-success fw-bold">Academic Information</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="admin_school_id" class="form-label">School <span class="text-danger">*</span></label>
+                            <select class="form-select" id="admin_school_id" name="school_id" required onchange="loadTeachersBySchool()">
+                                <option value="">Select School</option>
+                                @foreach($schools ?? [] as $school)
+                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="admin_teacher_id" class="form-label">Teacher <span class="text-danger">*</span></label>
+                            <select class="form-select" id="admin_teacher_id" name="user_id" required onchange="loadSectionsByTeacher()" disabled>
+                                <option value="">Select Teacher</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="admin_section_id" class="form-label">Grade & Section <span class="text-danger">*</span></label>
+                            <select class="form-select" id="admin_section_id" name="section_id" required disabled>
+                                <option value="">Select Grade & Section</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="admin_semester_id" class="form-label">Semester</label>
+                            <select class="form-select" id="admin_semester_id" name="semester_id">
+                                <option value="">Select Semester</option>
+                                @foreach($semesters ?? [] as $semester)
+                                    <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <!-- Personal Information -->
+                        <div class="col-12 mt-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <h6 class="mb-0 text-info fw-bold">Personal Information</h6>
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
@@ -768,49 +814,37 @@
                         </div>
                         <div class="col-md-4">
                             <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="age" name="age" min="1" max="100" required>
+                            <input type="number" class="form-control" id="age" name="age" min="13" max="25" required placeholder="Age">
                         </div>
                         <div class="col-md-4">
-                            <label for="school_id" class="form-label">School</label>
-                            <select class="form-select" id="school_id" name="school_id">
-                                <option value="">Select School</option>
-                                @foreach($schools as $school)
-                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="section" class="form-label">Section</label>
-                            <input type="text" class="form-control" id="section" name="section" placeholder="e.g., A, B, C">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="grade_level" class="form-label">Grade Level</label>
-                            <input type="text" class="form-control" id="grade_level" name="grade_level" placeholder="e.g., Grade 7, Grade 8">
-                        </div>
-                        <div class="col-md-12">
-                            <label for="teacher_id" class="form-label">Teacher</label>
-                            <select class="form-select" id="teacher_id" name="user_id">
-                                <option value="">Select Teacher</option>
-                                @foreach($teachers as $teacher)
-                                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="cp_no" class="form-label">Contact Number</label>
+                            <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX">
                         </div>
                         <div class="col-md-12">
                             <label for="address" class="form-label">Address</label>
-                            <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                            <input type="text" class="form-control" id="address" name="address" placeholder="Complete address">
+                        </div>
+                        
+                        <!-- Emergency Contact -->
+                        <div class="col-12 mt-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-danger text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <h6 class="mb-0 text-danger fw-bold">Emergency Contact <span class="text-danger">*</span></h6>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label for="cp_no" class="form-label">Contact Number</label>
-                            <input type="tel" class="form-control" id="cp_no" name="cp_no">
+                            <label for="contact_person_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" required placeholder="Parent/Guardian name">
                         </div>
                         <div class="col-md-6">
-                            <label for="contact_person_name" class="form-label">Emergency Contact Name</label>
-                            <input type="text" class="form-control" id="contact_person_name" name="contact_person_name">
+                            <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX">
                         </div>
-                        <div class="col-md-6">
-                            <label for="contact_person_relationship" class="form-label">Relationship</label>
-                            <select class="form-select" id="contact_person_relationship" name="contact_person_relationship">
+                        <div class="col-md-12">
+                            <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
+                            <select class="form-select" id="contact_person_relationship" name="contact_person_relationship" required>
                                 <option value="">Select Relationship</option>
                                 <option value="Parent">Parent</option>
                                 <option value="Guardian">Guardian</option>
@@ -819,19 +853,12 @@
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="contact_person_contact" class="form-label">Emergency Contact Number</label>
-                            <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact">
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                     <div class="me-auto">
-                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importStudentsModal" data-bs-dismiss="modal">
-                                    <i class="fas fa-file-excel me-1"></i>Import Excel File
-                                </button>
-                            </div>
-
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importStudentsModal" data-bs-dismiss="modal">
+                        <i class="fas fa-file-excel me-1"></i>Import Excel File
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times me-1"></i>Cancel
                     </button>
@@ -844,263 +871,347 @@
     </div>
 </div>
 
-  <div class="modal fade" id="importStudentsModal" tabindex="-1" aria-labelledby="importStudentsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title" id="importStudentsModalLabel">
-                            <i class="fas fa-file-upload me-2"></i>Import Students from Excel
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Instructions Section -->
-                        <div class="alert alert-info" role="alert">
-                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>How to Import Students</h6>
-                            <ol class="mb-2">
-                                <li>Download the template file below</li>
-                                <li>Fill in the student data following the format</li>
-                                <li>Save and upload your completed file</li>
-                                <li>Review the preview before confirming the import</li>
-                            </ol>
-                            <hr>
-                            <p class="mb-0"><strong>Supported formats:</strong> .csv, .xls, .xlsx (max 5MB)</p>
-                        </div>
-
-                        <!-- Download Template Section -->
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-3">
-                                <i class="fas fa-download me-2"></i>Step 1: Download Template
-                            </h6>
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('admin.students.downloadTemplate') }}" class="btn btn-outline-success">
-                                    <i class="fas fa-file-excel me-1"></i>Download Excel Template
-                                </a>
-                                <a href="{{ route('admin.students.downloadSampleData') }}" class="btn btn-outline-info">
-                                    <i class="fas fa-eye me-1"></i>View Sample Data
-                                </a>
+<!-- Import Students Modal -->
+<div class="modal fade" id="importStudentsModal" tabindex="-1" aria-labelledby="importStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white py-2">
+                <h6 class="modal-title" id="importStudentsModalLabel">
+                    <i class="fas fa-file-excel me-1"></i>Import Students from Excel
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light border-0 py-2">
+                                <small class="text-success fw-bold">
+                                    <i class="fas fa-list-ol me-1"></i>Quick Steps
+                                </small>
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                The template includes all required fields with proper formatting examples.
-                            </small>
-                        </div>
-
-                        <hr>
-
-                        <!-- Upload Section -->
-                        <div class="mb-3">
-                            <h6 class="fw-bold mb-3">
-                                <i class="fas fa-upload me-2"></i>Step 2: Upload Your File
-                            </h6>
-                            <form action="{{ route('import.upload') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                                @csrf
-                                <div class="row g-3">
-                                    <div class="col">
-                                        <label for="import_file" class="form-label">Choose Excel/CSV file:</label>
-                                        <input type="file" name="file" id="import_file" class="form-control" 
-                                               accept=".csv, .xls, .xlsx" required 
-                                               onchange="handleFileSelect(this)">
-                                        <div class="form-text">
-                                            <i class="fas fa-check-circle text-success me-1"></i>
-                                            Accepted formats: CSV, Excel (.xls, .xlsx) | Max size: 5MB
+                            <div class="card-body p-3">
+                                <ol class="mb-2 small">
+                                    <li class="mb-1">Download template file</li>
+                                    <li class="mb-1">Fill in student data</li>
+                                    <li class="mb-1">Save and upload file</li>
+                                    <li class="mb-1">Review and confirm</li>
+                                </ol>
+                                
+                                <div class="d-grid mb-2">
+                                    <a href="{{ route('admin.students.downloadTemplate') }}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-download me-1"></i>Download Template
+                                    </a>
+                                </div>
+                                
+                                <div class="bg-light p-2 rounded">
+                                    <small class="text-success fw-bold d-block mb-1">
+                                        <i class="fas fa-check-circle me-1"></i>Supported Formats
+                                    </small>
+                                    <div class="row g-1">
+                                        <div class="col-6">
+                                            <small class="d-flex align-items-center">
+                                                <i class="fas fa-file-excel text-success me-1"></i>.xlsx, .xls, .csv
+                                            </small>
                                         </div>
                                     </div>
-                                    
+                                    <small class="text-muted">Max: 5MB</small>
                                 </div>
-
-                                <!-- File Info Display -->
-                                <div id="fileInfo" class="mt-3" style="display: none;">
-                                    <div class="alert alert-light border">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-file-alt text-primary me-2"></i>
-                                            <div>
-                                                <div class="fw-bold" id="fileName"></div>
-                                                <small class="text-muted" id="fileDetails"></small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-
-                                <div class="d-grid gap-2 mt-4">
-                                    <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
-                                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload and Process File
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Progress Indicator -->
-                        <div id="uploadProgress" class="mt-3" style="display: none;">
-                            <div class="d-flex align-items-center">
-                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-                                    <span class="visually-hidden">Processing...</span>
-                                </div>
-                                <span>Processing your file, please wait...</span>
                             </div>
                         </div>
                     </div>
                     
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light border-0 py-2">
+                                <small class="text-primary fw-bold">
+                                    <i class="fas fa-upload me-1"></i>Upload Your File
+                                </small>
+                            </div>
+                            <div class="card-body p-3">
+                                <form action="{{ route('import.upload') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="mb-3">
+                                        <label for="import_file" class="form-label small">Select Excel or CSV File</label>
+                                        <div class="border-2 border-dashed border-primary rounded p-3 text-center bg-light">
+                                            <div class="mb-2">
+                                                <i class="fas fa-cloud-upload-alt fa-2x text-primary"></i>
+                                            </div>
+                                            <input type="file" name="file" id="import_file" class="form-control form-control-sm" accept=".csv, .xls, .xlsx" required>
+                                            <small class="form-text text-muted mt-1 d-block">
+                                                Choose template format file
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-upload me-1"></i>Upload & Import
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-warning py-2 border-0">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
+                                <div>
+                                    <small class="fw-bold text-warning d-block mb-1">Important Notes</small>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <ul class="mb-0" style="font-size: 0.75rem;">
+                                                <li>Fill all required fields: Student ID, Name <strong>(LN, FN MI.)</strong>, Gender (M/F), Age, School ID, Teacher ID, Section ID, Emergency Contact Name, Relationship, Emergency Contact Phone</li>
+                                                <li>Name format must be: <strong>Last Name, First Name Middle Initial.</strong> (example: Dela Cruz, Juan M.)</li>
+                                                <li>Student IDs must be unique - duplicates will be skipped</li>
+                                                <li>School ID, Teacher ID, and Section ID must match existing records in the system</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Close
+                </button>
+            </div>
         </div>
+    </div>
 </div>
 
-
-<style>
-    .bg-pink {
-        background-color: #e91e63 !important;
-    }
-    
-    .info-item {
-        margin-bottom: 0.5rem;
-    }
-    
-    .generate-qr-form {
-        display: inline-block;
-    }
-
-    .card {
-        border-radius: 10px;
-        border: none;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    
-    .card-header {
-        border-radius: 10px 10px 0 0 !important;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .btn {
-        border-radius: 6px;
-    }
-    
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .badge {
-        font-size: 0.75em;
-    }
-
-    
-    .bg-pink {
-        background-color: #e91e63 !important;
-    }
-    
-    .form-select {
-        border-radius: 6px;
-        min-width: 150px;
-    }
-    
-     .table thead th {
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-    }
-    
-    .table tbody td {
-        padding: 1rem 0.75rem;
-        border-top: none;
-    }
-    
-    .table tbody tr {
-        transition: all 0.2s ease;
-    }
-    
-
-     .dropdown-toggle {
-        border-radius: 20px;
-        padding: 0.375rem 1rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    
-    .dropdown-toggle::after {
-        margin-left: 0.5rem;
-    }
-    
-    .dropdown-menu {
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        border: none;
-        min-width: 250px;
-        padding: 0.5rem 0;
-    }
-    
-    .dropdown-header {
-        color: #495057;
-        font-weight: 600;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 0.5rem 1rem 0.25rem;
-    }
-    
-    .dropdown-item {
-        padding: 0.75rem 1rem;
-        transition: all 0.2s ease;
-        border-radius: 0;
-    }
-    
-    .dropdown-item:hover {
-        background-color: #f8f9fa;
-        transform: translateX(3px);
-        color: #495057;
-    }
-    
-    .dropdown-item i {
-        width: 16px;
-        text-align: center;
-    }
-    
-    #bulkActions .btn {
-        font-size: 0.85rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-    
-    .badge {
-        font-size: 0.8rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 15px;
-        font-weight: 500;
-    }
-    
-    .card-header .btn {
-        border-radius: 25px;
-        font-weight: 600;
-        padding: 0.5rem 1.25rem;
-        transition: all 0.3s ease;
-    }
-    
-    .card-header .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .custom-sticky {
-  top: 10%; 
-  z-index: 1020;  
- }
-</style>
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cameraModalLabel">Take Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="camera-container">
+                    <video id="camera-video" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 15px; border: 3px solid #007bff;"></video>
+                    <canvas id="camera-canvas" style="display: none;"></canvas>
+                </div>
+                <div id="camera-controls" class="mt-3">
+                    <button type="button" class="btn btn-primary" onclick="capturePhoto()"><i class="fa fa-camera"></i> Capture Photo</button>
+                    <button type="button" class="btn btn-secondary" onclick="retakePhoto()" style="display: none;" id="retake-btn"><i class="fa fa-redo"></i> Retake</button>
+                </div>
+                <div id="camera-preview" class="mt-3" style="display: none;"><img id="captured-photo" src="" alt="Captured Photo" style="width: 200px; height: 200px; object-fit: cover; border-radius: 15px; border: 3px solid #28a745;"></div>
+                <div id="camera-error" class="mt-3 alert alert-danger" style="display: none;"><i class="fa fa-exclamation-triangle"></i> Camera not available. Please upload a file instead.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="usePhoto()" id="use-photo-btn" style="display: none;"><i class="fa fa-check"></i> Use Photo</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    let debounceTimer;
-    
-    document.querySelectorAll('.generate-qr-form').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            var btn = form.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        });
-    });
+// Camera functionality
+let videoStream = null;
+let cameraModal = null;
 
+function openCameraModal() {
+    cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
+    cameraModal.show();
+    document.getElementById('camera-preview').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'none';
+    document.getElementById('use-photo-btn').style.display = 'none';
+    document.getElementById('camera-error').style.display = 'none';
+    document.getElementById('camera-video').style.display = 'block';
+    startCamera();
+}
+
+function startCamera() {
+    const video = document.getElementById('camera-video');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { 
+        showCameraError(); 
+        return; 
+    }
+    navigator.mediaDevices.getUserMedia({ 
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } 
+    })
+    .then(function(stream) { 
+        videoStream = stream; 
+        video.srcObject = stream; 
+    })
+    .catch(function(err) { 
+        console.error('Error accessing camera:', err); 
+        showCameraError(); 
+    });
+}
+
+function showCameraError() { 
+    document.getElementById('camera-video').style.display = 'none'; 
+    document.getElementById('camera-error').style.display = 'block'; 
+}
+
+function capturePhoto() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth; 
+    canvas.height = video.videoHeight; 
+    context.drawImage(video, 0, 0);
+    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+    document.getElementById('captured-photo').src = dataURL;
+    document.getElementById('camera-preview').style.display = 'block';
+    document.getElementById('camera-video').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'inline-block';
+    document.getElementById('use-photo-btn').style.display = 'inline-block';
+}
+
+function retakePhoto() { 
+    document.getElementById('camera-preview').style.display = 'none'; 
+    document.getElementById('camera-video').style.display = 'block'; 
+    document.getElementById('retake-btn').style.display = 'none'; 
+    document.getElementById('use-photo-btn').style.display = 'none'; 
+}
+
+function usePhoto() {
+    const dataURL = document.getElementById('captured-photo').src;
+    document.getElementById('captured_image').value = dataURL;
+    showImagePreview(dataURL);
+    stopCamera(); 
+    cameraModal.hide();
+}
+
+function stopCamera() { 
+    if (videoStream) { 
+        videoStream.getTracks().forEach(track => track.stop()); 
+        videoStream = null; 
+    } 
+}
+
+function showImagePreview(src) { 
+    const preview = document.getElementById('image-preview'); 
+    const previewImg = document.getElementById('preview-img'); 
+    const placeholder = document.querySelector('.student-photo-placeholder');
+    
+    // Hide placeholder
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
+    
+    // Show preview
+    previewImg.src = src; 
+    preview.style.display = 'block';
+}
+
+function removePhoto() {
+    const preview = document.getElementById('image-preview');
+    const placeholder = document.querySelector('.student-photo-placeholder');
+    const pictureInput = document.getElementById('picture');
+    const capturedInput = document.getElementById('captured_image');
+    
+    // Clear inputs
+    if (pictureInput) pictureInput.value = '';
+    if (capturedInput) capturedInput.value = '';
+    
+    // Hide preview and show placeholder
+    preview.style.display = 'none';
+    if (placeholder) {
+        placeholder.style.display = 'flex';
+    }
+}
+
+// File upload preview
+document.getElementById('picture').addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+        const file = this.files[0];
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            this.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) { 
+            showImagePreview(e.target.result); 
+            document.getElementById('captured_image').value = ''; 
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Close camera when modal is hidden
+document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () { 
+    stopCamera(); 
+});
+
+// Cascading dropdowns for School -> Teacher -> Section
+function loadTeachersBySchool() {
+    const schoolSelect = document.getElementById('admin_school_id');
+    const teacherSelect = document.getElementById('admin_teacher_id');
+    const sectionSelect = document.getElementById('admin_section_id');
+    
+    const schoolId = schoolSelect.value;
+    
+    // Reset dependent dropdowns
+    teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
+    sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
+    teacherSelect.disabled = !schoolId;
+    sectionSelect.disabled = true;
+    
+    if (schoolId) {
+        // Fetch teachers for this school
+        fetch(`/admin/schools/${schoolId}/teachers`)
+            .then(response => response.json())
+            .then(teachers => {
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = teacher.name;
+                    teacherSelect.appendChild(option);
+                });
+                teacherSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error loading teachers:', error);
+                teacherSelect.disabled = false;
+            });
+    }
+}
+
+function loadSectionsByTeacher() {
+    const teacherSelect = document.getElementById('admin_teacher_id');
+    const sectionSelect = document.getElementById('admin_section_id');
+    
+    const teacherId = teacherSelect.value;
+    
+    // Reset sections dropdown
+    sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
+    sectionSelect.disabled = !teacherId;
+    
+    if (teacherId) {
+        // Fetch sections for this teacher
+        fetch(`/admin/teachers/${teacherId}/sections`)
+            .then(response => response.json())
+            .then(sections => {
+                sections.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = `Grade ${section.gradelevel} - ${section.name}`;
+                    sectionSelect.appendChild(option);
+                });
+                sectionSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error loading sections:', error);
+                sectionSelect.disabled = false;
+            });
+    }
+}
 
 let debounceTimer;
 
@@ -1108,171 +1219,165 @@ function debounceSubmit() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function() {
         document.getElementById('studentFilterForm').submit();
-    }, 500); 
-
-function showQRCode(qrCodeUrl) {
-     const modal = document.createElement('div');
-    modal.className = 'modal fade';
-    modal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">QR Code</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img src="${qrCodeUrl}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
-                </div>
-
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-    
-     modal.addEventListener('hidden.bs.modal', function () {
-        modal.remove();
-    });
-}
-}
-
-function deleteStudent(studentId, studentName) {
-    if (confirm(`Are you sure you want to delete student "${studentName}"? This action cannot be undone.`)) {
-         const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/students/${studentId}`;
-        
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = '{{ csrf_token() }}';
-        
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'DELETE';
-        
-        form.appendChild(csrfToken);
-        form.appendChild(methodField);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
-    var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-        return new bootstrap.Dropdown(dropdownToggleEl);
-    });
-
-    document.querySelectorAll('.dropdown-menu form').forEach(function(form) {
-        form.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    });
-});
-
-function downloadTemplate() {
-    window.location.href = '{{ route("admin.students.downloadTemplate") }}';
-}
-
- function handleFileSelect(input) {
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    const fileDetails = document.getElementById('fileDetails');
-    
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const fileSize = (file.size / 1024 / 1024).toFixed(2); 
-        
-        fileName.textContent = file.name;
-        fileDetails.textContent = `Size: ${fileSize} MB | Type: ${file.type || 'Unknown'}`;
-        fileInfo.style.display = 'block';
-        
-         if (file.size > 5 * 1024 * 1024) {
-            showImportAlert('File size exceeds 5MB limit. Please choose a smaller file.', 'danger');
-            input.value = '';
-            fileInfo.style.display = 'none';
-            return;
-        }
-        
-        // Validate file type
-        const allowedTypes = ['.csv', '.xls', '.xlsx'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        if (!allowedTypes.includes(fileExtension)) {
-            showImportAlert('Invalid file type. Please choose a CSV or Excel file.', 'danger');
-            input.value = '';
-            fileInfo.style.display = 'none';
-            return;
-        }
-    } else {
-        fileInfo.style.display = 'none';
-    }
-}
-
- function showImportAlert(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    const modalBody = document.querySelector('#importStudentsModal .modal-body');
-    modalBody.insertBefore(alertDiv, modalBody.firstChild);
-    
-     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const importForm = document.getElementById('importForm');
-    if (importForm) {
-        importForm.addEventListener('submit', function(e) {
-            const uploadBtn = document.getElementById('uploadBtn');
-            const uploadProgress = document.getElementById('uploadProgress');
-            
-            uploadBtn.disabled = true;
-            uploadProgress.style.display = 'block';
-            
-             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-        });
-    }
-
-     const importModal = document.getElementById('importStudentsModal');
-    if (importModal) {
-        importModal.addEventListener('hidden.bs.modal', function() {
-            const form = document.getElementById('importForm');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const uploadProgress = document.getElementById('uploadProgress');
-            const fileInfo = document.getElementById('fileInfo');
-            
-             if (form) form.reset();
-            
-             if (uploadBtn) {
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload and Process File';
-            }
-            
-             if (uploadProgress) uploadProgress.style.display = 'none';
-            if (fileInfo) fileInfo.style.display = 'none';
-            
-             const alerts = document.querySelectorAll('#importStudentsModal .alert-dismissible');
-            alerts.forEach(alert => alert.remove());
-        });
-    }
-});
-
-function debounceSubmit() {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(function() {
-        document.getElementById('studentFilterForm').submit();
     }, 500);
 }
+
+function generateQr(studentId) {
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/students/${studentId}/generate-qr`;
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    
+    form.appendChild(csrfToken);
+    document.body.appendChild(form);
+    form.submit();
+}
 </script>
+
+<script>
+// Populate Section select when Teacher changes
+document.addEventListener('DOMContentLoaded', function() {
+    const teacherSelect = document.getElementById('filterTeacher');
+    const sectionSelect = document.getElementById('filterSection');
+
+    function populateSections() {
+        if(!teacherSelect || !sectionSelect) return;
+        const selected = teacherSelect.selectedOptions[0];
+        const sectionsData = selected ? selected.getAttribute('data-sections') : null;
+        // Clear current options but keep default
+        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+        if(sectionsData) {
+            try {
+                const sections = JSON.parse(sectionsData);
+                sections.forEach(sec => {
+                    const opt = document.createElement('option');
+                    opt.value = sec.id;
+                    opt.text = (sec.section_name || sec.name) + ' (Grade ' + (sec.gradelevel || sec.grade_level || '') + ')';
+                    sectionSelect.appendChild(opt);
+                });
+            } catch(e) {
+                // ignore
+            }
+        }
+    }
+
+    if(document.getElementById('filterTeacher')) {
+        document.getElementById('filterTeacher').addEventListener('change', populateSections);
+        // initial populate in case page loaded with teacher selected
+        populateSections();
+    }
+});
+</script>
+
+<style>
+    /* Sticky card and table styles */
+    .sticky-card {
+        position: relative;
+    }
+    
+    .table-responsive {
+        border-radius: 0 0 0.375rem 0.375rem;
+    }
+    
+    .sticky-top {
+        background-color: #f8f9fa !important;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .sticky-top th {
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        vertical-align: middle;
+        padding: 12px 8px;
+    }
+    
+    .sticky-card-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #6366f1;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #4f46e5;
+    }
+    
+    .card-body {
+        padding: 0 !important;
+    }
+    
+    .table {
+        margin-bottom: 0 !important;
+    }
+    
+    .table tbody tr {
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.04);
+    }
+    
+    /* Cursor pointer for clickable QR codes */
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    
+    /* Ensure the sticky header on filters stays below main header */
+    .sticky-header {
+        z-index: 1020;
+    }
+    
+    /* Improve stats card layout */
+    .stats-row {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+</style>
 
 @endsection

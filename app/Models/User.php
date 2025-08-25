@@ -106,16 +106,31 @@ class User extends Authenticatable
         return $this->belongsTo(School::class, 'school_id', 'id');
     }
 
-    // Relationship: User belongs to a Section
+    // Relationship: User belongs to a Section (legacy single section)
     public function section()
     {
         return $this->belongsTo(Section::class, 'section_id');
+    }
+
+    // Relationship: User has many Sections through pivot table (many-to-many)
+    public function sections()
+    {
+        return $this->belongsToMany(Section::class, 'section_teacher', 'teacher_id', 'section_id')
+                    ->withTimestamps();
     }
 
     // Accessor for section_name (from section relationship)
     public function getSectionNameAttribute()
     {
         return $this->section ? $this->section->name : null;
+    }
+
+    // Get all assigned sections as a formatted string
+    public function getAssignedSectionsAttribute()
+    {
+        return $this->sections->map(function($section) {
+            return $section->name . ' (Grade ' . $section->gradelevel . ')';
+        })->implode(', ');
     }
 
     // Relationship: User has many Students

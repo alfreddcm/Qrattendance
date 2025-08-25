@@ -13,15 +13,13 @@ use Illuminate\Support\Facades\Log;
 
 class AttendanceAnalyticsController extends Controller {
 
-    // Show dashboard with statistics charts (for @include in dashboard)
-    public function dashboardWithStatistics(Request $request)
+     public function dashboardWithStatistics(Request $request)
     {
         $teacherId = Auth::id();
         $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
-        // Daily Attendance Trends
-        $trends = \App\Models\Attendance::selectRaw('
+         $trends = \App\Models\Attendance::selectRaw('
                 DATE(date) as attendance_date,
                 COUNT(*) as total_students,
                 COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present_students,
@@ -37,8 +35,7 @@ class AttendanceAnalyticsController extends Controller {
         $trendAbsent = $trends->pluck('absent_students')->toArray();
         $attendanceTrendsChart = new \App\Charts\AttendanceTrendsChart($trendLabels, $trendPresent, $trendAbsent);
 
-        // Time-in & Time-out Patterns
-        $patterns = \App\Models\Attendance::selectRaw('
+         $patterns = \App\Models\Attendance::selectRaw('
                 DATE(date) as attendance_date,
                 COUNT(time_in_am) as am_in,
                 COUNT(time_out_pm) as pm_out
@@ -99,7 +96,7 @@ class AttendanceAnalyticsController extends Controller {
     {
     $chartData = $this->getChartData($request);
 
-    // Attendance Forecasting (simple moving average for next 7 days)
+    // Attendance Forecasting  
     $teacherId = \Auth::id();
     $endDate = $request->get('end_date', \Carbon\Carbon::now()->toDateString());
     $attendance = \App\Models\Attendance::selectRaw('DATE(date) as attendance_date, COUNT(DISTINCT student_id) as present_count')
@@ -124,17 +121,14 @@ class AttendanceAnalyticsController extends Controller {
     return view('teacher.statistics', $chartData);
 }
 
-    /**
-     * Get chart objects as array for use in dashboard or statistics view
-     */
+ 
     public function getChartData(Request $request)
     {
         $teacherId = Auth::id();
         $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
-        // Log the parameters for debugging
-        \Log::info('Getting chart data', [
+         \Log::info('Getting chart data', [
             'teacher_id' => $teacherId,
             'start_date' => $startDate,
             'end_date' => $endDate
@@ -253,7 +247,8 @@ class AttendanceAnalyticsController extends Controller {
 
         $activeSessions = AttendanceSession::with('semester')
                                          ->where('teacher_id', Auth::id())
-                                         ->active()
+                                         ->where('status', 'active')
+                                         ->whereDate('started_at', Carbon::today('Asia/Manila'))
                                          ->orderBy('created_at', 'desc')
                                          ->get();
                                          
@@ -438,8 +433,7 @@ class AttendanceAnalyticsController extends Controller {
             return response()->json(['weekly' => $weekly, 'monthly' => $monthly]);
         }
 
-        // Individual Student Attendance Forecast
-        public function studentForecast(Request $request)
+         public function studentForecast(Request $request)
         {
             $teacherId = Auth::id();
             $studentId = $request->get('student_id');

@@ -9,8 +9,7 @@
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
     <script src="{{ asset('js/all.min.js') }}"></script>
@@ -394,7 +393,7 @@
                 margin-bottom: 5px;
             }
         }
-        @media (max-width: 800px) {
+        @media (max-width: 900px) {
             .sidebar {
                 position: fixed;
                 left: 0;
@@ -430,9 +429,11 @@
 </head>
 
 <body>
+    <div id="mobile-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#222; color:#fff; z-index:9999; align-items:center; justify-content:center; flex-direction:column; text-align:center; font-size:1.5em;">
+        <div>Dev is tired,<br>Please switch to desktop</div>
+    </div>
     <div class="sidebar" id="sidebar">
-        <!-- Hamburger Menu -->
-        <div class="hamburger-menu" id="hamburgerToggle">
+         <div class="hamburger-menu" id="hamburgerToggle">
             <div class="hamburger-icon">
                 <span></span>
                 <span></span>
@@ -510,6 +511,19 @@
         @yield('content')
     </div>
     <script>
+        // Mobile overlay logic
+        function checkMobileOverlay() {
+            if (window.innerWidth <= 600) {
+                document.getElementById('mobile-overlay').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.getElementById('mobile-overlay').style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        window.addEventListener('resize', checkMobileOverlay);
+        window.addEventListener('DOMContentLoaded', checkMobileOverlay);
+  
         const hamburgerToggle = document.getElementById('hamburgerToggle');
         const sidebar = document.getElementById('sidebar');
 

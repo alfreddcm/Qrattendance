@@ -19,8 +19,7 @@ class ReportController extends Controller
         $gradeSection = $request->input('grade_section');
         $semesters = Semester::all();
         $records = [];
-
-        // Base student query
+ 
         $studentQuery = Student::where('user_id', Auth::id());
         
         if ($semesterId) {
@@ -30,34 +29,35 @@ class ReportController extends Controller
             $semester = null;
         }
 
-        // Apply grade_section filter if provided
+ 
         if ($gradeSection) {
             $parts = explode('|', $gradeSection);
             if (count($parts) == 2) {
                 $gradeLevel = $parts[0];
-                $section = $parts[1];
-                $studentQuery->where('grade_level', $gradeLevel)->where('section', $section);
+                $sectionName = $parts[1];
+                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $sectionName) {
+                    $query->where('gradelevel', $gradeLevel)->where('name', $sectionName);
+                });
             }
         }
 
         $students = $studentQuery->orderBy('name')->get();
 
-        // Get grade section options for the dropdown
-        $gradeSectionOptionsQuery = Student::where('user_id', Auth::id());
+         $gradeSectionOptionsQuery = Student::with('section')->where('user_id', Auth::id());
         if ($semesterId) {
             $gradeSectionOptionsQuery->where('semester_id', $semesterId);
         }
         
         $gradeSectionOptions = $gradeSectionOptionsQuery
-            ->select('grade_level', 'section')
-            ->distinct()
-            ->orderBy('grade_level')
-            ->orderBy('section')
             ->get()
-            ->map(function ($item) {
-                return $item->grade_level . '|' . $item->section;
+            ->filter(function($student) {
+                return $student->section;  
+            })
+            ->map(function ($student) {
+                return $student->section->gradelevel . '|' . $student->section->name;
             })
             ->unique()
+            ->sort()
             ->values();
 
         if ($type === 'daily') {
@@ -205,8 +205,7 @@ class ReportController extends Controller
 
             $classDays = self::getClassDays($start, $end);
 
-            // If no class days, show empty data
-            if (empty($classDays)) {
+             if (empty($classDays)) {
             $records = $students->map(function ($student) {
                 return (object)[
                 'id_no'    => $student->id_no,
@@ -265,8 +264,7 @@ class ReportController extends Controller
         $gradeSection = $request->input('grade_section');
         $semesters = Semester::all();
 
-        // Base student query
-        $studentQuery = Student::where('user_id', Auth::id());
+         $studentQuery = Student::where('user_id', Auth::id());
         
         if ($semesterId) {
             $studentQuery->where('semester_id', $semesterId);
@@ -275,13 +273,14 @@ class ReportController extends Controller
             $semester = null;
         }
 
-        // Apply grade_section filter if provided
-        if ($gradeSection) {
+         if ($gradeSection) {
             $parts = explode('|', $gradeSection);
             if (count($parts) == 2) {
                 $gradeLevel = $parts[0];
-                $section = $parts[1];
-                $studentQuery->where('grade_level', $gradeLevel)->where('section', $section);
+                $sectionName = $parts[1];
+                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $sectionName) {
+                    $query->where('gradelevel', $gradeLevel)->where('name', $sectionName);
+                });
             }
         }
 
@@ -325,8 +324,7 @@ class ReportController extends Controller
                     ]);
                 }
             } elseif ($type === 'monthly') {
-                // Apply the same approach as in the index() method
-                if ($semester) {
+                 if ($semester) {
                     $semester_start = \Carbon\Carbon::parse($semester->start_date)->startOfDay();
                     $semester_end = \Carbon\Carbon::parse($semester->end_date)->endOfDay();
                 } else {
@@ -437,7 +435,7 @@ class ReportController extends Controller
                         $att = $attendances->get($date);
                         if ($att) {
                             if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
-                                $row[] = '/'; // Full day
+                                $row[] = '/';  
                             } elseif ($att->time_in_am || $att->time_in_pm) {
                                 $row[] = '='; 
                             } else {
@@ -470,7 +468,7 @@ class ReportController extends Controller
             'grade_section' => 'nullable|string',
             'month' => 'required|integer|min:1|max:12',
             'year' => 'required|integer|min:2020|max:2030',
-            'teacher_id' => 'nullable|integer|exists:users,id' // Optional teacher ID for admin use
+            'teacher_id' => 'nullable|integer|exists:users,id'  
         ]);
 
         try {
@@ -478,12 +476,10 @@ class ReportController extends Controller
             $month = $request->month;
             $year = $request->year;
 
-            // Get semester information to derive school year
-            $semesterName = $semester->name;
+             $semesterName = $semester->name;
             $schoolYear = $this->extractSchoolYearFromSemester($semesterName);
             
-            // Parse grade_section parameter (format: "Grade 11|STEM")
-            $gradeLevel = null;
+             $gradeLevel = null;
             $section = null;
             
             if ($request->grade_section) {
@@ -505,7 +501,7 @@ class ReportController extends Controller
                 'year' => $year,
                 'filter_grade_level' => $gradeLevel,
                 'filter_section' => $section,
-                'teacher_id' => $request->teacher_id ?? null // Accept teacher_id from frontend
+                'teacher_id' => $request->teacher_id ?? null  
             ]);
 
             if ($result['success']) {
@@ -536,18 +532,15 @@ class ReportController extends Controller
      */
     private function extractSchoolYearFromSemester($semesterName)
     {
-        // Try to extract year from semester name (e.g., "1st Semester 2025" -> "2024-2025")
-        if (preg_match('/(\d{4})/', $semesterName, $matches)) {
+         if (preg_match('/(\d{4})/', $semesterName, $matches)) {
             $year = (int)$matches[1];
             return ($year - 1) . '-' . $year;
         }
         
-        // Fallback to current academic year
-        $currentYear = Carbon::now()->year;
+         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
         
-        // If we're in the first half of the year (Jan-June), it's the previous academic year
-        if ($currentMonth <= 6) {
+         if ($currentMonth <= 6) {
             return ($currentYear - 1) . '-' . $currentYear;
         } else {
             return $currentYear . '-' . ($currentYear + 1);
@@ -597,18 +590,14 @@ class ReportController extends Controller
         }
     }
 
-    /**
-     * Get SF2 form options for dropdown
-     */
+ 
     public function getSF2Options()
     {
-        // Get available semesters for the current user
-        $semesters = Semester::whereHas('students', function($query) {
+         $semesters = Semester::whereHas('students', function($query) {
             $query->where('user_id', Auth::id());
         })->select('id', 'name', 'start_date', 'end_date')->orderBy('created_at', 'desc')->get();
 
-        // Add semester date information for month filtering
-        $semestersWithDates = $semesters->map(function($semester) {
+         $semestersWithDates = $semesters->map(function($semester) {
             return [
                 'id' => $semester->id,
                 'name' => $semester->name,
@@ -621,24 +610,24 @@ class ReportController extends Controller
             ];
         });
 
-        // Get combined grade level and section options
-        $gradeSection = Student::where('user_id', Auth::id())
-            ->whereNotNull('grade_level')
-            ->whereNotNull('section')
-            ->select('grade_level', 'section')
-            ->distinct()
-            ->orderBy('grade_level')
-            ->orderBy('section')
+         $gradeSection = Student::with('section')
+            ->where('user_id', Auth::id())
+            ->whereHas('section')
             ->get()
+            ->filter(function($student) {
+                return $student->section; 
+            })
             ->map(function($student) {
                 return [
-                    'value' => $student->grade_level . '|' . $student->section_name,
-                    'label' => $student->grade_level . ' - ' . $student->section_name
+                    'value' => $student->section->gradelevel . '|' . $student->section->name,
+                    'label' => $student->section->gradelevel . ' - ' . $student->section->name
                 ];
-            });
+            })
+            ->unique('value')
+            ->sortBy('label')
+            ->values();
 
-        // All months (will be filtered on frontend based on semester selection)
-        $months = [
+         $months = [
             1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
             5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
             9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
@@ -651,9 +640,7 @@ class ReportController extends Controller
         ]);
     }
 
-    /**
-     * Get list of generated SF2 files
-     */
+  
     public function getGeneratedSF2Files()
     {
         try {

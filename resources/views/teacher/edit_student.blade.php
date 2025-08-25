@@ -3,20 +3,20 @@
 
 <style>
 .student-current-picture {
-    width: 120px;
-    height: 120px;
+    width: 96px;
+    height: 96px;
     object-fit: cover;
-    border-radius: 15px;
-    border: 3px solid #e9ecef;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .student-photo-placeholder {
-    width: 120px;
-    height: 120px;
+    width: 96px;
+    height: 96px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border: 2px dashed #6c757d;
-    border-radius: 15px;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -34,16 +34,16 @@
 }
 
 .placeholder-icon {
-    font-size: 2.5rem;
-    margin-bottom: 8px;
+    font-size: 1.8rem;
+    margin-bottom: 4px;
     opacity: 0.7;
 }
 
 .placeholder-text {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.0;
 }
 
 .placeholder-text small {
@@ -52,33 +52,37 @@
 
 .placeholder-plus-badge {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 4px;
+    right: 4px;
     background: #007bff;
     color: white;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     opacity: 0.8;
 }
 
 .upload-buttons {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .upload-btn {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
+    justify-content: center;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
     font-weight: 500;
+    font-size: 0.75rem;
+    min-width: 36px;
+    height: 32px;
 }
 
 .preview-container {
@@ -87,28 +91,28 @@
 }
 
 .preview-image {
-    width: 120px;
-    height: 120px;
+    width: 96px;
+    height: 96px;
     object-fit: cover;
-    border-radius: 15px;
-    border: 3px solid #28a745;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    border-radius: 8px;
+    border: 2px solid #28a745;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.2);
 }
 
 .preview-check-badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -4px;
+    right: -4px;
     background: #28a745;
     color: white;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 0.65rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .camera-video {
@@ -127,121 +131,129 @@
     border: 3px solid #28a745;
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
 }
+
+.sticky-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+}
 </style>
 
 @section('content')
 
-<div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
+<div class="sticky-header ">
+    <div class=" ">
         <div>
-            
-            <h4 class="fs-5 mb-1">
-                <span class="me-2">✏️</span>
-                Edit Student
-            </h4>
-            <p class="subtitle fs-6 mb-0">Update student information and records</p>
+            <h5 class="mb-1"><span class="me-2">✏️</span>Edit Student</h5>
+            <p class="small text-muted mb-0">Update student information and records</p>
         </div>
-       
+         
     </div>
 </div>
 
 <div class="card shadow-sm">
-    
-    <div class="card-header bg-primary text-white">
-        
-        <h5 class="mb-0">
-            <i class="fas fa-edit me-2"></i>
-            Student Information
-        </h5>
+    <div class="card-header bg-primary text-white py-2">
+        <h6 class="mb-0"><i class="fas fa-edit me-2"></i>Student Information</h6>
     </div>
-    <div class="card-body">
+    <div class="card-body p-3">
         
         <form method="POST" action="{{ route('teacher.students.update', $student->id) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
             
-            <div class="row g-3">
-                <div class="col-md-12">
-                     <div class="page-actions">
-            <a href="{{ route('teacher.students') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Students
-            </a>
-        </div>
-                    <label for="picture" class="form-label">Student Picture</label>
-                    @if($student->picture)
-                        <div class="mb-2">
-                            <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" alt="Current Picture" class="student-current-picture">
-                            <p class="text-muted mt-2 small">Current Picture</p>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label for="picture" class="form-label small fw-bold">Photo</label>
+                    <div class="d-flex flex-column align-items-center">
+                         <div id="current-photo-container">
+                            @if($student->picture)
+                                <div class="mb-1">
+                                    <img src="{{ asset('storage/student_pictures/' . $student->picture) }}" alt="Current Picture" class="student-current-picture">
+                                </div>
+                                <small class="text-muted text-center">Current</small>
+                            @else
+                                <div class="mb-1">
+                                    <div class="student-photo-placeholder" onclick="document.getElementById('picture').click();">
+                                        <i class="fas fa-user-circle placeholder-icon"></i>
+                                        <span class="placeholder-text">No Photo</span>
+                                        <div class="placeholder-plus-badge">
+                                            <i class="fas fa-plus"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="text-muted text-center">No photo</small>
+                            @endif
                         </div>
-                    @else
-                        <div class="mb-2">
-                            <div class="student-photo-placeholder" onclick="document.getElementById('picture').click();">
-                                <i class="fas fa-user-circle placeholder-icon"></i>
-                                <span class="placeholder-text">No Photo<br><small>Click to add</small></span>
-                                <div class="placeholder-plus-badge">
-                                    <i class="fas fa-plus"></i>
+                        
+                         <div id="image-preview" class="mt-1" style="display: none;">
+                            <div class="preview-container">
+                                <img id="preview-img" src="" alt="Preview" class="preview-image" style="display: block;">
+                                <div class="preview-check-badge">
+                                    <i class="fas fa-check"></i>
                                 </div>
                             </div>
-                            <p class="text-muted mt-2 small">No picture uploaded</p>
+                            <small class="text-success text-center d-block mt-1">Ready</small>
                         </div>
-                    @endif
-                    <div class="upload-buttons">
-                        <button type="button" class="btn btn-outline-primary btn-sm upload-btn" onclick="openCameraModal()">
-                            <i class="fa fa-camera"></i> <span>Take Photo</span>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm upload-btn" onclick="document.getElementById('picture').click()">
-                            <i class="fa fa-upload"></i> <span>Upload File</span>
-                        </button>
-                    </div>
-                    <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
-                    <input type="hidden" id="captured_image" name="captured_image">
-                    <div id="image-preview" class="mt-2" style="display: none;">
-                        <div class="preview-container">
-                            <img id="preview-img" src="" alt="Preview" class="preview-image">
-                            <div class="preview-check-badge">
-                                <i class="fas fa-check"></i>
-                            </div>
+                        
+                        <div class="upload-buttons mt-1">
+                            <button type="button" class="btn btn-primary btn-sm upload-btn" onclick="openCameraModal()" title="Take Photo">
+                                <i class="fa fa-camera"></i>
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm upload-btn" onclick="document.getElementById('picture').click()" title="Upload File">
+                                <i class="fa fa-upload"></i>
+                            </button>
                         </div>
-                        <p class="text-success mt-2 small mb-0"><i class="fas fa-check-circle me-1"></i>New photo ready</p>
+                        
+                        <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
+                        <input type="hidden" id="captured_image" name="captured_image">
+                        
+                        <small class="form-text text-muted text-center mt-1">Max: 2MB</small>
                     </div>
-                    <small class="form-text text-muted">Take a photo or upload JPG, PNG, or GIF. Max size: 2MB. Leave empty to keep current picture.</small>
                 </div>
-                <div class="col-md-12">
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                
+                <div class="col-md-9">
+                    <div class="alert alert-warning d-flex align-items-center py-2 mb-2" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <div>
-                            <strong>Reminder:</strong> Changing student information may require updating their QR code!
+                        <small><strong>Reminder:</strong> Changing student info may require updating their QR code!</small>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label for="id_no" class="form-label small">ID No</label>
+                            <input type="text" class="form-control form-control-sm" id="id_no" name="id_no" value="{{ $student->id_no }}" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="name" class="form-label small">Name</label>
+                            <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ $student->name }}" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="gender" class="form-label small">Gender</label>
+                            <select class="form-select form-select-sm" id="gender" name="gender" required>
+                                <option value="">Select</option>
+                                <option value="M" {{ $student->gender == 'M' ? 'selected' : '' }}>Male</option>
+                                <option value="F" {{ $student->gender == 'F' ? 'selected' : '' }}>Female</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="age" class="form-label small">Age</label>
+                            <input type="number" class="form-control form-control-sm" id="age" name="age" value="{{ $student->age }}" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="cp_no" class="form-label small">CP No</label>
+                            <input type="text" class="form-control form-control-sm" id="cp_no" name="cp_no" value="{{ $student->cp_no }}" required>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <label for="id_no" class="form-label">ID No</label>
-                    <input type="text" class="form-control" id="id_no" name="id_no" value="{{ $student->id_no }}" required>
-                </div>
                 
                 <div class="col-md-6">
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="name" name="name" value="{{ $student->name }}" required>
-                </div>
-                
-                <div class="col-md-6">
-                    <label for="gender" class="form-label">Gender</label>
-                    <select class="form-select" id="gender" name="gender" required>
-                        <option value="">Select</option>
-                        <option value="M" {{ $student->gender == 'M' ? 'selected' : '' }}>Male</option>
-                        <option value="F" {{ $student->gender == 'F' ? 'selected' : '' }}>Female</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-6">
-                    <label for="age" class="form-label">Age</label>
-                    <input type="number" class="form-control" id="age" name="age" value="{{ $student->age }}" required>
-                </div>
-                
-                <div class="col-md-12">
-                    <label for="section_dropdown" class="form-label">Grade Level & Section</label>
-                    <select class="form-select" id="section_dropdown" name="section_id" required>
+                    <label for="section_dropdown" class="form-label small">Grade Level & Section</label>
+                    <select class="form-select form-select-sm" id="section_dropdown" name="section_id" required>
                         <option value="">Select Grade Level & Section</option>
                         @php
                             $teacherSections = App\Models\Section::where('teacher_id', auth()->id())
@@ -267,27 +279,15 @@
                         @endforeach
                     </select>
                     <small class="form-text text-muted">
-                        Select the grade level and section for this student. 
                         @if(!$studentHasValidSection && $student->section)
-                            <span class="text-warning">Note: This student's current section is not in your managed sections.</span>
+                            <span class="text-warning">Current section not in your managed sections.</span>
                         @endif
-                        If you need to add a new section, please use the <a href="{{ route('teacher.semester') }}" class="text-primary">Semester Management</a> page first.
                     </small>
                 </div>
                 
-                <div class="col-md-12">
-                    <label for="address" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="address" name="address" value="{{ $student->address }}" required>
-                </div>
-                
                 <div class="col-md-6">
-                    <label for="cp_no" class="form-label">CP No</label>
-                    <input type="text" class="form-control" id="cp_no" name="cp_no" value="{{ $student->cp_no }}" required>
-                </div>
-                
-                <div class="col-md-6">
-                    <label for="semester_id" class="form-label">Semester</label>
-                    <select class="form-select" id="semester_id" name="semester_id" required>
+                    <label for="semester_id" class="form-label small">Semester</label>
+                    <select class="form-select form-select-sm" id="semester_id" name="semester_id" required>
                         @foreach(\App\Models\Semester::all() as $semester)
                             <option value="{{ $semester->id }}" {{ $student->semester_id == $semester->id ? 'selected' : '' }}>
                                 {{ $semester->name }}
@@ -296,20 +296,22 @@
                     </select>
                 </div>
                 
-                <!-- Contact Person Information -->
                 <div class="col-md-12">
-                    <hr>
-                    <h6>Contact Person Information</h6>
+                    <label for="address" class="form-label small">Address</label>
+                    <input type="text" class="form-control form-control-sm" id="address" name="address" value="{{ $student->address }}" required>
                 </div>
                 
-                <div class="col-md-6">
-                    <label for="contact_person_name" class="form-label">Contact Person Name</label>
-                    <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" value="{{ $student->contact_person_name }}">
+                <!-- Contact Person Information -->
+                <div class="col-md-12"><hr class="my-2"><h6 class="small text-muted">Contact Person Information</h6></div>
+                
+                <div class="col-md-4">
+                    <label for="contact_person_name" class="form-label small">Contact Person Name</label>
+                    <input type="text" class="form-control form-control-sm" id="contact_person_name" name="contact_person_name" value="{{ $student->contact_person_name }}">
                 </div>
                 
-                <div class="col-md-6">
-                    <label for="contact_person_relationship" class="form-label">Relationship</label>
-                    <select class="form-select" id="contact_person_relationship" name="contact_person_relationship">
+                <div class="col-md-4">
+                    <label for="contact_person_relationship" class="form-label small">Relationship</label>
+                    <select class="form-select form-select-sm" id="contact_person_relationship" name="contact_person_relationship">
                         <option value="">Select Relationship</option>
                         <option value="Parent" {{ $student->contact_person_relationship == 'Parent' ? 'selected' : '' }}>Parent</option>
                         <option value="Guardian" {{ $student->contact_person_relationship == 'Guardian' ? 'selected' : '' }}>Guardian</option>
@@ -320,15 +322,15 @@
                     </select>
                 </div>
                 
-                <div class="col-md-6">
-                    <label for="contact_person_contact" class="form-label">Contact Number</label>
-                    <input type="text" class="form-control" id="contact_person_contact" name="contact_person_contact" value="{{ $student->contact_person_contact }}">
+                <div class="col-md-4">
+                    <label for="contact_person_contact" class="form-label small">Contact Number</label>
+                    <input type="text" class="form-control form-control-sm" id="contact_person_contact" name="contact_person_contact" value="{{ $student->contact_person_contact }}">
                 </div>
             </div>
             
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary">Update Student</button>
-                <a href="{{ route('teacher.students') }}" class="btn btn-secondary">Cancel</a>
+            <div class="mt-3 d-flex justify-content-between">
+                <a href="{{ route('teacher.students') }}" class="btn btn-secondary btn-sm">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-sm">Update Student</button>
             </div>
         </form>
     </div>
@@ -476,8 +478,26 @@ function stopCamera() {
 function showImagePreview(src) {
     const preview = document.getElementById('image-preview');
     const previewImg = document.getElementById('preview-img');
+    const currentPhotoContainer = document.getElementById('current-photo-container');
+    
+    // Hide the current/no photo container
+    currentPhotoContainer.style.display = 'none';
+    
+    // Ensure the image loads properly
+    previewImg.onload = function() {
+        preview.style.display = 'block';
+    };
+    
+    previewImg.onerror = function() {
+        console.error('Error loading image preview');
+        preview.style.display = 'none';
+        // Show the current photo container again if preview fails
+        currentPhotoContainer.style.display = 'block';
+    };
+    
+    // Set the source and make sure it's visible
     previewImg.src = src;
-    preview.style.display = 'block';
+    previewImg.style.display = 'block';
 }
 
 // Close camera when modal is hidden
@@ -488,13 +508,22 @@ document.getElementById('cameraModal').addEventListener('hidden.bs.modal', funct
 // File upload preview
 document.getElementById('picture').addEventListener('change', function() {
     if (this.files && this.files[0]) {
+        const file = this.files[0];
+        
+        // Check if it's an image file
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            this.value = ''; // Clear the input
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             showImagePreview(e.target.result);
             // Clear captured image if file is uploaded
             document.getElementById('captured_image').value = '';
         }
-        reader.readAsDataURL(this.files[0]);
+        reader.readAsDataURL(file);
     }
 });
 </script>

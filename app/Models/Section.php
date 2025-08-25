@@ -34,11 +34,20 @@ class Section extends Model
     }
 
     /**
-     * Relationship: Section belongs to a Teacher (User)
+     * Relationship: Section belongs to a Teacher (User) - legacy single teacher
      */
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    /**
+     * Relationship: Section has many Teachers through pivot table (many-to-many)
+     */
+    public function teachers()
+    {
+        return $this->belongsToMany(User::class, 'section_teacher', 'section_id', 'teacher_id')
+                    ->withTimestamps();
     }
 
     /**

@@ -2,32 +2,33 @@
 @section('title', 'SMS Messages')
 @section('content')
 
-
 <div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">💬</span>
+                <i class="fas fa-sms me-2"></i>
                 SMS Messages
             </h4>
-            <p class="subtitle fs-6 mb-0">View and manage SMS message history</p>
+            <p class="subtitle fs-6 mb-0">Send SMS notifications and announcements</p>
         </div>
-            
+        
     </div>
 </div>
 
+<div class="container-fluid">
+
 <div class="container mt-4">
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-filter me-1"></i>Filters</h6>
+                    <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h6>
                 </div>
                 <div class="card-body">
                     <form id="filterForm" class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">Recipient Type</label>
-                            <select class="form-select form-select-sm" id="recipientTypeFilter">
+                            <select class="form-select" id="recipientTypeFilter">
                                 <option value="">All Types</option>
                                 <option value="teacher">Teachers</option>
                                 <option value="student">Students</option>
@@ -36,7 +37,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Status</label>
-                            <select class="form-select form-select-sm" id="statusFilter">
+                            <select class="form-select" id="statusFilter">
                                 <option value="">All Status</option>
                                 <option value="pending">Pending</option>
                                 <option value="sent">Sent</option>
@@ -46,17 +47,17 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">From Date</label>
-                            <input type="date" class="form-control form-control-sm" id="startDate">
+                            <input type="date" class="form-control" id="startDate">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">To Date</label>
-                            <input type="date" class="form-control form-control-sm" id="endDate">
+                            <input type="date" class="form-control" id="endDate">
                         </div>
                         <div class="col-12">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="loadMessages()">
+                            <button type="button" class="btn btn-primary btn-action" onclick="loadMessages()">
                                 <i class="fas fa-search me-1"></i>Apply Filters
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+                            <button type="button" class="btn btn-outline-secondary btn-action" onclick="clearFilters()">
                                 <i class="fas fa-times me-1"></i>Clear
                             </button>
                         </div>
@@ -65,23 +66,19 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card">
+            <div class="card stats-card primary">
                 <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-chart-bar me-1"></i>SMS Statistics</h6>
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>SMS Statistics</h6>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-6">
-                            <div class="stat-item">
-                                <div class="stat-value text-success" id="totalSent">0</div>
-                                <div class="stat-label">Sent</div>
-                            </div>
+                            <div class="stat-value text-success" id="totalSent">0</div>
+                            <div class="stat-label">Sent</div>
                         </div>
                         <div class="col-6">
-                            <div class="stat-item">
-                                <div class="stat-value text-danger" id="totalFailed">0</div>
-                                <div class="stat-label">Failed</div>
-                            </div>
+                            <div class="stat-value text-danger" id="totalFailed">0</div>
+                            <div class="stat-label">Failed</div>
                         </div>
                     </div>
                 </div>
@@ -97,14 +94,14 @@
                 </div>
                 <div class="col text-end">
                     <div class="d-flex justify-content-end gap-2">
-                        <button class="btn btn-outline-secondary btn-sm" onclick="loadMessages()" title="Refresh Messages">
+                        <button class="btn btn-outline-secondary btn-action" onclick="loadMessages()" title="Refresh Messages">
                             <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
-                        <button class="btn btn-outline-primary btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()">
+                        <button class="btn btn-outline-primary btn-action" id="checkSmsStatusBtn" onclick="testSMSGateway()">
                             <i class="fas fa-signal me-1"></i><span id="checkSmsStatusText">Check SMS Status</span>
                             <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
                         </button>
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal">
+                        <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#composeModal">
                             <i class="fas fa-plus me-1"></i>Send SMS
                         </button>
                     </div>
@@ -113,15 +110,15 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm" id="messagesTable">
+                <table class="table table-hover table-compact" id="messagesTable">
                     <thead class="table-light">
                         <tr>
-                            <th class="py-2 small">Date</th>
-                            <th class="py-2 small">Recipient</th>
-                            <th class="py-2 small">Message</th>
-                            <th class="py-2 small">Sender</th>
-                            <th class="py-2 small">Status</th>
-                            <th class="py-2 small">Actions</th>
+                            <th>Date</th>
+                            <th>Recipient</th>
+                            <th>Message</th>
+                            <th>Sender</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="messagesTableBody">
@@ -376,66 +373,11 @@
 </div>
 
 <style>
-.stat-item {
-    padding: 10px 0;
-}
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-.stat-label {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-.badge {
-    font-size: 0.75rem;
-}
 .message-preview {
     max-width: 300px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-/* Compact table styles */
-#messagesTable {
-    font-size: 0.875rem;
-}
-#messagesTable .small {
-    font-size: 0.8rem !important;
-}
-#messagesTable td, #messagesTable th {
-    padding: 0.5rem 0.75rem !important;
-    vertical-align: middle;
-}
-#messagesTable .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-.sticky-header {
-    background: white;
-    padding: 1rem 0;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 1rem;
-}
-
-/* Alert Modal Styles */
-#alertModal .modal-sm {
-    max-width: 400px;
-}
-
-#alertModal .modal-header {
-    padding: 0.75rem 1rem;
-}
-
-#alertModal .modal-body {
-    padding: 1rem;
-    font-size: 0.95rem;
-}
-
-#alertModal .modal-footer {
-    padding: 0.5rem 1rem;
 }
 
 /* Compact Info Panels */
@@ -490,7 +432,7 @@ function loadTeachers() {
                 data.teachers.forEach(teacher => {
                     const option = $('<option></option>')
                         .val(teacher.id)
-                        .data('section', teacher.section_name || '')
+                        .data('section', teacher.section ? teacher.section.name : '')
                         .data('phone', teacher.phone_number || '')
                         .data('school', teacher.school ? teacher.school.name : '')
                         .text(teacher.name.trim());

@@ -63,13 +63,26 @@ class AttendanceSession extends Model
 
         // AUTOMATICALLY CLOSE ALL OTHER ACTIVE SESSIONS for this teacher
         // This ensures only one session is active at a time
-        $closedCount = self::where('teacher_id', $teacherId)
+        $oldSessions = self::where('teacher_id', $teacherId)
             ->where('status', 'active')
-            ->update([
+            ->get();
+            
+        $closedCount = 0;
+        foreach ($oldSessions as $oldSession) {
+            $oldSession->update([
                 'status' => 'closed',
                 'closed_at' => Carbon::now('Asia/Manila'),
                 'updated_at' => Carbon::now('Asia/Manila')
             ]);
+            $closedCount++;
+            
+            \Log::info('Closed old session when creating new one', [
+                'teacher_id' => $teacherId,
+                'closed_session_id' => $oldSession->id,
+                'closed_session_name' => $oldSession->session_name,
+                'reason' => 'Creating new session'
+            ]);
+        }
 
         // Log if any sessions were automatically closed
         if ($closedCount > 0) {
@@ -108,12 +121,71 @@ class AttendanceSession extends Model
 
     public static function createDailySession($teacherId, $semesterId, $sessionName = null)
     {
-        return self::createOrGetActiveSession($teacherId, $semesterId, $sessionName);
+        $today = Carbon::now('Asia/Manila')->format('Y-m-d');
+        
+         $existingSession = self::where('teacher_id', $teacherId)
+                              ->where('semester_id', $semesterId)
+                              ->where('status', 'active')
+                              ->whereDate('started_at', $today)
+                              ->first();
+                              
+        if ($existingSession) {
+            return $existingSession;
+        }
+
+         $oldSessions = self::where('teacher_id', $teacherId)
+            ->where('status', 'active')
+            ->whereDate('started_at', '<', $today)
+            ->get();
+            
+        $closedCount = 0;
+        foreach ($oldSessions as $oldSession) {
+            $oldSession->update([
+                'status' => 'expired',
+                'closed_at' => Carbon::now('Asia/Manila'),
+                'updated_at' => Carbon::now('Asia/Manila')
+            ]);
+            $closedCount++;
+            
+            \Log::info('Closed old daily session when creating new one', [
+                'teacher_id' => $teacherId,
+                'closed_session_id' => $oldSession->id,
+                'closed_session_name' => $oldSession->session_name,
+                'session_date' => $oldSession->started_at->format('Y-m-d'),
+                'reason' => 'Creating new daily session for today'
+            ]);
+        }
+
+        // Log if any sessions were automatically closed
+        if ($closedCount > 0) {
+            \Log::info('Automatically expired previous daily sessions', [
+                'teacher_id' => $teacherId,
+                'closed_sessions_count' => $closedCount,
+                'reason' => 'Creating new daily session for today'
+            ]);
+        }
+
+        $token = self::generateToken();
+        $now = Carbon::now('Asia/Manila');
+        
+        // Create new session for TODAY
+        return self::create([
+            'session_token' => $token,
+            'teacher_id' => $teacherId,
+            'semester_id' => $semesterId,
+            'session_name' => $sessionName ?: 'Daily Session - ' . $now->format('M j, Y g:i A'),
+            'started_at' => $now,
+            'last_activity_at' => $now,
+            'status' => 'active',
+            'access_log' => [],
+            'attendance_count' => 0,
+            'access_count' => 0
+        ]);
     }
 
     public static function getTodaysSession($teacherId, $semesterId)
     {
-        return self::createOrGetActiveSession($teacherId, $semesterId);
+        return self::createDailySession($teacherId, $semesterId);
     }
 
     /**
@@ -169,7 +241,7 @@ class AttendanceSession extends Model
     }
 
     /**
-     * Check if attendance is allowed based on semester's time periods
+     * Check if attendance is allowed - now always allowed (flexible system)
      */
     public function isAttendanceAllowed()
     {
@@ -193,38 +265,74 @@ class AttendanceSession extends Model
             ];
         }
         
-        
-        $periods = [
-            'morning_time_in' => [
-                'start' => $semester->am_time_in_start ? Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start) : null,
-                'end' => $semester->am_time_in_end ? Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end) : null,
-                'type' => 'Time In'
-            ],
-            'afternoon_time_out' => [
-                'start' => $semester->pm_time_out_start ? Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start) : null,
-                'end' => $semester->pm_time_out_end ? Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_end) : null,
-                'type' => 'Time Out'
-            ]
+        return [
+            'allowed' => true,
+            'period' => 'flexible',
+            'period_name' => 'Flexible Recording',
+            'period_type' => 'Anytime',
+            'start_time' => 'Always Available',
+            'end_time' => 'Always Available',
+            'message' => 'Attendance recording available anytime with automatic status determination',
+            'current_time' => $now->format('g:i A'),
+            'current_periods' => $this->getCurrentPeriodInfoPrivate($now, $semester)
         ];
-        
-        foreach ($periods as $periodKey => $period) {
-            if ($period['start'] && $period['end'] && $now->between($period['start'], $period['end'])) {
-                return [
-                    'allowed' => true,
-                    'period' => $periodKey,
-                    'period_name' => ucfirst(str_replace('_', ' ', $periodKey)),
-                    'period_type' => $period['type'],
-                    'start_time' => $period['start']->format('g:i A'),
-                    'end_time' => $period['end']->format('g:i A'),
-                    'time_remaining' => $period['end']->diffInMinutes($now)
+    }
+
+    /**
+     * Get current period information for display
+     */
+    private function getCurrentPeriodInfoPrivate($now, $semester)
+    {
+        $periods = [
+            'AM Time In' => [
+                'start' => $semester->am_time_in_start,
+                'end' => $semester->am_time_in_end,
+            ],
+            'AM Time Out' => [
+                'start' => $semester->am_time_out_start,
+                'end' => $semester->am_time_out_end,
+            ],
+            'PM Time In' => [
+                'start' => $semester->pm_time_in_start,
+                'end' => $semester->pm_time_in_end,
+            ],
+            'PM Time Out' => [
+                'start' => $semester->pm_time_out_start,
+                'end' => $semester->pm_time_out_end,
+            ],
+        ];
+
+        $activePeriods = [];
+        $upcomingPeriods = [];
+
+        foreach ($periods as $label => $period) {
+            if (!$period['start'] || !$period['end']) continue;
+
+            $start = Carbon::today('Asia/Manila')->setTimeFromTimeString($period['start']);
+            $end = Carbon::today('Asia/Manila')->setTimeFromTimeString($period['end']);
+
+            if ($now->between($start, $end)) {
+                $activePeriods[] = [
+                    'name' => $label,
+                    'status' => 'active',
+                    'start_time' => $start->format('g:i A'),
+                    'end_time' => $end->format('g:i A'),
+                    'time_remaining' => $end->diffInMinutes($now)
+                ];
+            } elseif ($now->lessThan($start)) {
+                $upcomingPeriods[] = [
+                    'name' => $label,
+                    'status' => 'upcoming',
+                    'start_time' => $start->format('g:i A'),
+                    'end_time' => $end->format('g:i A'),
+                    'starts_in' => $now->diffInMinutes($start)
                 ];
             }
         }
-        
+
         return [
-            'allowed' => false,
-            'period' => null,
-            'next_period' => $this->getNextPeriod($periods, $now)
+            'active' => $activePeriods,
+            'upcoming' => $upcomingPeriods
         ];
     }
     
@@ -355,7 +463,17 @@ class AttendanceSession extends Model
     
     public function getCurrentPeriodInfo()
     {
-        return $this->isAttendanceAllowed();
+        $now = Carbon::now('Asia/Manila');
+        $semester = $this->semester;
+        
+        if (!$semester) {
+            return [
+                'active' => [],
+                'upcoming' => []
+            ];
+        }
+        
+        return $this->getCurrentPeriodInfoPrivate($now, $semester);
     }
 
     

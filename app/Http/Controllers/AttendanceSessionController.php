@@ -39,8 +39,8 @@ class AttendanceSessionController extends Controller
             
             $today = Carbon::now('Asia/Manila');
             $currentSemester = Semester::where('school_id', $user->school_id)
-                ->where('start_date', '<=', $today->format('Y-m-d'))
-                ->where('end_date', '>=', $today->format('Y-m-d'))
+                ->whereDate('start_date', '<=', $today->format('Y-m-d'))
+                ->whereDate('end_date', '>=', $today->format('Y-m-d'))
                 ->first();
 
             if (!$currentSemester) {
@@ -51,20 +51,31 @@ class AttendanceSessionController extends Controller
             }
 
             
+             $existingSession = AttendanceSession::where('teacher_id', $teacherId)
+                                                ->where('semester_id', $currentSemester->id)
+                                                ->where('status', 'active')
+                                                ->first();
+            
+            $isNewSession = !$existingSession;
             $session = AttendanceSession::createDailySession($teacherId, $currentSemester->id);
 
-            Log::info('Daily attendance session created/retrieved successfully', [
+            $message = $isNewSession ? 
+                'Daily attendance session created successfully!' : 
+                'Retrieved existing daily attendance session!';
+
+            Log::info('Daily attendance session ' . ($isNewSession ? 'created' : 'retrieved'), [
                 'session_id' => $session->id,
                 'teacher_id' => $teacherId,
                 'semester_id' => $currentSemester->id,
                 'session_name' => $session->session_name,
+                'is_new_session' => $isNewSession,
                 'expires_at' => 'Never (Permanent)',
                 'public_url' => $session->getPublicUrl()
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Daily attendance session created successfully!',
+                'message' => $message,
                 'session' => [
                     'id' => $session->id,
                     'token' => $session->session_token,
@@ -191,6 +202,7 @@ class AttendanceSessionController extends Controller
             $sessions = AttendanceSession::with('semester')
                 ->where('teacher_id', $teacherId)
                 ->where('status', 'active')
+                ->whereDate('started_at', Carbon::today('Asia/Manila'))
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -1055,10 +1067,7 @@ class AttendanceSessionController extends Controller
             ]);
         }
     }
-
-    /**
-     * Validate Philippine phone number format
-     */
+ 
     private function isValidPhoneNumber($number)
     {
         if (!$number) return false;
@@ -1084,8 +1093,7 @@ class AttendanceSessionController extends Controller
 
         if ($user) {
             if ($user->role === 'student') {
-                // Get the student record for this user
-                $student = \App\Models\Student::where('user_id', $user->id)->first();
+                 $student = \App\Models\Student::where('user_id', $user->id)->first();
                 if ($student && $student->semester_id) {
                     $semester = Semester::find($student->semester_id);
                 }

@@ -680,6 +680,552 @@
                 transform: translateX(0);
             }
         }
+
+        /* Global Admin Card Styles - Compact and Consistent Design */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+        }
+
+        .card-header h5, .card-header h6 {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1rem;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .card-footer {
+            background: #f8f9fa;
+            border: none;
+            border-radius: 0 0 12px 12px;
+            padding: 0.75rem 1rem;
+        }
+
+        /* Compact Statistics Cards */
+        .stats-card {
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .stats-card.primary { border-left-color: #007bff; }
+        .stats-card.success { border-left-color: #28a745; }
+        .stats-card.warning { border-left-color: #ffc107; }
+        .stats-card.info { border-left-color: #17a2b8; }
+        .stats-card.danger { border-left-color: #dc3545; }
+
+        .stats-card .card-body {
+            padding: 0.75rem 1rem;
+        }
+
+        .stats-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .stats-card .stat-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Compact Tables */
+        .table-compact {
+            font-size: 0.85rem;
+        }
+
+        .table-compact th,
+        .table-compact td {
+            padding: 0.5rem 0.75rem;
+            vertical-align: middle;
+        }
+
+        .table-compact .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Modal Improvements */
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        /* Form Controls */
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e6ed;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        /* Badges */
+        .badge {
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 0.4em 0.7em;
+        }
+
+        /* Alerts */
+        .alert {
+            border: none;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        /* Pagination */
+        .pagination {
+            margin-bottom: 0;
+        }
+
+        .page-link {
+            border-radius: 6px;
+            margin: 0 2px;
+            border: 1px solid #e0e6ed;
+            color: #667eea;
+        }
+
+        .page-item.active .page-link {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        /* Sticky Header */
+        .sticky-header {
+            background: white;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 1.5rem;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Responsive Grid Improvements */
+        @media (max-width: 768px) {
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .card-header {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .card-body {
+                padding: 0.75rem;
+            }
+            
+            .stats-card .stat-value {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* ===== GLOBAL ADMIN DESIGN SYSTEM ===== */
+        
+        /* Content Container */
+        .container-fluid {
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        /* Header Row Layout */
+        .header-row {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            margin-left: 1rem;
+            margin-right: 1rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: white;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        
+        .header-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .header-center {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .header-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        /* Compact Form Controls */
+        .form-control-compact {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            min-width: 120px;
+        }
+        
+        .form-control-compact::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .form-control-compact:focus {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+        }
+        
+        /* Compact Buttons */
+        .btn-compact-primary {
+            background: #28a745;
+            border: 1px solid #28a745;
+            color: white;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .btn-compact-primary:hover {
+            background: #218838;
+            border-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-compact-secondary {
+            background: #6c757d;
+            border: 1px solid #6c757d;
+            color: white;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .btn-compact-secondary:hover {
+            background: #5a6268;
+            border-color: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        .btn-compact-warning {
+            background: #ffc107;
+            border: 1px solid #ffc107;
+            color: #212529;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .btn-compact-warning:hover {
+            background: #e0a800;
+            border-color: #e0a800;
+            transform: translateY(-1px);
+        }
+        
+        .btn-compact-danger {
+            background: #dc3545;
+            border: 1px solid #dc3545;
+            color: white;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .btn-compact-danger:hover {
+            background: #c82333;
+            border-color: #c82333;
+            transform: translateY(-1px);
+        }
+        
+        /* Compact Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-left: 1rem;
+            margin-right: 1rem;
+        }
+        
+        .table-compact {
+            width: 100%;
+            margin: 0;
+            border-collapse: collapse;
+        }
+        
+        .table-compact thead {
+            background: #f8f9fa;
+        }
+        
+        .table-compact thead th {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            border: none;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .table-compact tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+        
+        .table-compact tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .table-compact tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .table-compact tbody td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+            border: none;
+        }
+        
+        /* Student/Data Display Elements */
+        .student-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #e9ecef;
+        }
+        
+        .student-photo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e9ecef;
+            color: #6c757d;
+        }
+        
+        .student-info .name,
+        .name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+        
+        .student-info .details,
+        .details {
+            font-size: 0.875rem;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        .contact-info .name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .contact-info .phone {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .school-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .date-range {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .time-ranges {
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        
+        .qr-code-small {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        
+        /* Badge Styles */
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-secondary {
+            background: #e2e3e5;
+            color: #6c757d;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        /* Button Groups */
+        .btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h5 {
+            margin-bottom: 0.5rem;
+            color: #6c757d;
+        }
+        
+        .empty-state p {
+            margin: 0;
+            opacity: 0.8;
+        }
+        
+        /* Pagination */
+        .pagination-wrapper {
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid #f3f4f6;
+        }
+        
+        .pagination-wrapper .pagination {
+            margin: 0;
+        }
+        
+        /* ===== END GLOBAL DESIGN SYSTEM ===== */
     </style>
 </head>
 <body>
@@ -734,9 +1280,10 @@
                     <span class="icon"><i class="fas fa-comments"></i></span> <span>Message</span>
                 </a>
             </li>
+             
             <li>
-                <a href="{{ route('admin.attendance-reports') }}" class="{{ request()->routeIs('admin.attendance-reports') ? 'active' : '' }}">
-                    <span class="icon"><i class="fas fa-chart-bar"></i></span> <span>Reports</span>
+                <a href="{{ route('admin.teacher-attendance-reports') }}" class="{{ request()->routeIs('admin.teacher-attendance-reports') ? 'active' : '' }}">
+                    <span class="icon"><i class="fas fa-chalkboard-teacher"></i></span> <span>Teacher Reports</span>
                 </a>
             </li>
             <li>
@@ -755,7 +1302,8 @@
         </ul>
     </div>
     <div class="content" id="content">
-        @yield('content')
+    <div id="flash-messages" style="position:relative; z-index:1001;"></div>
+    @yield('content')
     </div>
      <script>
         const hamburgerMenu = document.getElementById('hamburgerMenu');
@@ -773,6 +1321,71 @@
             content.classList.toggle('expanded');
             localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));
         });
+        
+        // Global helper to display flash messages from AJAX JSON responses
+        function showFlashFromJson(payload) {
+            try {
+                if(!payload) return;
+                const container = document.getElementById('flash-messages');
+                const wrapper = document.createElement('div');
+                wrapper.className = 'alert alert-danger alert-dismissible fade show';
+                wrapper.role = 'alert';
+
+                const title = document.createElement('div');
+                title.innerHTML = payload.message || 'Validation error';
+                wrapper.appendChild(title);
+
+                if(payload.errors && typeof payload.errors === 'object') {
+                    const ul = document.createElement('ul');
+                    ul.className = 'mb-0 mt-2';
+                    for(const key in payload.errors) {
+                        if(!Object.prototype.hasOwnProperty.call(payload.errors, key)) continue;
+                        const items = payload.errors[key];
+                        if(Array.isArray(items)) {
+                            items.forEach(it => {
+                                const li = document.createElement('li');
+                                li.textContent = it;
+                                ul.appendChild(li);
+                            });
+                        }
+                    }
+                    wrapper.appendChild(ul);
+                }
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn-close';
+                btn.setAttribute('data-bs-dismiss', 'alert');
+                btn.setAttribute('aria-label', 'Close');
+                wrapper.appendChild(btn);
+
+                // insert at top
+                container.prepend(wrapper);
+            } catch(e) {
+                // silent
+                console.error('flash helper error', e);
+            }
+        }
+
+        // Intercept fetch responses globally (optional): hook fetch to auto-handle 422 JSON
+        (function(){
+            if(!window.fetch) return;
+            const originalFetch = window.fetch;
+            window.fetch = function(){
+                return originalFetch.apply(this, arguments).then(resp => {
+                    if(resp && resp.status === 422) {
+                        const clone = resp.clone();
+                        clone.json().then(json => {
+                            // only show if structure matches
+                            if(json && (json.errors || json.message)) {
+                                showFlashFromJson(json);
+                            }
+                        }).catch(()=>{});
+                    }
+                    return resp;
+                });
+            };
+        })();
     </script>
 </body>
 </html>

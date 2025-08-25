@@ -12,10 +12,12 @@ use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Concerns\ValidatesForResponse;
  
 
 class ImportController extends Controller
 {
+    use ValidatesForResponse;
     public function showUploadForm()
     {
         return view('import.upload');
@@ -24,9 +26,13 @@ class ImportController extends Controller
     public function preview(Request $request)
     {
         try {
-            $request->validate([
+            $validated = $this->validateForResponse($request, [
                 'file' => 'required|mimes:xlsx,xls,csv'
             ]);
+
+            if (is_object($validated)) {
+                return $validated;
+            }
 
             if (!$request->hasFile('file')) {
                 return redirect()->back()->with('error', 'No file was uploaded. Please select a file to import.');
@@ -71,12 +77,18 @@ class ImportController extends Controller
             $user = Auth::user();
             $teachers = [];
             $schools = [];
+            $userSections = collect();
             $currentSchoolId = null;
+            
             if ($user->role === 'admin') {
                 $teachers = \App\Models\User::where('role', 'teacher')->get();
                 $schools = \App\Models\School::all();
             } elseif ($user->role === 'teacher') {
                 $currentSchoolId = $user->school_id;
+                // Get sections for the teacher
+                $userSections = \App\Models\Section::whereHas('teachers', function($query) use ($user) {
+                    $query->where('users.id', $user->id);
+                })->orWhere('teacher_id', $user->id)->get();
             }
 
             return view('import.preview', [
@@ -85,6 +97,7 @@ class ImportController extends Controller
                 'semesters' => $semesters,
                 'teachers' => $teachers,
                 'schools' => $schools,
+                'userSections' => $userSections,
                 'currentSchoolId' => $currentSchoolId
             ]);
             
@@ -107,6 +120,9 @@ class ImportController extends Controller
             \Log::info('Import process started', [
                 'user_id' => $request->input('user_id'),
                 'semester_id' => $request->input('semester_id'),
+                'section_id' => $request->input('section_id'),
+                'selectedUserId' => $request->input('selectedUserId'),
+                'selectedSectionId' => $request->input('selectedSectionId'),
                 'ip' => $request->ip(),
                 'timestamp' => now()
             ]);
@@ -114,17 +130,32 @@ class ImportController extends Controller
             $students = $request->input('students');  
             $semester_id = $request->input('semester_id'); 
             $user_id = $request->input('user_id');
-
+            
+             $section_id = null;
+            if (Auth::user()->role === 'admin') {
+                 $section_id = $request->input('selectedSectionId');
+                $user_id = $request->input('selectedUserId') ?? $user_id;
+            } else {
+                 $section_id = $request->input('section_id');
+            }
 
             $school_id = User::where('id', $user_id)->value('school_id');
-            
 
             if (!$students || !$semester_id || !$user_id) {
                 \Log::warning('Import failed: Missing students data or semester selection', [
                     'user_id' => $user_id,
-                    'semester_id' => $semester_id
+                    'semester_id' => $semester_id,
+                    'section_id' => $section_id
                 ]);
                 return redirect()->back()->with('error', 'Missing students data or semester selection. Please go back and try again.');
+            }
+
+            if (!$section_id) {
+                \Log::warning('Import failed: No section selected', [
+                    'user_id' => $user_id,
+                    'semester_id' => $semester_id
+                ]);
+                return redirect()->back()->with('error', 'Please select a section for the students.');
             }
 
              $semester = Semester::find($semester_id);
@@ -190,7 +221,7 @@ class ImportController extends Controller
                         ->first();
 
                     $cpNo = isset($row[5]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[5])) : null;
-                    $contactPersonContact = isset($row[8]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[8])) : null;
+                    $contactPersonContact = isset($row[7]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[7])) : null;
 
                     $gender = $this->normalizeGender($row[2]);
                     if (!in_array($gender, ['M', 'F'])) {
@@ -222,9 +253,10 @@ class ImportController extends Controller
                         'address'                       => isset($row[4]) ? trim(substr($row[4], 0, 255)) : '',
                         'cp_no'                         => $cpNo,
                         'contact_person_name'           => isset($row[6]) ? trim(substr($row[6], 0, 255)) : null,
-                        'contact_person_relationship'   => isset($row[7]) ? trim(substr($row[7], 0, 255)) : null,
+                        'contact_person_relationship'   => isset($row[8]) ? trim(substr($row[8], 0, 255)) : null,
                         'contact_person_contact'        => $contactPersonContact,
                         'semester_id'                   => $semester_id,
+                        'section_id'                    => $section_id,
                         'user_id'                       => $user_id,
                         'school_id'                     => $school_id
                     ];
@@ -292,8 +324,7 @@ class ImportController extends Controller
                 }
             }
 
-            // Build response message
-            $message = "";
+             $message = "";
             if ($added > 0) {
                 $message = "{$added} student(s) successfully imported/updated.";
             }
@@ -357,9 +388,7 @@ class ImportController extends Controller
         }
     }
 
-    /**
-     * Remove tab prefix that might be added during export to preserve phone number formatting
-     */
+  
     private function cleanTabPrefix($value)
     {
         if (empty($value)) {
@@ -369,9 +398,7 @@ class ImportController extends Controller
         return ltrim($value, "\t");
     }
 
-    /**
-     * Check if student data has changed compared to existing record
-     */
+ 
     private function hasStudentDataChanged($existingStudent, $newData)
     {
         $fieldsToCompare = [
@@ -393,10 +420,7 @@ class ImportController extends Controller
         
         return false;
     }
-
-    /**
-     * Format phone number to ensure proper format
-     */
+ 
     private function formatPhoneNumber($phoneNumber)
     {
         if (empty($phoneNumber)) {
@@ -416,9 +440,7 @@ class ImportController extends Controller
         return $phoneNumber;
     }
 
-    /**
-     * Normalize gender input to M/F format
-     */
+   
     private function normalizeGender($gender)
     {
         $gender = strtolower(trim($gender));

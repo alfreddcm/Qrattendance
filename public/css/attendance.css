@@ -1,12 +1,40 @@
 /* QR Attendance System - Material Design Styles */
 
+/* CSS Custom Properties */
+:root {
+    --primary-color: #1976d2;
+    --primary-light: #42a5f5;
+    --primary-dark: #1565c0;
+    --secondary-color: #ff9800;
+    --success-color: #4caf50;
+    --error-color: #f44336;
+    --warning-color: #ff9800;
+    --info-color: #2196f3;
+    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --card-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 /* Global Styles */
 body {
     margin: 0;
     padding: 0;
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--background-gradient);
     min-height: 100vh;
+}
+
+/* Bootstrap Override - Ensure our custom card styles don't conflict */
+.card.custom-card {
+    border: none;
+    box-shadow: var(--card-shadow);
 }
 
 /* Material Design Card System */
@@ -185,7 +213,8 @@ body {
 }
 
 /* Material Design Badges */
-.time-in-badge, .time-out-badge, .time-complete-badge, .recording-badge, .recorded-badge {
+.time-in-badge, .time-out-badge, .time-complete-badge, .recording-badge, .recorded-badge,
+.on-time-badge, .early-badge, .tardy-badge, .late-badge, .status-badge {
     padding: 4px 12px;
     border-radius: 16px;
     font-size: 0.8rem;
@@ -217,6 +246,32 @@ body {
 .recorded-badge {
     background: #E8F5E8;
     color: #2E7D32;
+}
+
+/* New Flexible Attendance Status Badges */
+.on-time-badge {
+    background: #E8F5E8;
+    color: #2E7D32;
+}
+
+.early-badge {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.tardy-badge {
+    background: #FFF3E0;
+    color: #F57C00;
+}
+
+.late-badge {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+.status-badge {
+    background: #F5F5F5;
+    color: #616161;
 }
 
 /* Material Snackbar */
@@ -376,6 +431,20 @@ body {
     font-size: 0.75rem;
     color: #666;
     margin-top: 4px;
+}
+
+.record-period {
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.record-remarks {
+    font-size: 0.75rem;
+    color: #666;
+    font-style: italic;
+    margin-top: 2px;
 }
 
 /* Material Design Animations */
@@ -572,6 +641,30 @@ body {
     padding: 20px;
     max-width: 1400px;
     margin: 0 auto;
+}
+
+/* Responsive Grid Layout */
+@media (max-width: 1200px) {
+    .main-container {
+        grid-template-columns: 280px 1fr 300px;
+        gap: 15px;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    .main-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 15px;
+        max-width: 100%;
+    }
+    
+    .session-panel,
+    .scanner-panel,
+    .attendance-panel {
+        width: 100%;
+    }
 }
 
 /* Panel Base Styles */
@@ -1077,4 +1170,140 @@ body {
     .system-title {
         margin: 0;
     }
+}
+
+/* Additional Missing Classes */
+.status-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Camera Controls */
+.camera-controls {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.webcam-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: 500;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Session Information */
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.session-item:last-child {
+    border-bottom: none;
+}
+
+.session-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.session-value {
+    color: #333;
+    text-align: right;
+    max-width: 60%;
+}
+
+/* Bootstrap Utility Classes Override */
+.text-muted {
+    color: #6c757d !important;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.mt-2 {
+    margin-top: 0.5rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+.me-1 {
+    margin-right: 0.25rem !important;
+}
+
+.p-3 {
+    padding: 1rem !important;
+}
+
+.d-flex {
+    display: flex !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+/* Custom Card Styles (Non-Bootstrap) */
+.custom-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    border: none;
+    overflow: hidden;
+}
+
+.custom-card-body {
+    padding: 1.5rem;
+}
+
+.custom-card-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.custom-card-subtitle {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
 }

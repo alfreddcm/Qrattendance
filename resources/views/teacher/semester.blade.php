@@ -77,8 +77,7 @@
                                         <th  >Status</th>
                                         <th  >Morning Period</th>
                                         <th  >Afternoon Period</th>
-                                        <th  >Actions</th>
-                                    </tr>
+                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($semesters as $semester)
@@ -100,7 +99,7 @@
                                             </td>
                                           
                                             <td>
-                                                <i class="fas fa-calendar-start me-1 text-muted"></i>
+                                                <i class="fas fa-calendar-check me-1 text-muted"></i>
                                                 {{ \Carbon\Carbon::parse($semester->start_date)->format('M j, Y') }}
                                             </td>
                                             <td>
@@ -136,13 +135,7 @@
                                                     @endif
                                                 </small>
                                             </td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <button class="btn btn-sm btn-outline-info" onclick="viewSemesterDetails({{ $semester->id }})" title="View Semester Details">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
+                                         
                                         </tr>
                                     @endforeach
                                 </tbody>

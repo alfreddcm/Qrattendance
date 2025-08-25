@@ -15,8 +15,7 @@ class AttendanceForecastController extends Controller
         $startDate = $request->get('start_date', Carbon::now()->subMonth()->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
-        // Get attendance per day for the last 14 days
-        $attendance = Attendance::selectRaw('DATE(date) as attendance_date, COUNT(DISTINCT student_id) as present_count')
+         $attendance = Attendance::selectRaw('DATE(date) as attendance_date, COUNT(DISTINCT student_id) as present_count')
             ->where('teacher_id', $teacherId)
             ->whereBetween('date', [Carbon::now()->subDays(14), $endDate])
             ->groupBy('attendance_date')
@@ -26,8 +25,7 @@ class AttendanceForecastController extends Controller
         $labels = $attendance->pluck('attendance_date')->toArray();
         $presentCounts = $attendance->pluck('present_count')->toArray();
 
-        // Simple moving average forecast for next 7 days
-        $average = count($presentCounts) ? array_sum($presentCounts) / count($presentCounts) : 0;
+         $average = count($presentCounts) ? array_sum($presentCounts) / count($presentCounts) : 0;
         $forecastLabels = [];
         $forecastData = [];
         for ($i = 1; $i <= 7; $i++) {
@@ -40,7 +38,6 @@ class AttendanceForecastController extends Controller
 
         return view('teacher.statistics', [
             'attendanceForecastChart' => $chart,
-            // ...existing code for other charts...
-        ]);
+         ]);
     }
 }

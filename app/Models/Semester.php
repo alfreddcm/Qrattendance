@@ -42,46 +42,27 @@ class Semester extends Model
         return $this->hasMany(AttendanceSession::class, 'semester_id');
     }
 
- 
-
-     public function getAmTimeInStartInputAttribute()
+    /**
+     * Get formatted time inputs for forms
+     */
+    public function getMorningPeriodStartInputAttribute()
     {
-        return $this->am_time_in_start ? Carbon::createFromFormat('H:i:s', $this->am_time_in_start)->format('H:i') : '07:00';
+        return $this->morning_period_start ? Carbon::createFromFormat('H:i:s', $this->morning_period_start)->format('H:i') : '';
     }
 
-    public function getAmTimeInEndInputAttribute()
+    public function getMorningPeriodEndInputAttribute()
     {
-        return $this->am_time_in_end ? Carbon::createFromFormat('H:i:s', $this->am_time_in_end)->format('H:i') : '07:30';
+        return $this->morning_period_end ? Carbon::createFromFormat('H:i:s', $this->morning_period_end)->format('H:i') : '';
     }
 
-    public function getAmTimeOutStartInputAttribute()
+    public function getAfternoonPeriodStartInputAttribute()
     {
-        return $this->am_time_out_start ? Carbon::createFromFormat('H:i:s', $this->am_time_out_start)->format('H:i') : '11:30';
+        return $this->afternoon_period_start ? Carbon::createFromFormat('H:i:s', $this->afternoon_period_start)->format('H:i') : '';
     }
 
-    public function getAmTimeOutEndInputAttribute()
+    public function getAfternoonPeriodEndInputAttribute()
     {
-        return $this->am_time_out_end ? Carbon::createFromFormat('H:i:s', $this->am_time_out_end)->format('H:i') : '12:00';
-    }
-
-    public function getPmTimeInStartInputAttribute()
-    {
-        return $this->pm_time_in_start ? Carbon::createFromFormat('H:i:s', $this->pm_time_in_start)->format('H:i') : '13:00';
-    }
-
-    public function getPmTimeInEndInputAttribute()
-    {
-        return $this->pm_time_in_end ? Carbon::createFromFormat('H:i:s', $this->pm_time_in_end)->format('H:i') : '13:30';
-    }
-
-    public function getPmTimeOutStartInputAttribute()
-    {
-        return $this->pm_time_out_start ? Carbon::createFromFormat('H:i:s', $this->pm_time_out_start)->format('H:i') : '16:30';
-    }
-
-    public function getPmTimeOutEndInputAttribute()
-    {
-        return $this->pm_time_out_end ? Carbon::createFromFormat('H:i:s', $this->pm_time_out_end)->format('H:i') : '17:00';
+        return $this->afternoon_period_end ? Carbon::createFromFormat('H:i:s', $this->afternoon_period_end)->format('H:i') : '';
     }
 
 

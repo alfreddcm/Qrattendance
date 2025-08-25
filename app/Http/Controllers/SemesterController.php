@@ -9,9 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Http\Controllers\Concerns\ValidatesForResponse;
 
 class SemesterController extends Controller
 {
+    use ValidatesForResponse;
     /**
      * Display a listing of the semesters.
      */
@@ -31,18 +33,26 @@ class SemesterController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
                     
-                // Get all schools for admin dropdown
-                $schools = School::orderBy('name')->get();
+                 $schools = School::orderBy('name')->get();
+                
+                 $sections = \App\Models\Section::with(['semester', 'teacher', 'students'])
+                    ->orderBy('gradelevel')
+                    ->orderBy('name')
+                    ->get();
+                
+                 $teachers = \App\Models\User::where('role', 'teacher')
+                    ->orderBy('name')
+                    ->get();
                     
                 Log::info('Admin viewing all semesters', [
                     'user_id' => $user->id,
-                    'semesters_count' => $semesters->count()
+                    'semesters_count' => $semesters->count(),
+                    'sections_count' => $sections->count()
                 ]);
 
-                return view('admin.manage-semesters', compact('semesters', 'schools'));
+                return view('admin.manage-semesters', compact('semesters', 'schools', 'sections', 'teachers'));
             } else {
-                // Teachers can only see semesters from their school
-                $semesters = Semester::with('school')
+                 $semesters = Semester::with('school')
                     ->where('school_id', $user->school_id)
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
@@ -53,8 +63,7 @@ class SemesterController extends Controller
                     'semesters_count' => $semesters->count()
                 ]);
 
-                // Get teacher's sections
-                $sections = \App\Models\Section::where('teacher_id', $user->id)
+                 $sections = \App\Models\Section::where('teacher_id', $user->id)
                     ->with(['semester'])
                     ->orderBy('gradelevel')
                     ->orderBy('name')
@@ -96,8 +105,7 @@ class SemesterController extends Controller
                 return redirect()->back()->with('error', 'Only administrators can create semesters.');
             }
             
-            // Get schools for admin
-            $schools = School::orderBy('name')->get();
+             $schools = School::orderBy('name')->get();
 
             return view('admin.semester-create', compact('schools'));
             
@@ -122,24 +130,23 @@ class SemesterController extends Controller
                 'request_data' => $request->all()
             ]);
 
-            $validated = $request->validate([
+            $validated = $this->validateForResponse($request, [
                 'name' => 'required|string|max:255',
                 'school_id' => 'required|exists:schools,id',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
-                'status' => 'required|in:active,inactive',
-                'am_time_in_start' => 'nullable|date_format:H:i',
-                'am_time_in_end' => 'nullable|date_format:H:i|after:am_time_in_start',
-                'am_time_out_start' => 'nullable|date_format:H:i',
-                'am_time_out_end' => 'nullable|date_format:H:i|after:am_time_out_start',
-                'pm_time_in_start' => 'nullable|date_format:H:i',
-                'pm_time_in_end' => 'nullable|date_format:H:i|after:pm_time_in_start',
-                'pm_time_out_start' => 'nullable|date_format:H:i',
-                'pm_time_out_end' => 'nullable|date_format:H:i|after:pm_time_out_start',
+                'description' => 'nullable|string|max:1000',
+                'morning_period_start' => 'nullable|date_format:H:i',
+                'morning_period_end' => 'nullable|date_format:H:i|after:morning_period_start',
+                'afternoon_period_start' => 'nullable|date_format:H:i',
+                'afternoon_period_end' => 'nullable|date_format:H:i|after:afternoon_period_start',
             ]);
 
-            // Check user permissions
-            $user = Auth::user();
+            if (is_object($validated)) {  
+                return $validated;
+            }
+
+             $user = Auth::user();
             if ($user->role !== 'admin' && $validated['school_id'] != $user->school_id) {
                 Log::warning('Unauthorized semester creation attempt', [
                     'user_id' => $user->id,
@@ -150,15 +157,15 @@ class SemesterController extends Controller
                 return redirect()->back()->with('error', 'You can only create semesters for your school.');
             }
 
-            // Validate time ranges for overlaps
-            $tempSemester = new Semester($validated);
+             $validated['status'] = 'active';
+
+             $tempSemester = new Semester($validated);
             $validation = $tempSemester->validateTimeRanges();
             if (!$validation['valid']) {
                 return redirect()->back()->with('error', $validation['message'])->withInput();
             }
 
-            // If setting this semester as active, deactivate others in the same school
-            if ($validated['status'] === 'active') {
+             if ($validated['status'] === 'active') {
                 Semester::where('school_id', $validated['school_id'])
                     ->where('status', 'active')
                     ->update(['status' => 'inactive']);
@@ -178,7 +185,7 @@ class SemesterController extends Controller
                 'user_id' => $user->id
             ]);
 
-            return redirect()->route('teacher.semesters')->with('success', 'Semester created successfully.');
+            return redirect()->route('admin.manage-semesters')->with('success', 'Semester created successfully.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Semester validation failed', [
@@ -205,8 +212,7 @@ class SemesterController extends Controller
     public function show(Semester $semester)
     {
         try {
-            // Check user permissions
-            $user = Auth::user();
+             $user = Auth::user();
             if ($user->role !== 'admin' && $semester->school_id != $user->school_id) {
                 Log::warning('Unauthorized semester view attempt', [
                     'user_id' => $user->id,
@@ -243,8 +249,7 @@ class SemesterController extends Controller
     public function edit(Semester $semester)
     {
         try {
-            // Check user permissions
-            $user = Auth::user();
+             $user = Auth::user();
             if ($user->role !== 'admin' && $semester->school_id != $user->school_id) {
                 Log::warning('Unauthorized semester edit attempt', [
                     'user_id' => $user->id,
@@ -265,30 +270,18 @@ class SemesterController extends Controller
                 'user_id' => $user->id
             ]);
 
-            // Always return JSON data for AJAX requests (both admin and teacher use modals)
-            return response()->json([
+             return response()->json([
                 'id' => $semester->id,
                 'name' => $semester->name,
                 'status' => $semester->status,
-                'start_date' => $semester->start_date,
-                'end_date' => $semester->end_date,
+                 'start_date' => $semester->start_date ? $semester->start_date->format('Y-m-d') : null,
+                'end_date' => $semester->end_date ? $semester->end_date->format('Y-m-d') : null,
                 'school_id' => $semester->school_id,
-                'am_time_in_start' => $semester->am_time_in_start,
-                'am_time_in_end' => $semester->am_time_in_end,
-                'am_time_out_start' => $semester->am_time_out_start,
-                'am_time_out_end' => $semester->am_time_out_end,
-                'pm_time_in_start' => $semester->pm_time_in_start,
-                'pm_time_in_end' => $semester->pm_time_in_end,
-                'pm_time_out_start' => $semester->pm_time_out_start,
-                'pm_time_out_end' => $semester->pm_time_out_end,
-                'am_time_in_start_input' => $semester->am_time_in_start ? \Carbon\Carbon::parse($semester->am_time_in_start)->format('H:i') : '',
-                'am_time_in_end_input' => $semester->am_time_in_end ? \Carbon\Carbon::parse($semester->am_time_in_end)->format('H:i') : '',
-                'am_time_out_start_input' => $semester->am_time_out_start ? \Carbon\Carbon::parse($semester->am_time_out_start)->format('H:i') : '',
-                'am_time_out_end_input' => $semester->am_time_out_end ? \Carbon\Carbon::parse($semester->am_time_out_end)->format('H:i') : '',
-                'pm_time_in_start_input' => $semester->pm_time_in_start ? \Carbon\Carbon::parse($semester->pm_time_in_start)->format('H:i') : '',
-                'pm_time_in_end_input' => $semester->pm_time_in_end ? \Carbon\Carbon::parse($semester->pm_time_in_end)->format('H:i') : '',
-                'pm_time_out_start_input' => $semester->pm_time_out_start ? \Carbon\Carbon::parse($semester->pm_time_out_start)->format('H:i') : '',
-                'pm_time_out_end_input' => $semester->pm_time_out_end ? \Carbon\Carbon::parse($semester->pm_time_out_end)->format('H:i') : '',
+                'description' => $semester->description,
+                'morning_period_start' => $semester->morning_period_start,
+                'morning_period_end' => $semester->morning_period_end,
+                'afternoon_period_start' => $semester->afternoon_period_start,
+                'afternoon_period_end' => $semester->afternoon_period_end,
                 'student_count' => $semester->students()->count(),
                 'attendance_count' => Attendance::whereHas('student', function($query) use ($semester) {
                     $query->where('semester_id', $semester->id);
@@ -306,9 +299,7 @@ class SemesterController extends Controller
         }
     }
 
-    /**
-     * Update the specified semester in storage.
-     */
+ 
     public function update(Request $request, Semester $semester)
     {
         try {
@@ -318,8 +309,7 @@ class SemesterController extends Controller
                 'request_data' => $request->all()
             ]);
 
-            // Check user permissions
-            $user = Auth::user();
+             $user = Auth::user();
             if ($user->role !== 'admin' && $semester->school_id != $user->school_id) {
                 Log::warning('Unauthorized semester update attempt', [
                     'user_id' => $user->id,
@@ -331,21 +321,22 @@ class SemesterController extends Controller
                 return redirect()->back()->with('error', 'You can only update semesters from your school.');
             }
 
-            $validated = $request->validate([
+            $validated = $this->validateForResponse($request, [
                 'name' => 'required|string|max:255',
                 'school_id' => 'required|exists:schools,id',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
                 'status' => 'required|in:active,inactive',
-                'am_time_in_start' => 'nullable|date_format:H:i',
-                'am_time_in_end' => 'nullable|date_format:H:i|after:am_time_in_start',
-                'am_time_out_start' => 'nullable|date_format:H:i',
-                'am_time_out_end' => 'nullable|date_format:H:i|after:am_time_out_start',
-                'pm_time_in_start' => 'nullable|date_format:H:i',
-                'pm_time_in_end' => 'nullable|date_format:H:i|after:pm_time_in_start',
-                'pm_time_out_start' => 'nullable|date_format:H:i',
-                'pm_time_out_end' => 'nullable|date_format:H:i|after:pm_time_out_start',
+                'description' => 'nullable|string|max:1000',
+                'morning_period_start' => 'nullable|date_format:H:i',
+                'morning_period_end' => 'nullable|date_format:H:i|after:morning_period_start',
+                'afternoon_period_start' => 'nullable|date_format:H:i',
+                'afternoon_period_end' => 'nullable|date_format:H:i|after:afternoon_period_start',
             ]);
+
+            if (is_object($validated)) { 
+                return $validated;
+            }
 
              if ($user->role !== 'admin' && $validated['school_id'] != $user->school_id) {
                 Log::warning('Unauthorized school change attempt', [
@@ -357,8 +348,7 @@ class SemesterController extends Controller
                 return redirect()->back()->with('error', 'You cannot move semesters to other schools.');
             }
 
-            // Validate time ranges for overlaps
-            $tempSemester = new Semester($validated);
+             $tempSemester = new Semester($validated);
             $validation = $tempSemester->validateTimeRanges();
             if (!$validation['valid']) {
                 return redirect()->back()->with('error', $validation['message'])->withInput();
@@ -385,7 +375,13 @@ class SemesterController extends Controller
                 'user_id' => $user->id
             ]);
 
-            return redirect()->route('teacher.semesters')->with('success', 'Semester updated successfully.');
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Semester updated successfully.'
+                ]);
+            }
+            return redirect()->route('admin.manage-semesters')->with('success', 'Semester updated successfully.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Semester update validation failed', [
@@ -394,6 +390,13 @@ class SemesterController extends Controller
                 'errors' => $e->errors()
             ]);
             
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
             return redirect()->back()->withErrors($e->errors())->withInput();
             
         } catch (\Exception $e) {
@@ -414,8 +417,7 @@ class SemesterController extends Controller
     public function destroy(Semester $semester)
     {
         try {
-            // Check user permissions
-            $user = Auth::user();
+             $user = Auth::user();
             if ($user->role !== 'admin' && $semester->school_id != $user->school_id) {
                 Log::warning('Unauthorized semester delete attempt', [
                     'user_id' => $user->id,
@@ -427,8 +429,7 @@ class SemesterController extends Controller
                 return redirect()->back()->with('error', 'You can only delete semesters from your school.');
             }
 
-            // Check if semester has associated data that would prevent deletion
-            $hasStudents = $semester->students()->exists();
+             $hasStudents = $semester->students()->exists();
             $hasSessions = $semester->attendanceSessions()->exists();
             
             if ($hasStudents || $hasSessions) {
@@ -477,8 +478,7 @@ class SemesterController extends Controller
     public function toggleStatus(Semester $semester)
     {
         try {
-            // Check user permissions
-            $user = Auth::user();
+             $user = Auth::user();
             if ($user->role !== 'admin' && $semester->school_id != $user->school_id) {
                 Log::warning('Unauthorized semester status toggle attempt', [
                     'user_id' => $user->id,
@@ -490,8 +490,7 @@ class SemesterController extends Controller
 
             $newStatus = $semester->status === 'active' ? 'inactive' : 'active';
             
-            // If activating, deactivate others in the same school
-            if ($newStatus === 'active') {
+             if ($newStatus === 'active') {
                 Semester::where('school_id', $semester->school_id)
                     ->where('id', '!=', $semester->id)
                     ->where('status', 'active')
@@ -539,8 +538,7 @@ class SemesterController extends Controller
             $user = Auth::user();
             $schoolId = $request->get('school_id', $user->school_id);
             
-            // Check permissions
-            if ($user->role !== 'admin' && $schoolId != $user->school_id) {
+             if ($user->role !== 'admin' && $schoolId != $user->school_id) {
                 Log::warning('Unauthorized active semester request', [
                     'user_id' => $user->id,
                     'requested_school_id' => $schoolId,
