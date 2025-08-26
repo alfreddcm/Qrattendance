@@ -1287,7 +1287,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="">
+                <a href="{{ route('admin.account') }}" class="{{ request()->routeIs('admin.account') ? 'active' : '' }}">
                     <span class="icon"><i class="fas fa-cog"></i></span> <span>Manage Account</span>
                 </a>
             </li>

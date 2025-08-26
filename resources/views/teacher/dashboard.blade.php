@@ -75,99 +75,104 @@
 
     <div class="container-fluid">
         @if($semesters->count() > 0)
-        <div class="row g-3 mb-3">
-            <div class="col-12">
-                <div class="card shadow-sm" style="background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); position: relative; overflow: hidden;">
-                    <div class="card-body text-white p-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-6" style="padding-right: 100px;">
-                                <h5 class="card-title text-white mb-2 d-flex align-items-center">
-                                    {{ $displayData['semester_name'] }}  &nbsp;
-                                    <a href="{{ route('teacher.semesters') }}" class="">
-                                        <i class="fas fa-eye me-1 text-dark"></i>
-                                    </a>
-                               </h5>
-                                <div class="col">
-                                    <p class="mb-1"><strong>School:</strong> {{ $displayData['school_name'] }}</p>
-                                    <p class="mb-0"><strong>Year:</strong> {{ $displayData['school_year'] }}</p>
-                                    <p class="mb-0"><strong>Period:</strong> {{ $displayData['date_range'] }}</p>
-                                    <p class="mb-1"><strong>Morning Period:</strong> 
-                                        <span class="badge bg-success">{{ $displayData['am_time_in_start_display'] }} - {{ $displayData['am_time_in_end_display'] }}</span>
-                                    </p>
-                                    <p class="mb-1"><strong>Afternoon Period:</strong> 
-                                        <span class="badge bg-warning">{{ $displayData['pm_time_in_start_display'] }} - {{ $displayData['pm_time_in_end_display'] }}</span>
-                                    </p>
-                                </div>
+         <div class="row g-3 mb-3">
+            <div class="col-md-7">
+                <div class="card shadow-sm h-100" style="background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); position: relative; overflow: hidden; min-height: 200px;">
+                    <!-- School Logo positioned like the blue circle -->
+                    <div class="school-logo-overlay">
+                        @if(auth()->user()->school && auth()->user()->school->logo)
+                            <img src="{{ asset('storage/' . auth()->user()->school->logo) }}" 
+                                 alt="{{ auth()->user()->school->name ?? 'School' }} Logo" 
+                                 class="school-logo-positioned"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="logo-fallback-positioned" style="display: none;">
+                                <i class="fas fa-school"></i>
                             </div>
-                            <div class="col-md-6">
-                                <!-- Today's Session Embedded -->
-                                <div class="bg-white bg-opacity-15 rounded p-2">
-                                    <h6 class="text-dark mb-2 text-center fw-bold">
-                                        <i class="fas fa-calendar-day me-1"></i>Today's Session
-                                    </h6>
-                                    @if($todaySession)
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-borderless text-dark mb-2">
-                                                <thead>
-                                                    <tr class="border-bottom border-dark">
-                                                        <th class="text-dark fs-7 fw-bold">Session</th>
-                                                        <th class="text-dark fs-7 fw-bold">Created</th>
-                                                        <th class="text-dark fs-7 fw-bold">Scanned</th>
-                                                        <th class="text-dark fs-7 fw-bold">Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="text-dark">
-                                                            <strong>{{$todaySession->session_name}}</strong>
-                                                            <br><small class="text-muted">{{ $todaySession->semester->name ?? 'Unknown' }}</small>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-success fs-8">
-                                                                {{ $todaySession->started_at->format('M j') }}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-info fs-8">{{ $todaySession->attendance_count ?? 0 }}</span>
-                                                        </td>
-                                                        <td>
-                                                            <div class="btn-group btn-group-sm" role="group">
-                                                                <button class="btn btn-outline-dark btn-compact" 
-                                                                    data-url="{{ $todaySession->getPublicUrl() }}" data-action="copy"
-                                                                    title="Copy URL">
-                                                                    <i class="fas fa-copy"></i>
-                                                                </button>
-                                                                <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-compact" title="View details">
-                                                                    <i class="fas fa-eye"></i> View details
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div class="text-center">
-                                            <a href="{{ $todaySession->getPublicUrl() }}" target="_blank" class="btn btn-success btn-compact me-2">
-                                                <i class="fas fa-external-link-alt me-1"></i>Open Link
-                                            </a>
-                                            <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-dark btn-compact">
-                                                <i class="fas fa-eye me-1"></i>View All
-                                            </a>
-                                        </div>
-                                    @else
-                                        <div class="text-center py-2">
-                                            <p class="text-dark mb-2 fs-7">No active session</p>
-                                            <a href="{{ route('teacher.attendance') }}" class="btn btn-success btn-compact me-2">
-                                                <i class="fas fa-plus me-1"></i>Create Session
-                                            </a>
-                                            <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-dark btn-compact">
-                                                <i class="fas fa-eye me-1"></i>View All
-                                            </a>
-                                        </div>
-                                    @endif
-                                </div>
+                        @else
+                            <div class="logo-fallback-positioned">
+                                <i class="fas fa-school"></i>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <div class="card-body text-white p-3 d-flex flex-column">
+                        <h5 class="card-title text-white mb-3 d-flex align-items-center">
+                            {{ $displayData['semester_name'] }}  &nbsp;
+                            <a href="{{ route('teacher.semesters') }}" class="">
+                                <i class="fas fa-eye me-1 text-dark"></i>
+                            </a>
+                       </h5>
+                        <div class="row flex-grow-1">
+                            <div class="col-md-12">
+                                <p class="mb-1"><strong>School:</strong> {{ $displayData['school_name'] }}</p>
+                                <p class="mb-1"><strong>Year:</strong> {{ $displayData['school_year'] }}</p>
+                                <p class="mb-1"><strong>Period:</strong> {{ $displayData['date_range'] }}</p>
+                                <p class="mb-1"><strong>Morning Period:</strong> 
+                                    <span class="badge bg-success">{{ $displayData['am_time_in_start_display'] }} - {{ $displayData['am_time_in_end_display'] }}</span>
+                                </p>
+                                <p class="mb-0"><strong>Afternoon Period:</strong> 
+                                    <span class="badge bg-warning">{{ $displayData['pm_time_in_start_display'] }} - {{ $displayData['pm_time_in_end_display'] }}</span>
+                                </p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today's Session Card -->
+            <div class="col-md-5">
+                <div class="card shadow-sm h-100" style="min-height: 200px;">
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title mb-3 text-center fw-bold">
+                            <i class="fas fa-calendar-day me-1"></i>Today's Session
+                        </h6>
+                        @if($todaySession)
+                            <div class="text-center mb-2">
+                                <div class="fw-bold text-primary">{{$todaySession->session_name}}</div>
+                                <small class="text-muted">{{ $todaySession->semester->name ?? 'Unknown' }}</small>
+                            </div>
+                            
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <div class="border-end">
+                                        <div class="fw-bold text-success">{{ $todaySession->started_at->format('M j') }}</div>
+                                        <small class="text-muted">Created</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="fw-bold text-info">{{ $todaySession->attendance_count ?? 0 }}</div>
+                                    <small class="text-muted">Scanned</small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-auto">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-secondary" 
+                                        data-url="{{ $todaySession->getPublicUrl() }}" data-action="copy"
+                                        title="Copy URL">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <a href="{{ $todaySession->getPublicUrl() }}" target="_blank" class="btn btn-success">
+                                        <i class="fas fa-external-link-alt me-1"></i>Open Link
+                                    </a>
+                                </div>
+                                <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                            </div>
+                        @else
+                            <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
+                                <p class="text-muted mb-3">No active session today</p>
+                                <div class="d-grid gap-2 mt-auto">
+                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-success">
+                                        <i class="fas fa-plus me-1"></i>Create Session
+                                    </a>
+                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View All Sessions
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -177,71 +182,83 @@
         <!-- Quick Stats -->
         <div class="row g-3 mb-3">
             <div class="col-lg-3 col-md-6">
-                <div class="card stat-card text-white bg-primary">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="h4 mb-0" id="myStudents">{{ $myStudents ?? 0 }}</div>
-                                <small>My Students</small>
+                <a href="{{ route('teacher.students') }}" class="text-decoration-none">
+                    <div class="card stat-card text-white bg-primary stat-card-clickable">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="h4 mb-0" id="myStudents">{{ $myStudents ?? 0 }}</div>
+                                    <small>My Students</small>
+                                </div>
+                                <i class="fas fa-user-graduate fa-2x opacity-75"></i>
                             </div>
-                            <i class="fas fa-user-graduate fa-2x opacity-75"></i>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px;">
-                            <div class="progress-bar bg-white" style="width: 100%"></div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-white" style="width: 100%"></div>
+                            </div>
+                           
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             
             <div class="col-lg-3 col-md-6">
-                <div class="card stat-card text-white bg-success">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="h4 mb-0" id="mySections">{{ $mySections ?? 0 }}</div>
-                                <small>My Sections</small>
+                <a href="{{ route('teacher.students') }}" class="text-decoration-none">
+                    <div class="card stat-card text-white bg-success stat-card-clickable">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="h4 mb-0" id="mySections">{{ $mySections ?? 0 }}</div>
+                                    <small>My Sections</small>
+                                </div>
+                                <i class="fas fa-users fa-2x opacity-75"></i>
                             </div>
-                            <i class="fas fa-users fa-2x opacity-75"></i>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px;">
-                            <div class="progress-bar bg-white" style="width: {{ $mySections > 0 ? min(($mySections / 5) * 100, 100) : 0 }}%"></div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-white" style="width: 100%"></div>
+                            </div>
+                          
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             
             <div class="col-lg-3 col-md-6">
-                <div class="card stat-card text-white bg-info">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="h4 mb-0" id="todayPresent">{{ $todayPresent ?? 0 }}</div>
-                                <small>Present Today</small>
+                <a href="{{ route('teacher.attendance') }}" class="text-decoration-none">
+                    <div class="card stat-card text-white bg-info stat-card-clickable">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="h4 mb-0" id="todayPresent">{{ $todayPresent ?? 0 }}</div>
+                                    <small>Present Today</small>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x opacity-75"></i>
                             </div>
-                            <i class="fas fa-calendar-check fa-2x opacity-75"></i>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px;">
-                            <div class="progress-bar bg-white" style="width: {{ $todayPresent > 0 && $myStudents > 0 ? min(($todayPresent / $myStudents) * 100, 100) : 0 }}%"></div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-white" style="width: {{ $todayPresent > 0 && $myStudents > 0 ? min(($todayPresent / $myStudents) * 100, 100) : 0 }}%"></div>
+                            </div>
+                           
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             
             <div class="col-lg-3 col-md-6">
-                <div class="card stat-card text-white bg-warning">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="h4 mb-0" id="attendanceRate">{{ $attendanceRate ?? '0%' }}</div>
-                                <small>Attendance Rate</small>
+                <a href="{{ route('teacher.attendance') }}" class="text-decoration-none">
+                    <div class="card stat-card text-white bg-warning stat-card-clickable">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="h4 mb-0" id="attendanceRate">{{ $attendanceRate ?? '0%' }}</div>
+                                    <small>Attendance Rate</small>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x opacity-75"></i>
                             </div>
-                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px;">
-                            <div class="progress-bar bg-white" style="width: {{ str_replace('%', '', $attendanceRate ?? '0') }}%"></div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-white" style="width: {{ str_replace('%', '', $attendanceRate ?? '0') }}%"></div>
+                            </div>
+                           
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -493,6 +510,61 @@
 .btn-compact {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
+}
+
+/* Clickable stat cards */
+.stat-card-clickable {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card-clickable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+a:hover .stat-card-clickable {
+    text-decoration: none !important;
+}
+
+a .stat-card-clickable * {
+    color: inherit !important;
+}
+
+/* Positioned School Logo (like blue circle) */
+.school-logo-overlay {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 100px;
+    height: 100px;
+    z-index: 10;
+}
+
+.school-logo-positioned {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.logo-fallback-positioned {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.5rem;
+    backdrop-filter: blur(8px);
 }
 </style>
 

@@ -106,24 +106,18 @@ class MessageApiController extends Controller
 
             $normalizedNumber = $this->normalizePhoneNumber($number);
 
-            $result = $this->smsService->sendSms($message, $normalizedNumber);
-
-            $outboundMessage = OutboundMessage::create([
+            // Prepare metadata for the SMS service
+            $metadata = [
                 'teacher_id' => $this->teacherId ?? auth()->id(),
                 'admin_id' => auth()->user()->role === 'admin' ? auth()->id() : null,
                 'student_id' => $studentId,
-                'contact_number' => $normalizedNumber,
-                'message' => $message,
-                'message_id' => $result['message_id'] ?? null,
-                'status' => $result['status'] ?? 'pending',
-                'recipient_type' => 'individual',
-                'recipient_count' => 1
-            ]);
+            ];
+
+            $result = $this->smsService->sendSms($message, $normalizedNumber, null, $metadata);
 
             if ($result['success']) {
                 Log::info('SMS sent successfully', [
                     'message_id' => $result['message_id'],
-                    'outbound_message_id' => $outboundMessage->id,
                     'student_id' => $studentId,
                     'number' => $normalizedNumber
                 ]);
@@ -131,13 +125,11 @@ class MessageApiController extends Controller
                 return response()->json([
                     'status' => 'success',
                     'message' => 'SMS sent successfully',
-                    'message_id' => $result['message_id'],
-                    'outbound_message_id' => $outboundMessage->id
+                    'message_id' => $result['message_id']
                 ]);
             } else {
                 Log::error('SMS sending failed', [
                     'message_id' => $result['message_id'] ?? null,
-                    'outbound_message_id' => $outboundMessage->id,
                     'student_id' => $studentId,
                     'number' => $normalizedNumber,
                     'error' => $result['error'] ?? null
@@ -146,8 +138,7 @@ class MessageApiController extends Controller
                 return response()->json([
                     'status' => 'fail',
                     'message' => 'Failed to send SMS: ' . ($result['error'] ?? 'Unknown error'),
-                    'message_id' => $result['message_id'] ?? null,
-                    'outbound_message_id' => $outboundMessage->id
+                    'message_id' => $result['message_id'] ?? null
                 ], 500);
             }
 
@@ -432,8 +423,73 @@ class MessageApiController extends Controller
     }
 
     /**
-     * Send attendance notification SMS
+     * Test rate limiting functionality
      */
+    public function testRateLimit(Request $request)
+    {
+        try {
+            $testNumber = '+639123456789';
+            
+            $status = $this->smsService->getRateLimitStatus($testNumber);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Rate limiting test completed',
+                'data' => [
+                    'test_number' => $testNumber,
+                    'rate_limit_status' => $status,
+                    'config' => [
+                        'delay_seconds' => config('sms.message_delay_seconds'),
+                        'rate_limiting_enabled' => config('sms.enable_rate_limiting')
+                    ]
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error testing rate limit', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Error testing rate limit: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function checkRateLimit(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'number' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Validation failed: ' . $validator->errors()->first()
+                ], 422);
+            }
+
+            $number = $request->input('number');
+            $status = $this->smsService->getRateLimitStatus($number);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $status
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error checking rate limit status', [
+                'error' => $e->getMessage(),
+                'number' => $request->input('number')
+            ]);
+
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Error checking rate limit: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     public function sendAttendanceNotification($student, $status, $time)
     {
         try {

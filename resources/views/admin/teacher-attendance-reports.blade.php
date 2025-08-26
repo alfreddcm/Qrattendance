@@ -113,7 +113,7 @@
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <form id="filterForm">
+                    <form id="filterForm" method="GET" action="{{ route('admin.teacher-attendance-reports') }}">
                         <!-- Report Configuration Section -->
                         <div class="filter-section">
                             <h6 class="text-primary mb-3 fw-semibold">
@@ -212,6 +212,7 @@
                                 <i class="fas fa-calendar-alt me-2"></i>Academic Period
                             </h6>
                             <div class="row g-4">
+                                <!-- Semester Selection (Always shown, required for Quarterly) -->
                                 <div class="col-lg-3 col-md-6">
                                     <div class="form-floating">
                                         <select name="semester_id" id="semester_id" class="form-select">
@@ -226,61 +227,49 @@
                                             <i class="fas fa-graduation-cap text-info me-2"></i>Semester
                                         </label>
                                     </div>
-                                    <div class="mt-2">
-                                        <span class="info-badge" id="semesterInfo">Select semester to filter months</span>
+                                    <div class="mt-2" style="display: none;">
+                                        <span class="info-badge" id="semesterInfo"></span>
                                     </div>
                                 </div>
 
-                                <!-- Date Range Fields (Daily) -->
-                                <div class="col-lg-3 col-md-6" id="dateField" style="display:none;">
+                                 <div class="col-lg-3 col-md-6" id="singleDateField" style="display:none;">
                                     <div class="form-floating">
-                                        <input type="date" name="start_date" id="start_date" value="{{ request('start_date', now()->toDateString()) }}" class="form-control">
-                                        <label for="start_date">
-                                            <i class="fas fa-calendar text-info me-2"></i>Start Date
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-3 col-md-6" id="endDateField" style="display:none;">
-                                    <div class="form-floating">
-                                        <input type="date" name="end_date" id="end_date" value="{{ request('end_date', now()->toDateString()) }}" class="form-control">
-                                        <label for="end_date">
-                                            <i class="fas fa-calendar text-info me-2"></i>End Date
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Month/Year Fields (Monthly/Quarterly) -->
-                                <div class="col-lg-3 col-md-6" id="monthField" style="display:none;">
-                                    <div class="form-floating">
-                                        <select name="report_month" id="report_month" class="form-select">
-                                            @for($m = 1; $m <= 12; $m++)
-                                                <option value="{{ $m }}" {{ request('report_month', date('n')) == $m ? 'selected' : '' }}>
-                                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                                </option>
-                                            @endfor
-                                        </select>
-                                        <label for="report_month">
-                                            <i class="fas fa-calendar-alt text-info me-2"></i>Month
+                                        <input type="date" name="report_date" id="report_date" value="{{ request('report_date', now()->toDateString()) }}" class="form-control">
+                                        <label for="report_date">
+                                            <i class="fas fa-calendar text-info me-2"></i>Select Date
                                         </label>
                                     </div>
                                     <div class="mt-2">
-                                        <span class="info-badge" id="monthInfo">Choose report month</span>
+                                        <span class="info-badge">Choose specific date for daily report</span>
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-6" id="yearField" style="display:none;">
+                                 <div class="col-lg-3 col-md-6" id="monthField" style="display:none;">
                                     <div class="form-floating">
-                                        <select name="report_year" id="report_year" class="form-select">
-                                            @for($y = date('Y') - 5; $y <= date('Y') + 1; $y++)
-                                                <option value="{{ $y }}" {{ request('report_year', date('Y')) == $y ? 'selected' : '' }}>
-                                                    {{ $y }}
-                                                </option>
+                                        <select name="report_month_year" id="report_month_year" class="form-select">
+                                            @php
+                                                $currentYear = date('Y');
+                                                $currentMonth = date('n');
+                                                $selectedMonthYear = request('report_month_year', $currentYear . '-' . str_pad($currentMonth, 2, '0', STR_PAD_LEFT));
+                                            @endphp
+                                            @for($y = $currentYear - 2; $y <= $currentYear + 1; $y++)
+                                                @for($m = 1; $m <= 12; $m++)
+                                                    @php
+                                                        $value = $y . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
+                                                        $display = date('F Y', mktime(0, 0, 0, $m, 1, $y));
+                                                    @endphp
+                                                    <option value="{{ $value }}" {{ $selectedMonthYear == $value ? 'selected' : '' }}>
+                                                        {{ $display }}
+                                                    </option>
+                                                @endfor
                                             @endfor
                                         </select>
-                                        <label for="report_year">
-                                            <i class="fas fa-calendar text-info me-2"></i>Year
+                                        <label for="report_month_year">
+                                            <i class="fas fa-calendar-alt text-info me-2"></i>Month & Year
                                         </label>
+                                    </div>
+                                    <div class="mt-2">
+                                        <span class="info-badge" id="monthInfo">Choose report month and year</span>
                                     </div>
                                 </div>
                             </div>
@@ -354,10 +343,8 @@
                                 <input type="hidden" name="teacher_id" value="{{ request('teacher_id') }}">
                                 <input type="hidden" name="school_id" value="{{ request('school_id') }}">
                                 <input type="hidden" name="grade_section" value="{{ request('grade_section') }}">
-                                <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-                                <input type="hidden" name="end_date" value="{{ request('end_date') }}">
-                                <input type="hidden" name="report_month" value="{{ request('report_month') }}">
-                                <input type="hidden" name="report_year" value="{{ request('report_year') }}">
+                                <input type="hidden" name="report_date" value="{{ request('report_date') }}">
+                                <input type="hidden" name="report_month_year" value="{{ request('report_month_year') }}">
                                 <button type="submit" class="btn btn-success">
                                     <i class="fas fa-file-csv me-2"></i>Export CSV
                                 </button>
@@ -575,12 +562,20 @@ $(document).ready(function() {
 
 function updateFilterFields() {
     var type = $('#type').val();
-    $('#dateField, #endDateField, #monthField, #yearField').hide();
     
+    // Hide all date/period fields first
+    $('#singleDateField, #monthField').hide();
+    
+    // Show fields based on report type
     if(type === 'daily') {
-        $('#dateField, #endDateField').show();
-    } else if(type === 'monthly' || type === 'quarterly') {
-        $('#monthField, #yearField').show();
+        // Daily: Show only single date selection
+        $('#singleDateField').show();
+    } else if(type === 'monthly') {
+        // Monthly: Show combined month and year selection
+        $('#monthField').show();
+    } else if(type === 'quarterly') {
+        // Quarterly: Only semester selection (already visible, no additional fields needed)
+        // Semester field is always visible
     }
 }
 

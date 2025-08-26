@@ -212,7 +212,7 @@
                                         <th>Section & Students</th>
                                         <th class="sortable" data-sort="phone_number">
                                             <a href="{{ route('admin.manage-teachers') }}?sort_by=phone_number&sort_order={{ request('sort_by') == 'phone_number' && request('sort_order') == 'asc' ? 'desc' : 'asc' }}" class="text-decoration-none text-dark">
-                                                Contact Person
+                                                Phone Number
                                                 @if(request('sort_by') == 'phone_number')
                                                     @if(request('sort_order') == 'asc')
                                                         <i class="fas fa-sort-up ms-1"></i>
@@ -289,25 +289,7 @@
                                                         title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                @if($teacher->section)
-                                                <button type="button" 
-                                                        class="btn btn-outline-warning btn-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#reassignSectionModal"
-                                                        onclick="openReassignModal({{ $teacher->section->id }}, '{{ $teacher->section->section_name ?? $teacher->section->name }} - Grade {{ $teacher->section->grade_level ?? $teacher->section->gradelevel }}', {{ $teacher->id }}, '{{ $teacher->name }}')"
-                                                        title="Reassign">
-                                                    <i class="fas fa-exchange-alt"></i>
-                                                </button>
-                                                @else
-                                                <button type="button" 
-                                                        class="btn btn-outline-success btn-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#createSectionModal"
-                                                        onclick="openCreateSectionModal({{ $teacher->id }}, '{{ $teacher->name }}')"
-                                                        title="Create Section">
-                                                    <i class="fas fa-plus"></i>
-                                                </button>
-                                                @endif
+                                                 
                                                 <button type="button" 
                                                         class="btn btn-outline-danger btn-sm" 
                                                         onclick="if(confirm('Are you sure you want to delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }"
@@ -366,6 +348,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="add_name" class="form-label">Full Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="add_name" name="name" required 
+                                   value="{{ old('name') }}"
                                    minlength="2" maxlength="255" 
                                    title="Name should contain only letters, spaces, and periods"
                                    placeholder="Enter full name">
@@ -375,6 +358,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="add_username" class="form-label">Username <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="add_username" name="username" required 
+                                   value="{{ old('username') }}"
                                    minlength="3" maxlength="50" 
                                     
                                    title="Username should contain only letters, numbers, underscores, and hyphens"
@@ -385,6 +369,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="add_email" class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="add_email" name="email" required 
+                                   value="{{ old('email') }}"
                                    maxlength="255" 
                                    title="Enter a valid email address"
                                    placeholder="user@example.com">
@@ -406,7 +391,9 @@
                                     title="Select the school this teacher will be assigned to">
                                 <option value="">Select School</option>
                                 @foreach($schools as $school)
-                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                    <option value="{{ $school->id }}" {{ old('school_id') == $school->id ? 'selected' : '' }}>
+                                        {{ $school->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -416,8 +403,8 @@
                             <label for="add_position" class="form-label">Position</label>
                             <select class="form-select" id="add_position" name="position" title="Select position">
                                 <option value="">Select Position</option>
-                                <option value="Teacher">Teacher</option>
-                                <option value="Adviser">Adviser</option>
+                                <option value="Teacher" {{ old('position') == 'Teacher' ? 'selected' : '' }}>Teacher</option>
+                                <option value="Adviser" {{ old('position') == 'Adviser' ? 'selected' : '' }}>Adviser</option>
                             </select>
                         </div>
                         
@@ -479,6 +466,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="add_phone_number" class="form-label">Phone Number</label>
                             <input type="tel" class="form-control" id="add_phone_number" name="phone_number" 
+                                   value="{{ old('phone_number') }}"
                                    placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+" 
                                    title="Enter a valid phone number (digits, spaces, dashes, parentheses, and + allowed)">
                         </div>
@@ -845,12 +833,6 @@
                             <label class="form-label">Section Assignment</label>
                             @if($sections->count() > 0)
                                 <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="section_id" id="edit_no_section" value="">
-                                        <label class="form-check-label text-muted" for="edit_no_section">
-                                            <i class="fas fa-minus-circle me-1"></i>No Section Assignment
-                                        </label>
-                                    </div>
                                     @foreach($sections as $section)
                                         @php
                                             $isAssigned = $section->teacher_id !== null;
@@ -858,8 +840,8 @@
                                         @endphp
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" 
-                                                   type="radio" 
-                                                   name="section_id" 
+                                                   type="checkbox" 
+                                                   name="section_ids[]" 
                                                    id="edit_section_{{ $section->id }}" 
                                                    value="{{ $section->id }}"
                                                    data-assigned="{{ $isAssigned ? 'true' : 'false' }}"
@@ -886,7 +868,7 @@
                                 </div>
                                 <small class="text-muted">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Only unassigned sections can be selected. Your current section (if any) will be available for selection.
+                                    Select multiple sections to assign to this teacher. Only unassigned sections or sections currently assigned to this teacher can be selected.
                                 </small>
                             @else
                                 <div class="alert alert-warning mb-0">
@@ -1094,40 +1076,43 @@ function editTeacher(teacherId) {
     document.getElementById('edit_position').value = teacher.position || '';
     document.getElementById('edit_phone_number').value = teacher.phone_number || '';
     
-    // Handle section selection
-    const currentTeacherId = teacher.id;
-    const currentSectionId = teacher.section_id;
-    
-    // Reset all radio buttons
-    document.querySelectorAll('input[name="section_id"]').forEach(radio => {
-        radio.checked = false;
-        radio.disabled = false;
+     const currentTeacherId = teacher.id;
+    const teacherSections = teacher.sections || [];  
+     
+    document.querySelectorAll('input[name="section_ids[]"]').forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.disabled = false;
         
-        // Re-enable sections that were assigned to this teacher
-        if (radio.dataset.teacherId == currentTeacherId) {
-            radio.disabled = false;
-            radio.parentElement.querySelector('label').classList.remove('text-muted');
-            const badge = radio.parentElement.querySelector('.badge');
+         if (checkbox.dataset.teacherId == currentTeacherId) {
+            checkbox.disabled = false;
+            checkbox.parentElement.querySelector('label').classList.remove('text-muted');
+            const badge = checkbox.parentElement.querySelector('.badge');
             if (badge) {
                 badge.className = 'badge bg-success';
                 badge.textContent = 'Available';
             }
         } 
         // Disable sections assigned to other teachers
-        else if (radio.dataset.assigned === 'true' && radio.dataset.teacherId != currentTeacherId) {
-            radio.disabled = true;
-            radio.parentElement.querySelector('label').classList.add('text-muted');
+        else if (checkbox.dataset.assigned === 'true' && checkbox.dataset.teacherId != currentTeacherId) {
+            checkbox.disabled = true;
+            checkbox.parentElement.querySelector('label').classList.add('text-muted');
         }
     });
     
-    // Select current section or no section
-    if (currentSectionId) {
-        const currentSectionRadio = document.getElementById(`edit_section_${currentSectionId}`);
-        if (currentSectionRadio) {
-            currentSectionRadio.checked = true;
+    // Check sections that are currently assigned to this teacher
+    if (Array.isArray(teacherSections)) {
+        teacherSections.forEach(section => {
+            const sectionCheckbox = document.getElementById(`edit_section_${section.id}`);
+            if (sectionCheckbox) {
+                sectionCheckbox.checked = true;
+            }
+        });
+    } else if (teacher.section_id) {
+        // Fallback for single section assignment
+        const currentSectionCheckbox = document.getElementById(`edit_section_${teacher.section_id}`);
+        if (currentSectionCheckbox) {
+            currentSectionCheckbox.checked = true;
         }
-    } else {
-        document.getElementById('edit_no_section').checked = true;
     }
 }
 
@@ -1432,8 +1417,68 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
     }
     
     // Form will submit normally if validation passes
-    
-    // Form will submit normally if validation passes
+});
+
+// Add Teacher Form Validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Show modal again if there are validation errors for the add teacher form
+    @if($errors->any() && old('_token'))
+        const addTeacherModal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
+        addTeacherModal.show();
+    @endif
+
+    const addTeacherForm = document.querySelector('#addTeacherModal form');
+    if (addTeacherForm) {
+        addTeacherForm.addEventListener('submit', function(e) {
+            // Basic client-side validation
+            const name = document.getElementById('add_name').value.trim();
+            const username = document.getElementById('add_username').value.trim();
+            const email = document.getElementById('add_email').value.trim();
+            const password = document.getElementById('add_password').value;
+            const schoolId = document.getElementById('add_school_id').value;
+            
+            if (!name || !username || !email || !password || !schoolId) {
+                e.preventDefault();
+                alert('Please fill in all required fields (Name, Username, Email, Password, and School).');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long.');
+                return false;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Please enter a valid email address.');
+                return false;
+            }
+            
+            // Username validation
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('Username must be at least 3 characters long.');
+                return false;
+            }
+            
+            // Log form data for debugging (remove in production)
+            console.log('Submitting teacher form with data:', {
+                name: name,
+                username: username,
+                email: email,
+                school_id: schoolId,
+                position: document.getElementById('add_position').value,
+                phone_number: document.getElementById('add_phone_number').value,
+                section_id: document.querySelector('input[name="section_id"]:checked')?.value || ''
+            });
+            
+            // Form will submit normally if validation passes
+            return true;
+        });
+    }
 });
 </script>
 

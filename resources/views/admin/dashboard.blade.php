@@ -77,13 +77,13 @@
             </div>
             
             <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.attendance') }}" class="text-decoration-none">
+                <a href="##" class="text-decoration-none">
                     <div class="card stat-card text-white bg-warning h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="h4 mb-0" id="todaySessionCount">{{ $todaySessionCount ?? 0 }}</div>
-                                    <small>Today's Session Count</small>
+                                    <small>Active Sessions Today</small>
                                 </div>
                                 <i class="fas fa-calendar-check fa-2x opacity-75"></i>
                             </div>
@@ -96,7 +96,7 @@
             </div>
             
             <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.reports') }}" class="text-decoration-none">
+                <a href="{{ route('admin.teacher-attendance-reports') }}" class="text-decoration-none">
                     <div class="card stat-card text-white bg-secondary h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">

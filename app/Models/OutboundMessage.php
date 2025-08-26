@@ -18,12 +18,14 @@ class OutboundMessage extends Model
         'message_id',
         'status',
         'recipient_type',
-        'recipient_count'
+        'recipient_count',
+        'last_sent_at'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'last_sent_at' => 'datetime'
     ];
 
     public function student()

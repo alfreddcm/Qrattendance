@@ -24,4 +24,14 @@ return [
     'allowed_country_codes' => ['+63'],  
     'default_country_code' => '+63',
     'sender_id' => env('SMS_SENDER_ID', 'Scan-to-notify'),  // Default sender ID
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Message Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    */
+    
+    'message_delay_seconds' => env('SMS_MESSAGE_DELAY_SECONDS', 60), 
+    'enable_rate_limiting' => env('SMS_ENABLE_RATE_LIMITING', true),
 ];

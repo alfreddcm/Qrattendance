@@ -44,9 +44,18 @@
     content: "\f0dd"; /* fa-sort-down */
 }
 
+.sortable.sort-original i::before {
+    content: "\f162"; /* fa-sort-numeric-up */
+}
+
 .sortable.sort-asc i,
 .sortable.sort-desc i {
     color: #ffc107;
+    opacity: 1;
+}
+
+.sortable.sort-original i {
+    color: #28a745;
     opacity: 1;
 }
 
@@ -54,6 +63,24 @@
 .badge {
     font-weight: 500;
     letter-spacing: 0.5px;
+}
+
+/* Sort notification styling */
+.sort-notification {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-size: 0.9rem;
+}
+
+/* Sortable header enhancements */
+.sortable {
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.sortable:active {
+    background-color: rgba(0,123,255,0.1) !important;
 }
 
 /* Table cell enhancements */
@@ -98,16 +125,7 @@
     <div class="row mb-4">
 
         <div class="col">
-                <div class="row mb-4 text-center">
-        <div class="mt-2">
-            <button class="btn btn-primary btn-sm px-2 py-1" data-bs-toggle="modal" data-bs-target="#createSessionModal">
-                <i class="fas fa-calendar-day me-1"></i>Get Today's Session
-            </button>
-            <button class="btn btn-success btn-sm px-2 py-1 ms-2" data-bs-toggle="modal" data-bs-target="#qrScannerModal">
-                <i class="fas fa-qrcode me-1"></i>QR Scanner
-            </button>
-        </div>
-    </div>
+            
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white p-2">
                     <h6 class="mb-0 fs-6">
@@ -115,16 +133,16 @@
                         <span class="badge bg-light text-success ms-2 fs-6">{{ count($activeSessions) }}</span>
                     </h6>
                 </div>
-                <div class="card-body p-2">
+                <div class="card-body p-0">
                     @if(count($activeSessions) > 0)
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead class="table-dark sticky-top" style="top: 0; z-index: 1;">
                                 <tr>
-                                    <th class="py-1 fs-6" style="max-width: 150px; white-space: normal; word-break: break-word;">Session</th>
-                                    <th class="py-1 fs-6">Date Created</th>
-                                    <th class="py-1 fs-6">Scanned</th>
-                                    <th class="py-1 fs-6">Actions</th>
+                                    <th class="py-1 " style="max-width: 50px; white-space: normal; word-break: break-word;">Session</th>
+                                    <th class="py-1 ">Date Created</th>
+                                    <th class="py-1 ">Scanned</th>
+                                    <th class="py-1 ">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -162,12 +180,26 @@
                         </table>
                     </div>
                     @else
-                    <div class="text-center py-3">
+                    <div class="text-center p-0">
                         <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
                         <p class="text-muted mb-0">No active sessions</p>
                         <small class="text-muted">Click "Get Today's Session" to create one</small>
                     </div>
                     @endif
+
+
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row mb-4 text-center">
+                        <div class="mt-2">
+                            <button class="btn btn-primary btn-sm px-2 py-1" data-bs-toggle="modal" data-bs-target="#createSessionModal">
+                                <i class="fas fa-calendar-day me-1"></i>Get Today's Session
+                            </button>
+                            <button class="btn btn-success btn-sm px-2 py-1 ms-2" data-bs-toggle="modal" data-bs-target="#qrScannerModal">
+                                <i class="fas fa-qrcode me-1"></i>QR Scanner
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -447,8 +479,8 @@
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="successModalBody">
-                    <!-- Success message will be inserted here -->
-                </div>
+ 
+            </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
                 </div>
@@ -468,8 +500,7 @@
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="errorModalBody">
-                    <!-- Error message will be inserted here -->
-                </div>
+                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
                 </div>
@@ -488,7 +519,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="confirmModalBody">
-                    <!-- Confirmation message will be inserted here -->
+                    <!-- Confirmation message   -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -556,9 +587,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <small class="text-muted">
-                                @if(request('search') || request('section_filter'))
-                                    Filtered results
-                                @endif
+                                 
                             </small>
                         </div>
                     </div>
@@ -1255,64 +1284,128 @@
     function initializeTableSorting() {
         const sortableHeaders = document.querySelectorAll('.sortable');
         
+        console.log('Initializing table sorting, found headers:', sortableHeaders.length);
+        
         sortableHeaders.forEach(header => {
             header.addEventListener('click', function() {
+                console.log('Header clicked:', this.dataset.sort);
+                
                 const sortColumn = this.dataset.sort;
                 const currentSort = this.classList.contains('sort-asc') ? 'asc' : 
                                    this.classList.contains('sort-desc') ? 'desc' : 'none';
                 
                 // Remove sort classes from all headers
                 sortableHeaders.forEach(h => {
-                    h.classList.remove('sort-asc', 'sort-desc');
+                    h.classList.remove('sort-asc', 'sort-desc', 'sort-original');
+                    const icon = h.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas fa-sort ms-1';
+                    }
                 });
                 
-                // Determine new sort direction
+                // Determine new sort direction (3-state cycle: none -> asc -> desc -> none)
                 let newSort = 'asc';
-                if (currentSort === 'asc') {
+                if (currentSort === 'none') {
+                    newSort = 'asc';
+                } else if (currentSort === 'asc') {
                     newSort = 'desc';
                 } else if (currentSort === 'desc') {
-                    newSort = 'asc';
+                    newSort = 'original';
                 }
                 
                 // Add sort class to current header
                 this.classList.add(`sort-${newSort}`);
                 
+                // Update icon
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (newSort === 'asc') {
+                        icon.className = 'fas fa-sort-up ms-1';
+                        icon.style.color = '#ffc107';
+                    } else if (newSort === 'desc') {
+                        icon.className = 'fas fa-sort-down ms-1';
+                        icon.style.color = '#ffc107';
+                    } else if (newSort === 'original') {
+                        icon.className = 'fas fa-sort-numeric-up ms-1';
+                        icon.style.color = '#28a745';
+                    }
+                }
+                
+                console.log('Sorting by:', sortColumn, 'direction:', newSort);
+                
                 // Sort the table
-                sortTable(sortColumn, newSort === 'asc');
+                sortTable(sortColumn, newSort);
             });
         });
     }
 
-    function sortTable(column, ascending = true) {
-        const tbody = document.querySelector('.table tbody');
-        if (!tbody) return;
+    function sortTable(column, sortMode = 'asc') {
+        const tbody = document.querySelector('#attendance-table-body');
+        if (!tbody) {
+            console.log('Could not find table body');
+            return;
+        }
         
         const rows = Array.from(tbody.querySelectorAll('tr'));
         
-        const sortedRows = rows.sort((a, b) => {
-            let aVal = getCellValue(a, column);
-            let bVal = getCellValue(b, column);
-            
-            // Handle different data types
-            if (column === 'status') {
-                // Sort by status priority: Present > Partial > Time Out Only > Absent
-                const statusPriority = {
-                    'Present': 4,
-                    'Partial': 3,
-                    'Time Out Only': 2,
-                    'Absent': 1
-                };
-                aVal = statusPriority[aVal] || 0;
-                bVal = statusPriority[bVal] || 0;
-            } else {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
-            }
-            
-            if (aVal < bVal) return ascending ? -1 : 1;
-            if (aVal > bVal) return ascending ? 1 : -1;
-            return 0;
+        // Filter out empty state rows (rows with colspan)
+        const dataRows = rows.filter(row => {
+            const firstCell = row.cells[0];
+            return firstCell && !firstCell.hasAttribute('colspan');
         });
+        
+        if (dataRows.length === 0) {
+            console.log('No data rows to sort');
+            return;
+        }
+        
+        let sortedRows;
+        
+        if (sortMode === 'original') {
+            // Sort by original order (by data-original-index or just by current DOM order)
+            sortedRows = [...dataRows].sort((a, b) => {
+                // Get the original index from data attribute or use current index
+                const aIndex = parseInt(a.getAttribute('data-original-index')) || Array.from(tbody.children).indexOf(a);
+                const bIndex = parseInt(b.getAttribute('data-original-index')) || Array.from(tbody.children).indexOf(b);
+                return aIndex - bIndex;
+            });
+        } else {
+            // Store original indices if not already stored
+            dataRows.forEach((row, index) => {
+                if (!row.hasAttribute('data-original-index')) {
+                    row.setAttribute('data-original-index', index);
+                }
+            });
+            
+            sortedRows = dataRows.sort((a, b) => {
+                let aVal = getCellValue(a, column);
+                let bVal = getCellValue(b, column);
+                
+                // Handle different data types
+                if (column === 'status') {
+                    // Sort by status priority: Present > Partial > Time Out Only > Absent
+                    const statusPriority = {
+                        'Present': 4,
+                        'Partial': 3,
+                        'Time Out Only': 2,
+                        'Absent': 1
+                    };
+                    aVal = statusPriority[aVal] || 0;
+                    bVal = statusPriority[bVal] || 0;
+                } else {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                const ascending = sortMode === 'asc';
+                if (aVal < bVal) return ascending ? -1 : 1;
+                if (aVal > bVal) return ascending ? 1 : -1;
+                return 0;
+            });
+        }
+        
+        // Clear the tbody and re-append sorted rows
+        tbody.innerHTML = '';
         
         // Re-append sorted rows and update row numbers
         sortedRows.forEach((row, index) => {
@@ -1323,13 +1416,82 @@
             }
             tbody.appendChild(row);
         });
+        
+        // If there were no data rows originally, add the empty state back
+        if (rows.length > 0 && dataRows.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
+                        No attendance records found for today
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // Add visual feedback
+        const sortInfo = sortMode === 'original' ? 'Original Order' : 
+                        sortMode === 'asc' ? 'A → Z' : 'Z → A';
+        console.log(`Table sorted: ${column} (${sortInfo})`);
+        
+        // Show a temporary sort notification
+        showSortNotification(column, sortInfo);
+    }
+    
+    function showSortNotification(column, sortInfo) {
+        // Remove any existing notifications
+        const existingNotification = document.querySelector('.sort-notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'sort-notification alert alert-info';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            min-width: 250px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        
+        const columnDisplayNames = {
+            'name': 'Student Name',
+            'section': 'Section',
+            'status': 'Status'
+        };
+        
+        notification.innerHTML = `
+            <i class="fas fa-sort me-2"></i>
+            <strong>Sorted by ${columnDisplayNames[column] || column}:</strong> ${sortInfo}
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Fade in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+        }, 10);
+        
+        // Fade out and remove after 2 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
+        }, 2000);
     }
 
     function getCellValue(row, column) {
         const columnMap = {
-            'name': 1,      // Student Name
-            'section': 2,   // Section 
-            'status': 3     // Status
+            'name': 1,       
+            'section': 2,     
+            'status': 3      
         };
         
         const columnIndex = columnMap[column];
@@ -1338,13 +1500,16 @@
         const cell = row.cells[columnIndex];
         if (!cell) return '';
         
-        // Handle special cases
-        if (column === 'name') {
-            // Extract text content from the cell
-            return cell.textContent.trim();
+         if (column === 'name') {
+             return cell.textContent.trim();
         } else if (column === 'section') {
             const badge = cell.querySelector('.badge');
-            return badge ? badge.textContent.trim() : cell.textContent.trim();
+            if (badge) {
+                return badge.textContent.trim();
+            } else {
+                const textContent = cell.textContent.trim();
+                 return textContent === '-' || textContent === '' ? 'zzz' : textContent;
+            }
         } else if (column === 'status') {
             const badge = cell.querySelector('.badge');
             return badge ? badge.textContent.trim() : cell.textContent.trim();
@@ -1352,9 +1517,14 @@
             return cell.textContent.trim();
         }
     }
-    // Initialize table sorting when document is ready
-    document.addEventListener('DOMContentLoaded', function() {
+     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing table sorting...');
         initializeTableSorting();
+        
+         setTimeout(() => {
+            console.log('Re-initializing table sorting after timeout...');
+            initializeTableSorting();
+        }, 1000);
     });
     </script>
 

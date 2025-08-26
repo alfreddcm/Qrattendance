@@ -9,6 +9,7 @@ use App\Models\School;
 use App\Models\Section;
 use App\Models\Semester;
 use App\Models\Attendance;
+use App\Models\AttendanceSession;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -31,9 +32,14 @@ class AdminController extends Controller
         $totalSchools = School::count();
         
         $totalSections = Section::count();
-        $todaySessionCount = Attendance::whereDate('date', today())
-            ->select(DB::raw('COUNT(DISTINCT CONCAT(student_id, "-", IF(time_in_am IS NOT NULL, "am_in", ""), IF(time_out_am IS NOT NULL, "am_out", ""), IF(time_in_pm IS NOT NULL, "pm_in", ""), IF(time_out_pm IS NOT NULL, "pm_out", ""))) as sessions'))
-            ->first()->sessions ?? 0;
+        
+        // Count active sessions created by teachers today
+        $todaySessionCount = AttendanceSession::whereDate('created_at', today())
+            ->where('status', 'active')
+            ->whereHas('teacher', function($query) {
+                $query->where('role', 'teacher');
+            })
+            ->count();
         
         $totalAttendanceRecords = Attendance::count();
         
@@ -235,7 +241,7 @@ class AdminController extends Controller
             'logo' => $logoPath
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'School updated successfully!');
+        return redirect()->route('admin.edit-school', $school->id)->with('success', 'School updated successfully!');
     }
 
     /**
@@ -356,48 +362,47 @@ class AdminController extends Controller
      */
     public function storeTeacher(Request $request)
     {
-    if ($resp = $this->validateOrRespond($request, [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'username' => 'required|string|unique:users,username|max:255',
-            'password' => 'required|string|min:6',
-            'phone_number' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:100',
-            'school_id' => 'required|exists:schools,id',
-            'section_name' => 'nullable|string|max:100',
-            'grade_level' => 'nullable|string|max:100'
-    ])) return $resp;
-
-        $sectionId = null;
-        if ($request->filled('section_name') && $request->filled('grade_level')) {
-            // Create or find the section
-            $section = Section::firstOrCreate([
-                'name' => $request->section_name,
-                'gradelevel' => (int) filter_var($request->grade_level, FILTER_EXTRACT_NUMBER_INT),
-                'teacher_id' => null, // Will be set after user creation
-                'semester_id' => 1 // You might want to make this dynamic
+        try {
+            // Direct validation without the trait to ensure proper web form handling
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'username' => 'required|string|unique:users,username|max:255',
+                'password' => 'required|string|min:6',
+                'phone_number' => 'nullable|string|max:20',
+                'position' => 'nullable|string|max:100',
+                'school_id' => 'required|exists:schools,id',
+                'section_id' => 'nullable|exists:sections,id'
             ]);
-            $sectionId = $section->id;
+
+            $sectionId = $request->section_id ?: null;
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'username' => $validated['username'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'teacher',
+                'phone_number' => $validated['phone_number'],
+                'position' => $validated['position'],
+                'school_id' => $validated['school_id'],
+                'section_id' => $sectionId
+            ]);
+
+            // Update section with teacher_id if section was selected
+            if ($sectionId) {
+                Section::where('id', $sectionId)->update(['teacher_id' => $user->id]);
+            }
+
+            return redirect()->route('admin.manage-teachers')
+                           ->with('success', 'Teacher "' . $user->name . '" has been added successfully!');
+                           
+        } catch (\Exception $e) {
+            \Log::error('Error creating teacher: ' . $e->getMessage());
+            return redirect()->back()
+                           ->withInput()
+                           ->with('error', 'An error occurred while creating the teacher. Please try again.');
         }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'role' => 'teacher',
-            'phone_number' => $request->phone_number,
-            'position' => $request->position,
-            'school_id' => $request->school_id,
-            'section_id' => $sectionId
-        ]);
-
-        // Update section with teacher_id if section was created
-        if ($sectionId) {
-            Section::where('id', $sectionId)->update(['teacher_id' => $user->id]);
-        }
-
-        return redirect()->route('admin.manage-teachers')->with('success', 'Teacher added successfully!');
     }
 
     /**
@@ -844,8 +849,18 @@ class AdminController extends Controller
          if ($request->filled('school_id')) {
             $query->where('school_id', $request->school_id);
         }
+        
+        if ($request->filled('semester_id')) {
+            $query->where('semester_id', $request->semester_id);
+        }
+        
          if ($request->filled('teacher_id')) {
             $query->where('user_id', $request->teacher_id);
+        }
+        
+        // Handle section_id filter (direct section ID)
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
         }
         
         // Handle grade_section filter (format: "Grade 11|STEM")
@@ -958,14 +973,61 @@ class AdminController extends Controller
         $schoolId = $request->input('school_id');
         $sectionId = $request->input('section_id');
         $timeRange = $request->input('time_range');
-        $reportMonth = $request->input('report_month');
-        $reportYear = $request->input('report_year', date('Y'));
+        $reportMonthYear = $request->input('report_month_year');
+        $reportDate = $request->input('report_date');
+        
+        // Parse month and year from the combined field for backward compatibility
+        $reportMonth = null;
+        $reportYear = date('Y');
+        if ($reportMonthYear) {
+            $parts = explode('-', $reportMonthYear);
+            if (count($parts) == 2) {
+                $reportYear = $parts[0];
+                $reportMonth = (int)$parts[1];
+            }
+        }
         
         $attendanceData = collect();
         $reportData = null;
         $records = [];
         
-        // Handle predefined time ranges
+        // Handle different date parameters based on report type
+        switch ($type) {
+            case 'daily':
+                // For daily reports, use single date or convert to start/end date
+                if ($reportDate) {
+                    $request->merge([
+                        'start_date' => $reportDate,
+                        'end_date' => $reportDate
+                    ]);
+                }
+                break;
+            case 'monthly':
+                // For monthly reports, use month and year to determine date range
+                if ($reportMonth && $reportYear) {
+                    $startDate = date('Y-m-01', mktime(0, 0, 0, $reportMonth, 1, $reportYear));
+                    $endDate = date('Y-m-t', mktime(0, 0, 0, $reportMonth, 1, $reportYear));
+                    $request->merge([
+                        'start_date' => $startDate,
+                        'end_date' => $endDate
+                    ]);
+                }
+                break;
+            case 'quarterly':
+                // For quarterly reports, use semester dates
+                if ($semesterId) {
+                    $semester = Semester::find($semesterId);
+                    if ($semester) {
+                        $request->merge([
+                            'start_date' => $semester->start_date,
+                            'end_date' => $semester->end_date
+                        ]);
+                    }
+                }
+                break;
+        }
+        
+        // Handle predefined time ranges (fallback)
         if ($timeRange && $timeRange !== 'custom') {
             $dates = $this->getDateRangeFromTimeRange($timeRange);
             $request->merge(['start_date' => $dates['start'], 'end_date' => $dates['end']]);
@@ -976,8 +1038,13 @@ class AdminController extends Controller
             return $this->generateAdminSF2($request);
         }
         
-        // Handle CSV export
-        if ($request->has('export') && $request->filled(['start_date', 'end_date'])) {
+        // Handle CSV export - check for any valid date range
+        $hasValidDateRange = $request->filled(['start_date', 'end_date']) || 
+                           ($type === 'daily' && $reportDate) ||
+                           ($type === 'monthly' && $reportMonthYear) ||
+                           ($type === 'quarterly'); // Quarterly doesn't require specific semester
+                           
+        if ($request->has('export') && $hasValidDateRange) {
             return $this->exportTeacherAttendanceCsv($request);
         }
         
@@ -986,7 +1053,7 @@ class AdminController extends Controller
         $gradeSectionOptions = $this->getGradeSectionOptions($request);
         
         // Generate report based on type
-        if ($request->filled(['start_date', 'end_date']) || $timeRange) {
+        if ($hasValidDateRange || $timeRange) {
             switch ($type) {
                 case 'daily':
                     $records = $this->generateDailyReport($students, $request);
@@ -1434,32 +1501,23 @@ class AdminController extends Controller
             $start = Carbon::parse($semester->start_date)->startOfDay();
             $end = Carbon::parse($semester->end_date)->endOfDay();
         } else {
+            // If no semester selected, use current academic year
             $start = now()->startOfYear();
             $end = now()->endOfYear();
         }
 
         $classDays = $this->getClassDays($start, $end);
 
-        if (empty($classDays)) {
-            return $students->map(function ($student) {
-                return (object)[
-                    'id_no'    => $student->id_no,
-                    'name'     => $student->name,
-                    'grade_level' => $student->grade_level,
-                    'section'  => $student->section_name,
-                    'school'   => $student->school ? $student->school->name : 'N/A',
-                    'teacher'  => $student->user ? $student->user->name : 'N/A',
-                    'checks'   => [],
-                ];
-            });
-        } else {
-            return $students->map(function ($student) use ($classDays) {
+        // Always return student data, even if no class days
+        return $students->map(function ($student) use ($classDays) {
+            $checks = [];
+            
+            if (!empty($classDays)) {
                 $attendances = Attendance::where('student_id', $student->id)
                     ->whereIn('date', $classDays)
                     ->get()
                     ->keyBy('date');
 
-                $checks = [];
                 foreach ($classDays as $date) {
                     $att = $attendances->get($date);
                     if ($att) {
@@ -1474,18 +1532,40 @@ class AdminController extends Controller
                         $checks[$date] = '✗';
                     }
                 }
+            }
 
-                return (object)[
-                    'id_no'    => $student->id_no,
-                    'name'     => $student->name,
-                    'grade_level' => $student->grade_level,
-                    'section'  => $student->section_name,
-                    'school'   => $student->school ? $student->school->name : 'N/A',
-                    'teacher'  => $student->user ? $student->user->name : 'N/A',
-                    'checks'   => $checks,
-                ];
-            });
-        }
+            $totalDays = count($classDays);
+            $presentDays = count(array_filter($checks, function($check) { return $check === '✓'; }));
+            $partialDays = count(array_filter($checks, function($check) { return $check === '◐'; }));
+            $absentDays = count(array_filter($checks, function($check) { return $check === '✗'; }));
+            
+            // Calculate attendance rate including partial attendance as half
+            $attendanceRate = $totalDays > 0 ? (($presentDays + ($partialDays * 0.5)) / $totalDays) * 100 : 0;
+            
+            // Determine remarks based on attendance rate
+            if ($attendanceRate >= 80) {
+                $remarks = 'Good';
+            } elseif ($attendanceRate >= 60) {
+                $remarks = 'Poor';
+            } else {
+                $remarks = 'Bad';
+            }
+
+            return (object)[
+                'id_no'       => $student->id_no,
+                'name'        => $student->name,
+                'grade_level' => $student->section ? $student->section->gradelevel : 'N/A',
+                'section'     => $student->section ? $student->section->name : 'N/A',
+                'school'      => $student->school ? $student->school->name : 'N/A',
+                'teacher'     => $student->user ? $student->user->name : 'N/A',
+                'checks'      => $checks,
+                'total_days'  => $totalDays,
+                'present_days' => $presentDays,
+                'partial_days' => $partialDays,
+                'absent_days' => $absentDays,
+                'remarks'     => $remarks,
+            ];
+        });
     }
     
     /**
@@ -2406,20 +2486,51 @@ class AdminController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'student_id' => 'required|string|max:20|unique:students,student_id,' . $id,
-            'birthday' => 'required|date',
+            'id_no' => 'required|string|max:20|unique:students,id_no,' . $id,
             'age' => 'required|integer|min:1|max:100',
-            'gender' => 'required|in:Male,Female',
-            'address' => 'nullable|string|max:500',
-            'contact_person' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:15',
+            'gender' => 'required|in:M,F',
+            'address' => 'required|string|max:500',
+            'cp_no' => 'required|string|max:15',
             'section_id' => 'required|exists:sections,id',
-            'school_id' => 'required|exists:schools,id',
+            'semester_id' => 'required|exists:semesters,id',
+            'contact_person_name' => 'nullable|string|max:255',
+            'contact_person_relationship' => 'nullable|string|max:50',
+            'contact_person_contact' => 'nullable|string|max:15',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'captured_image' => 'nullable|string',
         ]);
 
-        $student->update($request->all());
+         $updateData = $request->except(['picture', 'captured_image']);
+        
+        if ($request->hasFile('picture')) {
+             if ($student->picture && file_exists(storage_path('app/public/student_pictures/' . $student->picture))) {
+                unlink(storage_path('app/public/student_pictures/' . $student->picture));
+            }
+            
+            $picture = $request->file('picture');
+            $pictureName = time() . '_' . $student->id . '.' . $picture->getClientOriginalExtension();
+            $picture->storeAs('public/student_pictures', $pictureName);
+            $updateData['picture'] = $pictureName;
+        } elseif ($request->filled('captured_image')) {
+             $imageData = $request->captured_image;
+            if (strpos($imageData, 'data:image/') === 0) {
+                 if ($student->picture && file_exists(storage_path('app/public/student_pictures/' . $student->picture))) {
+                    unlink(storage_path('app/public/student_pictures/' . $student->picture));
+                }
+                
+                $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
+                $imageData = str_replace(' ', '+', $imageData);
+                $imageData = base64_decode($imageData);
+                
+                $pictureName = time() . '_' . $student->id . '.jpg';
+                file_put_contents(storage_path('app/public/student_pictures/' . $pictureName), $imageData);
+                $updateData['picture'] = $pictureName;
+            }
+        }
 
-        return redirect()->route('admin.manage-students')->with('success', 'Student updated successfully!');
+        $student->update($updateData);
+
+        return redirect()->route('admin.students.edit', $student->id)->with('success', 'Student updated successfully!');
     }
 
     /**
@@ -2572,5 +2683,71 @@ class AdminController extends Controller
                                     ->get();
         
         return response()->json($schools);
+    }
+
+    /**
+     * Show admin account management page
+     */
+    public function account()
+    {
+        $admin = Auth::user();
+        return view('admin.account', compact('admin'));
+    }
+
+    /**
+     * Update admin profile information
+     */
+    public function updateAccount(Request $request)
+    {
+        $admin = Auth::user();
+        
+        $validated = $this->validateForResponse($request, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $admin->id,
+            'username' => 'required|string|max:255|unique:users,username,' . $admin->id,
+            'phone_number' => 'nullable|string|max:20',
+        ]);
+
+        if (is_object($validated)) {
+            return $validated;
+        }
+
+        $admin->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'username' => $request->username,
+            'phone_number' => $request->phone_number,
+        ]);
+
+        return redirect()->route('admin.account')->with('success', 'Account updated successfully!');
+    }
+
+    /**
+     * Update admin password
+     */
+    public function updatePassword(Request $request)
+    {
+        $admin = Auth::user();
+        
+        $validated = $this->validateForResponse($request, [
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (is_object($validated)) {
+            return $validated;
+        }
+
+        // Check if current password is correct
+        if (!Hash::check($request->current_password, $admin->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+        }
+
+        // Update password
+        $admin->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->route('admin.account')->with('success', 'Password updated successfully!');
     }
 }

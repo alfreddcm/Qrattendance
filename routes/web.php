@@ -94,6 +94,8 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::post('/send-sms', [MessageApiController::class, 'sendSms'])->name('teacher.send.sms');
     Route::get('/outbound-messages', [MessageApiController::class, 'getOutboundMessages'])->name('teacher.outbound.messages');
     Route::get('/message-status/{id}', [MessageApiController::class, 'getMessageStatus'])->name('teacher.message.status');
+    Route::post('/check-rate-limit', [MessageApiController::class, 'checkRateLimit'])->name('teacher.check.rate.limit');
+    Route::get('/test-rate-limit', [MessageApiController::class, 'testRateLimit'])->name('teacher.test.rate.limit');
     Route::get('/test-sms-gateway', [MessageApiController::class, 'testGateway'])->name('teacher.test.gateway');
     Route::get('/get-students', [StudentManagementController::class, 'getStudentsForApi'])->name('teacher.get.students');
     
@@ -196,11 +198,18 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/semester', [AdminController::class, 'semester'])->name('admin.semester');
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     
+    // Admin Account Management
+    Route::get('/account', [AdminController::class, 'account'])->name('admin.account');
+    Route::put('/account', [AdminController::class, 'updateAccount'])->name('admin.account.update');
+    Route::put('/account/password', [AdminController::class, 'updatePassword'])->name('admin.account.password');
+    
     // Admin SMS/Message Routes
     Route::get('/message', [AdminController::class, 'message'])->name('admin.message');
     Route::post('/send-sms', [MessageApiController::class, 'sendSms'])->name('admin.send.sms');
     Route::get('/outbound-messages', [MessageApiController::class, 'getOutboundMessages'])->name('admin.outbound.messages');
     Route::get('/message-status/{id}', [MessageApiController::class, 'getMessageStatus'])->name('admin.message.status');
+    Route::post('/check-rate-limit', [MessageApiController::class, 'checkRateLimit'])->name('admin.check.rate.limit');
+    Route::get('/test-rate-limit', [MessageApiController::class, 'testRateLimit'])->name('admin.test.rate.limit');
     Route::get('/test-sms-gateway', [MessageApiController::class, 'testGateway'])->name('admin.test.gateway');
     Route::get('/get-teachers', [AdminController::class, 'getTeachersForApi'])->name('admin.get.teachers');
     Route::get('/get-all-students', [AdminController::class, 'getAllStudentsForApi'])->name('admin.get.all.students');

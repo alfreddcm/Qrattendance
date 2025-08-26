@@ -46,12 +46,14 @@
             border: none;
         }
         .qr-cell {
-            width: 28mm; /* Slightly smaller for more text space */
+            width: 35mm; /* Adjusted to match QR size */
             text-align: center;
+            vertical-align: top;
+            padding: 2mm;
         }
         .qr-section {
-            width: 22mm;
-            height: 22mm;
+            width: 30mm;
+            height: 30mm;
             border: 1px solid #90EE90;
             background: #f8f9fa;
             margin: 0 auto;
@@ -63,21 +65,35 @@
         }
         .info-cell {
             width: auto;
-            padding-left: 3mm; /* Reduced padding */
+            padding: 2mm 3mm;
+            vertical-align: top;
         }
         .student-name {
             font-weight: bold;
-            font-size: 3mm;
+            font-size: 3.5mm;
             color: #333;
             text-transform: uppercase;
-            margin-bottom: 0.5mm;
+            margin-bottom: 1mm;
             line-height: 1.1;
+            word-wrap: break-word;
         }
         .info-line {
-            font-size: 2.5mm;
+            font-size: 2.8mm;
             color: #333;
-            line-height: 1.2;
-            margin-bottom: 0.2mm;
+            line-height: 1.3;
+            margin-bottom: 0.5mm;
+            word-wrap: break-word;
+        }
+        .student-id-number {
+            font-weight: bold;
+            font-size: 3mm;
+            color: #0066cc;
+            margin-bottom: 1mm;
+        }
+        .school-info {
+            font-size: 2.5mm;
+            color: #666;
+            font-style: italic;
         }
         
         @media print {
@@ -148,15 +164,17 @@
                                     }
                                 @endphp
                                 @if($hasQrCode)
-                                    <img src="data:image/svg+xml;base64,{{ $qrImageContent }}" alt="QR Code" style="width: 20mm; height: 20mm; display: block; margin: 0 auto;">
+                                    <img src="data:image/svg+xml;base64,{{ $qrImageContent }}" alt="QR Code" style="width: 28mm; height: 28mm; display: block;">
                                 @endif
                             </div>
                         </td>
                         <td class="info-cell">
-                            <div class="info-line">Student ID: {{ $student->id_no }}</div>
+                            <div class="student-id-number">ID: {{ $student->id_no }}</div>
                             <div class="student-name">{{ $student->name }}</div>
-                            <div class="info-line">School: {{ $student->school->name ?? 'SGVS' }}</div>
-                            <div class="info-line">Grade and Section: {{ $student->grade . '-' . $student->section_name ?? 'N/A' }}</div>
+                            <div class="school-info">{{ $student->school->name ?? 'San Guillermo Vocational and Industrial High School' }}</div>
+                            <div class="info-line">
+                                Grade {{ $student->section->gradelevel ?? $student->grade ?? 'N/A' }} - {{ $student->section->name ?? $student->section_name ?? 'N/A' }}
+                            </div>
                         </td>
                     </tr>
                 </table>

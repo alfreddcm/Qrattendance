@@ -48,12 +48,12 @@
                             <th width="12%">ID No</th>
                             <th width="25%">Student Name</th>
                             <th width="10%">Grade</th>
-                            <th width="10%">Section</th>
+                            <th width="15%">School Info</th>
                             <th width="8%">Total Days</th>
                             <th width="8%">Present</th>
                             <th width="8%">Absent</th>
                             <th width="8%">Partial</th>
-                            <th width="11%">Remarks</th>
+                            <th width="6%">Remarks</th>
                         @endif
                     </tr>
                 </thead>
@@ -119,20 +119,28 @@
                                     @endif
                                 </td>
                                 <td><span class="badge bg-info">{{ $record->grade_level }}</span></td>
-                                <td><span class="badge bg-secondary">{{ $record->section }}</span></td>
-                                <td><span class="badge bg-primary">{{ $record->total_day }}</span></td>
-                                <td><span class="badge bg-success">{{ $record->present }}</span></td>
-                                <td><span class="badge bg-danger">{{ $record->absent }}</span></td>
-                                <td><span class="badge bg-warning">{{ $record->partial }}</span></td>
                                 <td>
-                                    @if($record->remarks === 'Good')
-                                        <span class="badge bg-success">{{ $record->remarks }}</span>
-                                    @elseif($record->remarks === 'Poor')
-                                        <span class="badge bg-warning">{{ $record->remarks }}</span>
-                                    @elseif($record->remarks === 'Bad')
-                                        <span class="badge bg-danger">{{ $record->remarks }}</span>
+                                    <div class="fw-medium">{{ $record->section }}</div>
+                                    <small class="text-muted">{{ $record->school }}</small>
+                                    <br><small class="text-primary">{{ $record->teacher }}</small>
+                                </td>
+                                <td><span class="badge bg-primary">{{ $record->total_days ?? $record->total_day ?? 0 }}</span></td>
+                                <td><span class="badge bg-success">{{ $record->present_days ?? $record->present ?? 0 }}</span></td>
+                                <td><span class="badge bg-danger">{{ $record->absent_days ?? $record->absent ?? 0 }}</span></td>
+                                <td><span class="badge bg-warning">{{ $record->partial_days ?? $record->partial ?? 0 }}</span></td>
+                                <td>
+                                    @if(isset($record->remarks))
+                                        @if($record->remarks === 'Good')
+                                            <span class="badge bg-success">{{ $record->remarks }}</span>
+                                        @elseif($record->remarks === 'Poor')
+                                            <span class="badge bg-warning">{{ $record->remarks }}</span>
+                                        @elseif($record->remarks === 'Bad')
+                                            <span class="badge bg-danger">{{ $record->remarks }}</span>
+                                        @else
+                                            <span class="badge bg-secondary">{{ $record->remarks }}</span>
+                                        @endif
                                     @else
-                                        <span class="badge bg-secondary">{{ $record->remarks }}</span>
+                                        <span class="badge bg-secondary">N/A</span>
                                     @endif
                                 </td>
                             @endif
@@ -169,10 +177,18 @@
                 </div>
             @elseif($type === 'monthly' || $type === 'quarterly')
                 @php
-                    $totalDays = collect($records)->sum('total_day');
-                    $totalPresent = collect($records)->sum('present');
-                    $totalAbsent = collect($records)->sum('absent');
-                    $totalPartial = collect($records)->sum('partial');
+                    $totalDays = collect($records)->sum(function($record) {
+                        return $record->total_days ?? $record->total_day ?? 0;
+                    });
+                    $totalPresent = collect($records)->sum(function($record) {
+                        return $record->present_days ?? $record->present ?? 0;
+                    });
+                    $totalAbsent = collect($records)->sum(function($record) {
+                        return $record->absent_days ?? $record->absent ?? 0;
+                    });
+                    $totalPartial = collect($records)->sum(function($record) {
+                        return $record->partial_days ?? $record->partial ?? 0;
+                    });
                     $attendanceRate = $totalDays > 0 ? ($totalPresent / $totalDays) * 100 : 0;
                 @endphp
                 <div class="col-md-3">

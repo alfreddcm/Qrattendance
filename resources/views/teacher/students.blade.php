@@ -242,16 +242,26 @@
                         <tr>
                             <th class="text-center" style="width: 60px;">#</th>
                             <th class="text-center" style="width: 80px;">Photo</th>
-                            <th>Name & ID</th>
-                            <th>Section</th>
-                            <th class="text-center" style="width: 100px;">Gender</th>
-                            <th class="text-center" style="width: 80px;">Age</th>
-                            <th> Contact Details </th>
-                            <th class="text-center" style="width: 100px;">QR Code</th>
+                            <th>
+                                Name & ID
+                            </th>
+                            <th>
+                                Section
+                            </th>
+                            <th class="text-center" style="width: 150px;">
+                                Gender
+                            </th>
+                            <th class="text-center" style="width: 80px;">
+                                Age
+                            </th>
+                            <th>Contact Details</th>
+                            <th class="text-center" style="width: 100px;">
+                                QR Code
+                            </th>
                             <th class="text-center" style="width: 120px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="students-table-body">
                         @foreach($students as $index => $student)
                         <tr>
                             <td class="text-center fw-bold">{{ $index + 1 }}</td>
@@ -1077,6 +1087,14 @@
         padding: 12px 8px;
     }
     
+    /* Sort notification styling */
+    .sort-notification {
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        font-size: 0.9rem;
+    }
+    
      .sticky-card-header {
         position: sticky;
         top: 0;
@@ -1536,7 +1554,6 @@
             cancelEdit(editableField);
         }
     });
-});
 
 let availableSections = {};
 

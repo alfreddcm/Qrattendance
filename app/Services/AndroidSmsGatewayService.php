@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use App\Models\OutboundMessage;
+use Carbon\Carbon;
 use Exception;
 
 class AndroidSmsGatewayService
@@ -25,7 +27,7 @@ class AndroidSmsGatewayService
     /**
      * Send SMS with optional sender ID support
      */
-    public function sendSms($text, $recipients, $senderId = null)
+    public function sendSms($text, $recipients, $senderId = null, $metadata = [])
     {
         try {
             // Get sender ID from parameter, config, or default
@@ -39,14 +41,22 @@ class AndroidSmsGatewayService
             foreach ($recipients as $recipient) {
                 $normalizedNumber = $this->normalizePhoneNumber($recipient);
                 if ($this->isValidPhoneNumber($normalizedNumber)) {
-                    $validRecipients[] = $normalizedNumber;
+                    // Check rate limit before adding to valid recipients
+                    if ($this->canSendMessage($normalizedNumber)) {
+                        $validRecipients[] = $normalizedNumber;
+                    } else {
+                        Log::info('Message rate limited', [
+                            'number' => $normalizedNumber,
+                            'delay_seconds' => config('sms.message_delay_seconds', 60)
+                        ]);
+                    }
                 } else {
                     Log::warning('Invalid phone number skipped', ['number' => $recipient]);
                 }
             }
 
             if (empty($validRecipients)) {
-                throw new Exception('No valid recipients provided');
+                throw new Exception('No valid recipients provided or all recipients are rate limited');
             }
 
              $requestData = [
@@ -71,6 +81,15 @@ class AndroidSmsGatewayService
 
             if ($response->successful()) {
                 $responseData = $response->json();
+                $messageId = $responseData['id'] ?? uniqid('sms_');
+                
+                // Update last sent time for each recipient
+                foreach ($validRecipients as $recipient) {
+                    $recipientMetadata = array_merge($metadata, [
+                        'message' => $text
+                    ]);
+                    $this->updateLastSentTime($recipient, $messageId, $responseData['status'] ?? 'sent', $recipientMetadata);
+                }
                 
                 Log::info('SMS sent successfully', [
                     'response' => $responseData,
@@ -80,7 +99,7 @@ class AndroidSmsGatewayService
 
                 return [
                     'success' => true,
-                    'message_id' => $responseData['id'] ?? uniqid('sms_'),
+                    'message_id' => $messageId,
                     'status' => $responseData['status'] ?? 'sent',
                     'data' => $responseData,
                     'recipients' => $validRecipients
@@ -265,6 +284,105 @@ class AndroidSmsGatewayService
                 'success' => false,
                 'error' => $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Check if a message can be sent to a specific number based on rate limiting
+     */
+    protected function canSendMessage($number)
+    {
+        // If rate limiting is disabled, always allow
+        if (!config('sms.enable_rate_limiting', true)) {
+            return true;
+        }
+
+        $delaySeconds = config('sms.message_delay_seconds', 60);
+        $cutoffTime = Carbon::now()->subSeconds($delaySeconds);
+
+        // Check if there's a recent message to this number
+        $recentMessage = OutboundMessage::where('contact_number', $number)
+            ->where('last_sent_at', '>', $cutoffTime)
+            ->orderBy('last_sent_at', 'desc')
+            ->first();
+
+        return $recentMessage === null;
+    }
+
+    /**
+     * Get rate limiting status for a specific number
+     */
+    public function getRateLimitStatus($number)
+    {
+        $normalizedNumber = $this->normalizePhoneNumber($number);
+        
+        if (!config('sms.enable_rate_limiting', true)) {
+            return [
+                'can_send' => true,
+                'rate_limiting_enabled' => false,
+                'message' => 'Rate limiting is disabled'
+            ];
+        }
+
+        $delaySeconds = config('sms.message_delay_seconds', 60);
+        $cutoffTime = Carbon::now()->subSeconds($delaySeconds);
+
+        $recentMessage = OutboundMessage::where('contact_number', $normalizedNumber)
+            ->where('last_sent_at', '>', $cutoffTime)
+            ->orderBy('last_sent_at', 'desc')
+            ->first();
+
+        if ($recentMessage === null) {
+            return [
+                'can_send' => true,
+                'rate_limiting_enabled' => true,
+                'message' => 'Ready to send'
+            ];
+        }
+
+        $timeRemaining = $delaySeconds - Carbon::now()->diffInSeconds($recentMessage->last_sent_at);
+        
+        return [
+            'can_send' => false,
+            'rate_limiting_enabled' => true,
+            'time_remaining_seconds' => max(0, $timeRemaining),
+            'last_sent_at' => $recentMessage->last_sent_at,
+            'message' => "Must wait {$timeRemaining} more seconds"
+        ];
+    }
+
+    /**
+     * Update the last sent time for a contact number
+     */
+    protected function updateLastSentTime($number, $messageId = null, $status = 'sent', $additionalData = [])
+    {
+        $now = Carbon::now();
+        
+        // Try to find an existing recent record to update
+        $recentMessage = OutboundMessage::where('contact_number', $number)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($recentMessage && $recentMessage->created_at->diffInMinutes($now) < 5) {
+            // Update existing recent message
+            $recentMessage->update([
+                'last_sent_at' => $now,
+                'message_id' => $messageId ?: $recentMessage->message_id,
+                'status' => $status
+            ]);
+        } else {
+            // Create new tracking record
+            $messageData = array_merge([
+                'teacher_id' => auth()->id() ?? 1, // Fallback to system user
+                'contact_number' => $number,
+                'message_id' => $messageId,
+                'status' => $status,
+                'last_sent_at' => $now,
+                'recipient_type' => 'individual',
+                'recipient_count' => 1
+            ], $additionalData);
+
+            OutboundMessage::create($messageData);
         }
     }
 }

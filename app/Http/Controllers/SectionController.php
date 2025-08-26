@@ -38,7 +38,7 @@ class SectionController extends Controller
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
             'semester_id' => 'required|exists:semesters,id',
-            'teacher_id' => 'required|exists:users,id',
+            'teacher_id' => 'nullable|exists:users,id',
             'am_time_in_start' => 'required|date_format:H:i',
             'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',
             'am_time_out_start' => 'required|date_format:H:i|after:am_time_in_end',

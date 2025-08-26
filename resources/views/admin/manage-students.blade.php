@@ -109,7 +109,11 @@
                         <i class="fas fa-plus me-1"></i>Add Student
                     </button>
                     
-                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#importStudentsModal">
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importStudentsModal">
+                        <i class="fas fa-file-excel me-1"></i>Import Students
+                    </button>
+                    
+                    <button class="btn btn-success btn-sm" onclick="generateAllQrs()">
                         <i class="fas fa-magic me-1"></i>Generate All QR Codes
                     </button>
                     
@@ -1237,6 +1241,30 @@ function generateQr(studentId) {
     document.body.appendChild(form);
     form.submit();
 }
+
+function generateAllQrs() {
+    if (confirm('Generate QR codes for all students? This may take some time.')) {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+        button.disabled = true;
+        
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("admin.students.generateQrs") }}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = '{{ csrf_token() }}';
+        
+        form.appendChild(csrfToken);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 
 <script>
@@ -1244,13 +1272,25 @@ function generateQr(studentId) {
 document.addEventListener('DOMContentLoaded', function() {
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
+    
+    // Store the initial section selection from server-side rendering
+    const initialSectionValue = sectionSelect ? sectionSelect.value : '';
 
-    function populateSections() {
+    function populateSections(preserveSelection = true) {
         if(!teacherSelect || !sectionSelect) return;
         const selected = teacherSelect.selectedOptions[0];
         const sectionsData = selected ? selected.getAttribute('data-sections') : null;
+        
+        // Determine which section should be selected
+        let sectionToSelect = '';
+        if (preserveSelection) {
+            // Use the current value (which could be from URL or previous selection)
+            sectionToSelect = sectionSelect.value || initialSectionValue;
+        }
+        
         // Clear current options but keep default
         sectionSelect.innerHTML = '<option value="">All Sections</option>';
+        
         if(sectionsData) {
             try {
                 const sections = JSON.parse(sectionsData);
@@ -1258,18 +1298,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     const opt = document.createElement('option');
                     opt.value = sec.id;
                     opt.text = (sec.section_name || sec.name) + ' (Grade ' + (sec.gradelevel || sec.grade_level || '') + ')';
+                    
+                    // Set selected if this matches the section we want to preserve
+                    if (sectionToSelect && sec.id == sectionToSelect) {
+                        opt.selected = true;
+                    }
+                    
                     sectionSelect.appendChild(opt);
                 });
             } catch(e) {
-                // ignore
+                console.error('Error parsing sections data:', e);
             }
         }
     }
 
-    if(document.getElementById('filterTeacher')) {
-        document.getElementById('filterTeacher').addEventListener('change', populateSections);
-        // initial populate in case page loaded with teacher selected
-        populateSections();
+    if(teacherSelect) {
+        teacherSelect.addEventListener('change', function() {
+            // When teacher changes manually, clear section selection
+            populateSections(false);
+        });
+        
+        // Initial populate on page load - preserve any existing selection
+        populateSections(true);
     }
 });
 </script>
