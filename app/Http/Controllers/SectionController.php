@@ -582,4 +582,44 @@ class SectionController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Get teacher's assigned sections for dropdown
+     */
+    public function getTeacherSections()
+    {
+        try {
+            $teacherId = Auth::id();
+            $teacher = User::with(['sections', 'section'])->find($teacherId);
+            
+            // Get sections from many-to-many relationship (primary)
+            $sections = $teacher->sections;
+            
+            // Add legacy single section if exists
+            if ($teacher->section && !$sections->contains('id', $teacher->section->id)) {
+                $sections->push($teacher->section);
+            }
+            
+            $formattedSections = $sections->map(function($section) {
+                return [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                    'gradelevel' => $section->gradelevel,
+                    'student_count' => $section->students()->count()
+                ];
+            });
+            
+            return response()->json($formattedSections);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching teacher sections', [
+                'teacher_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'error' => 'Could not load sections'
+            ], 500);
+        }
+    }
 }

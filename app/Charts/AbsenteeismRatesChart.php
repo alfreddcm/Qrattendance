@@ -10,18 +10,30 @@ class AbsenteeismRatesChart extends Chart
     {
         parent::__construct();
         
-        // Handle empty data
-        if (empty($labels) || empty($percentages)) {
-            $labels = ['No Data'];
+        // Debug what's being passed to the chart
+        \Log::info('Chart Constructor Data', [
+            'labels_received' => $labels,
+            'percentages_received' => $percentages,
+            'labels_count' => count($labels),
+            'percentages_count' => count($percentages)
+        ]);
+        
+        // Handle empty data or mismatched arrays
+        if (empty($labels) || empty($percentages) || count($labels) != count($percentages)) {
+            $labels = ['No Student Data Available'];
             $percentages = [0];
         }
         
-        $this->labels($labels);
-        $this->dataset('Attendance %', 'bar', $percentages)
-            ->color('purple')
-            ->backgroundColor('purple');
+        // Ensure labels are strings and percentages are numeric
+        $labels = array_map('strval', $labels);
+        $percentages = array_map('floatval', $percentages);
         
-        // Add chart options for better handling of empty data
+        $this->labels($labels);
+        $this->dataset('Absenteeism %', 'bar', $percentages)
+            ->color('#dc3545')
+            ->backgroundColor('#dc3545'); // Red color for absenteeism (negative metric)
+        
+        // Add chart options for better display of student names
         $this->options([
             'responsive' => true,
             'maintainAspectRatio' => false,
@@ -30,7 +42,11 @@ class AbsenteeismRatesChart extends Chart
                     'display' => true,
                     'title' => [
                         'display' => true,
-                        'text' => 'Students'
+                        'text' => 'Student Names'
+                    ],
+                    'ticks' => [
+                        'maxRotation' => 45,
+                        'minRotation' => 45
                     ]
                 ],
                 'y' => [
@@ -40,7 +56,7 @@ class AbsenteeismRatesChart extends Chart
                     'display' => true,
                     'title' => [
                         'display' => true,
-                        'text' => 'Attendance Percentage (%)'
+                        'text' => 'Absenteeism Percentage (%)'
                     ]
                 ]
             ]

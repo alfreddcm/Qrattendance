@@ -19,27 +19,15 @@ class TeacherController extends Controller
      
     private function getCurrentSemesterId()
     {
-        $today = Carbon::now()->toDateString();
-        
-        $activeSemester = Semester::where('start_date', '<=', $today)
-            ->where('end_date', '>=', $today)
-            ->orderBy('start_date', 'desc')
-            ->first();
-            
-        if ($activeSemester) {
-            return $activeSemester->id;
-        }
-        
-        $nearestSemester = Semester::orderByRaw('ABS(DATEDIFF(end_date, ?))', [$today])
-            ->first();
-            
-        return $nearestSemester?->id ?? Semester::latest('start_date')->first()?->id;
+        $currentSemester = Semester::getCurrentSemester();
+        return $currentSemester ? $currentSemester->id : null;
     }
 
     
     public function dashboard(Request $request)
     {
         $semesters = Semester::orderBy('start_date')->get();
+
         $selectedSemester = $request->get('semester', $this->getCurrentSemesterId());
 
         $studentCount = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->count();
@@ -54,13 +42,11 @@ class TeacherController extends Controller
         $presentCount = $students->whereIn('id', $attendancesToday)->count();
         $absentCount = max($students->count() - $presentCount, 0);
 
-        // Get teacher's sections for current semester to use their time periods
-        $teacherSections = Section::where('teacher_id', Auth::id())
+         $teacherSections = Section::where('teacher_id', Auth::id())
             ->where('semester_id', $selectedSemester)
             ->get();
         
-        // Use the first section's time periods as default, or fallback to semester defaults
-        $timePeriodsSource = $teacherSections->first();
+         $timePeriodsSource = $teacherSections->first();
         $currentSemester = $semesters->where('id', $selectedSemester)->first();
         
         $studentsWithMissingInfo = Student::where('semester_id', $selectedSemester)
@@ -138,7 +124,8 @@ class TeacherController extends Controller
         }
 
         
-        $currentSemester = $semesters->where('id', $selectedSemester)->first();
+        $currentSemester = Semester::getCurrentSemester();
+        $selectedSemesterObj = $semesters->where('id', $selectedSemester)->first();
         
         // Override semester time periods with section time periods if available
         if ($timePeriodsSource && $currentSemester) {

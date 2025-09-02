@@ -39,8 +39,7 @@ class AttendanceSessionController extends Controller
             
             $today = Carbon::now('Asia/Manila');
             $currentSemester = Semester::where('school_id', $user->school_id)
-                ->whereDate('start_date', '<=', $today->format('Y-m-d'))
-                ->whereDate('end_date', '>=', $today->format('Y-m-d'))
+                ->current($today->format('Y-m-d'))
                 ->first();
 
             if (!$currentSemester) {

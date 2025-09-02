@@ -43,8 +43,35 @@ class Semester extends Model
     }
 
     /**
-     * Get formatted time inputs for forms
+     * Scope to get the current semester based on the current date
      */
+    public function scopeCurrent($query, $date = null)
+    {
+        $currentDate = $date ?: Carbon::now()->toDateString();
+        
+        return $query->whereDate('start_date', '<=', $currentDate)
+                    ->whereDate('end_date', '>=', $currentDate);
+    }
+
+ 
+    public static function getCurrentSemester($date = null)
+    {
+        $currentDate = $date ?: Carbon::now()->toDateString();
+        
+         $semester = static::current($currentDate)->first();
+        
+         if (!$semester) {
+            $semester = static::where('status', 'active')->first();
+        }
+        
+         if (!$semester) {
+            $semester = static::latest()->first();
+        }
+        
+        return $semester;
+    }
+
+ 
     public function getMorningPeriodStartInputAttribute()
     {
         return $this->morning_period_start ? Carbon::createFromFormat('H:i:s', $this->morning_period_start)->format('H:i') : '';
@@ -161,9 +188,7 @@ class Semester extends Model
         ];
     }
 
-    /**
-     * Validate time ranges to prevent overlapping
-     */
+ 
     public function validateTimeRanges()
     {
         $timeRanges = [];
@@ -201,14 +226,12 @@ class Semester extends Model
             ];
         }
 
-        // Check for overlaps
-        for ($i = 0; $i < count($timeRanges); $i++) {
+         for ($i = 0; $i < count($timeRanges); $i++) {
             for ($j = $i + 1; $j < count($timeRanges); $j++) {
                 $range1 = $timeRanges[$i];
                 $range2 = $timeRanges[$j];
                 
-                // Check if ranges overlap
-                if (($range1['start'] < $range2['end'] && $range1['end'] > $range2['start'])) {
+                 if (($range1['start'] < $range2['end'] && $range1['end'] > $range2['start'])) {
                     return [
                         'valid' => false,
                         'message' => "Time ranges '{$range1['name']}' and '{$range2['name']}' overlap. Please adjust the times."
@@ -217,8 +240,7 @@ class Semester extends Model
             }
         }
 
-        // Check if start time is before end time for each range
-        foreach ($timeRanges as $range) {
+         foreach ($timeRanges as $range) {
             if ($range['start'] >= $range['end']) {
                 return [
                     'valid' => false,

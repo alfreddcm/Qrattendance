@@ -4,21 +4,15 @@
 
 @php
     $today = \Carbon\Carbon::now();
-    $currentSemester = null;
     $isActiveSemester = false;
     $semesterData = [];
     
-    // Check if there's a semester that contains today's date
-    if($semesters && $semesters->count() > 0) {
-        foreach($semesters as $semester) {
-            $startDate = \Carbon\Carbon::parse($semester->start_date);
-            $endDate = \Carbon\Carbon::parse($semester->end_date);
-            
-            if($today->between($startDate, $endDate)) {
-                $currentSemester = $semester;
-                $isActiveSemester = true;
-                break;
-            }
+    if($currentSemester) {
+        $startDate = \Carbon\Carbon::parse($currentSemester->start_date);
+        $endDate = \Carbon\Carbon::parse($currentSemester->end_date);
+        
+        if($today->between($startDate, $endDate)) {
+            $isActiveSemester = true;
         }
     }
     
@@ -78,8 +72,7 @@
          <div class="row g-3 mb-3">
             <div class="col-md-7">
                 <div class="card shadow-sm h-100" style="background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); position: relative; overflow: hidden; min-height: 200px;">
-                    <!-- School Logo positioned like the blue circle -->
-                    <div class="school-logo-overlay">
+                     <div class="school-logo-overlay">
                         @if(auth()->user()->school && auth()->user()->school->logo)
                             <img src="{{ asset('storage/' . auth()->user()->school->logo) }}" 
                                  alt="{{ auth()->user()->school->name ?? 'School' }} Logo" 

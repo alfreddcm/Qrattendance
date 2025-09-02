@@ -3,106 +3,105 @@
 @section('content')
 
 <style>
-/* Table styling improvements */
-.table-light {
-    background-color: #f8f9fa !important;
-    border-bottom: 2px solid #dee2e6;
-}
+    .table-light {
+        background-color: #f8f9fa !important;
+        border-bottom: 2px solid #dee2e6;
+    }
 
-.table-striped > tbody > tr:nth-of-type(odd) > td {
-    background-color: rgba(0, 0, 0, 0.02);
-}
+    .table-striped > tbody > tr:nth-of-type(odd) > td {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
 
-.table-hover > tbody > tr:hover > td {
-    background-color: rgba(13, 110, 253, 0.04);
-}
+    .table-hover > tbody > tr:hover > td {
+        background-color: rgba(13, 110, 253, 0.04);
+    }
 
-.sortable {
-    transition: all 0.2s ease;
-    user-select: none;
-}
+    .sortable {
+        transition: all 0.2s ease;
+        user-select: none;
+    }
 
-.sortable:hover {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-1px);
-}
+    .sortable:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        transform: translateY(-1px);
+    }
 
-.sortable i {
-    transition: transform 0.2s ease;
-    opacity: 0.6;
-}
+    .sortable i {
+        transition: transform 0.2s ease;
+        opacity: 0.6;
+    }
 
-.sortable:hover i {
-    opacity: 1;
-}
+    .sortable:hover i {
+        opacity: 1;
+    }
 
-.sortable.sort-asc i::before {
-    content: "\f0de"; /* fa-sort-up */
-}
+    .sortable.sort-asc i::before {
+        content: "\f0de"; /* fa-sort-up */
+    }
 
-.sortable.sort-desc i::before {
-    content: "\f0dd"; /* fa-sort-down */
-}
+    .sortable.sort-desc i::before {
+        content: "\f0dd"; /* fa-sort-down */
+    }
 
-.sortable.sort-original i::before {
-    content: "\f162"; /* fa-sort-numeric-up */
-}
+    .sortable.sort-original i::before {
+        content: "\f162"; /* fa-sort-numeric-up */
+    }
 
-.sortable.sort-asc i,
-.sortable.sort-desc i {
-    color: #ffc107;
-    opacity: 1;
-}
+    .sortable.sort-asc i,
+    .sortable.sort-desc i {
+        color: #ffc107;
+        opacity: 1;
+    }
 
-.sortable.sort-original i {
-    color: #28a745;
-    opacity: 1;
-}
+    .sortable.sort-original i {
+        color: #28a745;
+        opacity: 1;
+    }
 
-/* Enhanced badge styling */
-.badge {
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
+    /* Enhanced badge styling */
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
 
-/* Sort notification styling */
-.sort-notification {
-    border-radius: 8px;
-    border: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    font-size: 0.9rem;
-}
+    /* Sort notification styling */
+    .sort-notification {
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        font-size: 0.9rem;
+    }
 
-/* Sortable header enhancements */
-.sortable {
-    user-select: none;
-    transition: background-color 0.2s ease;
-}
+    /* Sortable header enhancements */
+    .sortable {
+        user-select: none;
+        transition: background-color 0.2s ease;
+    }
 
-.sortable:active {
-    background-color: rgba(0,123,255,0.1) !important;
-}
+    .sortable:active {
+        background-color: rgba(0,123,255,0.1) !important;
+    }
 
-/* Table cell enhancements */
-.table td {
-    padding: 0.6rem 0.4rem;
-    vertical-align: middle;
-    border-color: #e9ecef;
-}
+    /* Table cell enhancements */
+    .table td {
+        padding: 0.6rem 0.4rem;
+        vertical-align: middle;
+        border-color: #e9ecef;
+    }
 
-.table th {
-    padding: 0.8rem 0.4rem;
-    font-weight: 600;
-    font-size: 0.85em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-color: #dee2e6;
-}
+    .table th {
+        padding: 0.8rem 0.4rem;
+        font-weight: 600;
+        font-size: 0.85em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-color: #dee2e6;
+    }
 
-/* Sticky header enhancement */
-.sticky-top {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+    /* Sticky header enhancement */
+    .sticky-top {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 </style>
 
 <div class="sticky-header">

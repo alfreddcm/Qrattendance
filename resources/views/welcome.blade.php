@@ -61,7 +61,9 @@
 
                 
                 </div>
-                <h1 class="mb-3">Scan-to-Notify <span class="text-primary">QR Attendance </span> with Parent Notification</h1>
+                <h1 class="mb-3">
+            
+                Scan-to-Notify <span class="text-primary">QR Attendance </span> with Parent Notification</h1>
                 <p class="tagline text-secondary mb-3">Streamline attendance capture, eliminate manual errors, and keep families informed in real time—all within a single secure platform.</p>
                 <div class="cta-buttons d-flex flex-wrap gap-2 mb-3">
                 </div>

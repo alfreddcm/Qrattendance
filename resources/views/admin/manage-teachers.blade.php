@@ -347,47 +347,58 @@
                         <!-- Name -->
                         <div class="col-md-6 mb-3">
                             <label for="add_name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="add_name" name="name" required 
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="add_name" name="name" required 
                                    value="{{ old('name') }}"
                                    minlength="2" maxlength="255" 
-                                   title="Name should contain only letters, spaces, and periods"
-                                   placeholder="Enter full name">
+                                    placeholder="Enter full name">
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- Username -->
                         <div class="col-md-6 mb-3">
                             <label for="add_username" class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="add_username" name="username" required 
+                            <input type="text" class="form-control @error('username') is-invalid @enderror" id="add_username" name="username" required 
                                    value="{{ old('username') }}"
                                    minlength="3" maxlength="50" 
                                     
                                    title="Username should contain only letters, numbers, underscores, and hyphens"
                                    placeholder="Enter username">
+                            @error('username')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- Email -->
                         <div class="col-md-6 mb-3">
                             <label for="add_email" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="add_email" name="email" required 
+                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="add_email" name="email" required 
                                    value="{{ old('email') }}"
                                    maxlength="255" 
                                    title="Enter a valid email address"
                                    placeholder="user@example.com">
+                            @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- Password -->
                         <div class="col-md-6 mb-3">
                             <label for="add_password" class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="add_password" name="password" required 
+                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="add_password" name="password" required 
                                    minlength="6" maxlength="100" 
                                    title="Password must be at least 6 characters long"
                                    placeholder="Enter password">
+                            @error('password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- School -->
                         <div class="col-md-6 mb-3">
                             <label for="add_school_id" class="form-label">School <span class="text-danger">*</span></label>
-                            <select class="form-select" id="add_school_id" name="school_id" required 
+                            <select class="form-select @error('school_id') is-invalid @enderror" id="add_school_id" name="school_id" required 
                                     title="Select the school this teacher will be assigned to">
                                 <option value="">Select School</option>
                                 @foreach($schools as $school)
@@ -396,6 +407,9 @@
                                     </option>
                                 @endforeach
                             </select>
+                            @error('school_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- Position -->
@@ -412,13 +426,7 @@
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Section Assignment</label>
                             @if($sections->count() > 0)
-                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="section_id" id="add_no_section" value="" checked>
-                                        <label class="form-check-label text-muted" for="add_no_section">
-                                            <i class="fas fa-minus-circle me-1"></i>No Section Assignment
-                                        </label>
-                                    </div>
+                                <div class="border rounded p-3 @error('section_ids') border-danger @enderror" style="max-height: 200px; overflow-y: auto;">
                                     @foreach($sections as $section)
                                         @php
                                             $isAssigned = $section->teacher_id !== null;
@@ -426,11 +434,12 @@
                                         @endphp
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" 
-                                                   type="radio" 
-                                                   name="section_id" 
+                                                   type="checkbox" 
+                                                   name="section_ids[]" 
                                                    id="add_section_{{ $section->id }}" 
                                                    value="{{ $section->id }}"
-                                                   @if($isAssigned) disabled @endif>
+                                                   @if($isAssigned) disabled @endif
+                                                   {{ in_array($section->id, old('section_ids', [])) ? 'checked' : '' }}>
                                             <label class="form-check-label @if($isAssigned) text-muted @endif" for="add_section_{{ $section->id }}">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
@@ -450,9 +459,19 @@
                                         </div>
                                     @endforeach
                                 </div>
+                                @error('section_ids')
+                                    <div class="text-danger mt-1">
+                                        <small>{{ $message }}</small>
+                                    </div>
+                                @enderror
+                                @error('section_ids.*')
+                                    <div class="text-danger mt-1">
+                                        <small>{{ $message }}</small>
+                                    </div>
+                                @enderror
                                 <small class="text-muted">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Only unassigned sections can be selected. Assigned sections show current teacher.
+                                    Select multiple sections to assign to this teacher. Only unassigned sections can be selected.
                                 </small>
                             @else
                                 <div class="alert alert-warning mb-0">
@@ -773,7 +792,7 @@
                             <label for="edit_name" class="form-label">Full Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="edit_name" name="name" required 
                                    minlength="2" maxlength="255" 
-                                   pattern="[A-Za-z\s\.]+" 
+                                 
                                    title="Name should contain only letters, spaces, and periods"
                                    placeholder="Enter full name">
                         </div>

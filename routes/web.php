@@ -69,11 +69,15 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/message', [TeacherController::class, 'message'])->name('teacher.message');
     Route::get('/attendance', [AttendanceAnalyticsController::class, 'attendanceToday'])->name('teacher.attendance');
     
+    // New Rewritten Analytics Routes - Chart.js JSON API Endpoints
     Route::get('/analytics/statistics', [AttendanceAnalyticsController::class, 'statistics'])->name('teacher.analytics.statistics');
-    Route::get('/analytics/daily-trends', [AttendanceAnalyticsController::class, 'dailyTrends'])->name('teacher.analytics.daily');
-    Route::get('/analytics/patterns', [AttendanceAnalyticsController::class, 'timePatterns'])->name('teacher.analytics.patterns');
-    Route::get('/analytics/time-distribution', [AttendanceAnalyticsController::class, 'getTimeDistribution'])->name('teacher.analytics.time');
-    Route::get('/analytics/student-performance', [AttendanceAnalyticsController::class, 'studentForecast'])->name('teacher.analytics.performance');
+    Route::get('/analytics/summary-stats', [AttendanceAnalyticsController::class, 'getSummaryStats'])->name('teacher.analytics.summary');
+    Route::get('/analytics/attendance-trend', [AttendanceAnalyticsController::class, 'getAttendanceTrend'])->name('teacher.analytics.trend');
+    Route::get('/analytics/absenteeism-rates', [AttendanceAnalyticsController::class, 'getAbsenteeismRates'])->name('teacher.analytics.absenteeism');
+    Route::get('/analytics/weekly-trend', [AttendanceAnalyticsController::class, 'getWeeklyTrend'])->name('teacher.analytics.weekly');
+    Route::get('/analytics/monthly-trend', [AttendanceAnalyticsController::class, 'getMonthlyTrend'])->name('teacher.analytics.monthly');
+    Route::get('/analytics/time-patterns', [AttendanceAnalyticsController::class, 'getTimePatterns'])->name('teacher.analytics.patterns');
+    Route::get('/sections/list', [SectionController::class, 'getTeacherSections'])->name('teacher.sections.list');
     
     Route::get('/report', [ReportController::class, 'index'])->name('teacher.report');
     Route::post('/attendance/export/csv', [ReportController::class, 'exportCsv'])->name('teacher.attendance.export.csv');

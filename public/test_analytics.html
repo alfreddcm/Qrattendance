@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Analytics Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .chart-container { width: 400px; height: 300px; margin: 20px 0; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>Attendance Analytics API Test</h1>
+    
+    <div class="test-section">
+        <h3>API Endpoints Test</h3>
+        <button onclick="testAllEndpoints()">Test All Endpoints</button>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Sample Chart - Attendance Trend</h3>
+        <div class="chart-container">
+            <canvas id="sampleChart"></canvas>
+        </div>
+        <button onclick="loadSampleChart()">Load Sample Chart</button>
+    </div>
+
+    <script>
+        // Test all API endpoints
+        async function testAllEndpoints() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<div class="status info">Testing endpoints...</div>';
+            
+            const endpoints = [
+                '/teacher/analytics/summary-stats',
+                '/teacher/analytics/attendance-trend',
+                '/teacher/analytics/absenteeism-rates',
+                '/teacher/analytics/weekly-trend',
+                '/teacher/analytics/monthly-trend',
+                '/teacher/analytics/time-patterns'
+            ];
+            
+            let results = [];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint + '?section_id=all');
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        results.push(`<div class="status success">✓ ${endpoint} - Success</div>`);
+                        console.log(`${endpoint}:`, data);
+                    } else {
+                        results.push(`<div class="status error">✗ ${endpoint} - Error: ${response.status}</div>`);
+                    }
+                } catch (error) {
+                    results.push(`<div class="status error">✗ ${endpoint} - Exception: ${error.message}</div>`);
+                }
+            }
+            
+            resultsDiv.innerHTML = results.join('');
+        }
+        
+        // Load sample chart
+        async function loadSampleChart() {
+            try {
+                const response = await fetch('/teacher/analytics/attendance-trend?section_id=all');
+                const data = await response.json();
+                
+                const ctx = document.getElementById('sampleChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+                
+                alert('Sample chart loaded successfully!');
+            } catch (error) {
+                alert('Error loading sample chart: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

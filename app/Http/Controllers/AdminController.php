@@ -372,11 +372,20 @@ class AdminController extends Controller
                 'phone_number' => 'nullable|string|max:20',
                 'position' => 'nullable|string|max:100',
                 'school_id' => 'required|exists:schools,id',
-                'section_id' => 'nullable|exists:sections,id'
+                'section_id' => 'nullable|exists:sections,id', // Single section for Add modal
+                'section_ids' => 'nullable|array', // Multiple sections for future use
+                'section_ids.*' => 'exists:sections,id'
             ]);
 
-            $sectionId = $request->section_id ?: null;
+            // Handle both single and multiple section assignments
+            $sectionIds = [];
+            if ($request->section_id) {
+                $sectionIds = [$request->section_id];
+            } elseif ($request->section_ids) {
+                $sectionIds = $request->section_ids;
+            }
 
+            // Create the user
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -386,16 +395,42 @@ class AdminController extends Controller
                 'phone_number' => $validated['phone_number'],
                 'position' => $validated['position'],
                 'school_id' => $validated['school_id'],
-                'section_id' => $sectionId
+                'section_id' => $sectionIds ? $sectionIds[0] : null // Primary section
             ]);
 
-            // Update section with teacher_id if section was selected
-            if ($sectionId) {
-                Section::where('id', $sectionId)->update(['teacher_id' => $user->id]);
+            // Handle section assignments
+            if (!empty($sectionIds)) {
+                // Check for already assigned sections
+                $assignedSections = Section::whereIn('id', $sectionIds)
+                    ->whereNotNull('teacher_id')
+                    ->with('teacher')
+                    ->get();
+                
+                if ($assignedSections->count() > 0) {
+                    $assignedSectionNames = $assignedSections->map(function($section) {
+                        return "'{$section->name}' (assigned to {$section->teacher->name})";
+                    })->join(', ');
+                    
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', "The following sections are already assigned to other teachers: {$assignedSectionNames}");
+                }
+                
+                foreach ($sectionIds as $sectionId) {
+                    // Update section with teacher_id
+                    Section::where('id', $sectionId)->update(['teacher_id' => $user->id]);
+                    
+                    // Update students in this section to belong to this teacher
+                    Student::where('section_id', $sectionId)
+                           ->update(['user_id' => $user->id]);
+                    
+                    // Add to pivot table for many-to-many relationship
+                    $user->sections()->attach($sectionId);
+                }
             }
 
             return redirect()->route('admin.manage-teachers')
-                           ->with('success', 'Teacher "' . $user->name . '" has been added successfully!');
+                           ->with('success', 'Teacher "' . $user->name . '" has been added successfully with ' . count($sectionIds) . ' section(s) assigned!');
                            
         } catch (\Exception $e) {
             \Log::error('Error creating teacher: ' . $e->getMessage());
@@ -412,7 +447,12 @@ class AdminController extends Controller
     {
         $teacher = User::findOrFail($id);
         
-    if ($resp = $this->validateOrRespond($request, [
+        // Debug: Force to not be treated as AJAX/JSON request
+        $request->headers->remove('X-Requested-With');
+        $request->headers->set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+        
+        // Use standard Laravel validation instead of the trait
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $teacher->id,
             'username' => 'required|string|unique:users,username,' . $teacher->id . '|max:255',
@@ -420,38 +460,126 @@ class AdminController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:100',
             'school_id' => 'required|exists:schools,id',
-            'section_id' => 'nullable|exists:sections,id'
-    ])) return $resp;
+            'section_ids' => 'nullable|array',
+            'section_ids.*' => 'exists:sections,id'
+        ]);
 
-        // Handle section assignment with dual-reference integrity
-        $oldSectionId = $teacher->section_id;
-        $newSectionId = $request->section_id;
+        try {
+            \DB::beginTransaction();
 
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'phone_number' => $request->phone_number,
-            'position' => $request->position,
-            'school_id' => $request->school_id
-        ];
+             $currentSectionIds = Section::where('teacher_id', $teacher->id)->pluck('id')->toArray();
+            $newSectionIds = $request->section_ids ?: [];
 
-        if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($request->password);
-        }
+             $updateData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'username' => $request->username,
+                'phone_number' => $request->phone_number,
+                'position' => $request->position,
+                'school_id' => $request->school_id,
+                'section_id' => !empty($newSectionIds) ? $newSectionIds[0] : null // Primary section
+            ];
 
-        // Handle section assignment changes with proper dual-reference management
-        if ($oldSectionId != $newSectionId) {
-            $result = $this->manageSectionAssignment($teacher, $oldSectionId, $newSectionId);
-            if (!$result['success']) {
-                return back()->withErrors($result['error']);
+            if ($request->filled('password')) {
+                $updateData['password'] = Hash::make($request->password);
             }
-            $updateData['section_id'] = $newSectionId;
+
+            $teacher->update($updateData);
+
+            // Handle section reassignments
+            $sectionsToRemove = array_diff($currentSectionIds, $newSectionIds);
+            $sectionsToAdd = array_diff($newSectionIds, $currentSectionIds);
+
+            // Remove teacher from unchecked sections
+            foreach ($sectionsToRemove as $sectionId) {
+                $section = Section::find($sectionId);
+                if ($section) {
+                    // Get student count for logging
+                    $studentCount = Student::where('section_id', $sectionId)->count();
+                    
+                    // Unassign teacher from section
+                    Section::where('id', $sectionId)->update(['teacher_id' => null]);
+                    
+                    // Set students' user_id to null (unassign them from teacher)
+                    Student::where('section_id', $sectionId)->update(['user_id' => null]);
+                    
+                    // Remove from pivot table for many-to-many relationship
+                    $teacher->sections()->detach($sectionId);
+                    
+                    \Log::info("Section unassigned from teacher", [
+                        'teacher_id' => $teacher->id,
+                        'teacher_name' => $teacher->name,
+                        'section_id' => $sectionId,
+                        'section_name' => $section->name,
+                        'students_affected' => $studentCount
+                    ]);
+                }
+            }
+
+            // Add teacher to newly checked sections
+            foreach ($sectionsToAdd as $sectionId) {
+                $section = Section::find($sectionId);
+                if ($section && $section->teacher_id && $section->teacher_id != $teacher->id) {
+                    \DB::rollBack();
+                    return redirect()->back()
+                        ->with('error', "Section '{$section->name}' is already assigned to another teacher.")
+                        ->withInput();
+                }
+
+                if ($section) {
+                     $studentCount = Student::where('section_id', $sectionId)->count();
+                    
+                     Section::where('id', $sectionId)->update(['teacher_id' => $teacher->id]);
+                    
+                     Student::where('section_id', $sectionId)->update(['user_id' => $teacher->id]);
+                    
+                     $teacher->sections()->attach($sectionId);
+                    
+                    \Log::info("Section assigned to teacher", [
+                        'teacher_id' => $teacher->id,
+                        'teacher_name' => $teacher->name,
+                        'section_id' => $sectionId,
+                        'section_name' => $section->name,
+                        'students_assigned' => $studentCount
+                    ]);
+                }
+            }
+
+            \DB::commit();
+
+            $assignedCount = count($newSectionIds);
+            $removedCount = count($sectionsToRemove);
+            $addedCount = count($sectionsToAdd);
+            
+            $message = "Teacher '{$teacher->name}' updated successfully";
+            
+            if ($addedCount > 0 || $removedCount > 0) {
+                $changes = [];
+                if ($addedCount > 0) {
+                    $changes[] = "{$addedCount} section(s) assigned";
+                }
+                if ($removedCount > 0) {
+                    $changes[] = "{$removedCount} section(s) unassigned";
+                }
+                $message .= " - " . implode(', ', $changes);
+            }
+            
+            if ($assignedCount > 0) {
+                $message .= ". Total sections: {$assignedCount}";
+            } else {
+                $message .= ". No sections currently assigned";
+            }
+
+            // Force redirect to manage-teachers page instead of back
+            return redirect()->route('admin.manage-teachers')->with('success', $message);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error updating teacher: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'An error occurred while updating the teacher. Please try again.')
+                ->withInput();
         }
-
-        $teacher->update($updateData);
-
-        return redirect()->route('admin.manage-teachers')->with('success', 'Teacher updated successfully!');
     }
 
     /**
@@ -652,31 +780,51 @@ class AdminController extends Controller
      */
     public function deleteTeacher($id)
     {
-        $teacher = User::findOrFail($id);
-        
-        // Get students associated with this teacher
-        $students = Student::where('user_id', $teacher->id)->get();
-        
-        // Delete students and their files
-        foreach ($students as $student) {
-            // Clear QR code files
-            if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
-                Storage::disk('public')->delete($student->qr_code);
+        try {
+            $teacher = User::findOrFail($id);
+            
+            \DB::beginTransaction();
+            
+            // Get students associated with this teacher
+            $students = Student::where('user_id', $teacher->id)->get();
+            $teacherName = $teacher->name;
+            
+            // Clear section assignments
+            Section::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+            
+            // Remove from pivot table
+            $teacher->sections()->detach();
+            
+            // Delete students and their files
+            foreach ($students as $student) {
+                // Clear QR code files
+                if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+                    Storage::disk('public')->delete($student->qr_code);
+                }
+                
+                // Clear picture
+                if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+                    Storage::disk('public')->delete('student_pictures/' . $student->picture);
+                }
+                
+                // Delete student record
+                $student->delete();
             }
             
-            // Clear picture
-            if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
-                Storage::disk('public')->delete('student_pictures/' . $student->picture);
-            }
+            // Delete teacher
+            $teacher->delete();
             
-            // Delete student record
-            $student->delete();
-        }
-        
-        // Delete teacher
-        $teacher->delete();
+            \DB::commit();
 
-        return redirect()->route('admin.manage-teachers')->with('success', 'Teacher and related students deleted successfully!');
+            return redirect()->route('admin.manage-teachers')
+                ->with('success', "Teacher '{$teacherName}' and {$students->count()} related students deleted successfully!");
+                
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error deleting teacher: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the teacher. Please try again.');
+        }
     }
 
     /**
