@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Section;
+use App\Models\AttendanceSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -21,6 +22,117 @@ class AttendanceAnalyticsController extends Controller
         $sections = $this->getTeacherSections($teacherId);
         
         return view('teacher.statistics', compact('currentSemester', 'sections'));
+    }
+
+    /**
+     * Display today's attendance overview page
+     */
+    public function attendanceToday(Request $request)
+    {
+        $teacherId = Auth::id();
+        $teacher = Auth::user();
+        
+         $currentSemester = Semester::where('status', 'active')->first();
+        if (!$currentSemester) {
+            $currentSemester = Semester::latest('created_at')->first();
+        }
+        
+         if ($teacher->school_id) {
+            $semesters = Semester::where('school_id', $teacher->school_id)->orderBy('created_at', 'desc')->get();
+        } else {
+            $semesters = Semester::orderBy('created_at', 'desc')->get();
+        }
+        
+         $sections = $this->getTeacherSections($teacherId);
+        
+         $activeSessions = AttendanceSession::where('teacher_id', $teacherId)
+            ->whereDate('created_at', today())
+            ->where('status', 'active')
+            ->with('semester')
+            ->get();
+            
+         $recentSessions = AttendanceSession::where('teacher_id', $teacherId)
+            ->where('status', 'closed')
+            ->with('semester')
+            ->latest()
+            ->take(10)
+            ->get();
+            
+         $today = today();
+        
+         $search = $request->get('search');
+        $sectionFilter = $request->get('section_filter');
+        
+         $studentsQuery = Student::where('user_id', $teacherId);
+        if ($currentSemester) {
+            $studentsQuery->where('semester_id', $currentSemester->id);
+        }
+        
+         if ($search) {
+            $studentsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('id_no', 'like', '%' . $search . '%');
+            });
+        }
+        
+         if ($sectionFilter) {
+            $studentsQuery->where('section_id', $sectionFilter);
+        }
+        
+        $students = $studentsQuery->with(['section', 'attendances' => function($q) use ($today) {
+            $q->whereDate('date', $today);
+        }])->get();
+        
+         $totalStudents = $students->count();
+        $totalPresent = $students->filter(function($student) {
+            return $student->attendances->isNotEmpty() && 
+                   ($student->attendances->first()->time_in_am || $student->attendances->first()->time_in_pm);
+        })->count();
+        $totalAbsent = $totalStudents - $totalPresent;
+        
+         $attendanceList = $students->map(function($student, $index) {
+            $attendance = $student->attendances->first();
+            
+             $status = 'Absent';
+            $statusClass = 'bg-danger';
+            
+            if ($attendance) {
+                if ($attendance->time_in_am && $attendance->time_in_pm) {
+                    $status = 'Present';
+                    $statusClass = 'bg-success';
+                } elseif ($attendance->time_in_am || $attendance->time_in_pm) {
+                    $status = 'Partial';
+                    $statusClass = 'bg-warning';
+                } elseif ($attendance->time_out_am || $attendance->time_out_pm) {
+                    $status = 'Time Out Only';
+                    $statusClass = 'bg-info';
+                }
+            }
+            
+            return [
+                'index' => $index + 1,
+                'student' => $student,
+                'status' => $status,
+                'status_class' => $statusClass,
+                'attendance' => $attendance,
+                'time_in_am' => $attendance ? $attendance->time_in_am : null,
+                'time_out_am' => $attendance ? $attendance->time_out_am : null,
+                'time_in_pm' => $attendance ? $attendance->time_in_pm : null,
+                'time_out_pm' => $attendance ? $attendance->time_out_pm : null,
+            ];
+        });
+        
+        return view('teacher.attendance', compact(
+            'activeSessions',
+            'recentSessions', 
+            'semesters',
+            'sections',
+            'totalPresent',
+            'totalAbsent', 
+            'totalStudents',
+            'attendanceList',
+            'search'
+        ));
     }
 
     /**

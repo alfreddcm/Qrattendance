@@ -96,16 +96,8 @@
             </div>
         </div>
     </div>
-    
-    <div class="row mt-4">
-        <div class="col-12">
-            <div id="previewArea">
-                @include('teacher.report_preview', ['records' => $records])
-            </div>
-        </div>
-    </div>
-    
-    @if(isset($records) && count($records))
+
+        @if(isset($records) && count($records))
     <div class="row mt-4">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -134,6 +126,16 @@
         </div>
     </div>
     @endif
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div id="previewArea">
+                @include('teacher.report_preview', ['records' => $records])
+            </div>
+        </div>
+    </div>
+    
+
 </div>
 
 <!-- SF2 Generation Modal -->
@@ -206,13 +208,22 @@
                     <i class="fas fa-info-circle me-2"></i>
                     <span id="sf2ResultMessage">SF2 file has been generated successfully!</span>
                 </div>
+                
+                <!-- Warning display area -->
+                <div id="sf2WarningsContainer" style="display: none;">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Data Availability Notice:</strong>
+                        <ul id="sf2WarningsList" class="mb-0 mt-2">
+                        </ul>
+                    </div>
+                </div>
+                
                 <div class="d-grid gap-2">
                     <a href="#" id="downloadExcelBtn" class="btn btn-success">
                         <i class="fas fa-download me-2"></i>Download Excel File
                     </a>
-                    <button type="button" class="btn btn-outline-primary" id="generatePdfBtn">
-                        <i class="fas fa-file-pdf me-2"></i>Generate PDF Version
-                    </button>
+                   
                 </div>
             </div>
             <div class="modal-footer">
@@ -468,6 +479,18 @@ function generateSF2() {
                 $('#sf2ResultMessage').text(`SF2 generated successfully! ${response.student_count} students included.`);
                 $('#downloadExcelBtn').attr('href', response.download_url);
                 $('#downloadExcelBtn').data('filename', response.filename);
+                
+                // Handle warnings if present
+                if (response.warnings && response.warnings.length > 0) {
+                    $('#sf2WarningsContainer').show();
+                    $('#sf2WarningsList').empty();
+                    response.warnings.forEach(function(warning) {
+                        $('#sf2WarningsList').append('<li>' + warning + '</li>');
+                    });
+                } else {
+                    $('#sf2WarningsContainer').hide();
+                }
+                
                 $('#sf2ResultModal').modal('show');
                 
                 // Clear any error messages
@@ -483,51 +506,10 @@ function generateSF2() {
             showError(errorMessage);
         })
         .always(function() {
-            // Restore button state
-            $btn.html(originalText).prop('disabled', false);
+             $btn.html(originalText).prop('disabled', false);
         });
 }
-
-function generatePDF() {
-    const filename = $('#downloadExcelBtn').data('filename');
-    if (!filename) {
-        showError('No Excel file to convert to PDF.');
-        return;
-    }
-
-    const $btn = $('#generatePdfBtn');
-    const originalText = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Generating PDF...').prop('disabled', true);
-
-    $.post('{{ route("teacher.sf2.generate.pdf") }}', {
-        excel_file: filename,
-        _token: $('meta[name="csrf-token"]').attr('content')
-    })
-    .done(function(response) {
-        if (response.success) {
-            // Create temporary download link for PDF
-            const link = document.createElement('a');
-            link.href = response.download_url;
-            link.download = filename.replace('.xlsx', '.pdf');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showSuccess('PDF generated successfully!');
-        } else {
-            showError(response.message || 'Error generating PDF file');
-        }
-    })
-    .fail(function(xhr) {
-        console.error('PDF Generation Error:', xhr);
-        const response = xhr.responseJSON;
-        const errorMessage = response?.message || 'Unknown error occurred while generating PDF';
-        showError(errorMessage);
-    })
-    .always(function() {
-        $btn.html(originalText).prop('disabled', false);
-    });
-}
+ 
 
 $(function() {
     updateFilterFields();

@@ -1020,8 +1020,7 @@
 </div>
 
 <script>
-// Camera functionality
-let videoStream = null;
+ let videoStream = null;
 let cameraModal = null;
 
 function openCameraModal() {
@@ -1101,13 +1100,11 @@ function showImagePreview(src) {
     const previewImg = document.getElementById('preview-img'); 
     const placeholder = document.querySelector('.student-photo-placeholder');
     
-    // Hide placeholder
-    if (placeholder) {
+     if (placeholder) {
         placeholder.style.display = 'none';
     }
     
-    // Show preview
-    previewImg.src = src; 
+     previewImg.src = src; 
     preview.style.display = 'block';
 }
 
@@ -1117,19 +1114,16 @@ function removePhoto() {
     const pictureInput = document.getElementById('picture');
     const capturedInput = document.getElementById('captured_image');
     
-    // Clear inputs
-    if (pictureInput) pictureInput.value = '';
+     if (pictureInput) pictureInput.value = '';
     if (capturedInput) capturedInput.value = '';
     
-    // Hide preview and show placeholder
-    preview.style.display = 'none';
+     preview.style.display = 'none';
     if (placeholder) {
         placeholder.style.display = 'flex';
     }
 }
 
-// File upload preview
-document.getElementById('picture').addEventListener('change', function() {
+ document.getElementById('picture').addEventListener('change', function() {
     if (this.files && this.files[0]) {
         const file = this.files[0];
         
@@ -1148,21 +1142,18 @@ document.getElementById('picture').addEventListener('change', function() {
     }
 });
 
-// Close camera when modal is hidden
-document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () { 
+ document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () { 
     stopCamera(); 
 });
 
-// Cascading dropdowns for School -> Teacher -> Section
-function loadTeachersBySchool() {
+ function loadTeachersBySchool() {
     const schoolSelect = document.getElementById('admin_school_id');
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
     
     const schoolId = schoolSelect.value;
     
-    // Reset dependent dropdowns
-    teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
+     teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
     sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
     teacherSelect.disabled = !schoolId;
     sectionSelect.disabled = true;
@@ -1193,13 +1184,11 @@ function loadSectionsByTeacher() {
     
     const teacherId = teacherSelect.value;
     
-    // Reset sections dropdown
-    sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
+     sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
     sectionSelect.disabled = !teacherId;
     
     if (teacherId) {
-        // Fetch sections for this teacher
-        fetch(`/admin/teachers/${teacherId}/sections`)
+         fetch(`/admin/teachers/${teacherId}/sections`)
             .then(response => response.json())
             .then(sections => {
                 sections.forEach(section => {
@@ -1244,14 +1233,12 @@ function generateQr(studentId) {
 
 function generateAllQrs() {
     if (confirm('Generate QR codes for all students? This may take some time.')) {
-        // Show loading state
-        const button = event.target;
+         const button = event.target;
         const originalText = button.innerHTML;
         button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
         button.disabled = true;
         
-        // Create form and submit
-        const form = document.createElement('form');
+         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route("admin.students.generateQrs") }}';
         
@@ -1268,28 +1255,23 @@ function generateAllQrs() {
 </script>
 
 <script>
-// Populate Section select when Teacher changes
-document.addEventListener('DOMContentLoaded', function() {
+ document.addEventListener('DOMContentLoaded', function() {
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
     
-    // Store the initial section selection from server-side rendering
-    const initialSectionValue = sectionSelect ? sectionSelect.value : '';
+     const initialSectionValue = sectionSelect ? sectionSelect.value : '';
 
     function populateSections(preserveSelection = true) {
         if(!teacherSelect || !sectionSelect) return;
         const selected = teacherSelect.selectedOptions[0];
         const sectionsData = selected ? selected.getAttribute('data-sections') : null;
         
-        // Determine which section should be selected
-        let sectionToSelect = '';
+         let sectionToSelect = '';
         if (preserveSelection) {
-            // Use the current value (which could be from URL or previous selection)
-            sectionToSelect = sectionSelect.value || initialSectionValue;
+             sectionToSelect = sectionSelect.value || initialSectionValue;
         }
         
-        // Clear current options but keep default
-        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+         sectionSelect.innerHTML = '<option value="">All Sections</option>';
         
         if(sectionsData) {
             try {
@@ -1299,8 +1281,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     opt.value = sec.id;
                     opt.text = (sec.section_name || sec.name) + ' (Grade ' + (sec.gradelevel || sec.grade_level || '') + ')';
                     
-                    // Set selected if this matches the section we want to preserve
-                    if (sectionToSelect && sec.id == sectionToSelect) {
+                     if (sectionToSelect && sec.id == sectionToSelect) {
                         opt.selected = true;
                     }
                     
@@ -1314,19 +1295,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if(teacherSelect) {
         teacherSelect.addEventListener('change', function() {
-            // When teacher changes manually, clear section selection
-            populateSections(false);
+             populateSections(false);
         });
         
-        // Initial populate on page load - preserve any existing selection
-        populateSections(true);
+         populateSections(true);
     }
 });
 </script>
 
 <style>
-    /* Sticky card and table styles */
-    .sticky-card {
+     .sticky-card {
         position: relative;
     }
     
@@ -1390,18 +1368,15 @@ document.addEventListener('DOMContentLoaded', function() {
         background-color: rgba(0, 123, 255, 0.04);
     }
     
-    /* Cursor pointer for clickable QR codes */
-    .cursor-pointer {
+     .cursor-pointer {
         cursor: pointer;
     }
     
-    /* Ensure the sticky header on filters stays below main header */
-    .sticky-header {
+     .sticky-header {
         z-index: 1020;
     }
     
-    /* Improve stats card layout */
-    .stats-row {
+     .stats-row {
         position: relative;
         z-index: 1;
     }

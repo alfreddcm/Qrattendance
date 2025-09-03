@@ -505,13 +505,20 @@ class ReportController extends Controller
             ]);
 
             if ($result['success']) {
-                return response()->json([
+                $response = [
                     'success' => true,
                     'message' => 'SF2 generated successfully!',
                     'download_url' => $result['download_url'],
                     'filename' => $result['filename'],
                     'student_count' => $result['student_count']
-                ]);
+                ];
+                
+                // Add warnings if present
+                if (isset($result['warnings']) && !empty($result['warnings'])) {
+                    $response['warnings'] = $result['warnings'];
+                }
+                
+                return response()->json($response);
             } else {
                 return response()->json([
                     'success' => false,

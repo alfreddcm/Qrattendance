@@ -75,7 +75,17 @@
     </div>
 @endif
 
-<!-- Search and Filter Row -->
+
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">My Sections</h5>
+        </div>
+
+
+<div class="row">
+    <!-- Search and Filter Row -->
 <div class="row mb-3">
     <div class="col-lg-8">
         <form method="GET" action="{{ route('teacher.students') }}" class="d-flex align-items-center gap-2 flex-wrap">
@@ -108,18 +118,15 @@
         </form>
     </div>
 </div>
+</div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold mb-0">My Sections</h5>
-        </div>
+
         <div class="row">
 
             @if($sectionCounts->count() > 0)
                 @foreach($sectionCounts as $section)
                 <div class="col-md-6 col-lg-3 mb-3">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card p-1 border-0 shadow-sm h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="icon-circle bg-{{ $section['color'] }}-subtle text-{{ $section['color'] }} me-3">

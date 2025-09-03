@@ -144,7 +144,7 @@ class SF2TemplateService
             }
 
             // Populate student data and attendance
-            $attendanceData = $this->populateStudentData($worksheet, $students, $month, $year, $user);
+            $attendanceData = $this->populateStudentData($worksheet, $students, $month, $year, $user, $semesterId);
 
             // Generate filename
             $gradeSection = $filterGradeLevel && $filterSection ? "_{$filterGradeLevel}_{$filterSection}" : '';
@@ -155,7 +155,7 @@ class SF2TemplateService
             $writer = new Xlsx($spreadsheet);
             $writer->save($filepath);
 
-            return [
+            $result = [
                 'success' => true,
                 'filename' => $filename,
                 'filepath' => $filepath,
@@ -163,6 +163,13 @@ class SF2TemplateService
                 'student_count' => $students->count(),
                 'attendance_data' => $attendanceData
             ];
+            
+            // Add data warnings if present
+            if (isset($attendanceData['data_warnings']) && !empty($attendanceData['data_warnings'])) {
+                $result['warnings'] = $attendanceData['data_warnings'];
+            }
+            
+            return $result;
 
         } catch (\Exception $e) {
             return [
@@ -322,7 +329,7 @@ class SF2TemplateService
     /**
      * Populate student data and attendance marks
      */
-    private function populateStudentData($worksheet, $students, $month, $year, $user = null)
+    private function populateStudentData($worksheet, $students, $month, $year, $user = null, $semesterId = null)
     {
         // Separate students by gender
         $maleStudents = $students->filter(function($student) {
@@ -346,9 +353,23 @@ class SF2TemplateService
         $this->populateMonthlyTotals($worksheet, $maleData, $femaleData);
         
         // Populate summary statistics and teacher info
-        $this->populateMonthlyStatistics($worksheet, $maleStudents->count(), $femaleStudents->count(), $maleData, $femaleData, $month, $year, $user);
+        $this->populateMonthlyStatistics($worksheet, $maleStudents->count(), $femaleStudents->count(), $maleData, $femaleData, $month, $year, $user, $semesterId);
         
-        return array_merge($maleData, $femaleData);
+        // Collect any data warnings
+        $warnings = [];
+        if (isset($maleData['data_warning']) && $maleData['data_warning']) {
+            $warnings[] = $maleData['data_warning'];
+        }
+        if (isset($femaleData['data_warning']) && $femaleData['data_warning']) {
+            $warnings[] = $femaleData['data_warning'];
+        }
+        
+        $result = array_merge($maleData, $femaleData);
+        if (!empty($warnings)) {
+            $result['data_warnings'] = array_unique($warnings);
+        }
+        
+        return $result;
     }
 
     /**
@@ -361,11 +382,12 @@ class SF2TemplateService
         $totalTardy = 0;
         $totalPresent = 0;
         
-        // Use the weekday columns generated in populateDatesAndDays
-        $attendanceColumns = $this->weekdayColumns;
+         $latestAttendanceDate = Attendance::max('date');
+        $latestDate = $latestAttendanceDate ? Carbon::parse($latestAttendanceDate) : null;
         
-        // Get all weekdays in the month for proper attendance tracking
-        $startDate = Carbon::create($year, $month, 1);
+         $attendanceColumns = $this->weekdayColumns;
+        
+         $startDate = Carbon::create($year, $month, 1);
         $endDate = $startDate->copy()->endOfMonth();
         $weekdaysInMonth = [];
         
@@ -385,8 +407,7 @@ class SF2TemplateService
                 $fullName = $student->name;
                 $worksheet->setCellValue('B' . $currentRow, $fullName);
                 
-                // Get attendance data for this student
-                $attendanceRecords = Attendance::where('student_id', $student->id)
+                 $attendanceRecords = Attendance::where('student_id', $student->id)
                     ->whereMonth('date', $month)
                     ->whereYear('date', $year)
                     ->get()
@@ -398,8 +419,7 @@ class SF2TemplateService
                 $studentTardy = 0;
                 $studentPresent = 0;
                 
-                // Populate daily attendance for weekdays only
-                $columnIndex = 0;
+                 $columnIndex = 0;
                 foreach ($weekdaysInMonth as $day => $date) {
                     if ($columnIndex < count($attendanceColumns)) {
                         $column = $attendanceColumns[$columnIndex];
@@ -419,9 +439,16 @@ class SF2TemplateService
                                 $studentPresent++;
                             }
                         } else {
-                            // No attendance record for this weekday - consider absent
-                            $worksheet->setCellValue($cellRef, 'x');
-                            $studentAbsent++;
+                            // No attendance record for this weekday
+                            // Check if this date is beyond our available data
+                            if ($latestDate && $date->gt($latestDate)) {
+                                // Date is beyond available attendance data - leave blank
+                                $worksheet->setCellValue($cellRef, '');
+                            } else {
+                                // Date is within expected range but no record - consider absent
+                                $worksheet->setCellValue($cellRef, 'x');
+                                $studentAbsent++;
+                            }
                         }
                         
                         $columnIndex++;
@@ -443,11 +470,21 @@ class SF2TemplateService
             }
         }
         
+        // Check if requested month extends beyond available data
+        $requestedMonth = Carbon::create($year, $month, 1);
+        $dataAvailabilityWarning = null;
+        
+        if ($latestDate && $requestedMonth->endOfMonth()->gt($latestDate)) {
+            $dataAvailabilityWarning = "Note: Attendance data is only available until {$latestDate->format('F j, Y')}. Days after this date are left blank.";
+        }
+        
         return [
             'total_absent' => $totalAbsent,
             'total_tardy' => $totalTardy,
             'total_present' => $totalPresent,
-            'student_count' => $students->count()
+            'student_count' => $students->count(),
+            'data_warning' => $dataAvailabilityWarning,
+            'latest_data_date' => $latestDate ? $latestDate->format('Y-m-d') : null
         ];
     }
 
@@ -513,10 +550,22 @@ class SF2TemplateService
     /**
      * Populate monthly statistics summary
      */
-    private function populateMonthlyStatistics($worksheet, $maleCount, $femaleCount, $maleData, $femaleData, $month, $year, $user = null)
+    private function populateMonthlyStatistics($worksheet, $maleCount, $femaleCount, $maleData, $femaleData, $month, $year, $user = null, $semesterId = null)
     {
         $totalStudents = $maleCount + $femaleCount;
         $workingDays = $this->getWorkingDaysInMonth($month, $year);
+        
+        // Get students for consecutive absence calculation
+        $studentsQuery = Student::where('semester_id', $semesterId);
+        if ($user && $user->role === 'teacher') {
+            $studentsQuery->where('user_id', $user->id);
+        }
+        $allStudents = $studentsQuery->get();
+        
+        // Calculate consecutive absences for male and female students
+        $maleConsecutiveAbsences = $this->calculateConsecutiveAbsences($allStudents, $month, $year, 'Male');
+        $femaleConsecutiveAbsences = $this->calculateConsecutiveAbsences($allStudents, $month, $year, 'Female');
+        $totalConsecutiveAbsences = $maleConsecutiveAbsences + $femaleConsecutiveAbsences;
         
         // Add teacher name at AC87
         if ($user && $user->name) {
@@ -528,45 +577,45 @@ class SF2TemplateService
         $maleAvgAttendance = $maleCount > 0 && $workingDays > 0 ? ($maleData['total_present'] / ($workingDays * $maleCount)) * 100 : 0;
         
         $worksheet->setCellValue('AH65', $maleEnrollment); // Enrollment as of 1st Friday of June (Male)
-        $worksheet->setCellValue('AH67', 0); // Late Enrollment (Male)
+        $worksheet->setCellValue('AH67', 0); // Late Enrollment (Male 
         $worksheet->setCellValue('AH69', $maleEnrollment); // Registered Learner (end of month) (Male)
         $worksheet->setCellValue('AH71', 100); // Percentage of Enrollment (Male)
         $worksheet->setCellValue('AH73', $workingDays > 0 ? round($maleData['total_present'] / $workingDays, 1) : 0); // Average Daily Attendance (Male)
         $worksheet->setCellValue('AH74', round($maleAvgAttendance, 1)); // Percentage Attendance (Male)
-        $worksheet->setCellValue('AH76', 0); // 5 Consecutive Absences (Male)
-        $worksheet->setCellValue('AH78', 0); // Dropout (Male)
-        $worksheet->setCellValue('AH80', 0); // Transferred Out (Male)
-        $worksheet->setCellValue('AH82', 0); // Transferred In (Male)
+        $worksheet->setCellValue('AH76', $maleConsecutiveAbsences); // 5 Consecutive Absences (Male)
+        $worksheet->setCellValue('AH78', 0); // Dropout (Male 
+        $worksheet->setCellValue('AH80', 0); // Transferred Out (Male 
+        $worksheet->setCellValue('AH82', 0); // Transferred In (Male 
         
         // Female statistics
         $femaleEnrollment = $femaleCount;
         $femaleAvgAttendance = $femaleCount > 0 && $workingDays > 0 ? ($femaleData['total_present'] / ($workingDays * $femaleCount)) * 100 : 0;
         
         $worksheet->setCellValue('AI65', $femaleEnrollment); // Enrollment as of 1st Friday of June (Female)
-        $worksheet->setCellValue('AI67', 0); // Late Enrollment (Female)
+        $worksheet->setCellValue('AI67', 0); // Late Enrollment (Female 
         $worksheet->setCellValue('AI69', $femaleEnrollment); // Registered Learner (end of month) (Female)
         $worksheet->setCellValue('AI71', 100); // Percentage of Enrollment (Female)
         $worksheet->setCellValue('AI73', $workingDays > 0 ? round($femaleData['total_present'] / $workingDays, 1) : 0); // Average Daily Attendance (Female)
         $worksheet->setCellValue('AI74', round($femaleAvgAttendance, 1)); // Percentage Attendance (Female)
-        $worksheet->setCellValue('AI76', 0); // 5 Consecutive Absences (Female)
-        $worksheet->setCellValue('AI78', 0); // Dropout (Female)
-        $worksheet->setCellValue('AI80', 0); // Transferred Out (Female)
-        $worksheet->setCellValue('AI82', 0); // Transferred In (Female)
+        $worksheet->setCellValue('AI76', $femaleConsecutiveAbsences); // 5 Consecutive Absences (Female)
+        $worksheet->setCellValue('AI78', 0); // Dropout (Female 
+        $worksheet->setCellValue('AI80', 0); // Transferred Out (Female 
+        $worksheet->setCellValue('AI82', 0); // Transferred In (Female 
         
         // Total statistics
         $totalEnrollment = $totalStudents;
         $totalAvgAttendance = $totalStudents > 0 && $workingDays > 0 ? (($maleData['total_present'] + $femaleData['total_present']) / ($workingDays * $totalStudents)) * 100 : 0;
         
         $worksheet->setCellValue('AJ65', $totalEnrollment); // Enrollment as of 1st Friday of June (Total)
-        $worksheet->setCellValue('AJ67', 0); // Late Enrollment (Total)
+        $worksheet->setCellValue('AJ67', 0); // Late Enrollment (Total 
         $worksheet->setCellValue('AJ69', $totalEnrollment); // Registered Learner (end of month) (Total)
         $worksheet->setCellValue('AJ71', 100); // Percentage of Enrollment (Total)
         $worksheet->setCellValue('AJ73', $workingDays > 0 ? round(($maleData['total_present'] + $femaleData['total_present']) / $workingDays, 1) : 0); // Average Daily Attendance (Total)
         $worksheet->setCellValue('AJ74', round($totalAvgAttendance, 1)); // Percentage Attendance (Total)
-        $worksheet->setCellValue('AJ76', 0); // 5 Consecutive Absences (Total)
-        $worksheet->setCellValue('AJ78', 0); // Dropout (Total)
-        $worksheet->setCellValue('AJ80', 0); // Transferred Out (Total)
-        $worksheet->setCellValue('AJ82', 0); // Transferred In (Total)
+        $worksheet->setCellValue('AJ76', $totalConsecutiveAbsences); // 5 Consecutive Absences (Total)
+        $worksheet->setCellValue('AJ78', 0); // Dropout (Total 
+        $worksheet->setCellValue('AJ80', 0); // Transferred Out (Total 
+        $worksheet->setCellValue('AJ82', 0); // Transferred In (Total 
     }
 
     /**
@@ -627,5 +676,127 @@ class SF2TemplateService
         }
         
         return $files;
+    }
+
+    /**
+     * Calculate number of students with 5 consecutive absences
+     */
+    private function calculateConsecutiveAbsences($students, $month, $year, $gender = null)
+    {
+        $consecutiveAbsenceCount = 0;
+        
+        // Debug: Log the parameters
+        \Log::info("calculateConsecutiveAbsences called", [
+            'students_count' => $students->count(),
+            'month' => $month,
+            'year' => $year,
+            'gender' => $gender
+        ]);
+        
+        // Filter students by gender if specified
+        if ($gender) {
+            $students = $students->filter(function($student) use ($gender) {
+                $studentGender = strtolower(trim($student->gender));
+                $filterGender = strtolower(trim($gender));
+                
+                // Handle different gender formats
+                if ($filterGender === 'male') {
+                    return in_array($studentGender, ['male', 'm', 'boy']);
+                } elseif ($filterGender === 'female') {
+                    return in_array($studentGender, ['female', 'f', 'girl']);
+                }
+                
+                return $studentGender === $filterGender;
+            });
+            
+            \Log::info("After gender filter", [
+                'gender' => $gender,
+                'filtered_count' => $students->count()
+            ]);
+        }
+        
+        // Get the latest attendance date to avoid counting absences beyond available data
+        $latestAttendanceDate = Attendance::max('date');
+        $latestDate = $latestAttendanceDate ? Carbon::parse($latestAttendanceDate) : null;
+        
+        // Get all weekdays in the month
+        $startDate = Carbon::create($year, $month, 1);
+        $endDate = $startDate->copy()->endOfMonth();
+        $weekdaysInMonth = [];
+        
+        for ($date = $startDate->copy(); $date <= $endDate; $date->addDay()) {
+            // Only include weekdays (Monday=1 to Friday=5)
+            if ($date->dayOfWeek >= 1 && $date->dayOfWeek <= 5) {
+                // Only include dates within our data range
+                if (!$latestDate || $date->lte($latestDate)) {
+                    $weekdaysInMonth[] = $date->copy();
+                }
+            }
+        }
+        
+        foreach ($students as $student) {
+            // Get attendance records for this student in the specified month
+            $attendanceRecords = Attendance::where('student_id', $student->id)
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->get()
+                ->keyBy(function($item) {
+                    return Carbon::parse($item->date)->format('Y-m-d');
+                });
+            
+            \Log::info("Student attendance check", [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'attendance_records' => $attendanceRecords->count(),
+                'weekdays_in_month' => count($weekdaysInMonth)
+            ]);
+            
+            // Check for consecutive absences
+            $consecutiveDays = 0;
+            $hasConsecutiveAbsences = false;
+            
+            foreach ($weekdaysInMonth as $date) {
+                $dateKey = $date->format('Y-m-d');
+                $isAbsent = false;
+                
+                if (isset($attendanceRecords[$dateKey])) {
+                    $attendance = $attendanceRecords[$dateKey];
+                    // Consider absent if no time_in records
+                    if (!$attendance->time_in_am && !$attendance->time_in_pm) {
+                        $isAbsent = true;
+                    }
+                } else {
+                    // No attendance record = absent
+                    $isAbsent = true;
+                }
+                
+                if ($isAbsent) {
+                    $consecutiveDays++;
+                    if ($consecutiveDays >= 5) {
+                        $hasConsecutiveAbsences = true;
+                        break; // Found 5 consecutive absences for this student
+                    }
+                } else {
+                    $consecutiveDays = 0; // Reset counter
+                }
+            }
+            
+            if ($hasConsecutiveAbsences) {
+                $consecutiveAbsenceCount++;
+                \Log::info("Found student with consecutive absences", [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name
+                ]);
+            }
+        }
+        
+        \Log::info("Final consecutive absence count", [
+            'count' => $consecutiveAbsenceCount,
+            'gender' => $gender,
+            'weekdays_checked' => count($weekdaysInMonth),
+            'latest_data_date' => $latestDate ? $latestDate->format('Y-m-d') : 'No attendance data'
+        ]);
+        
+        return $consecutiveAbsenceCount;
     }
 }

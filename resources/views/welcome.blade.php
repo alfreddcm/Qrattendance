@@ -29,7 +29,7 @@
         .mini-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.55rem; margin-top:1rem; }
         .mini-item { background:#fff; border:1px solid #e5e9f1; border-radius:12px; padding:.6rem .55rem; display:flex; align-items:flex-start; gap:.5rem; font-size:.65rem; line-height:1.05rem; }
         .mini-item i { font-size:.9rem; color:var(--brand); }
-        .footer-inline { position:absolute; left:0; bottom:.4rem; width:100%; text-align:center; font-size:.65rem; color:#6c7a89; pointer-events:none; }
+        .footer-inline { position:fixed; left:0; bottom:0; width:100%; text-align:center; font-size:.65rem; color:#6c7a89; background:rgba(255,255,255,0.9); padding:.5rem 0; border-top:1px solid rgba(0,0,0,.05); z-index:1000; }
         @media (max-width: 992px){ .glass-panel { margin:2rem auto 0; } body { overflow:auto; } }
         /* Allow scroll on very small heights to prevent content cut-off */
         @media (max-height: 620px){ body { overflow:auto; } }
@@ -103,9 +103,11 @@
                 </div>
             </div>
         </div>
-        <div class="footer-inline">&copy; {{ date('Y') }} Scan-to-Notify • All rights reserved.</div>
     </div>
 </header>
+
+<footer class="footer-inline">&copy; {{ date('Y') }} Scan-to-Notify • All rights reserved.</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

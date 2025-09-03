@@ -18,8 +18,7 @@
     <div class="container-fluid py-2">
         @include('partials.alerts')
 
-    <!-- Statistics Dashboard (compact) -->
-    <div class="row mb-3 gx-3">
+     <div class="row mb-3 gx-3">
         <div class="col-md-3 col-6">
             <div class="card stats-card primary h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -1053,8 +1052,7 @@
 </div>
 
 <style>
-    /* Page-specific styles only */
-    .sortable a {
+     .sortable a {
         color: inherit;
         text-decoration: none;
         transition: all 0.2s ease;
@@ -1083,10 +1081,7 @@ function editTeacher(teacherId) {
     const teacher = teachers.find(t => t.id === teacherId);
     if (!teacher) return;
     
-    // Set form action
-    document.getElementById('editTeacherForm').action = `/admin/teachers/${teacherId}`;
-    
-    // Fill form fields
+     document.getElementById('editTeacherForm').action = `/admin/teachers/${teacherId}`;
     document.getElementById('edit_name').value = teacher.name || '';
     document.getElementById('edit_username').value = teacher.username || '';
     document.getElementById('edit_email').value = teacher.email || '';
@@ -1111,15 +1106,13 @@ function editTeacher(teacherId) {
                 badge.textContent = 'Available';
             }
         } 
-        // Disable sections assigned to other teachers
-        else if (checkbox.dataset.assigned === 'true' && checkbox.dataset.teacherId != currentTeacherId) {
+         else if (checkbox.dataset.assigned === 'true' && checkbox.dataset.teacherId != currentTeacherId) {
             checkbox.disabled = true;
             checkbox.parentElement.querySelector('label').classList.add('text-muted');
         }
     });
     
-    // Check sections that are currently assigned to this teacher
-    if (Array.isArray(teacherSections)) {
+      if (Array.isArray(teacherSections)) {
         teacherSections.forEach(section => {
             const sectionCheckbox = document.getElementById(`edit_section_${section.id}`);
             if (sectionCheckbox) {
@@ -1127,8 +1120,7 @@ function editTeacher(teacherId) {
             }
         });
     } else if (teacher.section_id) {
-        // Fallback for single section assignment
-        const currentSectionCheckbox = document.getElementById(`edit_section_${teacher.section_id}`);
+         const currentSectionCheckbox = document.getElementById(`edit_section_${teacher.section_id}`);
         if (currentSectionCheckbox) {
             currentSectionCheckbox.checked = true;
         }
@@ -1140,8 +1132,7 @@ function openReassignModal(sectionId, sectionName, currentTeacherId, currentTeac
     document.getElementById('current_section_name').textContent = sectionName;
     document.getElementById('current_teacher_name').textContent = currentTeacherName;
     
-    // Remove current teacher from dropdown options
-    const newTeacherSelect = document.getElementById('reassign_new_teacher_id');
+     const newTeacherSelect = document.getElementById('reassign_new_teacher_id');
     Array.from(newTeacherSelect.options).forEach(option => {
         if (option.value == currentTeacherId) {
             option.style.display = 'none';
@@ -1155,16 +1146,14 @@ function openCreateSectionModal(teacherId, teacherName) {
     document.getElementById('create_teacher_id').value = teacherId;
     document.getElementById('create_teacher_name').textContent = teacherName;
     
-    // Reset form fields
-    document.getElementById('create_section_name').value = '';
+     document.getElementById('create_section_name').value = '';
     document.getElementById('create_grade_level').value = '';
 }
 
 function showUnassignedTeachers() {
-    // Highlight teachers without sections
-    const tableRows = document.querySelectorAll('table tbody tr');
+     const tableRows = document.querySelectorAll('table tbody tr');
     tableRows.forEach(row => {
-        const sectionCell = row.cells[4]; // Section & Students column
+        const sectionCell = row.cells[4];  
         if (sectionCell && sectionCell.textContent.includes('Not Assigned')) {
             row.style.backgroundColor = '#fff3cd';
             row.scrollIntoView({behavior: 'smooth', block: 'center'});
@@ -1182,10 +1171,8 @@ function showUnassignedSections() {
     alert('Check sections that appear without teachers in the section management area.');
 }
 
-// Add event listeners for school selection in modals
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle school selection in Add Teacher modal
-    const addSchoolSelect = document.getElementById('school_id');
+ document.addEventListener('DOMContentLoaded', function() {
+     const addSchoolSelect = document.getElementById('school_id');
     const addSectionContainer = document.getElementById('section_selection_container');
     
     if (addSchoolSelect && addSectionContainer) {
@@ -1194,8 +1181,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle school selection in Edit Teacher modal  
-    const editSchoolSelect = document.getElementById('edit_school_id');
+     const editSchoolSelect = document.getElementById('edit_school_id');
     const editSectionContainer = document.getElementById('edit_section_selection_container');
     
     if (editSchoolSelect && editSectionContainer) {
@@ -1270,24 +1256,20 @@ function loadSectionsForModal(schoolId, container, modalType) {
         });
 }
 
-// Section Management Functions
-const sections = @json($sections ?? []);
+ const sections = @json($sections ?? []);
 
 function editSection(sectionId) {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return;
     
-    // Set form action
-    document.getElementById('editSectionForm').action = `/admin/sections/${sectionId}`;
+     document.getElementById('editSectionForm').action = `/admin/sections/${sectionId}`;
     
-    // Fill form fields with fallback default values
-    document.getElementById('edit_section_name').value = section.name || '';
+     document.getElementById('edit_section_name').value = section.name || '';
     document.getElementById('edit_gradelevel').value = section.gradelevel || '';
     document.getElementById('edit_semester_id').value = section.semester_id || '';
     document.getElementById('edit_teacher_id').value = section.teacher_id || '';
     
-    // Time fields with proper format fallbacks
-    document.getElementById('edit_am_time_in_start').value = section.am_time_in_start || '07:00';
+     document.getElementById('edit_am_time_in_start').value = section.am_time_in_start || '07:00';
     document.getElementById('edit_am_time_in_end').value = section.am_time_in_end || '08:00';
     document.getElementById('edit_am_time_out_start').value = section.am_time_out_start || '11:00';
     document.getElementById('edit_am_time_out_end').value = section.am_time_out_end || '12:00';
@@ -1296,19 +1278,15 @@ function editSection(sectionId) {
     document.getElementById('edit_pm_time_out_start').value = section.pm_time_out_start || '16:00';
     document.getElementById('edit_pm_time_out_end').value = section.pm_time_out_end || '17:00';
     
-    // Show modal
-    new bootstrap.Modal(document.getElementById('editSectionModal')).show();
+     new bootstrap.Modal(document.getElementById('editSectionModal')).show();
 }
 
 function deleteSection(sectionId, sectionName) {
-    // Set form action
-    document.getElementById('deleteSectionForm').action = `/admin/sections/${sectionId}`;
+     document.getElementById('deleteSectionForm').action = `/admin/sections/${sectionId}`;
     
-    // Set section name in modal
-    document.getElementById('deleteSectionName').textContent = sectionName;
+     document.getElementById('deleteSectionName').textContent = sectionName;
     
-    // Show modal
-    new bootstrap.Modal(document.getElementById('deleteSectionModal')).show();
+     new bootstrap.Modal(document.getElementById('deleteSectionModal')).show();
 }
 
 function validateSectionTimes() {
@@ -1321,15 +1299,13 @@ function validateSectionTimes() {
     const pmTimeOutStart = document.getElementById('add_pm_time_out_start').value;
     const pmTimeOutEnd = document.getElementById('add_pm_time_out_end').value;
     
-    // All time fields are required according to controller validation
-    if (!amTimeInStart || !amTimeInEnd || !amTimeOutStart || !amTimeOutEnd ||
+     if (!amTimeInStart || !amTimeInEnd || !amTimeOutStart || !amTimeOutEnd ||
         !pmTimeInStart || !pmTimeInEnd || !pmTimeOutStart || !pmTimeOutEnd) {
         alert('All time fields are required.');
         return false;
     }
     
-    // Validate AM time sequence
-    if (amTimeInStart >= amTimeInEnd) {
+     if (amTimeInStart >= amTimeInEnd) {
         alert('AM Time In Start must be before AM Time In End.');
         return false;
     }
@@ -1342,8 +1318,7 @@ function validateSectionTimes() {
         return false;
     }
     
-    // Validate PM time sequence
-    if (pmTimeInStart >= pmTimeInEnd) {
+     if (pmTimeInStart >= pmTimeInEnd) {
         alert('PM Time In Start must be before PM Time In End.');
         return false;
     }
@@ -1356,8 +1331,7 @@ function validateSectionTimes() {
         return false;
     }
     
-    // Validate AM and PM don't overlap
-    if (amTimeOutEnd >= pmTimeInStart) {
+     if (amTimeOutEnd >= pmTimeInStart) {
         alert('AM Time Out End must be before PM Time In Start.');
         return false;
     }
@@ -1365,19 +1339,16 @@ function validateSectionTimes() {
     return true;
 }
 
-// Form submissions
-document.getElementById('addSectionForm').addEventListener('submit', function(e) {
+ document.getElementById('addSectionForm').addEventListener('submit', function(e) {
     if (!validateSectionTimes()) {
         e.preventDefault();
         return;
     }
     
-    // Form will submit normally if validation passes
-});
+ });
 
 document.getElementById('editSectionForm').addEventListener('submit', function(e) {
-    // Update validation for edit form
-    const amTimeInStart = document.getElementById('edit_am_time_in_start').value;
+     const amTimeInStart = document.getElementById('edit_am_time_in_start').value;
     const amTimeInEnd = document.getElementById('edit_am_time_in_end').value;
     const amTimeOutStart = document.getElementById('edit_am_time_out_start').value;
     const amTimeOutEnd = document.getElementById('edit_am_time_out_end').value;
@@ -1386,16 +1357,14 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
     const pmTimeOutStart = document.getElementById('edit_pm_time_out_start').value;
     const pmTimeOutEnd = document.getElementById('edit_pm_time_out_end').value;
     
-    // All time fields are required according to controller validation
-    if (!amTimeInStart || !amTimeInEnd || !amTimeOutStart || !amTimeOutEnd ||
+     if (!amTimeInStart || !amTimeInEnd || !amTimeOutStart || !amTimeOutEnd ||
         !pmTimeInStart || !pmTimeInEnd || !pmTimeOutStart || !pmTimeOutEnd) {
         alert('All time fields are required.');
         e.preventDefault();
         return;
     }
     
-    // Validate AM time sequence
-    if (amTimeInStart >= amTimeInEnd) {
+     if (amTimeInStart >= amTimeInEnd) {
         alert('AM Time In Start must be before AM Time In End.');
         e.preventDefault();
         return;
@@ -1411,8 +1380,7 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
         return;
     }
     
-    // Validate PM time sequence
-    if (pmTimeInStart >= pmTimeInEnd) {
+     if (pmTimeInStart >= pmTimeInEnd) {
         alert('PM Time In Start must be before PM Time In End.');
         e.preventDefault();
         return;
@@ -1428,20 +1396,16 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
         return;
     }
     
-    // Validate AM and PM don't overlap
-    if (amTimeOutEnd >= pmTimeInStart) {
+     if (amTimeOutEnd >= pmTimeInStart) {
         alert('AM Time Out End must be before PM Time In Start.');
         e.preventDefault();
         return;
     }
     
-    // Form will submit normally if validation passes
-});
+ });
 
-// Add Teacher Form Validation
-document.addEventListener('DOMContentLoaded', function() {
-    // Show modal again if there are validation errors for the add teacher form
-    @if($errors->any() && old('_token'))
+ document.addEventListener('DOMContentLoaded', function() {
+     @if($errors->any() && old('_token'))
         const addTeacherModal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
         addTeacherModal.show();
     @endif
@@ -1449,8 +1413,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const addTeacherForm = document.querySelector('#addTeacherModal form');
     if (addTeacherForm) {
         addTeacherForm.addEventListener('submit', function(e) {
-            // Basic client-side validation
-            const name = document.getElementById('add_name').value.trim();
+             const name = document.getElementById('add_name').value.trim();
             const username = document.getElementById('add_username').value.trim();
             const email = document.getElementById('add_email').value.trim();
             const password = document.getElementById('add_password').value;
@@ -1468,23 +1431,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
             
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 e.preventDefault();
                 alert('Please enter a valid email address.');
                 return false;
             }
             
-            // Username validation
-            if (username.length < 3) {
+             if (username.length < 3) {
                 e.preventDefault();
                 alert('Username must be at least 3 characters long.');
                 return false;
             }
             
-            // Log form data for debugging (remove in production)
-            console.log('Submitting teacher form with data:', {
+             console.log('Submitting teacher form with data:', {
                 name: name,
                 username: username,
                 email: email,
@@ -1494,8 +1454,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 section_id: document.querySelector('input[name="section_id"]:checked')?.value || ''
             });
             
-            // Form will submit normally if validation passes
-            return true;
+             return true;
         });
     }
 });
