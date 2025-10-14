@@ -99,14 +99,68 @@ class AdminController extends Controller
     public function checkSmsStatus()
     {
         try {
-            $isConfigured = config('sms.api_key') && config('sms.sender_id');
-            if ($isConfigured) {
-                return response()->json(['status' => 'online', 'message' => 'SMS gateway configured']);
-            } else {
-                return response()->json(['status' => 'offline', 'message' => 'SMS gateway not configured'], 500);
+            $gatewayUrl = env('SMS_GATEWAY_URL');
+            
+            // If no URL is configured, return offline
+            if (!$gatewayUrl) {
+                return response()->json([
+                    'status' => 'offline', 
+                    'message' => 'SMS gateway URL not configured'
+                ], 500);
             }
+
+            // Use cURL for faster and more reliable connection testing
+            $timeout = env('SMS_TIMEOUT', 3); // Default 3 seconds for faster response
+            
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $gatewayUrl,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_CONNECTTIMEOUT => 2, // 2 seconds connection timeout
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HEADER => true,
+                CURLOPT_NOBODY => true, // HEAD request for faster response
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_USERAGENT => 'QRAttendance-HealthCheck/1.0'
+            ]);
+
+            $startTime = microtime(true);
+            $response = curl_exec($ch);
+            $responseTime = round((microtime(true) - $startTime) * 1000); // Convert to milliseconds
+            
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            // Check if connection was successful (any HTTP response code means server is reachable)
+            if ($response !== false && $httpCode > 0) {
+                $statusMessage = $httpCode == 200 ? 'Online and responding' : 'Reachable (HTTP ' . $httpCode . ')';
+                
+                return response()->json([
+                    'status' => 'online',
+                    'message' => $statusMessage,
+                    'response_time' => $responseTime . 'ms',
+                    'http_code' => $httpCode,
+                    'gateway_url' => $gatewayUrl
+                ]);
+            } else {
+                $errorMessage = $error ?: 'Connection timeout or unreachable';
+                
+                return response()->json([
+                    'status' => 'offline',
+                    'message' => 'SMS gateway unreachable: ' . $errorMessage,
+                    'gateway_url' => $gatewayUrl,
+                    'timeout' => $timeout . 's'
+                ], 500);
+            }
+
         } catch (\Exception $e) {
-            return response()->json(['status' => 'offline', 'message' => 'SMS gateway error'], 500);
+            return response()->json([
+                'status' => 'offline',
+                'message' => 'SMS gateway error: ' . $e->getMessage(),
+                'gateway_url' => env('SMS_GATEWAY_URL', 'Not configured')
+            ], 500);
         }
     }
 

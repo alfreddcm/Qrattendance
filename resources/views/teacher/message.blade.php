@@ -18,21 +18,21 @@
 
 <div class="container mt-4">
      <div class="row mb-4">
-        <div class="col-lg-8">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0"><i class="fas fa-filter me-1"></i>Filters</h6>
                 </div>
                 <div class="card-body">
-                    <form id="filterForm" class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Student</label>
+                    <form id="filterForm" class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label small">Student</label>
                             <select class="form-select form-select-sm" id="studentFilter">
                                 <option value="">All Students</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Status</label>
+                        <div class="col-md-6">
+                            <label class="form-label small">Status</label>
                             <select class="form-select form-select-sm" id="statusFilter">
                                 <option value="">All Status</option>
                                 <option value="pending">Pending</option>
@@ -41,16 +41,16 @@
                                 <option value="failed">Failed</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">From Date</label>
+                        <div class="col-md-6">
+                            <label class="form-label small">From Date</label>
                             <input type="date" class="form-control form-control-sm" id="startDate">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">To Date</label>
+                        <div class="col-md-6">
+                            <label class="form-label small">To Date</label>
                             <input type="date" class="form-control form-control-sm" id="endDate">
                         </div>
-                        <div class="col-12">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="loadMessages()">
+                        <div class="col-12 mt-2">
+                            <button type="button" class="btn btn-primary btn-sm me-1" onclick="loadMessages()">
                                 <i class="fas fa-search me-1"></i>Apply Filters
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
@@ -61,7 +61,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0"><i class="fas fa-chart-bar me-1"></i>SMS Statistics</h6>
@@ -87,29 +87,31 @@
     </div>
 
      <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-primary text-white">
         <div class="row align-items-center">
             <div class="col">
-                <h6 class="mb-0"><i class="fas fa-list me-1"></i>Message History</h6>
+                <h6 class="mb-0 text-white"><i class="fas fa-history me-2"></i>Message History</h6>
+                <!-- Inline SMS Status Display -->
+                <small id="smsStatusDisplay" class="text-white-50 d-block mt-1">
+                    <i class="fas fa-satellite-dish me-1"></i>
+                    <span id="smsStatusText">Checking gateway status...</span>
+                </small>
             </div>
             <div class="col text-end">
                 <div class="d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="loadMessages()" title="Refresh Messages">
+                    <button class="btn btn-light btn-sm" onclick="loadMessages()" title="Refresh message list">
                         <i class="fas fa-sync-alt me-1"></i>Refresh
                     </button>
-                    <button class="btn btn-outline-primary btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()">
-                        <i class="fas fa-signal me-1"></i><span id="checkSmsStatusText">Check SMS Status</span>
+                    <button class="btn btn-success btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()" title="Test SMS Gateway connectivity">
+                        <i class="fas fa-satellite-dish me-1"></i><span id="checkSmsStatusText">Ping Gateway</span>
                         <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
                     </button>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal">
-                        <i class="fas fa-plus me-1"></i>Send SMS
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal" title="Compose new SMS message">
+                        <i class="fas fa-paper-plane me-1"></i>Send SMS
                     </button>
                 </div>
             </div>
         </div>
-
-
-       
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -395,6 +397,129 @@
 
 #studentInfoPanel .small {
     font-size: 0.8rem !important;
+}
+
+/* Enhanced SMS Status Button and Header Styling */
+#checkSmsStatusBtn {
+    position: relative;
+    transition: all 0.3s ease;
+    border-width: 2px;
+    min-width: 140px;
+    font-weight: 600;
+}
+
+#checkSmsStatusBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+#checkSmsStatusBtn:disabled {
+    opacity: 0.7;
+    transform: none;
+}
+
+#checkSmsStatusBtn .fa-satellite-dish {
+    transition: transform 0.3s ease;
+}
+
+#checkSmsStatusBtn:hover .fa-satellite-dish {
+    transform: rotate(10deg) scale(1.1);
+}
+
+/* Header button backgrounds */
+.card-header.bg-primary .btn {
+    border: 2px solid transparent;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-header.bg-primary .btn-light {
+    background-color: rgba(255,255,255,0.9);
+    border-color: rgba(255,255,255,0.3);
+    color: #495057;
+}
+
+.card-header.bg-primary .btn-light:hover {
+    background-color: white;
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-header.bg-primary .btn-success {
+    background-color: #28a745;
+    border-color: #1e7e34;
+    color: white;
+}
+
+.card-header.bg-primary .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-header.bg-primary .btn-warning {
+    background-color: #ffc107;
+    border-color: #e0a800;
+    color: #212529;
+}
+
+.card-header.bg-primary .btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-header.bg-primary .btn-danger {
+    background-color: #dc3545;
+    border-color: #c82333;
+    color: white;
+}
+
+.card-header.bg-primary .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-header.bg-primary .btn-secondary {
+    background-color: #6c757d;
+    border-color: #5a6268;
+    color: white;
+}
+
+/* SMS Status Display in Header */
+#smsStatusDisplay {
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+#smsStatusText {
+    transition: color 0.3s ease;
+}
+
+#smsStatusText .text-success {
+    color: #28a745 !important;
+}
+
+#smsStatusText .text-warning {
+    color: #ffc107 !important;
+}
+
+#smsStatusText .text-danger {
+    color: #dc3545 !important;
+}
+
+#checkSmsStatusSpinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 </style>
 
@@ -855,34 +980,61 @@ function checkMessageStatus(messageId) {
         });
 }
 
-// Test SMS Gateway
-function testSMSGateway() {
+// Test SMS Gateway with button-only status updates
+async function testSMSGateway() {
     const btn = document.getElementById('checkSmsStatusBtn');
     const text = document.getElementById('checkSmsStatusText');
     const spinner = document.getElementById('checkSmsStatusSpinner');
+    const startTime = Date.now();
+    
     btn.disabled = true;
+    btn.classList.remove('btn-success', 'btn-danger', 'btn-warning');
+    btn.classList.add('btn-secondary');
     spinner.classList.remove('d-none');
-    text.textContent = 'Checking...';
-    fetch('/teacher/test-sms-gateway')
-        .then(response => response.json())
-        .then(data => {
-             if (data.status === 'success' && data.reachable === true) {
-                showAlert('SMS working!', 'success');
-            } else if (data.status === 'success' && data.reachable === false) {
-                showAlert('SMS test failed: Gateway not reachable', 'danger');
-            } else {
-                showAlert('SMS test failed contact Admin : ' + (data.message || 'Unknown error'), 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('Error testing SMS gateway contact Admin', 'danger');
-        })
-        .finally(() => {
-            btn.disabled = false;
-            spinner.classList.add('d-none');
-            text.textContent = 'Check SMS Status';
-        });
+    text.textContent = 'Pinging...';
+    
+    try {
+        const response = await fetch('/teacher/system/status/sms');
+        const data = await response.json();
+        const responseTime = Date.now() - startTime;
+        
+        if (data.status === 'online') {
+            const pingTime = data.response_time || responseTime + 'ms';
+            
+            // Success state - button only
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-success');
+            text.textContent = `Online (${pingTime})`;
+            
+            setTimeout(() => {
+                text.textContent = 'Ping Gateway';
+            }, 3000);
+            
+        } else {
+            const pingTime = responseTime + 'ms';
+            
+            // Error state - button only (stays red until manually clicked)
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-danger');
+            text.textContent = `Offline (${pingTime})`;
+            
+            // No auto-reset - stays red until user clicks again
+        }
+    } catch (error) {
+        const responseTime = Date.now() - startTime;
+        
+        // Error state - button only (stays red until manually clicked)
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-danger');
+        text.textContent = `Error (${responseTime}ms)`;
+        
+        // No auto-reset - stays red until user clicks again
+        
+        console.error('SMS Gateway ping failed:', error);
+    } finally {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+    }
 }
 
  function viewMessage(messageId) {
@@ -1091,6 +1243,16 @@ function addSignature() {
      toggleRecipientOptions();
     
      setInterval(loadMessages, 30000);
+     
+     // Pre-load SMS Gateway status on page load (like dashboard)
+     setTimeout(() => {
+         testSMSGateway();
+     }, 1000); // Wait 1 second after page load
+     
+     // Auto-check SMS status every 2 minutes
+     setInterval(() => {
+         testSMSGateway();
+     }, 120000); // 2 minutes = 120,000ms
 });
 </script>
 

@@ -30,8 +30,7 @@ class AndroidSmsGatewayService
     public function sendSms($text, $recipients, $senderId = null, $metadata = [])
     {
         try {
-            // Get sender ID from parameter, config, or default
-            $senderId = $senderId ?? config('sms.sender_id', 'Scan-to-notify');
+             $senderId = $senderId ?? config('sms.sender_id', 'Scan-to-notify');
             
              if (is_string($recipients)) {
                 $recipients = [$recipients];
@@ -41,8 +40,7 @@ class AndroidSmsGatewayService
             foreach ($recipients as $recipient) {
                 $normalizedNumber = $this->normalizePhoneNumber($recipient);
                 if ($this->isValidPhoneNumber($normalizedNumber)) {
-                    // Check rate limit before adding to valid recipients
-                    if ($this->canSendMessage($normalizedNumber)) {
+                     if ($this->canSendMessage($normalizedNumber)) {
                         $validRecipients[] = $normalizedNumber;
                     } else {
                         Log::info('Message rate limited', [
@@ -83,8 +81,7 @@ class AndroidSmsGatewayService
                 $responseData = $response->json();
                 $messageId = $responseData['id'] ?? uniqid('sms_');
                 
-                // Update last sent time for each recipient
-                foreach ($validRecipients as $recipient) {
+                 foreach ($validRecipients as $recipient) {
                     $recipientMetadata = array_merge($metadata, [
                         'message' => $text
                     ]);
@@ -222,26 +219,21 @@ class AndroidSmsGatewayService
  
     protected function normalizePhoneNumber($number)
     {
-        // Remove spaces and dashes
-        $cleaned = preg_replace('/[\s\-]/', '', $number);
+         $cleaned = preg_replace('/[\s\-]/', '', $number);
         
-        // If it's a short code (3-6 digits), return as-is
-        if (preg_match('/^\d{3,6}$/', $cleaned)) {
+         if (preg_match('/^\d{3,6}$/', $cleaned)) {
             return $cleaned;
         }
         
-        // Convert Philippine 09 format to +63 format
-        if (preg_match('/^09(\d{9})$/', $cleaned, $matches)) {
+         if (preg_match('/^09(\d{9})$/', $cleaned, $matches)) {
             return '+639' . $matches[1];
         }
         
-        // If already in +63 format, return as-is
-        if (preg_match('/^\+639\d{9}$/', $cleaned)) {
+         if (preg_match('/^\+639\d{9}$/', $cleaned)) {
             return $cleaned;
         }
         
-        // Return original number if no pattern matches
-        return $number;
+         return $number;
     }
 
   
@@ -287,21 +279,17 @@ class AndroidSmsGatewayService
         }
     }
 
-    /**
-     * Check if a message can be sent to a specific number based on rate limiting
-     */
+   
     protected function canSendMessage($number)
     {
-        // If rate limiting is disabled, always allow
-        if (!config('sms.enable_rate_limiting', true)) {
+         if (!config('sms.enable_rate_limiting', true)) {
             return true;
         }
 
         $delaySeconds = config('sms.message_delay_seconds', 60);
         $cutoffTime = Carbon::now()->subSeconds($delaySeconds);
 
-        // Check if there's a recent message to this number
-        $recentMessage = OutboundMessage::where('contact_number', $number)
+         $recentMessage = OutboundMessage::where('contact_number', $number)
             ->where('last_sent_at', '>', $cutoffTime)
             ->orderBy('last_sent_at', 'desc')
             ->first();
@@ -358,22 +346,19 @@ class AndroidSmsGatewayService
     {
         $now = Carbon::now();
         
-        // Try to find an existing recent record to update
-        $recentMessage = OutboundMessage::where('contact_number', $number)
+         $recentMessage = OutboundMessage::where('contact_number', $number)
             ->orderBy('created_at', 'desc')
             ->first();
 
         if ($recentMessage && $recentMessage->created_at->diffInMinutes($now) < 5) {
-            // Update existing recent message
-            $recentMessage->update([
+             $recentMessage->update([
                 'last_sent_at' => $now,
                 'message_id' => $messageId ?: $recentMessage->message_id,
                 'status' => $status
             ]);
         } else {
-            // Create new tracking record
-            $messageData = array_merge([
-                'teacher_id' => auth()->id() ?? 1, // Fallback to system user
+             $messageData = array_merge([
+                'teacher_id' => auth()->id() ?? 1,  
                 'contact_number' => $number,
                 'message_id' => $messageId,
                 'status' => $status,

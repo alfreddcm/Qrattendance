@@ -1,0 +1,613 @@
+/* Teacher Attendance Live Page Styles */
+.teacher-attendance-live {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Header Section */
+.live-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 20px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.school-logo .logo-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.logo-placeholder {
+    width: 80px;
+    height: 80px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #666;
+}
+
+.school-info h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.school-info p {
+    font-size: 1rem;
+    color: #7f8c8d;
+    margin: 5px 0 0 0;
+}
+
+.header-center {
+    text-align: center;
+}
+
+.header-center h2 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.header-center p {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin: 5px 0 0 0;
+}
+
+.header-right {
+    text-align: right;
+}
+
+.live-clock {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.live-clock .time {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.live-clock .date {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Main Content Grid */
+.live-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    padding: 0 30px;
+    margin-bottom: 20px;
+}
+
+/* Student Display Panel */
+.student-display-panel {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+.student-display-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.student-display-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #27ae60;
+}
+
+.student-card-display {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.waiting-state {
+    text-align: center;
+}
+
+.student-photo-placeholder {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.student-info h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+}
+
+.student-info p {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin: 0 0 30px 0;
+}
+
+.student-details {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.detail-row .value {
+    font-weight: 500;
+    color: #7f8c8d;
+}
+
+/* Control Panel */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.scanner-controls,
+.time-periods-panel,
+.session-info-panel {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.scanner-controls h4,
+.time-periods-panel h4,
+.session-info-panel h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Scanner Toggle */
+.scanner-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #ecf0f1;
+    background: white;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.toggle-btn:hover:not(.active) {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+/* USB Scanner Input */
+.usb-scanner-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ecf0f1;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    transition: border-color 0.3s ease;
+}
+
+.usb-scanner-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.scanner-status {
+    font-size: 0.9rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Webcam Container */
+.webcam-container {
+    text-align: center;
+}
+
+#qr-reader {
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.camera-controls {
+    text-align: center;
+}
+
+/* Time Periods */
+.periods-list {
+    margin-bottom: 15px;
+}
+
+.period-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.period-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.period-item.inactive {
+    background: #f8f9fa;
+    color: #7f8c8d;
+}
+
+.period-label {
+    font-weight: 600;
+}
+
+.period-time {
+    font-size: 0.9rem;
+}
+
+.period-status {
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.period-status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.period-status.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Session Information */
+.session-details {
+    margin-bottom: 20px;
+}
+
+.session-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.session-actions .btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Recent Attendance Panel */
+.recent-attendance-panel {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin: 0 30px 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.attendance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.attendance-header h4 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.attendance-count {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Attendance Grid */
+.attendance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.attendance-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.attendance-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-color: #667eea;
+}
+
+.student-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.student-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.attendance-card .student-info {
+    flex: 1;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 3px;
+}
+
+.student-section {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.time-badge {
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.time-badge.time-in {
+    background: #d4edda;
+    color: #155724;
+}
+
+.time-badge.time-out {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.no-attendance {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.no-attendance i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .live-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .scanner-controls,
+    .time-periods-panel,
+    .session-info-panel {
+        flex: 1;
+        min-width: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .live-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .header-left,
+    .header-center,
+    .header-right {
+        width: 100%;
+    }
+    
+    .live-content {
+        padding: 0 15px;
+    }
+    
+    .recent-attendance-panel {
+        margin: 0 15px 30px;
+        padding: 20px;
+    }
+    
+    .attendance-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-panel {
+        flex-direction: column;
+    }
+    
+    .session-actions {
+        flex-direction: column;
+    }
+}

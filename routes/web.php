@@ -68,8 +68,9 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
 
     Route::get('/message', [TeacherController::class, 'message'])->name('teacher.message');
     Route::get('/attendance', [AttendanceAnalyticsController::class, 'attendanceToday'])->name('teacher.attendance');
+    Route::get('/attendance/live', [App\Http\Controllers\AttendanceSessionController::class, 'teacherAttendanceLive'])->name('teacher.attendance.live');
+    Route::post('/attendance/live/qr-verify', [App\Http\Controllers\AttendanceSessionController::class, 'teacherQrVerify'])->name('teacher.attendance.live.verify');
     
-    // New Rewritten Analytics Routes - Chart.js JSON API Endpoints
     Route::get('/analytics/statistics', [AttendanceAnalyticsController::class, 'statistics'])->name('teacher.analytics.statistics');
     Route::get('/analytics/summary-stats', [AttendanceAnalyticsController::class, 'getSummaryStats'])->name('teacher.analytics.summary');
     Route::get('/analytics/attendance-trend', [AttendanceAnalyticsController::class, 'getAttendanceTrend'])->name('teacher.analytics.trend');
@@ -82,7 +83,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/report', [ReportController::class, 'index'])->name('teacher.report');
     Route::post('/attendance/export/csv', [ReportController::class, 'exportCsv'])->name('teacher.attendance.export.csv');
     
-    // SF2 Routes
+ 
     Route::post('/sf2/generate', [ReportController::class, 'generateSF2'])->name('teacher.sf2.generate');
     Route::post('/sf2/generate-pdf', [ReportController::class, 'generateSF2PDF'])->name('teacher.sf2.generate.pdf');
     Route::get('/sf2/options', [ReportController::class, 'getSF2Options'])->name('teacher.sf2.options');
@@ -94,13 +95,13 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     
     Route::post('/qr-verify', [AttendanceController::class, 'verifyQrAndRecordAttendance'])->name('teacher.qr.verify');
     
-    // SMS/Message Routes
     Route::post('/send-sms', [MessageApiController::class, 'sendSms'])->name('teacher.send.sms');
     Route::get('/outbound-messages', [MessageApiController::class, 'getOutboundMessages'])->name('teacher.outbound.messages');
     Route::get('/message-status/{id}', [MessageApiController::class, 'getMessageStatus'])->name('teacher.message.status');
     Route::post('/check-rate-limit', [MessageApiController::class, 'checkRateLimit'])->name('teacher.check.rate.limit');
     Route::get('/test-rate-limit', [MessageApiController::class, 'testRateLimit'])->name('teacher.test.rate.limit');
     Route::get('/test-sms-gateway', [MessageApiController::class, 'testGateway'])->name('teacher.test.gateway');
+    Route::get('/system/status/sms', [AdminController::class, 'checkSmsStatus'])->name('teacher.system.status.sms');
     Route::get('/get-students', [StudentManagementController::class, 'getStudentsForApi'])->name('teacher.get.students');
     
     // Attendance Session Routes
@@ -111,7 +112,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
 
 });
 
-    // Admin Routes
+    
 Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/dashboard/stats', [AdminController::class, 'getDashboardStats'])->name('admin.dashboard.stats');
@@ -239,6 +240,7 @@ Route::get('/attendance/{token}/status', [App\Http\Controllers\AttendanceSession
 // API Routes
 Route::get('/api/semester/time-sessions', [App\Http\Controllers\AttendanceSessionController::class, 'getTimeSessions']);
 Route::get('/api/teacher-sections/{teacherId}', [App\Http\Controllers\AdminController::class, 'getTeacherSections']);
+Route::get('/api/student-attendance-today/{studentId}', [AttendanceController::class, 'getStudentAttendanceToday']);
 
 // Attendance Forecasting
 Route::get('/teacher/attendance-forecast', [App\Http\Controllers\AttendanceForecastController::class, 'index'])->name('teacher.attendance.forecast');

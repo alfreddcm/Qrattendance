@@ -484,6 +484,101 @@ class AttendanceController extends Controller
         $attendance->save();
     }
 
+    /**
+     * Get student's attendance records for today with period interpretation
+     */
+    public function getStudentAttendanceToday($studentId)
+    {
+        try {
+            $student = Student::find($studentId);
+            if (!$student) {
+                return response()->json(['success' => false, 'message' => 'Student not found.']);
+            }
+
+            $semester = Semester::find($student->semester_id);
+            if (!$semester) {
+                return response()->json(['success' => false, 'message' => 'No semester found.']);
+            }
+
+            // Get today's attendance records for this student
+            $todayAttendance = Attendance::where('student_id', $studentId)
+                ->whereDate('created_at', Carbon::today('Asia/Manila'))
+                ->get();
+
+            // Define time periods
+            $timeSchedules = [];
+            if ($semester->am_time_in_start && $semester->am_time_in_end) {
+                $timeSchedules['am_time_in'] = [
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end)
+                ];
+            }
+            if ($semester->am_time_out_start && $semester->am_time_out_end) {
+                $timeSchedules['am_time_out'] = [
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_end)
+                ];
+            }
+            if ($semester->pm_time_in_start && $semester->pm_time_in_end) {
+                $timeSchedules['pm_time_in'] = [
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_end)
+                ];
+            }
+            if ($semester->pm_time_out_start && $semester->pm_time_out_end) {
+                $timeSchedules['pm_time_out'] = [
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_end)
+                ];
+            }
+
+            // Check which periods have records
+            $records = [
+                'am-in' => false,
+                'am-out' => false,
+                'pm-in' => false,
+                'pm-out' => false
+            ];
+
+            foreach ($todayAttendance as $attendance) {
+                $recordTime = $attendance->time_in ?: $attendance->time_out;
+                if (!$recordTime) continue;
+
+                foreach ($timeSchedules as $periodType => $schedule) {
+                    if ($recordTime->between($schedule['start_time'], $schedule['end_time'])) {
+                        switch ($periodType) {
+                            case 'am_time_in':
+                                $records['am-in'] = true;
+                                break;
+                            case 'am_time_out':
+                                $records['am-out'] = true;
+                                break;
+                            case 'pm_time_in':
+                                $records['pm-in'] = true;
+                                break;
+                            case 'pm_time_out':
+                                $records['pm-out'] = true;
+                                break;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'records' => $records
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error fetching student attendance today', [
+                'student_id' => $studentId,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Error fetching attendance records.']);
+        }
+    }
+
  
     private function timeToMinutes($time)
     {

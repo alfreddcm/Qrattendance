@@ -339,10 +339,7 @@
             padding: 16px 20px;
         }
 
-        .card-body {
-            color: #374151;
-            padding: 20px;
-        }
+ 
 
         .table {
             background: #fff;

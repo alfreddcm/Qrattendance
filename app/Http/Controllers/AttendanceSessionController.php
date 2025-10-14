@@ -361,7 +361,7 @@ class AttendanceSessionController extends Controller
 
             
             $currentHour = $now->hour;
-            if ($currentHour < 5 || $currentHour >= 18) {
+            if ($currentHour < 5 || $currentHour >= 24) {
                 Log::info('Attendance session accessed outside allowed hours', [
                     'session_id' => $session->id,
                     'current_hour' => $currentHour,
@@ -1116,5 +1116,309 @@ class AttendanceSessionController extends Controller
             'start_date' => $semester->start_date,
             'end_date' => $semester->end_date,
         ]);
+    }
+
+    /**
+     * Teacher-only attendance page (no token required)
+     */
+    public function teacherAttendanceLive(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user || !$user->school_id) {
+                return redirect()->route('teacher.dashboard')->with('error', 'You are not assigned to a school. Please contact administrator.');
+            }
+
+            $today = Carbon::now('Asia/Manila');
+            $currentSemester = Semester::where('school_id', $user->school_id)
+                ->current($today->format('Y-m-d'))
+                ->first();
+
+            if (!$currentSemester) {
+                return redirect()->route('teacher.dashboard')->with('error', 'No active semester found for today. Please contact administrator.');
+            }
+
+            // Create or get today's session for this teacher
+            $session = AttendanceSession::where('teacher_id', $user->id)
+                ->where('semester_id', $currentSemester->id)
+                ->whereDate('started_at', $today)
+                ->first();
+
+            if (!$session) {
+                // Create a new session for the teacher
+                $session = AttendanceSession::create([
+                    'teacher_id' => $user->id,
+                    'semester_id' => $currentSemester->id,
+                    'session_name' => 'Daily Session - ' . $today->format('M d, Y'),
+                    'session_token' => AttendanceSession::generateToken(),
+                    'status' => 'active',
+                    'started_at' => $today,
+                    'access_count' => 0
+                ]);
+            }
+
+            $semester = $session->semester;
+            $students = Student::with('user')
+                ->where('user_id', $session->teacher_id)
+                ->where('semester_id', $session->semester_id)
+                ->orderBy('name')
+                ->get();
+
+            $recentAttendance = Attendance::with(['student', 'student.user'])
+                ->whereHas('student', function($query) use ($session) {
+                    $query->where('user_id', $session->teacher_id)
+                          ->where('semester_id', $session->semester_id);
+                })
+                ->whereDate('created_at', Carbon::today('Asia/Manila'))
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            $periodInfo = $this->getCurrentPeriodInfo($semester);
+
+            Log::info('Teacher attendance live page accessed', [
+                'teacher_id' => $user->id,
+                'session_id' => $session->id,
+                'session_name' => $session->session_name,
+                'period_info' => $periodInfo,
+            ]);
+
+            return view('teacher.attendance-live', [
+                'session' => $session,
+                'semester' => $semester,
+                'students' => $students,
+                'teacher_name' => $user->name,
+                'recentAttendance' => $recentAttendance,
+                'period_info' => $periodInfo,
+                'current_time' => Carbon::now('Asia/Manila')->timestamp * 1000,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error accessing teacher attendance live page', [
+                'teacher_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('teacher.dashboard')->with('error', 'An error occurred while loading the attendance page.');
+        }
+    }
+
+    /**
+     * Teacher QR verification (for teacher attendance live page)
+     */
+    public function teacherQrVerify(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $qrData = $request->input('qr_data');
+            
+            if (!$qrData) {
+                return response()->json(['success' => false, 'message' => 'No QR data provided'], 400);
+            }
+
+            // Get today's session for this teacher
+            $today = Carbon::now('Asia/Manila');
+            $session = AttendanceSession::where('teacher_id', $user->id)
+                ->whereDate('started_at', $today)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$session) {
+                return response()->json(['success' => false, 'message' => 'No active session found'], 404);
+            }
+
+            // Use the existing QR verification logic from publicQrVerify
+            return $this->processQrVerification($session, $qrData, $request);
+
+        } catch (\Exception $e) {
+            Log::error('Error in teacher QR verification', [
+                'teacher_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'qr_data' => $request->input('qr_data')
+            ]);
+
+            return response()->json(['success' => false, 'message' => 'Verification failed'], 500);
+        }
+    }
+
+    /**
+     * Common QR verification processing for both public and teacher access
+     */
+    private function processQrVerification($session, $qrData, $request)
+    {
+        try {
+            Log::info('QR verification started', [
+                'session_id' => $session->id,
+                'qr_data' => $qrData,
+                'ip_address' => request()->ip(),
+                'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
+            ]);
+
+            // Validate QR data format
+            if (empty($qrData) || strlen($qrData) < 3) {
+                Log::warning('Invalid QR data format', [
+                    'session_id' => $session->id,
+                    'qr_data' => $qrData,
+                    'qr_data_length' => strlen($qrData),
+                    'ip_address' => request()->ip()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid QR code format.'
+                ]);
+            }
+
+            // Find student
+            $student = Student::with('user') 
+                ->where('user_id', $session->teacher_id)
+                ->where('semester_id', $session->semester_id)
+                ->where('stud_code', $qrData)
+                ->whereNotNull('stud_code')
+                ->where('stud_code', '!=', '')
+                ->first();
+
+            if (!$student) {
+                Log::warning('Student not found with stud_code', [
+                    'session_id' => $session->id,
+                    'teacher_id' => $session->teacher_id,
+                    'semester_id' => $session->semester_id,
+                    'stud_code' => $qrData,
+                    'ip_address' => request()->ip()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student not found. Please check your QR code or contact your teacher.'
+                ]);
+            }
+
+            Log::info('Student found successfully', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'student_section' => $student->user ? $student->user->section_name : 'N/A',
+                'ip_address' => request()->ip()
+            ]);
+
+            // Verify student info
+            if (!$this->verifyStudentInfo($student, $session)) {
+                Log::warning('Student verification failed', [
+                    'session_id' => $session->id,
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'ip_address' => request()->ip()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student verification failed. Please contact your teacher.'
+                ]);
+            }
+
+            // Get period info (always allow for teacher access)
+            $periodInfo = $this->getCurrentPeriodInfo($session->semester);
+            
+            // For teacher access, we can be more flexible with time restrictions
+            $isTeacherAccess = Auth::check() && Auth::id() === $session->teacher_id;
+            
+            if (!$isTeacherAccess && !$periodInfo['allowed']) {
+                $message = 'Attendance recording is only allowed during scheduled periods.';
+                if (isset($periodInfo['next_period'])) {
+                    $nextPeriod = $periodInfo['next_period'];
+                    $message .= " Next period: {$nextPeriod['period_name']} at {$nextPeriod['start_time']}.";
+                }
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'status' => 'outside_recording_period',
+                    'student' => [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                        'id_no' => $student->id_no ?? $student->id,
+                        'section' => $student->user ? $student->user->section_name : 'N/A',
+                        'picture' => $student->picture
+                    ],
+                    'period_info' => $periodInfo
+                ]);
+            }
+
+            // Process attendance recording
+            $attendanceController = new AttendanceController();
+            $tempRequest = new Request();
+            $tempRequest->merge([
+                'qr_data' => $qrData,
+                'scanner_type' => $request->scanner_type ?? 'Daily Session - ' . ($periodInfo['period_name'] ?? 'Manual')
+            ]);
+
+            // Temporarily login as teacher if not already authenticated
+            $wasLoggedIn = Auth::check();
+            if (!$wasLoggedIn) {
+                Auth::loginUsingId($session->teacher_id);
+            }
+
+            $result = $attendanceController->verifyQrAndRecordAttendance($tempRequest);
+            
+            if (!$wasLoggedIn) {
+                Auth::logout();
+            }
+
+            $responseData = json_decode($result->getContent(), true);
+            
+            // Enhance response with additional info
+            if ($responseData['success']) {
+                $responseData['student'] = [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'id_no' => $student->id_no ?? $student->id,
+                    'section' => $student->user ? $student->user->section_name : 'N/A',
+                    'picture' => $student->picture
+                ];
+                
+                $responseData['time'] = Carbon::now('Asia/Manila')->toISOString();
+                $responseData['attendance_type'] = $responseData['status'] ?? 'time_in';
+                
+                // Send SMS notification if attendance was recorded
+                if (!empty($responseData['attendance_recorded'])) {
+                    $this->sendAttendanceNotification(
+                        $student, 
+                        $responseData['attendance_type'], 
+                        Carbon::now('Asia/Manila')->format('g:i A'), 
+                        $session
+                    );
+                }
+
+                // Increment session attendance count
+                $session->increment('attendance_count');
+            }
+
+            Log::info('QR verification completed', [
+                'session_id' => $session->id,
+                'student_id' => $student->id,
+                'success' => $responseData['success'],
+                'ip_address' => request()->ip()
+            ]);
+
+            return response()->json($responseData);
+
+        } catch (\Exception $e) {
+            Log::error('Error in QR verification processing', [
+                'session_id' => $session->id,
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'qr_data' => $qrData,
+                'ip_address' => request()->ip()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing attendance.'
+            ], 500);
+        }
     }
 }

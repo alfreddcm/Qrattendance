@@ -17,8 +17,7 @@
 
 <div class="container-fluid">
 
-    <!-- Overview Cards with Links -->
-    <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
+     <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
             <div class="col-lg-3 col-md-6">
                 <a href="{{ route('admin.manage-students') }}" class="text-decoration-none">
                     <div class="card stat-card text-white bg-primary h-100">
@@ -115,11 +114,9 @@
             </div>
         </div>
 
-        <!-- System Status Module & Recent Attendance -->
-        <div class="row g-3">
+         <div class="row g-3">
             <div class="col-lg-4">
-                <!-- System Status -->
-                <div class="card mb-3">
+                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="fas fa-heartbeat me-1"></i>System Status</span>
                         <button class="btn btn-sm btn-outline-primary" onclick="checkSystemStatus()">
@@ -129,25 +126,19 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span>Database</span>
-                            <span class="badge" id="databaseStatus">
-                                <i class="fas fa-spinner fa-spin"></i> Checking...
-                            </span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>QR Scanner</span>
-                            <span class="badge" id="qrScannerStatus">
+                            <span class="badge bg-secondary text-white" id="databaseStatus">
                                 <i class="fas fa-spinner fa-spin"></i> Checking...
                             </span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span>SMS Gateway</span>
-                            <span class="badge" id="smsGatewayStatus">
+                            <span class="badge bg-secondary text-white" id="smsGatewayStatus">
                                 <i class="fas fa-spinner fa-spin"></i> Checking...
                             </span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span>File Storage</span>
-                            <span class="badge" id="fileStorageStatus">
+                            <span class="badge bg-secondary text-white" id="fileStorageStatus">
                                 <i class="fas fa-spinner fa-spin"></i> Checking...
                             </span>
                         </div>
@@ -200,28 +191,73 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <small>
-                                                    @if($attendance->am_time_in)
-                                                        <div><i class="fas fa-sign-in-alt text-success"></i> AM In: {{ \Carbon\Carbon::parse($attendance->am_time_in)->format('h:i A') }}</div>
+                                                <div class="time-records">
+                                                    @if($attendance->time_in_am)
+                                                        <div class="time-entry mb-1">
+                                                            <span class="badge bg-success text-white">
+                                                                <i class="fas fa-sun me-1"></i>AM In: {{ \Carbon\Carbon::parse($attendance->time_in_am)->format('h:i A') }}
+                                                            </span>
+                                                        </div>
                                                     @endif
-                                                    @if($attendance->am_time_out)
-                                                        <div><i class="fas fa-sign-out-alt text-primary"></i> AM Out: {{ \Carbon\Carbon::parse($attendance->am_time_out)->format('h:i A') }}</div>
+                                                    @if($attendance->time_out_am)
+                                                        <div class="time-entry mb-1">
+                                                            <span class="badge bg-info text-white">
+                                                                <i class="fas fa-sign-out-alt me-1"></i>AM Out: {{ \Carbon\Carbon::parse($attendance->time_out_am)->format('h:i A') }}
+                                                            </span>
+                                                        </div>
                                                     @endif
-                                                    @if($attendance->pm_time_in)
-                                                        <div><i class="fas fa-sign-in-alt text-success"></i> PM In: {{ \Carbon\Carbon::parse($attendance->pm_time_in)->format('h:i A') }}</div>
+                                                    @if($attendance->time_in_pm)
+                                                        <div class="time-entry mb-1">
+                                                            <span class="badge bg-warning text-white">
+                                                                <i class="fas fa-moon me-1"></i>PM In: {{ \Carbon\Carbon::parse($attendance->time_in_pm)->format('h:i A') }}
+                                                            </span>
+                                                        </div>
                                                     @endif
-                                                    @if($attendance->pm_time_out)
-                                                        <div><i class="fas fa-sign-out-alt text-danger"></i> PM Out: {{ \Carbon\Carbon::parse($attendance->pm_time_out)->format('h:i A') }}</div>
+                                                    @if($attendance->time_out_pm)
+                                                        <div class="time-entry mb-1">
+                                                            <span class="badge bg-danger text-white">
+                                                                <i class="fas fa-sign-out-alt me-1"></i>PM Out: {{ \Carbon\Carbon::parse($attendance->time_out_pm)->format('h:i A') }}
+                                                            </span>
+                                                        </div>
                                                     @endif
-                                                </small>
+                                                    @if(!$attendance->time_in_am && !$attendance->time_out_am && !$attendance->time_in_pm && !$attendance->time_out_pm)
+                                                        <span class="badge bg-secondary text-white">
+                                                            <i class="fas fa-question me-1"></i>No Records
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td>
                                                 @php
-                                                    $isComplete = $attendance->am_time_in && $attendance->am_time_out && $attendance->pm_time_in && $attendance->pm_time_out;
+                                                    $hasAMIn = $attendance->time_in_am;
+                                                    $hasAMOut = $attendance->time_out_am;
+                                                    $hasPMIn = $attendance->time_in_pm;
+                                                    $hasPMOut = $attendance->time_out_pm;
+                                                    $totalEntries = ($hasAMIn ? 1 : 0) + ($hasAMOut ? 1 : 0) + ($hasPMIn ? 1 : 0) + ($hasPMOut ? 1 : 0);
+                                                    
+                                                    if ($totalEntries === 4) {
+                                                        $statusClass = 'bg-success';
+                                                        $statusText = 'Complete';
+                                                        $statusIcon = 'fas fa-check-circle';
+                                                    } elseif ($totalEntries >= 2) {
+                                                        $statusClass = 'bg-warning';
+                                                        $statusText = 'Partial';
+                                                        $statusIcon = 'fas fa-clock';
+                                                    } elseif ($totalEntries === 1) {
+                                                        $statusClass = 'bg-info';
+                                                        $statusText = 'Started';
+                                                        $statusIcon = 'fas fa-play';
+                                                    } else {
+                                                        $statusClass = 'bg-secondary';
+                                                        $statusText = 'No Records';
+                                                        $statusIcon = 'fas fa-question';
+                                                    }
                                                 @endphp
-                                                <span class="badge {{ $isComplete ? 'bg-success' : 'bg-warning' }}">
-                                                    {{ $isComplete ? 'Complete' : 'Partial' }}
+                                                <span class="badge {{ $statusClass }} text-white">
+                                                    <i class="{{ $statusIcon }} me-1"></i>{{ $statusText }}
                                                 </span>
+                                                <br>
+                                                <small class="text-muted">{{ $totalEntries }}/4 entries</small>
                                             </td>
                                         </tr>
                                         @endforeach
@@ -254,87 +290,106 @@ function refreshDashboard() {
 // System Status Check Functions
 async function checkSystemStatus() {
     checkDatabaseStatus();
-    checkQRScannerStatus();  
     checkSMSGatewayStatus();
     checkFileStorageStatus();
 }
 
 async function checkDatabaseStatus() {
     try {
+        const statusElement = document.getElementById('databaseStatus');
+        statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        statusElement.className = 'badge bg-secondary';
+        
         const response = await fetch('{{ route("admin.system.status.database") }}');
         const data = await response.json();
-        const statusElement = document.getElementById('databaseStatus');
         
         if (data.status === 'online') {
-            statusElement.innerHTML = 'Online';
-            statusElement.className = 'badge bg-success';
+            statusElement.innerHTML = '<i class="fas fa-check-circle me-1"></i>Online';
+            statusElement.className = 'badge bg-success text-white';
         } else {
-            statusElement.innerHTML = 'Offline';
-            statusElement.className = 'badge bg-danger';
+            statusElement.innerHTML = '<i class="fas fa-times-circle me-1"></i>Offline';
+            statusElement.className = 'badge bg-danger text-white';
         }
     } catch (error) {
         const statusElement = document.getElementById('databaseStatus');
-        statusElement.innerHTML = 'Error';
-        statusElement.className = 'badge bg-danger';
-    }
-}
-
-async function checkQRScannerStatus() {
-    try {
-        // Check if camera/scanner is available
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            const statusElement = document.getElementById('qrScannerStatus');
-            statusElement.innerHTML = 'Available';
-            statusElement.className = 'badge bg-success';
-        } else {
-            const statusElement = document.getElementById('qrScannerStatus');
-            statusElement.innerHTML = 'Not Available';
-            statusElement.className = 'badge bg-warning';
-        }
-    } catch (error) {
-        const statusElement = document.getElementById('qrScannerStatus');
-        statusElement.innerHTML = 'Error';
-        statusElement.className = 'badge bg-danger';
+        statusElement.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Error';
+        statusElement.className = 'badge bg-danger text-white';
+        console.error('Database status check failed:', error);
     }
 }
 
 async function checkSMSGatewayStatus() {
     try {
+        const statusElement = document.getElementById('smsGatewayStatus');
+        statusElement.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> Pinging...';
+        statusElement.className = 'badge bg-secondary text-white';
+        
         const response = await fetch('{{ route("admin.system.status.sms") }}');
         const data = await response.json();
-        const statusElement = document.getElementById('smsGatewayStatus');
         
-        if (data.status === 'online') {
-            statusElement.innerHTML = 'Active';
-            statusElement.className = 'badge bg-success';
+        if (response.ok && data.status === 'online') {
+            const responseTime = data.response_time || 'N/A';
+            const httpCode = data.http_code || '';
+            
+            statusElement.innerHTML = `<i class="fas fa-signal me-1"></i>Online`;
+            statusElement.className = 'badge bg-success text-white';
+            
+            // Add detailed tooltip with all information
+            statusElement.title = `SMS Gateway Status: ${data.message}
+Gateway URL: ${data.gateway_url}
+Response Time: ${responseTime}
+HTTP Code: ${httpCode}
+Last Checked: ${new Date().toLocaleTimeString()}`;
+            
         } else {
-            statusElement.innerHTML = 'Limited';
-            statusElement.className = 'badge bg-warning';
+            statusElement.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Offline';
+            statusElement.className = 'badge bg-danger text-white';
+            
+            // Add tooltip with error details
+            statusElement.title = `SMS Gateway Error: ${data.message}
+Gateway URL: ${data.gateway_url || 'Not configured'}
+Timeout: ${data.timeout || 'N/A'}
+Last Checked: ${new Date().toLocaleTimeString()}`;
         }
+        
+        // Log the result for debugging
+        console.log('SMS Gateway Status:', data);
+        
     } catch (error) {
         const statusElement = document.getElementById('smsGatewayStatus');
-        statusElement.innerHTML = 'Offline';
-        statusElement.className = 'badge bg-danger';
+        statusElement.innerHTML = '<i class="fas fa-times-circle me-1"></i>Error';
+        statusElement.className = 'badge bg-danger text-white';
+        statusElement.title = `Network error occurred while pinging SMS gateway
+Error: ${error.message}
+Last Checked: ${new Date().toLocaleTimeString()}`;
+        console.error('SMS Gateway ping failed:', error);
     }
 }
 
 async function checkFileStorageStatus() {
     try {
+        const statusElement = document.getElementById('fileStorageStatus');
+        statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        statusElement.className = 'badge bg-secondary';
+        
         const response = await fetch('{{ route("admin.system.status.storage") }}');
         const data = await response.json();
-        const statusElement = document.getElementById('fileStorageStatus');
         
         if (data.status === 'online') {
-            statusElement.innerHTML = 'Available';
-            statusElement.className = 'badge bg-success';
+            statusElement.innerHTML = '<i class="fas fa-hdd me-1"></i>Available';
+            statusElement.className = 'badge bg-success text-white';
+            if (data.usage) {
+                statusElement.title = `Storage Usage: ${data.usage}`;
+            }
         } else {
-            statusElement.innerHTML = 'Limited';
-            statusElement.className = 'badge bg-warning';
+            statusElement.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Limited';
+            statusElement.className = 'badge bg-warning text-white';
         }
     } catch (error) {
         const statusElement = document.getElementById('fileStorageStatus');
-        statusElement.innerHTML = 'Error';
-        statusElement.className = 'badge bg-danger';
+        statusElement.innerHTML = '<i class="fas fa-times-circle me-1"></i>Error';
+        statusElement.className = 'badge bg-danger text-white';
+        console.error('File Storage status check failed:', error);
     }
 }
 
@@ -409,15 +464,237 @@ setInterval(function() {
             }
         })
         .catch(error => console.error('Error updating stats:', error));
-}, 300000); // 5 minutes
+}, 300000); 
 
-// Initialize system status check on page load
-document.addEventListener('DOMContentLoaded', function() {
+ document.addEventListener('DOMContentLoaded', function() {
     checkSystemStatus();
     
-    // Auto-check system status every 2 minutes
-    setInterval(checkSystemStatus, 120000);
+     setInterval(checkSystemStatus, 120000);
 });
 </script>
+
+<style>
+ .stat-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: none;
+    border-radius: 12px;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.stat-card .card-body {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card .card-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+/* Time Records Styling */
+.time-records {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.time-entry .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Enhanced System Status Badges */
+.badge {
+    transition: all 0.3s ease;
+    cursor: help;
+    position: relative;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Tooltip Styling */
+.badge[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0,0,0,0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: pre-line;
+    z-index: 1000;
+    min-width: 200px;
+    text-align: left;
+    line-height: 1.4;
+}
+
+.badge[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0,0,0,0.9);
+    z-index: 1000;
+}
+
+/* SMS Gateway Specific Styling */
+#smsGatewayStatus {
+    min-width: 80px;
+    font-weight: 600;
+}
+
+/* Pulsing Animation for Checking States */
+@keyframes pulse-check {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.02); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.badge .fa-satellite-dish {
+    animation: pulse-check 1.5s ease-in-out infinite;
+}
+
+/* Status Color Indicators */
+.badge.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.badge.bg-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.badge.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #212529 !important;
+}
+
+.badge.bg-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #545b62 100%) !important;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* System Status Card */
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+/* Recent Attendance Table */
+.table-hover tbody tr:hover {
+    background-color: rgba(0,123,255,0.05);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Responsive Badge Text */
+@media (max-width: 768px) {
+    .time-entry .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        min-width: 70px;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.badge .fa-spinner {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Card Header Icons */
+.card-header i {
+    margin-right: 8px;
+    opacity: 0.9;
+}
+
+/* Progress Bars in Stat Cards */
+.progress {
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 2px;
+}
+
+.progress-bar {
+    background-color: rgba(255,255,255,0.8) !important;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+
+/* Enhanced Table Styling */
+.table th {
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+    border-color: #f1f3f4;
+}
+
+/* Button Enhancements */
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+
+/* Badge Color Variations for Time Entries */
+.badge.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+}
+
+.badge.bg-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%) !important;
+}
+
+.badge.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+}
+
+.badge.bg-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%) !important;
+}
+
+.badge.bg-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+}
+</style>
 
 @endsection

@@ -76,7 +76,9 @@ class AttendanceAnalyticsController extends Controller
         }
         
          if ($sectionFilter) {
-            $studentsQuery->where('section_id', $sectionFilter);
+            $studentsQuery->whereHas('section', function($q) use ($sectionFilter) {
+                $q->where('name', $sectionFilter);
+            });
         }
         
         $students = $studentsQuery->with(['section', 'attendances' => function($q) use ($today) {
@@ -131,7 +133,8 @@ class AttendanceAnalyticsController extends Controller
             'totalAbsent', 
             'totalStudents',
             'attendanceList',
-            'search'
+            'search',
+            'sectionFilter'
         ));
     }
 

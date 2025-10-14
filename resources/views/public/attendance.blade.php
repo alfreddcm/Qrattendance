@@ -1,337 +1,1179 @@
-@php
-use Carbon\Carbon;
-
-$semester = $session->semester;
-$school = $semester->school ?? null;
-$now = Carbon::now('Asia/Manila');
-
-// Build comprehensive time schedule with all 4 periods
-$timeSchedules = [];
-if ($semester) {
-    // AM Time In
-    if ($semester->am_time_in_start && $semester->am_time_in_end) {
-        $timeSchedules[] = [
-            'label' => 'AM Time In',
-            'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end)
-        ];
-    }
-    
-    // AM Time Out
-    if ($semester->am_time_out_start && $semester->am_time_out_end) {
-        $timeSchedules[] = [
-            'label' => 'AM Time Out',
-            'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_end)
-        ];
-    }
-    
-    // PM Time In
-    if ($semester->pm_time_in_start && $semester->pm_time_in_end) {
-        $timeSchedules[] = [
-            'label' => 'PM Time In',
-            'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_end)
-        ];
-    }
-    
-    // PM Time Out
-    if ($semester->pm_time_out_start && $semester->pm_time_out_end) {
-        $timeSchedules[] = [
-            'label' => 'PM Time Out', 
-            'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_end)
-        ];
-    }
-}
-
-// Get attendance status - now always allowed with flexible system
-$attendanceStatus = $session->isAttendanceAllowed();
-$isWithinAllowedTime = $attendanceStatus['allowed']; // Should always be true now
-
-// Get recent attendance records
-$recentAttendance = collect();
-if (isset($session)) {
-    $recentAttendance = \App\Models\Attendance::with('student')
-        ->whereDate('created_at', Carbon::today('Asia/Manila'))
-        ->latest()
-        ->take(5)
-        ->get();
-}
-@endphp
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Attendance System</title>
+    <title>QR Attendance Scanner - {{ $session->session_name ?? 'Attendance Session' }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Material Design Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="{{ asset('css/attendance.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+ 
+    @php
+    use Carbon\Carbon;
+
+    $now = Carbon::now('Asia/Manila');
+    $school = $semester->school ?? null;
+
+    // Define time periods for attendance tracking
+    $timeSchedules = [];
+    if ($semester) {
+        // AM Time In
+        if ($semester->am_time_in_start && $semester->am_time_in_end) {
+            $timeSchedules[] = [
+                'type' => 'am_time_in',
+                'label' => 'AM Time In',
+                'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_start)->format('g:i A'),
+                'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_end)->format('g:i A'),
+                'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start),
+                'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end)
+            ];
+        }
+        
+        // AM Time Out
+        if ($semester->am_time_out_start && $semester->am_time_out_end) {
+            $timeSchedules[] = [
+                'type' => 'am_time_out',
+                'label' => 'AM Time Out',
+                'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_start)->format('g:i A'),
+                'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_end)->format('g:i A'),
+                'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_start),
+                'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_end)
+            ];
+        }
+        
+        // PM Time In
+        if ($semester->pm_time_in_start && $semester->pm_time_in_end) {
+            $timeSchedules[] = [
+                'type' => 'pm_time_in',
+                'label' => 'PM Time In',
+                'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_start)->format('g:i A'),
+                'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_end)->format('g:i A'),
+                'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_start),
+                'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_end)
+            ];
+        }
+        
+        // PM Time Out
+        if ($semester->pm_time_out_start && $semester->pm_time_out_end) {
+            $timeSchedules[] = [
+                'type' => 'pm_time_out',
+                'label' => 'PM Time Out', 
+                'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_start)->format('g:i A'),
+                'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_end)->format('g:i A'),
+                'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start),
+                'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_end)
+            ];
+        }
+    }
+
+    // Calculate attendance totals for today
+    $todayAttendance = \App\Models\Attendance::with('student')
+        ->whereDate('created_at', Carbon::today('Asia/Manila'))
+        ->whereHas('student', function($query) use ($session) {
+            $query->where('user_id', $session->teacher_id)
+                  ->where('semester_id', $session->semester_id);
+        })
+        ->get();
+
+    // Count attendance by periods
+    $attendanceCounts = [
+        'am_in' => 0,
+        'am_out' => 0,
+        'pm_in' => 0,
+        'pm_out' => 0
+    ];
+
+    foreach ($todayAttendance as $record) {
+        $recordTime = $record->time_in ?: $record->time_out;
+        if (!$recordTime) continue;
+        
+        foreach ($timeSchedules as $schedule) {
+            if ($recordTime->between($schedule['start_time'], $schedule['end_time'])) {
+                switch ($schedule['type']) {
+                    case 'am_time_in':
+                        $attendanceCounts['am_in']++;
+                        break;
+                    case 'am_time_out':
+                        $attendanceCounts['am_out']++;
+                        break;
+                    case 'pm_time_in':
+                        $attendanceCounts['pm_in']++;
+                        break;
+                    case 'pm_time_out':
+                        $attendanceCounts['pm_out']++;
+                        break;
+                }
+                break;
+            }
+        }
+    }
+
+    // Get recent attendance records with interpretation
+    $recentAttendanceProcessed = collect();
+    foreach ($recentAttendance->take(8) as $record) {
+        $recordTime = $record->time_in ?: $record->time_out;
+        $interpretedStatus = 'Unknown';
+        
+        if ($recordTime) {
+            foreach ($timeSchedules as $schedule) {
+                if ($recordTime->between($schedule['start_time'], $schedule['end_time'])) {
+                    $interpretedStatus = $schedule['label'] . ' Recorded';
+                    break;
+                }
+            }
+        }
+        
+        $record->interpreted_status = $interpretedStatus;
+        $recentAttendanceProcessed->push($record);
+    }
+    @endphp
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header Section */
+        .modern-header {
+            background: white;
+            box-shadow: var(--card-shadow);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .school-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .school-logo img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .school-logo i {
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+
+        .school-details h4 {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .school-details .address {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .system-title {
+            text-align: center;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .system-title h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-bottom: 2rem;
+        }
+
+        /* Modern Card Styles */
+        .modern-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+    
+
+        /* Left Panel - Large Photo */
+        .photo-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-card {
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .large-photo-container {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            color: #9ca3af;
+            position: relative;
+        }
+
+        .large-photo-container i {
+            font-size: 8rem;
+            margin-bottom: 1rem;
+        }
+
+        .large-photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .photo-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Center Panel - Student Info */
+        .student-info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .student-card {
+            overflow: hidden;
+        }
+
+        .student-info-header {
+            background: white;
+            padding: 1.5rem;
+        }
+
+        .info-field {
+            margin-bottom: 1rem;
+        }
+
+        .info-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            background: #f9fafb;
+        }
+
+        .field-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Attendance Status */
+        .attendance-status {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .status-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-action {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-time {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-date {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Attendance Record Table */
+        .attendance-table {
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-rows {
+            background: white;
+        }
+
+        .table-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .row-label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .row-status {
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        /* Right Panel - Controls */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Clock Card */
+        .clock-card {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .clock-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .digital-time {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Scanner Card */
+        .scanner-card {
+            padding: 1.5rem;
+        }
+
+        .scanner-toggles {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .scanner-btn {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scanner-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .scanner-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .scanner-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .scanner-status {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: var(--primary-color);
+            color: white;
+            overflow: hidden;
+        }
+
+        .summary-header {
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .summary-stats {
+            padding: 1rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .stat-separator {
+            height: 1px;
+            background: rgba(255,255,255,0.2);
+            margin: 0.75rem 0;
+        }
+
+        /* Bottom Panel - Recent Students */
+        .recent-students {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+
+        .student-tile {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .student-tile.empty {
+            background: #f8fafc;
+            color: #9ca3af;
+        }
+
+        .tile-time {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            background: #f3f4f6;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .tile-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .tile-section {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .system-title {
+                max-width: none;
+            }
+
+            .recent-students {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modern-header {
+                padding: 1rem;
+            }
+            
+            .recent-students {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .large-photo-container {
+                height: 250px;
+            }
+
+            .large-photo-container i {
+                font-size: 4rem;
+            }
+
+            .photo-text {
+                font-size: 1rem;
+            }
+
+            .system-title h3 {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .recent-students {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading States */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
+
 <body>
-     <div class="compact-header">
-        <div class="school-info">
-            <div class="school-logo">
-                @if($school && $school->logo)
-                    <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name ?? 'School Logo' }}" style="max-width: 100%; height: auto;" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-graduation-cap fa-3x\'></i>';">
-                @else
-                    <i class="fas fa-graduation-cap fa-3x"></i>
-                @endif
-            </div>
-            <div class="school-details">
-                <h5>{{ $school->name ?? 'SCHOOL NAME' }}</h5>
-                <small>{{ $school->address ?? 'ADDRESS' }}</small>
-            </div>
-        </div>
-        <div class="system-title">
-        <h2>
-          Scan-to-Notify: A QR-Based Student Attendance and Parent Notification System
-        </h2>   
-        </div>
-    </div>
-
-    <div class="datetime-bar" id="datetime-bar"></div>
-
-     <div class="main-container">
-         <div class="session-panel">
-            <div class="panel-header">
-                <i class="fas fa-qrcode"></i>
-                Scanner & Session
-            </div>
-            <div class="panel-content">
-                 <div class="time-periods">
-                    <div style="font-size: 0.7rem; font-weight: 600; margin-bottom: 5px; color: #2196F3;">
-                        <i class="fas fa-clock"></i> Today's Periods
+    <div class="container-fluid p-0">
+        <!-- Header Section -->
+        <header class="modern-header">
+            <div class="header-content">
+                <div class="school-brand">
+                    <div class="school-logo">
+                        @if($school && $school->logo)
+                            <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name ?? 'School Logo' }}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-graduation-cap\'></i>';">
+                        @else
+                            <i class="fas fa-graduation-cap"></i>
+                        @endif
                     </div>
-                    @forelse($timeSchedules as $schedule)
-                        <div class="time-period {{ ($schedule['start_time'] && $schedule['end_time'] && $now->between($schedule['start_time'], $schedule['end_time'])) ? 'active' : 'inactive' }}">
-                            <span>{{ $schedule['label'] }}</span>
-                            <span>{{ $schedule['start'] }}-{{ $schedule['end'] }}</span>
+                    <div class="school-details">
+                        <h4>{{ $school->name ?? 'SCHOOL NAME' }}</h4>
+                        <div class="address">{{ $school->address ?? 'ADDRESS' }}</div>
+                    </div>
+                </div>
+                <div class="system-title">
+                    <h3>Scan-to-Notify: QR-Based Student Attendance and Parent Notification System</h3>
+                </div>
+            </div>
+        </header>
+
+         <main class="main-layout">
+             <aside class="photo-panel">
+                <div class="modern-card photo-card">
+                    <div class="large-photo-container" id="student-photo">
+                        <i class="fas fa-user-graduate"></i>
+                        <div class="photo-text">PHOTO</div>
+                    </div>
+                </div>
+
+                <!-- <section class="recent-students">
+            @forelse($recentAttendanceProcessed->take(5) as $record)
+                <div class="student-tile">
+                    <div class="tile-time">TIME IN : {{ $record->time_in ? $record->time_in->format('G:i') : ($record->time_out ? $record->time_out->format('G:i') : '7:20') }}</div>
+                    <div class="tile-name">{{ $record->student->name ?? 'STUDENT NAME' }}</div>
+                    <div class="tile-section">{{ $record->student->section ?? 'SECTION' }}</div>
+                </div>
+            @empty
+                @for($i = 0; $i < 5; $i++)
+                    <div class="student-tile empty">
+                        <div class="tile-time">TIME IN : --:--</div>
+                        <div class="tile-name">STUDENT NAME</div>
+                        <div class="tile-section">SECTION</div>
+                    </div>
+                @endfor
+            @endforelse
+        </section> -->
+
+            </aside>
+
+            <!-- Center Panel: Student Information & Attendance Records -->
+            <section class="student-info-panel">
+                <!-- Student Name and Section -->
+                <div class="modern-card student-card">
+                    <div class="student-info-header">
+                        <div class="info-field">
+                            <div class="field-label">STUDENT NAME</div>
+                            <div class="field-value" id="student-name">STUDENT NAME</div>
                         </div>
-                    @empty
-                        <div class="time-period inactive">
-                            <span>No periods set</span>
+                        <div class="info-field">
+                            <div class="field-label">SECTION</div>
+                            <div class="field-value" id="student-section">SECTION</div>
                         </div>
-                    @endforelse
+                    </div>
                     
-                    @if($isWithinAllowedTime)
-                        <div style="margin-top: 8px; color: #4CAF50; font-size: 0.7rem; text-align: center;">
-                            <i class="fas fa-check-circle"></i> Currently accepting
+                     <div class="attendance-status" id="status-card">
+                        <div class="status-text">WAITING TO SCAN</div>
+                        <div class="status-action">READY</div>
+                        <div class="status-time">--:--</div>
+                        <div class="status-date">{{ $now->format('F j, Y') }}</div>
+                    </div>
+                </div>
+
+                 <div class="modern-card attendance-table">
+                    <div class="table-header">ATTENDANCE RECORD</div>
+                    <div class="table-rows">
+                        <div class="table-row">
+                            <span class="row-label">AM TIME IN</span>
+                            <span class="row-status" id="am-in-status">Not Recorded</span>
                         </div>
-                    @else
-                        <div style="margin-top: 8px; color: #f44336; font-size: 0.7rem; text-align: center;">
-                            <i class="fas fa-times-circle"></i> Outside hours
+                        <div class="table-row">
+                            <span class="row-label">AM TIME OUT</span>
+                            <span class="row-status" id="am-out-status">Not Recorded</span>
                         </div>
-                    @endif
-                </div>
-
-                @if(!$isWithinAllowedTime)
-                <div class="outside-hours-alert">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Outside attendance hours
-                    @if(isset($attendanceStatus['next_period']))
-                        <br><small>Next: {{ $attendanceStatus['next_period']['period_name'] }} at {{ $attendanceStatus['next_period']['start_time'] }}</small>
-                    @endif
-                </div>
-                @endif
-
-                <!-- Scanner Toggle -->
-                <div class="scanner-toggle">
-                    <button class="toggle-btn active" id="usb-toggle">
-                        <i class="fas fa-barcode"></i> USB Scanner
-                    </button>
-                    <button class="toggle-btn" id="webcam-toggle">
-                        <i class="fas fa-camera"></i> QR Camera
-                    </button>
-                </div>
-
-                <!-- USB Scanner Input -->
-                <div id="usb-scanner-section">
-                    <input type="text" 
-                           id="usb-scanner-input" 
-                           class="usb-scanner-input" 
-                           placeholder="Ready to scan..."
-                           autocomplete="off">
-                    <p class="text-center mt-2 text-muted" style="font-size: 0.7rem;">
-                        <i class="fas fa-check-circle text-success"></i>
-                        Ready for USB Scanner<br>
-                        Point scanner at QR code
-                    </p>
-                </div>
-
-                <!-- Webcam QR Scanner -->
-                <div id="webcam-scanner-section" style="display: none;">
-                    <div class="webcam-container">
-                        <div class="webcam-header">
-                            <i class="fas fa-camera"></i>
-                            QR Camera Scanner
+                        <div class="table-row">
+                            <span class="row-label">PM TIME IN</span>
+                            <span class="row-status" id="pm-in-status">Not Recorded</span>
                         </div>
-                        <div id="qr-reader" style="width: 100%; height: 200px;"></div>
-                        <div class="camera-controls">
+                        <div class="table-row">
+                            <span class="row-label">PM TIME OUT</span>
+                            <span class="row-status" id="pm-out-status">Not Recorded</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Clock, Scanner & Summary -->
+            <aside class="control-panel">
+                <!-- Digital Clock -->
+                <div class="modern-card clock-card">
+                    <div class="clock-header">TODAY IS: {{ strtoupper($now->format('D, M j, Y')) }}</div>
+                    <div class="digital-time" id="current-time">--:--:-- --</div>
+                </div>
+
+                <!-- Scanner Controls -->
+                <div class="modern-card scanner-card">
+                    <div class="scanner-toggles">
+                        <button class="scanner-btn active" id="usb-toggle">
+                            <i class="fas fa-barcode"></i> USB Scanner
+                        </button>
+                        <button class="scanner-btn" id="webcam-toggle">
+                            <i class="fas fa-camera"></i> QR Camera
+                        </button>
+                    </div>
+
+                    <!-- USB Scanner Input -->
+                    <div id="usb-scanner-section">
+                        <input type="text" 
+                               id="usb-scanner-input" 
+                               class="scanner-input" 
+                               placeholder="Ready to scan..."
+                               autocomplete="off">
+                        <div class="scanner-status">
+                            <i class="fas fa-check-circle text-success"></i>
+                            Ready for USB Scanner<br>
+                            Point scanner at QR code
+                        </div>
+                    </div>
+
+                    <!-- Webcam QR Scanner -->
+                    <div id="webcam-scanner-section" style="display: none;">
+                        <div id="qr-reader" style="width: 100%; height: 200px; border-radius: 8px; overflow: hidden;"></div>
+                        <div class="text-center mt-2">
                             <button class="btn btn-danger btn-sm" id="stop-scanning" onclick="stopScanning()">
-                                Stop Scanning
+                                <i class="fas fa-stop"></i> Stop Scanning
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Middle Panel: Student Display with Material Design -->
-        <div class="scanner-panel">
-            <div class="scanner-header">
-                <div class="status-badge" id="status-badge">WAITING TO SCAN</div>
-                <h6 class="scanner-title">Student Attendance</h6>
-            </div>
-
-            <div class="scanner-content">
-                <!-- Material Design Student Card -->
-                <div id="material-student-card" class="material-card-container">
-                    <div class="material-card waiting">
-                        <div class="card-header">
-                            <div class="waiting-indicator">
-                                <i class="fas fa-qrcode"></i>
-                            </div>
-                            <div class="card-title">Ready to Scan</div>
+                <!-- Today's Attendance Summary -->
+                <div class="modern-card summary-card">
+                    <div class="summary-header">TODAY'S ATTENDANCE</div>
+                    <div class="summary-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">MORNING IN:</span>
+                            <span class="stat-value">{{ $attendanceCounts['am_in'] }}</span>
                         </div>
-                        <div class="card-content">
-                            <div class="waiting-message">
-                                Point your scanner at a QR code to record attendance
-                            </div>
+                        <div class="stat-row">
+                            <span class="stat-label">MORNING OUT:</span>
+                            <span class="stat-value">{{ $attendanceCounts['am_out'] }}</span>
+                        </div>
+                        <div class="stat-separator"></div>
+                        <div class="stat-row">
+                            <span class="stat-label">AFTERNOON IN:</span>
+                            <span class="stat-value">{{ $attendanceCounts['pm_in'] }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">AFTERNOON OUT:</span>
+                            <span class="stat-value">{{ $attendanceCounts['pm_out'] }}</span>
                         </div>
                     </div>
                 </div>
+            </aside>
+        </main>
 
-                <!-- Legacy Student Preview (Hidden for Material Design) -->
-                <div class="student-preview" id="student-preview" style="display: none;">
-                    <div id="notification-area" class="notification-area" style="display: none;">
-                        <div id="notification-content" class="notification-content"></div>
-                    </div>
-                    
-                    <div class="student-photo-display" id="student-photo">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <div class="student-info-display" id="student-info">
-                        <div class="student-name">WAITING TO SCAN</div>
-                        <div class="student-details">Point your scanner at a QR code</div>
-                        <div class="student-details">to record attendance</div>
-                    </div>
-                </div>
+         
 
-                 <div class="material-info-summary">
-                    <div class="info-cards">
-                        <div class="info-card-row">
-                            <span class="info-label">Name:</span>
-                            <span class="info-value" id="name-value">-</span>
-                        </div>
-                        <div class="info-card-row">
-                            <span class="info-label">Section:</span>
-                            <span class="info-value" id="section-value">-</span>
-                        </div>
-                        <div class="info-card-row">
-                            <span class="info-label">Time:</span>
-                            <span class="info-value" id="time-value">-</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-         <div class="attendance-panel">
-            <div class="custom-card" style="width:100%; margin-bottom: 15px;">
-                <div class="custom-card-body">
-                    <h5 class="custom-card-title">Teacher Assigned</h5>
-                    <h6 class="custom-card-subtitle mb-2 text-muted">{{ $teacher_name }}</h6>
-                    
-                    <div class="session-item">
-                        <div class="session-label">Session</div>
-                        <div class="session-value" style="word-wrap: break-word; white-space: normal;">{{ $session->session_name ?? 'N/A' }}</div>
-                    </div>
-                    
-                    <div class="session-item">
-                        <div class="session-label">Semester</div>
-                        <div class="session-value" style="word-wrap: break-word; white-space: normal;">{{ $semester->name ?? 'Unknown' }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="attendance-header">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-list me-1"></i>
-                    Last Records Today
-                </div>
-                <div class="attendance-count" id="attendance-count">
-                    {{ $recentAttendance->count() }}
-                </div>
-            </div>
-            
-            <div class="attendance-list" id="attendance-list">
-                @forelse($recentAttendance->take(5) as $record)
-                    <div class="attendance-record">
-                        <div class="student-avatar">
-                            @if($record->student && $record->student->picture)
-                                <img src="{{ asset('storage/student_pictures/' . $record->student->picture) }}" alt="{{ $record->student->name }}">
-                            @else
-                                {{ $record->student ? substr($record->student->name, 0, 1) : 'S' }}
-                            @endif
-                        </div>
-                        <div class="record-info">
-                            <div class="record-name">{{ $record->student->name ?? 'Unknown Student' }}</div>
-                            <div class="record-section">{{ $record->student->section ?? 'No Section' }}</div>
-                        </div>
-                        <div class="record-time">
-                            @if($record->time_out)
-                                <div class="time-out-badge">
-                                    Time Out - {{ $record->time_out->format('g:i A') }}
-                                </div>
-                            @elseif($record->time_in)
-                                <div class="time-in-badge">
-                                    Time In - {{ $record->time_in->format('g:i A') }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center p-3" style="color: #666; font-size: 0.8rem;">
-                        <i class="fas fa-clock"></i><br>
-                        No attendance records yet today
-                    </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    <div id="status-container" class="status-container"></div>
-
+    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
 
+    <!-- Session Data for JavaScript -->
+    <script>
+        window.sessionData = {
+            token: '{{ $session->session_token }}',
+            sessionId: {{ $session->id }},
+            timeSchedules: @json($timeSchedules),
+            csrfToken: '{{ csrf_token() }}'
+        };
+    </script>
+
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        window.sessionToken = '{{ $session->session_token }}';
+        // Global variables  
+        let html5QrcodeScanner = null;
+        let usbScannerTimeout = null;
+        let currentStudentId = null;
+        
+        // Update digital clock
+        function updateDateTime() {
+            const now = new Date();
+            const timeOptions = { 
+                timeZone: 'Asia/Manila',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+        }
+
+        // Update attendance record status based on student scan
+        function updateAttendanceRecord(studentId) {
+            if (!studentId) return;
+            
+            // Reset all statuses first
+            document.querySelectorAll('.row-status').forEach(status => {
+                status.textContent = 'Not Recorded';
+                status.style.color = '#6b7280';
+            });
+
+            // Fetch student's attendance records for today and update UI
+            fetch(`/api/student-attendance-today/${studentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.records) {
+                        // Update each period based on actual records
+                        Object.keys(data.records).forEach(period => {
+                            const statusElement = document.getElementById(period + '-status');
+                            if (statusElement && data.records[period]) {
+                                statusElement.textContent = 'Recorded';
+                                statusElement.style.color = '#059669';
+                                statusElement.style.fontWeight = '600';
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching attendance records:', error);
+                });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            
+            // Initialize scanner functionality
+            initializeScanner();
+        });
+
+         function initializeScanner() {
+             const usbInput = document.getElementById('usb-scanner-input');
+            if (usbInput) {
+                usbInput.addEventListener('input', function(e) {
+                    const value = e.target.value.trim();
+                    if (value.length > 11) {  
+                        e.target.value = '';  
+                    }
+                });
+                
+                // Keep USB input focused
+                usbInput.addEventListener('blur', function() {
+                    setTimeout(() => this.focus(), 100);
+                });
+                
+                usbInput.focus();
+            }
+
+             document.getElementById('usb-toggle').addEventListener('click', function() {
+                activateUsbScanner();
+            });
+
+            document.getElementById('webcam-toggle').addEventListener('click', function() {
+                activateWebcamScanner();
+            });
+        }
+
+        function activateUsbScanner() {
+             document.getElementById('webcam-scanner-section').style.display = 'none';
+            document.getElementById('usb-scanner-section').style.display = 'block';
+            
+             document.getElementById('usb-toggle').classList.add('active');
+            document.getElementById('webcam-toggle').classList.remove('active');
+            
+             if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(err => console.log('Error stopping webcam:', err));
+                html5QrcodeScanner = null;
+            }
+            
+             setTimeout(() => {
+                document.getElementById('usb-scanner-input').focus();
+            }, 100);
+        }
+
+        function activateWebcamScanner() {
+             document.getElementById('usb-scanner-section').style.display = 'none';
+            document.getElementById('webcam-scanner-section').style.display = 'block';
+            
+             document.getElementById('webcam-toggle').classList.add('active');
+            document.getElementById('usb-toggle').classList.remove('active');
+            
+             setTimeout(() => {
+                initializeWebcamScanner();
+            }, 300);
+        }
+
+        function initializeWebcamScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(err => console.log('Error clearing previous scanner:', err));
+            }
+            
+            function onScanSuccess(decodedText, decodedResult) {
+                console.log('Webcam QR detected:', decodedText);
+                processQRCode(decodedText);
+            }
+            
+            function onScanFailure(error) {
+             }
+            
+            try {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "qr-reader",
+                    { 
+                        fps: 10,
+                        qrbox: { width: 200, height: 200 },
+                        rememberLastUsedCamera: true,
+                        showTorchButtonIfSupported: true,
+                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                    },
+                    false
+                );
+                
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            } catch (error) {
+                console.error('Error initializing webcam scanner:', error);
+                alert('Error initializing camera. Please check permissions.');
+            }
+        }
+
+        function stopScanning() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    html5QrcodeScanner = null;
+                    console.log('Webcam scanner stopped');
+                }).catch(err => {
+                    console.log('Error stopping scanner:', err);
+                });
+            }
+        }
+
+        function processQRCode(decodedText) {
+             if (!decodedText || decodedText.trim().length === 0) {
+                updateStatusCard('ERROR', 'INVALID QR', '--:--', 'Invalid QR Code');
+                playNotificationSound(false);
+                return;
+            }
+
+             const cleanedQRData = decodedText.trim();
+            console.log('QR Data received:', cleanedQRData);
+
+             if (!cleanedQRData.includes('_') || cleanedQRData.length < 5) {
+                updateStatusCard('ERROR', 'INVALID FORMAT', '--:--', 'Expected: StudentID_Code');
+                playNotificationSound(false);
+                return;
+            }
+
+             const studentData = parseQRData(cleanedQRData);
+            updateStudentDisplay(studentData);
+            
+             document.getElementById('loading-overlay').style.display = 'flex';
+
+            fetch(`/attendance/${window.sessionData.token}/qr-verify`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": window.sessionData.csrfToken
+                    },
+                    body: JSON.stringify({
+                        qr_data: cleanedQRData,
+                        scanner_type: document.getElementById('usb-toggle').classList.contains('active') ? '2D Barcode Scanner' : 'Webcam'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                         updateStudentDisplayWithServerData(data.student, data);
+                        currentStudentId = data.student.id;
+                        updateAttendanceRecord(data.student.id);
+                        
+                         const now = new Date();
+                        const timeStr = now.toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: true 
+                        });
+                        
+                        updateStatusCard('ATTENDANCE RECORDED!', data.time_period || 'TIME IN', timeStr, '{{ $now->format('F j, Y') }}');
+                        playNotificationSound(true);
+                        
+                         setTimeout(() => {
+                            resetStudentDisplay();
+                            location.reload();  
+                        }, 5000);
+                    } else {
+                        updateStatusCard('ACCESS DENIED', 'ERROR', '--:--', data.message || 'Please try again');
+                        playNotificationSound(false);
+                        
+                         setTimeout(() => {
+                            resetStudentDisplay();
+                        }, 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    updateStatusCard('SYSTEM ERROR', 'ERROR', '--:--', 'Please try again');
+                    playNotificationSound(false);
+                    
+                     setTimeout(() => {
+                        resetStudentDisplay();
+                    }, 3000);
+                })
+                .finally(() => {
+                     document.getElementById('loading-overlay').style.display = 'none';
+                });
+        }
+
+        function parseQRData(qrData) {
+             if (qrData.includes('_')) {
+                const parts = qrData.split('_');
+                return {
+                    id: parts[0],
+                    name: 'Student ' + parts[0],
+                    section: 'Loading...'
+                };
+            }
+            
+             return {
+                id: qrData,
+                name: 'Student ' + qrData,
+                section: 'Loading...'
+            };
+        }
+
+        function updateStudentDisplay(studentData) {
+             const photoElement = document.getElementById('student-photo');
+            photoElement.innerHTML = `<i class="fas fa-user-graduate"></i><div class="photo-text">PHOTO</div>`;
+
+             document.getElementById('student-name').textContent = studentData.name;
+            document.getElementById('student-section').textContent = studentData.section;
+
+             updateStatusCard('PROCESSING...', 'SCANNING', '--:--', '{{ $now->format('F j, Y') }}');
+        }
+
+        function updateStudentDisplayWithServerData(studentData, result) {
+             const photoElement = document.getElementById('student-photo');
+            if (studentData.picture) {
+                photoElement.innerHTML = `<img src="/storage/student_pictures/${studentData.picture}" alt="${studentData.name}">`;
+            } else {
+                photoElement.innerHTML = `<i class="fas fa-user-graduate"></i><div class="photo-text">PHOTO</div>`;
+            }
+
+             document.getElementById('student-name').textContent = studentData.name;
+            document.getElementById('student-section').textContent = studentData.section || 'No Section';
+        }
+
+        function updateStatusCard(statusText, actionText, timeText, dateText) {
+            const statusCard = document.getElementById('status-card');
+            statusCard.innerHTML = `
+                <div class="status-text">${statusText}</div>
+                <div class="status-action">${actionText}</div>
+                <div class="status-time">${timeText}</div>
+                <div class="status-date">${dateText}</div>
+            `;
+        }
+
+        function resetStudentDisplay() {
+             document.getElementById('student-photo').innerHTML = '<i class="fas fa-user-graduate"></i><div class="photo-text">PHOTO</div>';
+            document.getElementById('student-name').textContent = 'STUDENT NAME';
+            document.getElementById('student-section').textContent = 'SECTION';
+            
+            updateStatusCard('WAITING TO SCAN', 'READY', '--:--', '{{ $now->format('F j, Y') }}');
+            
+            currentStudentId = null;
+        }
+
+        function playNotificationSound(success) {
+            try {
+                const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                if (success) {
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+                } else {
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime + 0.2);
+                }
+
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + (success ? 0.2 : 0.4));
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + (success ? 0.2 : 0.4));
+            } catch (e) {
+
+            }
+        }
     </script>
-    <script src="{{ asset('js/attendance.js') }}"></script>
+
+
+
+    
 </body>
 </html>

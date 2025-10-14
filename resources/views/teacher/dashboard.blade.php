@@ -149,6 +149,9 @@
                                         <i class="fas fa-external-link-alt me-1"></i>Open Link
                                     </a>
                                 </div>
+                                <a href="{{ route('teacher.attendance.live') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-qrcode me-1"></i>Live Scanner
+                                </a>
                                 <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i>View Details
                                 </a>
@@ -157,6 +160,9 @@
                             <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
                                 <p class="text-muted mb-3">No active session today</p>
                                 <div class="d-grid gap-2 mt-auto">
+                                    <a href="{{ route('teacher.attendance.live') }}" class="btn btn-primary">
+                                        <i class="fas fa-qrcode me-1"></i>Start Live Scanner
+                                    </a>
                                     <a href="{{ route('teacher.attendance') }}" class="btn btn-success">
                                         <i class="fas fa-plus me-1"></i>Create Session
                                     </a>

@@ -138,7 +138,6 @@
 
 </div>
 
-<!-- SF2 Generation Modal -->
 <div class="modal fade" id="sf2Modal" tabindex="-1" aria-labelledby="sf2ModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
