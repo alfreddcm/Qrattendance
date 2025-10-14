@@ -148,10 +148,26 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
             min-height: 100vh;
             color: #1f2937;
             margin: 0;
             padding: 0;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         /* Header Section */
@@ -177,15 +193,20 @@
         }
 
         .school-logo img {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+            width: 65px;
+            height: 65px;
+            border-radius: 10px;
             object-fit: cover;
+            border: 2px solid #e5e7eb;
         }
 
         .school-logo i {
-            font-size: 3rem;
+            font-size: 3.5rem;
             color: var(--primary-color);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .school-details h4 {
@@ -216,12 +237,12 @@
         .main-layout {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 1rem;
+            padding: 0 1.5rem;
             display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
-            gap: 2rem;
+            grid-template-columns: 350px 1fr 300px;
+            gap: 1.5rem;
             align-items: start;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         /* Modern Card Styles */
@@ -255,16 +276,36 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #f8fafc;
-            border: 2px solid #e5e7eb;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 3px solid #cbd5e1;
             border-radius: 12px;
-            color: #9ca3af;
+            color: #94a3b8;
             position: relative;
+            overflow: hidden;
+        }
+
+        .large-photo-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(203, 213, 225, 0.1) 10px,
+                rgba(203, 213, 225, 0.1) 20px
+            );
+            pointer-events: none;
         }
 
         .large-photo-container i {
             font-size: 8rem;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
         }
 
         .large-photo-container img {
@@ -275,10 +316,12 @@
         }
 
         .photo-text {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            position: relative;
+            z-index: 1;
         }
 
         /* Center Panel - Student Info */
@@ -306,61 +349,95 @@
         }
 
         .field-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #6b7280;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            margin-bottom: 0;
             text-align: center;
-            border: 1px solid #e5e7eb;
-            padding: 0.5rem;
-            background: #f9fafb;
+            border: 2px solid #cbd5e1;
+            border-bottom: none;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
         }
 
         .field-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
             text-align: center;
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
+            padding: 1.25rem;
+            border: 2px solid #cbd5e1;
             background: white;
-            min-height: 3rem;
+            min-height: 3.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Attendance Status */
         .attendance-status {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             color: white;
             text-align: center;
             padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .attendance-status::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
         }
 
         .status-text {
             font-size: 0.875rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
         }
 
         .status-action {
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
         }
 
         .status-time {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 2.5rem;
+            font-weight: 700;
             margin-bottom: 0.25rem;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
         }
 
         .status-date {
             font-size: 0.875rem;
-            opacity: 0.9;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
         }
 
         /* Attendance Record Table */
@@ -369,13 +446,15 @@
         }
 
         .table-header {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             color: white;
             padding: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             text-align: center;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .table-rows {
@@ -388,7 +467,16 @@
             align-items: center;
             padding: 1rem 1.5rem;
             border-bottom: 1px solid #e5e7eb;
+            background: white;
+            transition: background 0.2s ease;
+        }
+
+        .table-row:nth-child(odd) {
             background: #f8fafc;
+        }
+
+        .table-row:hover {
+            background: #f0f7ff;
         }
 
         .table-row:last-child {
@@ -396,13 +484,19 @@
         }
 
         .row-label {
-            font-weight: 500;
+            font-weight: 600;
             color: #374151;
+            font-size: 0.95rem;
         }
 
         .row-status {
-            font-weight: 600;
+            font-weight: 700;
             color: #6b7280;
+            font-size: 0.95rem;
+        }
+
+        .row-status.recorded {
+            color: #059669;
         }
 
         /* Right Panel - Controls */
@@ -414,23 +508,26 @@
 
         /* Clock Card */
         .clock-card {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             text-align: center;
             padding: 1rem;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
         }
 
         .clock-header {
-            font-size: 0.875rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
-            opacity: 0.9;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
         }
 
         .digital-time {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         /* Scanner Card */
@@ -468,36 +565,56 @@
         .scanner-input {
             width: 100%;
             padding: 0.75rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2563eb;
             border-radius: 8px;
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-            border-color: #007bff;
-            background: #f8f9ff;
+            font-size: 1rem;
+            background: #f0f7ff;
+            color: #1f2937;
+            transition: all 0.3s ease;
+        }
+
+        .scanner-input:focus {
+            outline: none;
+            border-color: #1d4ed8;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .scanner-status {
             text-align: center;
-            font-size: 0.875rem;
-            color: #6b7280;
+            font-size: 0.75rem;
+            color: #059669;
+            line-height: 1.5;
+            padding: 0.5rem;
+            background: #f0fdf4;
+            border-radius: 6px;
+            border: 1px solid #d1fae5;
+        }
+
+        .scanner-status i {
+            margin-right: 0.25rem;
         }
 
         /* Summary Card */
         .summary-card {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
             color: white;
             overflow: hidden;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
         }
 
         .summary-header {
             padding: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             text-align: center;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.1);
+            font-size: 0.875rem;
         }
 
         .summary-stats {
@@ -509,6 +626,9 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
         }
 
         .stat-row:last-child {
@@ -516,64 +636,94 @@
         }
 
         .stat-label {
-            font-size: 0.875rem;
-            font-weight: 500;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .stat-separator {
-            height: 1px;
-            background: rgba(255,255,255,0.2);
+            height: 2px;
+            background: rgba(255,255,255,0.3);
             margin: 0.75rem 0;
         }
 
         /* Bottom Panel - Recent Students */
-        .recent-students {
+        .recent-students-section {
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 0 auto 2rem;
             padding: 0 1rem;
+        }
+
+        .recent-students-container {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 1rem;
+            background: transparent;
         }
 
         .student-tile {
             background: white;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #2563eb;
             border-radius: 8px;
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: center;
             box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .student-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-lg);
         }
 
         .student-tile.empty {
             background: #f8fafc;
+            border: 2px dashed #cbd5e1;
             color: #9ca3af;
         }
 
         .tile-time {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.5rem;
-            background: #f3f4f6;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.35rem 0.5rem;
+            background: #2563eb;
+            color: white;
             border-radius: 4px;
             margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .student-tile.empty .tile-time {
+            background: #cbd5e1;
+            color: #6b7280;
         }
 
         .tile-name {
-            font-weight: 600;
+            font-weight: 700;
             color: #1f2937;
             margin-bottom: 0.25rem;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .student-tile.empty .tile-name {
+            color: #9ca3af;
         }
 
         .tile-section {
             font-size: 0.75rem;
             color: #6b7280;
+            font-weight: 600;
+        }
+
+        .student-tile.empty .tile-section {
+            color: #cbd5e1;
         }
 
         /* Responsive Design */
@@ -593,7 +743,7 @@
                 max-width: none;
             }
 
-            .recent-students {
+            .recent-students-container {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
@@ -603,7 +753,7 @@
                 padding: 1rem;
             }
             
-            .recent-students {
+            .recent-students-container {
                 grid-template-columns: repeat(2, 1fr);
             }
             
@@ -625,7 +775,7 @@
         }
 
         @media (max-width: 480px) {
-            .recent-students {
+            .recent-students-container {
                 grid-template-columns: 1fr;
             }
         }
@@ -637,20 +787,31 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            flex-direction: column;
         }
 
         .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid var(--primary-color);
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #3b82f6;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .loading-overlay::after {
+            content: 'Processing...';
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
         }
 
         @keyframes spin {
@@ -829,7 +990,26 @@
             </aside>
         </main>
 
-         
+        <!-- Bottom Panel: Recent Students -->
+        <section class="recent-students-section">
+            <div class="recent-students-container" id="recent-students-container">
+                @forelse($recentAttendanceProcessed->take(5) as $record)
+                    <div class="student-tile">
+                        <div class="tile-time">TIME IN : {{ $record->time_in ? $record->time_in->format('G:i') : ($record->time_out ? $record->time_out->format('G:i') : '--:--') }}</div>
+                        <div class="tile-name">{{ $record->student->name ?? 'STUDENT NAME' }}</div>
+                        <div class="tile-section">{{ $record->student->section->name ?? 'SECTION' }}</div>
+                    </div>
+                @empty
+                    @for($i = 0; $i < 5; $i++)
+                        <div class="student-tile empty">
+                            <div class="tile-time">TIME IN : --:--</div>
+                            <div class="tile-name">STUDENT NAME</div>
+                            <div class="tile-section">SECTION</div>
+                        </div>
+                    @endfor
+                @endforelse
+            </div>
+        </section>
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
@@ -875,7 +1055,7 @@
             // Reset all statuses first
             document.querySelectorAll('.row-status').forEach(status => {
                 status.textContent = 'Not Recorded';
-                status.style.color = '#6b7280';
+                status.classList.remove('recorded');
             });
 
             // Fetch student's attendance records for today and update UI
@@ -887,9 +1067,8 @@
                         Object.keys(data.records).forEach(period => {
                             const statusElement = document.getElementById(period + '-status');
                             if (statusElement && data.records[period]) {
-                                statusElement.textContent = 'Recorded';
-                                statusElement.style.color = '#059669';
-                                statusElement.style.fontWeight = '600';
+                                statusElement.textContent = data.records[period];
+                                statusElement.classList.add('recorded');
                             }
                         });
                     }
@@ -1056,6 +1235,14 @@
                         
                         updateStatusCard('ATTENDANCE RECORDED!', data.time_period || 'TIME IN', timeStr, '{{ $now->format('F j, Y') }}');
                         playNotificationSound(true);
+
+                        // Add student to recent bar
+                        const timeOnly = now.toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: false
+                        });
+                        addStudentToRecentBar(data.student, timeOnly);
                         
                          setTimeout(() => {
                             resetStudentDisplay();
@@ -1131,6 +1318,58 @@
                 <div class="status-time">${timeText}</div>
                 <div class="status-date">${dateText}</div>
             `;
+        }
+
+        function addStudentToRecentBar(studentData, timeStr) {
+            const container = document.getElementById('recent-students-container');
+            if (!container) return;
+
+            // Remove all empty tiles first
+            const emptyTiles = container.querySelectorAll('.student-tile.empty');
+            emptyTiles.forEach(tile => tile.remove());
+
+            // Create new student tile
+            const newTile = document.createElement('div');
+            newTile.className = 'student-tile';
+            newTile.innerHTML = `
+                <div class="tile-time">TIME IN : ${timeStr}</div>
+                <div class="tile-name">${studentData.name}</div>
+                <div class="tile-section">${studentData.section || 'N/A'}</div>
+            `;
+
+            // Add animation
+            newTile.style.opacity = '0';
+            newTile.style.transform = 'scale(0.8)';
+            
+            container.insertBefore(newTile, container.firstChild);
+
+            // Animate in
+            setTimeout(() => {
+                newTile.style.transition = 'all 0.3s ease';
+                newTile.style.opacity = '1';
+                newTile.style.transform = 'scale(1)';
+            }, 10);
+
+            // Keep only last 5 students
+            const allTiles = container.querySelectorAll('.student-tile:not(.empty)');
+            if (allTiles.length > 5) {
+                for (let i = 5; i < allTiles.length; i++) {
+                    allTiles[i].remove();
+                }
+            }
+
+            // Add empty tiles if needed
+            const remainingSlots = 5 - container.querySelectorAll('.student-tile:not(.empty)').length;
+            for (let i = 0; i < remainingSlots; i++) {
+                const emptyTile = document.createElement('div');
+                emptyTile.className = 'student-tile empty';
+                emptyTile.innerHTML = `
+                    <div class="tile-time">TIME IN : --:--</div>
+                    <div class="tile-name">STUDENT NAME</div>
+                    <div class="tile-section">SECTION</div>
+                `;
+                container.appendChild(emptyTile);
+            }
         }
 
         function resetStudentDisplay() {
