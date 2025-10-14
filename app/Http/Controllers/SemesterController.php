@@ -136,10 +136,6 @@ class SemesterController extends Controller
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
                 'description' => 'nullable|string|max:1000',
-                'morning_period_start' => 'nullable|date_format:H:i',
-                'morning_period_end' => 'nullable|date_format:H:i|after:morning_period_start',
-                'afternoon_period_start' => 'nullable|date_format:H:i',
-                'afternoon_period_end' => 'nullable|date_format:H:i|after:afternoon_period_start',
             ]);
 
             if (is_object($validated)) {  
@@ -158,12 +154,6 @@ class SemesterController extends Controller
             }
 
              $validated['status'] = 'active';
-
-             $tempSemester = new Semester($validated);
-            $validation = $tempSemester->validateTimeRanges();
-            if (!$validation['valid']) {
-                return redirect()->back()->with('error', $validation['message'])->withInput();
-            }
 
              if ($validated['status'] === 'active') {
                 Semester::where('school_id', $validated['school_id'])
@@ -278,10 +268,6 @@ class SemesterController extends Controller
                 'end_date' => $semester->end_date ? $semester->end_date->format('Y-m-d') : null,
                 'school_id' => $semester->school_id,
                 'description' => $semester->description,
-                'morning_period_start' => $semester->morning_period_start,
-                'morning_period_end' => $semester->morning_period_end,
-                'afternoon_period_start' => $semester->afternoon_period_start,
-                'afternoon_period_end' => $semester->afternoon_period_end,
                 'student_count' => $semester->students()->count(),
                 'attendance_count' => Attendance::whereHas('student', function($query) use ($semester) {
                     $query->where('semester_id', $semester->id);
@@ -326,12 +312,8 @@ class SemesterController extends Controller
                 'school_id' => 'required|exists:schools,id',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
-                'status' => 'required|in:active,inactive',
+                'status' => 'required|in:active,inactive,completed',
                 'description' => 'nullable|string|max:1000',
-                'morning_period_start' => 'nullable|date_format:H:i',
-                'morning_period_end' => 'nullable|date_format:H:i|after:morning_period_start',
-                'afternoon_period_start' => 'nullable|date_format:H:i',
-                'afternoon_period_end' => 'nullable|date_format:H:i|after:afternoon_period_start',
             ]);
 
             if (is_object($validated)) { 
@@ -346,12 +328,6 @@ class SemesterController extends Controller
                 ]);
                 
                 return redirect()->back()->with('error', 'You cannot move semesters to other schools.');
-            }
-
-             $tempSemester = new Semester($validated);
-            $validation = $tempSemester->validateTimeRanges();
-            if (!$validation['valid']) {
-                return redirect()->back()->with('error', $validation['message'])->withInput();
             }
 
              if ($validated['status'] === 'active' && $semester->status !== 'active') {

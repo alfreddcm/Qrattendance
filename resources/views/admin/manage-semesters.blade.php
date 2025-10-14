@@ -58,7 +58,6 @@
                         <th>SCHOOL</th>
                         <th>DURATION</th>
                         <th>STATUS</th>
-                        <th>TIME RANGES</th>
                         <th style="width: 120px;">ACTIONS</th>
                     </tr>
                 </thead>
@@ -83,18 +82,6 @@
                                 <span class="badge-success">Active</span>
                             @else
                                 <span class="badge-secondary">Inactive</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($semester->morning_period_start && $semester->morning_period_end)
-                                <div class="time-ranges">
-                                    <div><strong>Morning:</strong> {{ \Carbon\Carbon::parse($semester->morning_period_start)->format('g:i A') }} - {{ \Carbon\Carbon::parse($semester->morning_period_end)->format('g:i A') }}</div>
-                                    @if($semester->afternoon_period_start && $semester->afternoon_period_end)
-                                        <div><strong>Afternoon:</strong> {{ \Carbon\Carbon::parse($semester->afternoon_period_start)->format('g:i A') }} - {{ \Carbon\Carbon::parse($semester->afternoon_period_end)->format('g:i A') }}</div>
-                                    @endif
-                                </div>
-                            @else
-                                <span class="text-muted">Time ranges not set</span>
                             @endif
                         </td>
                         <td class="text-center">
@@ -181,45 +168,6 @@
                         <textarea class="form-control" id="description" name="description" rows="2" 
                                   placeholder="Optional description"></textarea>
                     </div>
-                    
-                    <h6 class="mt-4 mb-3">Attendance Time Schedules</h6>
-                    <div class="alert alert-info">
-                        <small><i class="fas fa-info-circle"></i> Set the general time periods for this semester. These will define the overall attendance schedule framework.</small>
-                    </div>
-                    
-                    <!-- Morning Period -->
-                    <h6 class="mt-3 mb-2 text-primary">Morning Period</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="morning_period_start" class="form-label">Morning Start</label>
-                                <input type="time" class="form-control" id="morning_period_start" name="morning_period_start">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="morning_period_end" class="form-label">Morning End</label>
-                                <input type="time" class="form-control" id="morning_period_end" name="morning_period_end">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Afternoon Period -->
-                    <h6 class="mt-3 mb-2 text-success">Afternoon Period</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="afternoon_period_start" class="form-label">Afternoon Start</label>
-                                <input type="time" class="form-control" id="afternoon_period_start" name="afternoon_period_start">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="afternoon_period_end" class="form-label">Afternoon End</label>
-                                <input type="time" class="form-control" id="afternoon_period_end" name="afternoon_period_end">
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-compact-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -291,45 +239,6 @@
                     <div class="mb-3">
                         <label for="edit_description" class="form-label">Description</label>
                         <textarea class="form-control" id="edit_description" name="description" rows="2"></textarea>
-                    </div>
-                    
-                    <h6 class="mt-4 mb-3">Attendance Time Schedules</h6>
-                    <div class="alert alert-warning">
-                        <small><i class="fas fa-exclamation-triangle"></i> Modifying time schedules will affect all attendance data. Ensure no conflicts exist.</small>
-                    </div>
-                    
-                    <!-- Morning Period -->
-                    <h6 class="mt-3 mb-2 text-primary">Morning Period</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_morning_period_start" class="form-label">Morning Start</label>
-                                <input type="time" class="form-control" id="edit_morning_period_start" name="morning_period_start">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_morning_period_end" class="form-label">Morning End</label>
-                                <input type="time" class="form-control" id="edit_morning_period_end" name="morning_period_end">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Afternoon Period -->
-                    <h6 class="mt-3 mb-2 text-success">Afternoon Period</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_afternoon_period_start" class="form-label">Afternoon Start</label>
-                                <input type="time" class="form-control" id="edit_afternoon_period_start" name="afternoon_period_start">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_afternoon_period_end" class="form-label">Afternoon End</label>
-                                <input type="time" class="form-control" id="edit_afternoon_period_end" name="afternoon_period_end">
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -466,50 +375,6 @@ function validateSemesterTimes(prefix) {
         }
     }
     
-    // Check time periods (only if values are provided)
-    const morningStart = getTimeValue('morning_period_start');
-    const morningEnd = getTimeValue('morning_period_end');
-    const afternoonStart = getTimeValue('afternoon_period_start');
-    const afternoonEnd = getTimeValue('afternoon_period_end');
-    
-    // Check morning period
-    if (morningStart && morningEnd) {
-        if (timeToMinutes(morningStart) >= timeToMinutes(morningEnd)) {
-            alert('Morning period start time must be before end time');
-            const morningEndField = document.getElementById(prefix === 'add' ? 'morning_period_end' : `${prefix}_morning_period_end`);
-            if (morningEndField) morningEndField.focus();
-            return false;
-        }
-    }
-    
-    // Check afternoon period
-    if (afternoonStart && afternoonEnd) {
-        if (timeToMinutes(afternoonStart) >= timeToMinutes(afternoonEnd)) {
-            alert('Afternoon period start time must be before end time');
-            const afternoonEndField = document.getElementById(prefix === 'add' ? 'afternoon_period_end' : `${prefix}_afternoon_period_end`);
-            if (afternoonEndField) afternoonEndField.focus();
-            return false;
-        }
-    }
-    
-    // Check morning and afternoon don't overlap (only if both periods are defined)
-    if (morningEnd && afternoonStart) {
-        if (timeToMinutes(afternoonStart) <= timeToMinutes(morningEnd)) {
-            alert('Afternoon period must start after morning period ends. Please ensure there is a break between periods.');
-            const afternoonStartField = document.getElementById(prefix === 'add' ? 'afternoon_period_start' : `${prefix}_afternoon_period_start`);
-            if (afternoonStartField) afternoonStartField.focus();
-            return false;
-        }
-        
-        // Suggest minimum gap (optional)
-        const gap = timeToMinutes(afternoonStart) - timeToMinutes(morningEnd);
-        if (gap < 30) { // Less than 30 minutes
-            if (!confirm(`Only ${gap} minutes break between morning and afternoon periods. Recommended minimum is 30 minutes. Continue?`)) {
-                return false;
-            }
-        }
-    }
-    
     return true;
 }
 
@@ -577,11 +442,6 @@ function editSemester(semesterId) {
             document.getElementById('edit_end_date').value = formatDateValue(data.end_date);
             document.getElementById('edit_school_id').value = data.school_id || '';
             document.getElementById('edit_description').value = data.description || '';
-            
-             document.getElementById('edit_morning_period_start').value = formatTime(data.morning_period_start);
-            document.getElementById('edit_morning_period_end').value = formatTime(data.morning_period_end);
-            document.getElementById('edit_afternoon_period_start').value = formatTime(data.afternoon_period_start);
-            document.getElementById('edit_afternoon_period_end').value = formatTime(data.afternoon_period_end);
             
             document.getElementById('editSemesterForm').action = '/admin/semesters/' + semesterId;
             

@@ -22,10 +22,6 @@
             'name' => $currentSemester->name,
             'start_date' => $currentSemester->start_date,
             'end_date' => $currentSemester->end_date,
-            'am_time_in_start_input' => $currentSemester->am_time_in_start_input ?? '',
-            'am_time_in_end_input' => $currentSemester->am_time_in_end_input ?? '',
-            'pm_time_out_start_input' => $currentSemester->pm_time_out_start_input ?? '',
-            'pm_time_out_end_input' => $currentSemester->pm_time_out_end_input ?? '',
         ];
     }
     
@@ -34,14 +30,14 @@
         'school_name' => auth()->user()->school ? auth()->user()->school->name : 'N/A',
         'school_year' => $isActiveSemester ? \Carbon\Carbon::parse($currentSemester->start_date)->format('Y') . ' - ' . \Carbon\Carbon::parse($currentSemester->end_date)->format('Y') : 'N/A',
         'date_range' => $isActiveSemester ? \Carbon\Carbon::parse($currentSemester->start_date)->format('M j, Y') . ' – ' . \Carbon\Carbon::parse($currentSemester->end_date)->format('M j, Y') : 'Not Available',
-        'am_time_in_start_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->morning_period_start ?? '07:00:00')->format('g:i A')) : 'N/A',
-        'am_time_in_end_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->morning_period_end ?? '11:30:00')->format('g:i A')) : 'N/A',
-        'am_time_out_start_display' => 'N/A', // Not used with new semester structure
-        'am_time_out_end_display' => 'N/A', // Not used with new semester structure
-        'pm_time_in_start_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->afternoon_period_start ?? '13:00:00')->format('g:i A')) : 'N/A',
-        'pm_time_in_end_display' => $isActiveSemester ? (\Carbon\Carbon::parse($currentSemester->afternoon_period_end ?? '17:00:00')->format('g:i A')) : 'N/A',
-        'pm_time_out_start_display' => 'N/A', // Not used with new semester structure
-        'pm_time_out_end_display' => 'N/A', // Not used with new semester structure
+        'am_time_in_start_display' => 'N/A', // Time schedules moved to sections
+        'am_time_in_end_display' => 'N/A', // Time schedules moved to sections
+        'am_time_out_start_display' => 'N/A', // Time schedules moved to sections
+        'am_time_out_end_display' => 'N/A', // Time schedules moved to sections
+        'pm_time_in_start_display' => 'N/A', // Time schedules moved to sections
+        'pm_time_in_end_display' => 'N/A', // Time schedules moved to sections
+        'pm_time_out_start_display' => 'N/A', // Time schedules moved to sections
+        'pm_time_out_end_display' => 'N/A', // Time schedules moved to sections
         'student_count' => $isActiveSemester ? ($studentCount ?? 0) : 0,
         'present_count' => $isActiveSemester ? ($presentCount ?? 0) : 0,
         'absent_count' => $isActiveSemester ? ($absentCount ?? 0) : 0,
@@ -99,79 +95,53 @@
                             <div class="col-md-12">
                                 <p class="mb-1"><strong>School:</strong> {{ $displayData['school_name'] }}</p>
                                 <p class="mb-1"><strong>Year:</strong> {{ $displayData['school_year'] }}</p>
-                                <p class="mb-1"><strong>Period:</strong> {{ $displayData['date_range'] }}</p>
-                                <p class="mb-1"><strong>Morning Period:</strong> 
-                                    <span class="badge bg-success">{{ $displayData['am_time_in_start_display'] }} - {{ $displayData['am_time_in_end_display'] }}</span>
-                                </p>
-                                <p class="mb-0"><strong>Afternoon Period:</strong> 
-                                    <span class="badge bg-warning">{{ $displayData['pm_time_in_start_display'] }} - {{ $displayData['pm_time_in_end_display'] }}</span>
-                                </p>
+                                <p class="mb-0"><strong>Period:</strong> {{ $displayData['date_range'] }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Today's Session Card -->
+            <!-- Attendance Code Card -->
             <div class="col-md-5">
                 <div class="card shadow-sm h-100" style="min-height: 200px;">
                     <div class="card-body d-flex flex-column">
                         <h6 class="card-title mb-3 text-center fw-bold">
-                            <i class="fas fa-calendar-day me-1"></i>Today's Session
+                            <i class="fas fa-qrcode me-1"></i>Attendance Access Code
                         </h6>
-                        @if($todaySession)
-                            <div class="text-center mb-2">
-                                <div class="fw-bold text-primary">{{$todaySession->session_name}}</div>
-                                <small class="text-muted">{{ $todaySession->semester->name ?? 'Unknown' }}</small>
+                        
+                        <div id="noActiveCodeDashboard" style="display: none;">
+                            <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
+                                <i class="fas fa-lock fa-2x text-muted mb-3"></i>
+                                <p class="text-muted mb-3">No active attendance code</p>
+                                <div class="d-grid gap-2 mt-auto">
+                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i>Generate Code
+                                    </a>
+                                    <a href="{{ route('teacher.attendance.live') }}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-qrcode me-1"></i>QR Scanner
+                                    </a>
+                                </div>
                             </div>
-                            
-                            <div class="row text-center mb-3">
-                                <div class="col-6">
-                                    <div class="border-end">
-                                        <div class="fw-bold text-success">{{ $todaySession->started_at->format('M j') }}</div>
-                                        <small class="text-muted">Created</small>
-                                    </div>
+                        </div>
+                        
+                        <div id="activeCodeDisplayDashboard" style="display: none;">
+                            <div class="text-center mb-4">
+                                <div class="display-4 font-monospace fw-bold text-primary" id="displayCodeDashboard">
+                                    000000
                                 </div>
-                                <div class="col-6">
-                                    <div class="fw-bold text-info">{{ $todaySession->attendance_count ?? 0 }}</div>
-                                    <small class="text-muted">Scanned</small>
-                                </div>
+                                <small class="text-muted">Active Access Code</small>
                             </div>
                             
                             <div class="d-grid gap-2 mt-auto">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-outline-secondary" 
-                                        data-url="{{ $todaySession->getPublicUrl() }}" data-action="copy"
-                                        title="Copy URL">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                    <a href="{{ $todaySession->getPublicUrl() }}" target="_blank" class="btn btn-success">
-                                        <i class="fas fa-external-link-alt me-1"></i>Open Link
-                                    </a>
-                                </div>
-                                <a href="{{ route('teacher.attendance.live') }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-qrcode me-1"></i>Live Scanner
-                                </a>
-                                <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-sm">
+                                <a href="{{ route('teacher.attendance') }}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i>View Details
                                 </a>
+                                <a href="{{ route('teacher.attendance.live') }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-qrcode me-1"></i>QR Scanner
+                                </a>
                             </div>
-                        @else
-                            <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
-                                <p class="text-muted mb-3">No active session today</p>
-                                <div class="d-grid gap-2 mt-auto">
-                                    <a href="{{ route('teacher.attendance.live') }}" class="btn btn-primary">
-                                        <i class="fas fa-qrcode me-1"></i>Start Live Scanner
-                                    </a>
-                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-success">
-                                        <i class="fas fa-plus me-1"></i>Create Session
-                                    </a>
-                                    <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-eye me-1"></i>View All Sessions
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -413,7 +383,7 @@
                             The current date ({{ $today->format('M j, Y') }}) is outside any semester date range.
                         </p>
                         <a href="{{ route('teacher.semesters') }}" class="btn btn-warning btn-compact">
-                            <i class="fas fa-plus me-1"></i>Add or Manage Semester
+                            <i class="fas fa-plus me-1"></i>View Semester
                         </a>
                     </div>
                 </div>
@@ -755,17 +725,55 @@ function toggleMissingStudents() {
 
 // Auto-refresh functionality (optional)
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-refresh every 5 minutes (300000 ms)
-    // setInterval(() => {
-    //     location.reload();
-    // }, 300000);
-    
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+    
+    // Load active attendance code
+    loadActiveCodeDashboard();
 });
+
+// Load Active Code for Dashboard
+let updateIntervalDashboard = null;
+
+function loadActiveCodeDashboard() {
+    fetch('{{ route("teacher.attendance.code.active") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.has_active_code) {
+                displayActiveCodeDashboard(data.data);
+            } else {
+                showNoActiveCodeDashboard();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading active code:', error);
+            showNoActiveCodeDashboard();
+        });
+}
+
+function displayActiveCodeDashboard(codeData) {
+    document.getElementById('displayCodeDashboard').textContent = codeData.code;
+    
+    document.getElementById('noActiveCodeDashboard').style.display = 'none';
+    document.getElementById('activeCodeDisplayDashboard').style.display = 'block';
+    
+    // Start interval to check if code is still active
+    if (updateIntervalDashboard) clearInterval(updateIntervalDashboard);
+    updateIntervalDashboard = setInterval(loadActiveCodeDashboard, 60000); // Update every 60 seconds
+}
+
+function showNoActiveCodeDashboard() {
+    document.getElementById('noActiveCodeDashboard').style.display = 'block';
+    document.getElementById('activeCodeDisplayDashboard').style.display = 'none';
+    
+    if (updateIntervalDashboard) {
+        clearInterval(updateIntervalDashboard);
+        updateIntervalDashboard = null;
+    }
+}
 
 </script>
 

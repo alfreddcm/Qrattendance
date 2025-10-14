@@ -71,12 +71,10 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th width="5%">#</th>
-                                        <th  >Semester Name</th>
-                                         <th  >Start Date</th>
-                                        <th  >End Date</th>
-                                        <th  >Status</th>
-                                        <th  >Morning Period</th>
-                                        <th  >Afternoon Period</th>
+                                        <th>Semester Name</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
                                      </tr>
                                 </thead>
                                 <tbody>
@@ -107,33 +105,15 @@
                                                 {{ \Carbon\Carbon::parse($semester->end_date)->format('M j, Y') }}
                                             </td>
                                             <td>
-                                                @if($semester->status === 'active')
-                                                    <span class="badge bg-success">Active</span>
-                                                @elseif($semester->status === 'completed')
+                                                @if($semester->status === 'inactive')
+                                                    <span class="badge bg-warning">Inactive</span>
+                                                @elseif($isActive)
+                                                    <span class="badge bg-success">Ongoing</span>
+                                                @elseif($isPast)
                                                     <span class="badge bg-secondary">Completed</span>
                                                 @else
-                                                    <span class="badge bg-warning">Inactive</span>
+                                                    <span class="badge bg-info">Upcoming</span>
                                                 @endif
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    @if($semester->morning_period_start && $semester->morning_period_end)
-                                                        {{ \Carbon\Carbon::parse($semester->morning_period_start)->format('g:i A') }} - 
-                                                        {{ \Carbon\Carbon::parse($semester->morning_period_end)->format('g:i A') }}
-                                                    @else
-                                                        <span class="text-muted">Not set</span>
-                                                    @endif
-                                                </small>
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    @if($semester->afternoon_period_start && $semester->afternoon_period_end)
-                                                        {{ \Carbon\Carbon::parse($semester->afternoon_period_start)->format('g:i A') }} - 
-                                                        {{ \Carbon\Carbon::parse($semester->afternoon_period_end)->format('g:i A') }}
-                                                    @else
-                                                        <span class="text-muted">Not set</span>
-                                                    @endif
-                                                </small>
                                             </td>
                                          
                                         </tr>
@@ -321,53 +301,6 @@
                                 <i class="fas fa-calendar-check me-1"></i>End Date
                             </label>
                             <input type="text" class="form-control" id="view_end_date" readonly>
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="my-4">
-                <h6 class="mb-1">
-                    <i class="fas fa-clock me-2"></i>Period Schedule Configuration
-                </h6>
-                
-                <!-- Period Times -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card border-success">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-sun me-1"></i>Morning Period
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-1">
-                                    <label class="form-label">Start Time</label>
-                                    <input type="text" class="form-control" id="view_morning_period_start" readonly>
-                                </div>
-                                <div class="mb-1">
-                                    <label class="form-label">End Time</label>
-                                    <input type="text" class="form-control" id="view_morning_period_end" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-warning">
-                            <div class="card-header bg-warning text-white">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-moon me-1"></i>Afternoon Period
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-1">
-                                    <label class="form-label">Start Time</label>
-                                    <input type="text" class="form-control" id="view_afternoon_period_start" readonly>
-                                </div>
-                                <div class="mb-1">
-                                    <label class="form-label">End Time</label>
-                                    <input type="text" class="form-control" id="view_afternoon_period_end" readonly>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -717,10 +650,6 @@ function viewSemesterDetails(semesterId) {
     document.getElementById('view_status').value = semester.status || '';
     document.getElementById('view_start_date').value = semester.start_date || '';
     document.getElementById('view_end_date').value = semester.end_date || '';
-    document.getElementById('view_morning_period_start').value = semester.morning_period_start || '';
-    document.getElementById('view_morning_period_end').value = semester.morning_period_end || '';
-    document.getElementById('view_afternoon_period_start').value = semester.afternoon_period_start || '';
-    document.getElementById('view_afternoon_period_end').value = semester.afternoon_period_end || '';
     
     // Show the modal
     const modal = new bootstrap.Modal(document.getElementById('viewSemesterModal'));

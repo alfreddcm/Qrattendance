@@ -13,6 +13,8 @@ use App\Http\Controllers\StudentIdController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MessageApiController;
+use App\Http\Controllers\AttendanceCodeController;
+use App\Http\Controllers\PublicAttendanceController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -232,8 +234,20 @@ Route::middleware(['role:teacher,admin'])->group(function () {
 
  Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Attendance Code Routes (Teacher)
+Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
+    Route::post('/attendance-code/generate', [App\Http\Controllers\AttendanceCodeController::class, 'generate'])->name('teacher.attendance.code.generate');
+    Route::get('/attendance-code/active', [App\Http\Controllers\AttendanceCodeController::class, 'getActive'])->name('teacher.attendance.code.active');
+    Route::delete('/attendance-code/{id}/deactivate', [App\Http\Controllers\AttendanceCodeController::class, 'deactivate'])->name('teacher.attendance.code.deactivate');
+});
+
 // Public Attendance Routes (no auth required)
-Route::get('/attendance/{token}', [App\Http\Controllers\AttendanceSessionController::class, 'publicAttendance'])->name('attendance.public');
+Route::get('/public/attendance', [App\Http\Controllers\PublicAttendanceController::class, 'index'])->name('public.attendance');
+Route::post('/public/attendance/record', [App\Http\Controllers\PublicAttendanceController::class, 'record'])->name('public.attendance.record');
+Route::post('/public/attendance/validate', [App\Http\Controllers\AttendanceCodeController::class, 'validate'])->name('public.attendance.validate');
+
+// Legacy public attendance routes (keep for backwards compatibility)
+Route::get('/attendance/{token}', [App\Http\Controllers\AttendanceSessionController::class, 'publicAttendance'])->name('attendance.public.legacy');
 Route::post('/attendance/{token}/qr-verify', [App\Http\Controllers\AttendanceSessionController::class, 'publicQrVerify'])->name('attendance.public.verify');
 Route::get('/attendance/{token}/status', [App\Http\Controllers\AttendanceSessionController::class, 'checkSessionStatus'])->name('attendance.public.status');
 

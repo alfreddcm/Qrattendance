@@ -51,8 +51,7 @@ class StudentManagementController extends Controller
             }
         }
         
-        // Handle grade_section filter (format: "Grade 11|STEM")
-        if ($request->filled('grade_section')) {
+         if ($request->filled('grade_section')) {
             $parts = explode('|', $request->grade_section);
             if (count($parts) == 2) {
                 $gradeLevel = $parts[0];
@@ -71,8 +70,7 @@ class StudentManagementController extends Controller
                 $query->whereNull('qr_code');
             }
         }
-        
-        // Handle sorting
+ 
         $sortBy = $request->get('sort_by', 'name');
         $sortOrder = $request->get('sort_order', 'asc');
         

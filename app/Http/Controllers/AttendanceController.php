@@ -110,33 +110,45 @@ class AttendanceController extends Controller
         $currentTime = $now->format('H:i:s');
         
          $section = $student->section;
-        $timeSource = $section ?: $semester;
+        
+         if (!$section) {
+            Log::warning('Student has no section assigned', [
+                'scanner_type' => $scannerType,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'user_id' => Auth::id(),
+            ]);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Student is not assigned to any section. Please contact your teacher.'
+            ]);
+        }
         
          $periods = [
             'am_time_in' => [
-                'start' => $timeSource->am_time_in_start ?? $semester->am_time_in_start,
-                'end' => $timeSource->am_time_in_end ?? $semester->am_time_in_end,
+                'start' => $section->am_time_in_start,
+                'end' => $section->am_time_in_end,
                 'field' => 'time_in_am',
                 'status_field' => 'am_status',
                 'label' => 'AM Time In'
             ],
             'am_time_out' => [
-                'start' => $timeSource->am_time_out_start ?? $semester->am_time_out_start,
-                'end' => $timeSource->am_time_out_end ?? $semester->am_time_out_end,
+                'start' => $section->am_time_out_start,
+                'end' => $section->am_time_out_end,
                 'field' => 'time_out_am',
                 'status_field' => 'am_status',
                 'label' => 'AM Time Out'
             ],
             'pm_time_in' => [
-                'start' => $timeSource->pm_time_in_start ?? $semester->pm_time_in_start,
-                'end' => $timeSource->pm_time_in_end ?? $semester->pm_time_in_end,
+                'start' => $section->pm_time_in_start,
+                'end' => $section->pm_time_in_end,
                 'field' => 'time_in_pm',
                 'status_field' => 'pm_status',
                 'label' => 'PM Time In'
             ],
             'pm_time_out' => [
-                'start' => $timeSource->pm_time_out_start ?? $semester->pm_time_out_start,
-                'end' => $timeSource->pm_time_out_end ?? $semester->pm_time_out_end,
+                'start' => $section->pm_time_out_start,
+                'end' => $section->pm_time_out_end,
                 'field' => 'time_out_pm',
                 'status_field' => 'pm_status',
                 'label' => 'PM Time Out'
