@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Section;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\User;
 use App\Models\Student;
 use Illuminate\Http\Request;
@@ -15,9 +15,7 @@ use Carbon\Carbon;
 
 class SectionController extends Controller
 {
-    /**
-     * Store a newly created section in storage.
-     */
+ 
     public function store(Request $request)
     {
         Log::info('Creating new section', ['user_id' => Auth::id()]);
@@ -37,7 +35,7 @@ class SectionController extends Controller
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
-            'semester_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:semesters,id',
             'teacher_id' => 'nullable|exists:users,id',
             'am_time_in_start' => 'required|date_format:H:i',
             'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',
@@ -63,7 +61,7 @@ class SectionController extends Controller
         try {
              $existingSection = Section::where('name', $request->name)
                 ->where('gradelevel', $request->gradelevel)
-                ->where('semester_id', $request->semester_id)
+                ->where('school_year_id', $request->school_year_id)
                 ->first();
 
             if ($existingSection) {
@@ -100,7 +98,7 @@ class SectionController extends Controller
             $section = Section::create([
                 'name' => $validatedData['name'],
                 'gradelevel' => $validatedData['gradelevel'],
-                'semester_id' => $validatedData['semester_id'],
+                'school_year_id' => $validatedData['school_year_id'],
                 'teacher_id' => $validatedData['teacher_id'],
                 'am_time_in_start' => $validatedData['am_time_in_start'],
                 'am_time_in_end' => $validatedData['am_time_in_end'],
@@ -135,7 +133,7 @@ class SectionController extends Controller
                 'section_name' => $section->name,
                 'grade_level' => $section->gradelevel,
                 'teacher_id' => $section->teacher_id,
-                'semester_id' => $section->semester_id
+                'school_year_id' => $section->school_year_id
             ]);
 
             if ($request->ajax() || $request->isJson()) {
@@ -179,7 +177,7 @@ class SectionController extends Controller
                 'name' => $section->name,
                 'gradelevel' => $section->gradelevel,
                 'teacher_id' => $section->teacher_id,
-                'semester_id' => $section->semester_id,
+                'school_year_id' => $section->school_year_id,
                 'am_time_in_start' => $section->am_time_in_start,
                 'am_time_in_end' => $section->am_time_in_end,
                 'am_time_out_start' => $section->am_time_out_start,
@@ -189,10 +187,10 @@ class SectionController extends Controller
                 'pm_time_out_start' => $section->pm_time_out_start,
                 'pm_time_out_end' => $section->pm_time_out_end,
                  'semester_defaults' => [
-                    'morning_start' => $section->semester->morning_period_start,
-                    'morning_end' => $section->semester->morning_period_end,
-                    'afternoon_start' => $section->semester->afternoon_period_start,
-                    'afternoon_end' => $section->semester->afternoon_period_end,
+                    'morning_start' => $section->schoolYear->morning_period_start,
+                    'morning_end' => $section->schoolYear->morning_period_end,
+                    'afternoon_start' => $section->schoolYear->afternoon_period_start,
+                    'afternoon_end' => $section->schoolYear->afternoon_period_end,
                 ]
             ]);
 
@@ -235,7 +233,7 @@ class SectionController extends Controller
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
-            'semester_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:semesters,id',
             'teacher_id' => 'required|exists:users,id',
             'am_time_in_start' => 'required|date_format:H:i',
             'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',
@@ -263,7 +261,7 @@ class SectionController extends Controller
             
             $existingSection = Section::where('name', $validatedData['name'])
                 ->where('gradelevel', $validatedData['gradelevel'])
-                ->where('semester_id', $validatedData['semester_id'])
+                ->where('school_year_id', $validatedData['school_year_id'])
                 ->where('id', '!=', $section->id)
                 ->first();
 
@@ -308,7 +306,7 @@ class SectionController extends Controller
             $section->update([
                 'name' => $validatedData['name'],
                 'gradelevel' => $validatedData['gradelevel'],
-                'semester_id' => $validatedData['semester_id'],
+                'school_year_id' => $validatedData['school_year_id'],
                 'teacher_id' => $validatedData['teacher_id'],
                 'am_time_in_start' => $validatedData['am_time_in_start'],
                 'am_time_in_end' => $validatedData['am_time_in_end'],
@@ -332,7 +330,7 @@ class SectionController extends Controller
                 'grade_level' => $section->gradelevel,
                 'old_teacher_id' => $oldTeacherId,
                 'new_teacher_id' => $newTeacherId,
-                'semester_id' => $section->semester_id
+                'school_year_id' => $section->school_year_id
             ]);
 
             if ($request->ajax() || $request->isJson()) {
@@ -545,21 +543,21 @@ class SectionController extends Controller
                 ->orderBy('name')
                 ->get();
 
-            $semesters = Semester::select('id', 'name', 'status', 'morning_period_start', 'morning_period_end', 'afternoon_period_start', 'afternoon_period_end')
+            $schoolYears = SchoolYear::select('id', 'name', 'status', 'morning_period_start', 'morning_period_end', 'afternoon_period_start', 'afternoon_period_end')
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get();
 
-             $formattedSemesters = $semesters->map(function ($semester) {
+             $formattedSemesters = $schoolYears->map(function ($schoolYear) {
                 return [
-                    'id' => $semester->id,
-                    'name' => $semester->name,
-                    'status' => $semester->status,
+                    'id' => $schoolYear->id,
+                    'name' => $schoolYear->name,
+                    'status' => $schoolYear->status,
                     'time_defaults' => [
-                        'morning_start' => $semester->morning_period_start ? Carbon::parse($semester->morning_period_start)->format('H:i') : '07:00',
-                        'morning_end' => $semester->morning_period_end ? Carbon::parse($semester->morning_period_end)->format('H:i') : '12:00',
-                        'afternoon_start' => $semester->afternoon_period_start ? Carbon::parse($semester->afternoon_period_start)->format('H:i') : '13:00',
-                        'afternoon_end' => $semester->afternoon_period_end ? Carbon::parse($semester->afternoon_period_end)->format('H:i') : '17:00',
+                        'morning_start' => $schoolYear->morning_period_start ? Carbon::parse($schoolYear->morning_period_start)->format('H:i') : '07:00',
+                        'morning_end' => $schoolYear->morning_period_end ? Carbon::parse($schoolYear->morning_period_end)->format('H:i') : '12:00',
+                        'afternoon_start' => $schoolYear->afternoon_period_start ? Carbon::parse($schoolYear->afternoon_period_start)->format('H:i') : '13:00',
+                        'afternoon_end' => $schoolYear->afternoon_period_end ? Carbon::parse($schoolYear->afternoon_period_end)->format('H:i') : '17:00',
                     ]
                 ];
             });

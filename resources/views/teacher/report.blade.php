@@ -7,21 +7,21 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="fs-5 mb-1">
-                    <span class="me-2">📊</span>
-                    Attendance Reports
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Reports
                 </h4>
                 <p class="subtitle fs-6 mb-0">Generate and export attendance reports</p>
             </div>
-           
+
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white p-2">
                     <h6 class="mb-0 fs-6">
-                        <span class="me-1">🔍</span>
+                        <i class="fas fa-search me-1"></i>
                         Report Filters
                     </h6>
                 </div>
@@ -33,37 +33,37 @@
                             </label>
                             <select name="type" id="type" class="form-select form-select-sm">
                                 <option value="daily" {{ request('type', 'daily') == 'daily' ? 'selected' : '' }}>
-                                    📅 Daily Report
+                                    <i class="fas fa-calendar-day me-1"></i>Daily Report
                                 </option>
                                 <option value="monthly" {{ request('type') == 'monthly' ? 'selected' : '' }}>
-                                    📊 Monthly Summary
+                                    <i class="fas fa-chart-line me-1"></i>Monthly Summary
                                 </option>
                                 <option value="quarterly" {{ request('type') == 'quarterly' ? 'selected' : '' }}>
-                                    📈 Quarterly Tracking
+                                    📈 Quarterly 
                                 </option>
                             </select>
                         </div>
-                        
+
                         <div class="col-md-3">
                             <label for="grade_section" class="form-label fw-bold fs-6">
                                 <i class="fas fa-users me-1"></i>Grade & Section
                             </label>
                             <select name="grade_section" id="grade_section" class="form-select form-select-sm">
-                                <option value="">All Students</option>
                                 @if(isset($gradeSectionOptions))
                                     @foreach($gradeSectionOptions as $option)
                                         @php
                                             $parts = explode('|', $option);
                                             $displayText = count($parts) == 2 ? "Grade {$parts[0]} - {$parts[1]}" : $option;
+                                            $isSelected = (isset($gradeSection) && $gradeSection == $option) || (request('grade_section') == $option);
                                         @endphp
-                                        <option value="{{ $option }}" {{ request('grade_section') == $option ? 'selected' : '' }}>
+                                        <option value="{{ $option }}" {{ $isSelected ? 'selected' : '' }}>
                                             {{ $displayText }}
                                         </option>
                                     @endforeach
                                 @endif
                             </select>
                         </div>
-                        
+
                         <div class="col-md-3">
                             <div id="dateField" style="display:none;">
                                 <label for="date" class="form-label fw-bold fs-6">
@@ -78,15 +78,15 @@
                                 <input type="month" name="month" id="month" value="{{ request('month', now()->format('Y-m')) }}" class="form-control">
                             </div>
                         </div>
-                        
+
                         <div class="col-md-3">
-                            <label for="semester_id" class="form-label fw-bold">
-                                <i class="fas fa-graduation-cap me-1"></i>Semester
+                            <label for="school_year_id" class="form-label fw-bold">
+                                <i class="fas fa-graduation-cap me-1"></i>School Year
                             </label>
-                            <select name="semester_id" id="semester_id" class="form-select">
-                                @foreach($semesters as $semester)
-                                    <option value="{{ $semester->id }}" {{ request('semester_id') == $semester->id ? 'selected' : '' }}>
-                                        {{ $semester->name }}
+                            <select name="school_year_id" id="school_year_id" class="form-select">
+                                @foreach($schoolYears as $schoolYear)
+                                    <option value="{{ $schoolYear->id }}" {{ request('school_year_id') == $schoolYear->id ? 'selected' : '' }}>
+                                        {{ $schoolYear->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -97,7 +97,7 @@
         </div>
     </div>
 
-        @if(isset($records) && count($records))
+@if(isset($records) && count($records))
     <div class="row mt-4">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -109,7 +109,7 @@
                         <form method="POST" action="{{ route('teacher.attendance.export.csv') }}">
                             @csrf
                             <input type="hidden" name="type" id="export_type" value="{{ request('type', 'daily') }}">
-                            <input type="hidden" name="semester_id" id="export_semester_id" value="{{ request('semester_id') }}">
+                            <input type="hidden" name="school_year_id" id="export_school_year_id" value="{{ request('school_year_id') }}">
                             <input type="hidden" name="grade_section" id="export_grade_section" value="{{ request('grade_section') }}">
                             <input type="hidden" name="date" id="export_date" value="{{ request('date') }}">
                             <input type="hidden" name="month" id="export_month" value="{{ request('month') }}">
@@ -126,7 +126,7 @@
         </div>
     </div>
     @endif
-    
+
     <div class="row mt-4">
         <div class="col-12">
             <div id="previewArea">
@@ -134,7 +134,7 @@
             </div>
         </div>
     </div>
-    
+
 
 </div>
 
@@ -152,11 +152,11 @@
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label for="sf2_semester" class="form-label fw-bold">
-                                <i class="fas fa-graduation-cap me-1"></i>Semester
+                            <label for="sf2_school_year" class="form-label fw-bold">
+                                <i class="fas fa-graduation-cap me-1"></i>School Year
                             </label>
-                            <select name="semester_id" id="sf2_semester" class="form-select" required>
-                                <option value="">Select Semester</option>
+                            <select name="school_year_id" id="sf2_school_year" class="form-select" required>
+                                <option value="">Select School Year</option>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -164,7 +164,6 @@
                                 <i class="fas fa-layer-group me-1"></i>Grade & Section
                             </label>
                             <select name="grade_section" id="sf2_grade_section" class="form-select">
-                                <option value="">All Students</option>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -172,7 +171,7 @@
                                 <i class="fas fa-calendar-alt me-1"></i>Month & Year
                             </label>
                             <select name="month_year" id="sf2_month_year" class="form-select" required>
-                                <option value="">Select Semester First</option>
+                                <option value="">Select School Year First</option>
                             </select>
                             <input type="hidden" name="month" id="sf2_month_hidden">
                             <input type="hidden" name="year" id="sf2_year_hidden">
@@ -192,7 +191,6 @@
     </div>
 </div>
 
-<!-- SF2 Result Modal -->
 <div class="modal fade" id="sf2ResultModal" tabindex="-1" aria-labelledby="sf2ResultModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -207,8 +205,8 @@
                     <i class="fas fa-info-circle me-2"></i>
                     <span id="sf2ResultMessage">SF2 file has been generated successfully!</span>
                 </div>
-                
-                <!-- Warning display area -->
+
+
                 <div id="sf2WarningsContainer" style="display: none;">
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -217,12 +215,12 @@
                         </ul>
                     </div>
                 </div>
-                
+
                 <div class="d-grid gap-2">
                     <a href="#" id="downloadExcelBtn" class="btn btn-success">
                         <i class="fas fa-download me-2"></i>Download Excel File
                     </a>
-                   
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -245,12 +243,9 @@ function updateFilterFields() {
     }
 }
 
-// SF2 Functions
 let sf2Data = {};
 
-// Enhanced error handling function
 function showError(message) {
-    // Create a more user-friendly error display
     const alertHtml = `
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -258,15 +253,12 @@ function showError(message) {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    
-    // Remove any existing error alerts
-    $('.modal-body .alert-danger').remove();
-    
-    // Add the error alert to the modal body
-    $('#sf2Modal .modal-body').prepend(alertHtml);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
+
+     $('.modal-body .alert-danger').remove();
+
+     $('#sf2Modal .modal-body').prepend(alertHtml);
+
+     setTimeout(() => {
         $('.alert-danger').fadeOut('slow', function() {
             $(this).remove();
         });
@@ -281,44 +273,40 @@ function showSuccess(message) {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    
+
     $('.modal-body .alert-success').remove();
     $('#sf2Modal .modal-body').prepend(alertHtml);
-    
+
     setTimeout(() => {
         $('.alert-success').fadeOut('slow', function() {
             $(this).remove();
         });
     }, 3000);
-} // Store all SF2 data
+}  
 
 function loadSF2Options() {
     $.get('{{ route("teacher.sf2.options") }}')
         .done(function(response) {
-            // Store the full response for later use
-            sf2Data = response;
-            
-            // Populate Semesters
-            const $semester = $('#sf2_semester');
-            $semester.empty().append('<option value="">Select Semester</option>');
-            response.semesters.forEach(function(semester) {
-                $semester.append(`<option value="${semester.id}" 
-                    data-start-month="${semester.start_month}"
-                    data-start-year="${semester.start_year}"
-                    data-end-month="${semester.end_month}"
-                    data-end-year="${semester.end_year}">${semester.name}</option>`);
+             sf2Data = response;
+
+             const $schoolYear = $('#sf2_school_year');
+            $schoolYear.empty().append('<option value="">Select School Year</option>');
+            response.schoolYears.forEach(function(schoolYear) {
+                $schoolYear.append(`<option value="${schoolYear.id}"
+                    data-start-month="${schoolYear.start_month}"
+                    data-start-year="${schoolYear.start_year}"
+                    data-end-month="${schoolYear.end_month}"
+                    data-end-year="${schoolYear.end_year}">${schoolYear.name}</option>`);
             });
 
-            // Populate Grade & Section Options
-            const $gradeSection = $('#sf2_grade_section');
+             const $gradeSection = $('#sf2_grade_section');
             $gradeSection.empty().append('<option value="">All Students</option>');
             response.grade_section_options.forEach(function(option) {
                 $gradeSection.append(`<option value="${option.value}">${option.label}</option>`);
             });
 
-            // Initialize month-year as empty (will be populated when semester is selected)
-            const $monthYear = $('#sf2_month_year');
-            $monthYear.empty().append('<option value="">Select Semester First</option>');
+             const $monthYear = $('#sf2_month_year');
+            $monthYear.empty().append('<option value="">Select School Year First</option>');
         })
         .fail(function(xhr) {
             console.error('SF2 Options Error:', xhr);
@@ -328,40 +316,38 @@ function loadSF2Options() {
 }
 
 function updateMonthOptions() {
-    const $semester = $('#sf2_semester');
+    const $schoolYear = $('#sf2_school_year');
     const $monthYear = $('#sf2_month_year');
-    const selectedSemester = $semester.find('option:selected');
-    
-    if (!$semester.val()) {
-        $monthYear.empty().append('<option value="">Select Semester First</option>');
+    const selectedSchoolYear = $schoolYear.find('option:selected');
+
+    if (!$schoolYear.val()) {
+        $monthYear.empty().append('<option value="">Select School Year First</option>');
         return;
     }
-    
-    const startMonth = parseInt(selectedSemester.data('start-month'));
-    const startYear = parseInt(selectedSemester.data('start-year'));
-    const endMonth = parseInt(selectedSemester.data('end-month'));
-    const endYear = parseInt(selectedSemester.data('end-year'));
-    
-    // Validate semester data
-    if (!startMonth || !startYear || !endMonth || !endYear) {
-        showError('Invalid semester data. Please contact administrator.');
-        $monthYear.empty().append('<option value="">Semester Data Error</option>');
+
+    const startMonth = parseInt(selectedSchoolYear.data('start-month'));
+    const startYear = parseInt(selectedSchoolYear.data('start-year'));
+    const endMonth = parseInt(selectedSchoolYear.data('end-month'));
+    const endYear = parseInt(selectedSchoolYear.data('end-year'));
+
+      if (!startMonth || !startYear || !endMonth || !endYear) {
+        showError('Invalid School Year data. Please contact administrator.');
+        $monthYear.empty().append('<option value="">School Year Data Error</option>');
         return;
     }
-    
+
     $monthYear.empty().append('<option value="">Select Month & Year</option>');
-    
-    // Generate months within semester range
-    const months = sf2Data.months;
+
+     const months = sf2Data.months;
     if (!months) {
         showError('Month data not loaded. Please try again.');
         return;
     }
-    
+
     let currentYear = startYear;
     let currentMonth = startMonth;
     let optionCount = 0;
-    
+
     while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
         const monthName = months[currentMonth];
         if (monthName) {
@@ -369,118 +355,104 @@ function updateMonthOptions() {
             $monthYear.append(`<option value="${value}">${monthName} ${currentYear}</option>`);
             optionCount++;
         }
-        
+
         currentMonth++;
         if (currentMonth > 12) {
             currentMonth = 1;
             currentYear++;
         }
-        
-        // Safety break to prevent infinite loop
-        if (optionCount > 24) {
+
+         if (optionCount > 24) {
             console.warn('Too many months generated, breaking loop');
             break;
         }
     }
-    
+
     if (optionCount === 0) {
-        showError('No valid months found for this semester.');
+        showError('No valid months found for this School Year.');
     }
 }
 
 function generateSF2() {
     const monthYear = $('#sf2_month_year').val();
-    const semesterId = $('#sf2_semester').val();
-    
-    // Enhanced validation with specific error messages
-    if (!semesterId) {
-        showError('Please select a semester first.');
+    const schoolYearId = $('#sf2_school_year').val();
+
+     if (!schoolYearId) {
+        showError('Please select a School Year first.');
         return;
     }
-    
+
     if (!monthYear) {
         showError('Please select Month & Year.');
         return;
     }
-    
-    // Validate that the selected option exists in the dropdown
-    const selectedOption = $(`#sf2_month_year option[value="${monthYear}"]`);
+
+     const selectedOption = $(`#sf2_month_year option[value="${monthYear}"]`);
     if (selectedOption.length === 0) {
         showError('Invalid month-year selection. Please choose from available options.');
         return;
     }
-    
-    // Split month-year value
-    const [month, year] = monthYear.split('-');
-    
-    // Additional validation for split values
-    if (!month || !year || isNaN(month) || isNaN(year)) {
+
+     const [month, year] = monthYear.split('-');
+
+     if (!month || !year || isNaN(month) || isNaN(year)) {
         showError('Invalid month-year format. Please try again.');
         return;
     }
-    
-    // Validate month range (1-12)
-    const monthNum = parseInt(month);
+
+     const monthNum = parseInt(month);
     const yearNum = parseInt(year);
     if (monthNum < 1 || monthNum > 12) {
         showError('Invalid month value. Month must be between 1 and 12.');
         return;
     }
-    
-    // Validate year range (reasonable bounds)
-    if (yearNum < 2020 || yearNum > 2030) {
+
+     if (yearNum < 2020 || yearNum > 2030) {
         showError('Invalid year value. Please select a valid academic year.');
         return;
     }
-    
-    // Update hidden fields for backend compatibility
-    $('#sf2_month_hidden').val(month);
+
+     $('#sf2_month_hidden').val(month);
     $('#sf2_year_hidden').val(year);
-    
+
     const formData = {
-        semester_id: semesterId,
+        school_year_id: schoolYearId,
         grade_section: $('#sf2_grade_section').val(),
         month: month,
         year: year,
         _token: $('meta[name="csrf-token"]').attr('content')
     };
 
-    // Additional validation: Check if month is within semester range
-    const selectedSemester = $('#sf2_semester').find('option:selected');
-    const startMonth = parseInt(selectedSemester.data('start-month'));
-    const startYear = parseInt(selectedSemester.data('start-year'));
-    const endMonth = parseInt(selectedSemester.data('end-month'));
-    const endYear = parseInt(selectedSemester.data('end-year'));
+     const selectedSchoolYear = $('#sf2_school_year').find('option:selected');
+    const startMonth = parseInt(selectedSchoolYear.data('start-month'));
+    const startYear = parseInt(selectedSchoolYear.data('start-year'));
+    const endMonth = parseInt(selectedSchoolYear.data('end-month'));
+    const endYear = parseInt(selectedSchoolYear.data('end-year'));
     const selectedMonth = parseInt(formData.month);
     const selectedYear = parseInt(formData.year);
 
-    // Check if selected month/year is within semester range
-    const isValidDate = (selectedYear > startYear || (selectedYear === startYear && selectedMonth >= startMonth)) &&
+     const isValidDate = (selectedYear > startYear || (selectedYear === startYear && selectedMonth >= startMonth)) &&
                        (selectedYear < endYear || (selectedYear === endYear && selectedMonth <= endMonth));
 
     if (!isValidDate) {
-        showError('Selected month and year must be within the semester period.');
+        showError('Selected month and year must be within the School Year period.');
         return;
     }
 
-    // Show loading state
-    const $btn = $('#generateSF2Btn');
+     const $btn = $('#generateSF2Btn');
     const originalText = $btn.html();
     $btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Generating...').prop('disabled', true);
 
     $.post('{{ route("teacher.sf2.generate") }}', formData)
         .done(function(response) {
             if (response.success) {
-                // Hide SF2 modal
-                $('#sf2Modal').modal('hide');
-                
-                // Show result modal
-                $('#sf2ResultMessage').text(`SF2 generated successfully! ${response.student_count} students included.`);
+                 $('#sf2Modal').modal('hide');
+
+                 $('#sf2ResultMessage').text(`SF2 generated successfully! ${response.student_count} students included.`);
                 $('#downloadExcelBtn').attr('href', response.download_url);
                 $('#downloadExcelBtn').data('filename', response.filename);
-                
-                // Handle warnings if present
-                if (response.warnings && response.warnings.length > 0) {
+
+                 if (response.warnings && response.warnings.length > 0) {
                     $('#sf2WarningsContainer').show();
                     $('#sf2WarningsList').empty();
                     response.warnings.forEach(function(warning) {
@@ -489,11 +461,10 @@ function generateSF2() {
                 } else {
                     $('#sf2WarningsContainer').hide();
                 }
-                
+
                 $('#sf2ResultModal').modal('show');
-                
-                // Clear any error messages
-                $('.modal-body .alert-danger').remove();
+
+                 $('.modal-body .alert-danger').remove();
             } else {
                 showError(response.message || 'Error generating SF2 file');
             }
@@ -508,7 +479,7 @@ function generateSF2() {
              $btn.html(originalText).prop('disabled', false);
         });
 }
- 
+
 
 $(function() {
     updateFilterFields();
@@ -518,35 +489,30 @@ $(function() {
     });
 
     $('#filterForm').on('change', 'select, input[type=date], input[type=month]', function() {
-        // Update export form values
-        $('#export_type').val($('#type').val());
-        $('#export_semester_id').val($('#semester_id').val());
+         $('#export_type').val($('#type').val());
+        $('#export_school_year_id').val($('#school_year_id').val());
         $('#export_grade_section').val($('#grade_section').val());
         $('#export_date').val($('#date').val());
         $('#export_month').val($('#month').val());
-        
+
         $('#filterForm').submit();
     });
 
-    // Initial update of export form values
-    $('#export_type').val($('#type').val());
-    $('#export_semester_id').val($('#semester_id').val());
+     $('#export_type').val($('#type').val());
+    $('#export_school_year_id').val($('#school_year_id').val());
     $('#export_grade_section').val($('#grade_section').val());
     $('#export_date').val($('#date').val());
     $('#export_month').val($('#month').val());
 
-    // SF2 Event Handlers
-    $('#sf2Modal').on('show.bs.modal', function() {
+     $('#sf2Modal').on('show.bs.modal', function() {
         loadSF2Options();
     });
 
-    // Semester change handler to update months
-    $('#sf2_semester').on('change', function() {
+     $('#sf2_school_year').on('change', function() {
         updateMonthOptions();
     });
 
-    // Month-year change handler to update hidden fields
-    $('#sf2_month_year').on('change', function() {
+     $('#sf2_month_year').on('change', function() {
         const monthYear = $(this).val();
         if (monthYear) {
             const [month, year] = monthYear.split('-');
@@ -558,8 +524,7 @@ $(function() {
         }
     });
 
-    // Prevent form submission
-    $('#sf2Form').on('submit', function(e) {
+     $('#sf2Form').on('submit', function(e) {
         e.preventDefault();
         generateSF2();
     });

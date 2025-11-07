@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceSession;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\User;
@@ -38,11 +38,11 @@ class AttendanceSessionController extends Controller
 
             
             $today = Carbon::now('Asia/Manila');
-            $currentSemester = Semester::where('school_id', $user->school_id)
+            $currentSchoolYear = SchoolYear::where('school_id', $user->school_id)
                 ->current($today->format('Y-m-d'))
                 ->first();
 
-            if (!$currentSemester) {
+            if (!$currentSchoolYear) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No active semester found for today. Please contact administrator.'
@@ -51,12 +51,12 @@ class AttendanceSessionController extends Controller
 
             
              $existingSession = AttendanceSession::where('teacher_id', $teacherId)
-                                                ->where('semester_id', $currentSemester->id)
+                                                ->where('school_year_id', $currentSchoolYear->id)
                                                 ->where('status', 'active')
                                                 ->first();
             
             $isNewSession = !$existingSession;
-            $session = AttendanceSession::createDailySession($teacherId, $currentSemester->id);
+            $session = AttendanceSession::createDailySession($teacherId, $currentSchoolYear->id);
 
             $message = $isNewSession ? 
                 'Daily attendance session created successfully!' : 
@@ -65,7 +65,7 @@ class AttendanceSessionController extends Controller
             Log::info('Daily attendance session ' . ($isNewSession ? 'created' : 'retrieved'), [
                 'session_id' => $session->id,
                 'teacher_id' => $teacherId,
-                'semester_id' => $currentSemester->id,
+                'school_year_id' => $currentSchoolYear->id,
                 'session_name' => $session->session_name,
                 'is_new_session' => $isNewSession,
                 'expires_at' => 'Never (Permanent)',
@@ -82,7 +82,7 @@ class AttendanceSessionController extends Controller
                     'public_url' => $session->getPublicUrl(),
                     'type' => 'daily',
                     'expires_at' => 'Never (Permanent Daily Link)',
-                    'semester_name' => $currentSemester->name,
+                    'semester_name' => $currentSchoolYear->name,
                     'access_hours' => 'Always Available (Recording based on time periods)'
                 ]
             ]);
@@ -103,14 +103,14 @@ class AttendanceSessionController extends Controller
     }
 
     
-    private function createDailySession($teacherId, $semesterId)
+    private function createDailySession($teacherId, $schoolYearId)
     {
         $now = Carbon::now('Asia/Manila');
         $today = $now->copy()->startOfDay();
         
         
         $existingSession = AttendanceSession::where('teacher_id', $teacherId)
-            ->where('semester_id', $semesterId)
+            ->where('school_year_id', $schoolYearId)
             ->where('status', 'active')
             ->whereDate('started_at', $today)
             ->first();
@@ -147,7 +147,7 @@ class AttendanceSessionController extends Controller
         return AttendanceSession::create([
             'session_token' => $token,
             'teacher_id' => $teacherId,
-            'semester_id' => $semesterId,
+            'school_year_id' => $schoolYearId,
             'session_name' => 'Daily Attendance - ' . $today->format('M j, Y'),
             'status' => 'active',
             'expires_at' => $endOfDay, 
@@ -198,7 +198,7 @@ class AttendanceSessionController extends Controller
         try {
             $teacherId = Auth::id();
             
-            $sessions = AttendanceSession::with('semester')
+            $sessions = AttendanceSession::with('schoolYear')
                 ->where('teacher_id', $teacherId)
                 ->where('status', 'active')
                 ->whereDate('started_at', Carbon::today('Asia/Manila'))
@@ -217,7 +217,7 @@ class AttendanceSessionController extends Controller
                         'created_at' => $session->created_at->format('M j, Y g:i A'),
                         'access_count' => $session->access_count,
                         'attendance_count' => $session->attendance_count,
-                        'semester_name' => $session->semester->name ?? 'Unknown',
+                        'semester_name' => $session->schoolYear->name ?? 'Unknown',
                         'access_hours' => 'Always Available',
                         'date' => $session->started_at->format('M j, Y')
                     ];
@@ -287,32 +287,32 @@ class AttendanceSessionController extends Controller
     {
         $teacherId = Auth::id();
         
-        $activeSessions = AttendanceSession::with('semester')
+        $activeSessions = AttendanceSession::with('schoolYear')
             ->where('teacher_id', $teacherId)
             ->where('status', 'active')
             ->whereDate('started_at', Carbon::today('Asia/Manila'))
             ->orderBy('created_at', 'desc')
             ->get();
                                          
-        $recentSessions = AttendanceSession::with('semester')
+        $recentSessions = AttendanceSession::with('schoolYear')
             ->where('teacher_id', $teacherId)
             ->where('status', '!=', 'active')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
                                          
-        $semesters = Semester::where('school_id', Auth::user()->school_id)
+        $schoolYears = SchoolYear::where('school_id', Auth::user()->school_id)
             ->orderBy('name')
             ->get();
         
-        return view('teacher.sessions', compact('activeSessions', 'recentSessions', 'semesters'));
+        return view('teacher.sessions', compact('activeSessions', 'recentSessions', 'schoolYears'));
     }
 
     
     public function publicAttendance($token)
     {
         try {
-            $session = AttendanceSession::with('teacher', 'semester')->where('session_token', $token)->first();
+            $session = AttendanceSession::with('teacher', 'schoolYear')->where('session_token', $token)->first();
 
             if (!$session) {
                 Log::warning('Invalid attendance session token accessed', [
@@ -378,17 +378,17 @@ class AttendanceSessionController extends Controller
             
             $session->logAccess(request()->ip(), request()->header('User-Agent'));
 
-            $semester = $session->semester;
+            $schoolYear = $session->semester;
             $students = Student::with('user')
                 ->where('user_id', $session->teacher_id)
-                ->where('semester_id', $session->semester_id)
+                ->where('school_year_id', $session->school_year_id)
                 ->orderBy('name')
                 ->get();
 
              $recentAttendance = Attendance::with(['student', 'student.user'])
                 ->whereHas('student', function($query) use ($session) {
                     $query->where('user_id', $session->teacher_id)
-                          ->where('semester_id', $session->semester_id);
+                          ->where('school_year_id', $session->school_year_id);
                 })
                 ->whereDate('created_at', Carbon::today('Asia/Manila'))
                 ->orderBy('created_at', 'desc')
@@ -396,7 +396,7 @@ class AttendanceSessionController extends Controller
                 ->get();
 
             
-            $periodInfo = $this->getCurrentPeriodInfo($semester);
+            $periodInfo = $this->getCurrentPeriodInfo($schoolYear);
 
             Log::info('Public attendance page accessed', [
                 'session_id' => $session->id,
@@ -409,7 +409,7 @@ class AttendanceSessionController extends Controller
 
             return view('public.attendance', [
                 'session' => $session,
-                'semester' => $semester,
+                'semester' => $schoolYear,
                 'students' => $students,
                 'teacher_name' => $session->teacher->name ?? 'Unknown',
                 'recentAttendance' => $recentAttendance,
@@ -432,17 +432,17 @@ class AttendanceSessionController extends Controller
     }
 
     
-    private function getCurrentPeriodInfo($semester)
+    private function getCurrentPeriodInfo($schoolYear)
     {
         $now = Carbon::now('Asia/Manila');
         $currentTimeMinutes = $now->hour * 60 + $now->minute;
 
-        $amStart = $semester->am_time_in_start ? Carbon::createFromFormat('H:i:s', $semester->am_time_in_start) : Carbon::createFromFormat('H:i', '07:00');
-        $amEnd = $semester->am_time_in_end ? Carbon::createFromFormat('H:i:s', $semester->am_time_in_end) : Carbon::createFromFormat('H:i', '07:30');
+        $amStart = $schoolYear->am_time_in_start ? Carbon::createFromFormat('H:i:s', $schoolYear->am_time_in_start) : Carbon::createFromFormat('H:i', '07:00');
+        $amEnd = $schoolYear->am_time_in_end ? Carbon::createFromFormat('H:i:s', $schoolYear->am_time_in_end) : Carbon::createFromFormat('H:i', '07:30');
         
         
-        $pmStart = $semester->pm_time_out_start ? Carbon::createFromFormat('H:i:s', $semester->pm_time_out_start) : Carbon::createFromFormat('H:i', '16:30');
-        $pmEnd = $semester->pm_time_out_end ? Carbon::createFromFormat('H:i:s', $semester->pm_time_out_end) : Carbon::createFromFormat('H:i', '17:00');
+        $pmStart = $schoolYear->pm_time_out_start ? Carbon::createFromFormat('H:i:s', $schoolYear->pm_time_out_start) : Carbon::createFromFormat('H:i', '16:30');
+        $pmEnd = $schoolYear->pm_time_out_end ? Carbon::createFromFormat('H:i:s', $schoolYear->pm_time_out_end) : Carbon::createFromFormat('H:i', '17:00');
 
         $amStartMinutes = $amStart->hour * 60 + $amStart->minute;
         $amEndMinutes = $amEnd->hour * 60 + $amEnd->minute;
@@ -595,7 +595,7 @@ class AttendanceSessionController extends Controller
                 'session_id' => $session->id,
                 'session_name' => $session->session_name,
                 'teacher_id' => $session->teacher_id,
-                'semester_id' => $session->semester_id,
+                'school_year_id' => $session->school_year_id,
                 'session_status' => $session->status,
                 'ip_address' => request()->ip()
             ]);
@@ -645,14 +645,14 @@ class AttendanceSessionController extends Controller
             Log::info('Starting student lookup', [
                 'session_id' => $session->id,
                 'teacher_id' => $session->teacher_id,
-                'semester_id' => $session->semester_id,
+                'school_year_id' => $session->school_year_id,
                 'stud_code' => $qrData,
                 'ip_address' => request()->ip()
             ]);
 
              $student = Student::with('user') 
                 ->where('user_id', $session->teacher_id)
-                ->where('semester_id', $session->semester_id)
+                ->where('school_year_id', $session->school_year_id)
                 ->where('stud_code', $qrData)
                 ->whereNotNull('stud_code')
                 ->where('stud_code', '!=', '')
@@ -665,11 +665,11 @@ class AttendanceSessionController extends Controller
                 Log::warning('Student not found in public session with stud_code', [
                     'session_id' => $session->id,
                     'teacher_id' => $session->teacher_id,
-                    'semester_id' => $session->semester_id,
+                    'school_year_id' => $session->school_year_id,
                     'stud_code' => $qrData,
                     'any_student_found' => $anyStudent ? true : false,
                     'any_student_teacher_id' => $anyStudent ? $anyStudent->user_id : null,
-                    'any_student_semester_id' => $anyStudent ? $anyStudent->semester_id : null,
+                    'any_student_school_year_id' => $anyStudent ? $anyStudent->school_year_id : null,
                     'ip_address' => request()->ip(),
                     'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
                 ]);
@@ -906,7 +906,7 @@ class AttendanceSessionController extends Controller
                         'public_url' => $session->public_url,
                         'date_created' => $session->started_at->format('M j, Y'),
                         'access_count' => $session->access_count ?? 0,
-                        'semester_name' => $session->semester->name ?? 'Unknown',
+                        'semester_name' => $session->schoolYear->name ?? 'Unknown',
                     ]
                 ]);
             } else {
@@ -998,13 +998,13 @@ class AttendanceSessionController extends Controller
         }
 
         
-        if ($student->semester_id !== $session->semester_id) {
+        if ($student->school_year_id !== $session->school_year_id) {
             Log::warning('Student semester mismatch with session', [
                 'student_id' => $student->id,
                 'student_name' => $student->name,
                 'session_id' => $session->id,
-                'student_semester_id' => $student->semester_id,
-                'session_semester_id' => $session->semester_id,
+                'student_school_year_id' => $student->school_year_id,
+                'session_school_year_id' => $session->school_year_id,
                 'ip_address' => request()->ip(),
             ]);
             return false;
@@ -1088,33 +1088,33 @@ class AttendanceSessionController extends Controller
     public function getTimeSessions()
     {
         $user = auth()->user();
-        $semester = null;
+        $schoolYear = null;
 
         if ($user) {
             if ($user->role === 'student') {
                  $student = \App\Models\Student::where('user_id', $user->id)->first();
-                if ($student && $student->semester_id) {
-                    $semester = Semester::find($student->semester_id);
+                if ($student && $student->school_year_id) {
+                    $schoolYear = SchoolYear::find($student->school_year_id);
                 }
             } else {
-                $semester = Semester::where('school_id', $user->school_id)
+                $schoolYear = SchoolYear::where('school_id', $user->school_id)
                     ->where('is_active', 1)
                     ->orderByDesc('start_date')
                     ->first();
             }
         }
 
-        if (!$semester) {
+        if (!$schoolYear) {
             return response()->json(['error' => 'No active semester found for user.'], 404);
         }
 
         return response()->json([
-            'am_time_in_start' => $semester->am_time_in_start,
-            'am_time_in_end' => $semester->am_time_in_end,
-            'pm_time_out_start' => $semester->pm_time_out_start,
-            'pm_time_out_end' => $semester->pm_time_out_end,
-            'start_date' => $semester->start_date,
-            'end_date' => $semester->end_date,
+            'am_time_in_start' => $schoolYear->am_time_in_start,
+            'am_time_in_end' => $schoolYear->am_time_in_end,
+            'pm_time_out_start' => $schoolYear->pm_time_out_start,
+            'pm_time_out_end' => $schoolYear->pm_time_out_end,
+            'start_date' => $schoolYear->start_date,
+            'end_date' => $schoolYear->end_date,
         ]);
     }
 
@@ -1131,17 +1131,17 @@ class AttendanceSessionController extends Controller
             }
 
             $today = Carbon::now('Asia/Manila');
-            $currentSemester = Semester::where('school_id', $user->school_id)
+            $currentSchoolYear = SchoolYear::where('school_id', $user->school_id)
                 ->current($today->format('Y-m-d'))
                 ->first();
 
-            if (!$currentSemester) {
+            if (!$currentSchoolYear) {
                 return redirect()->route('teacher.dashboard')->with('error', 'No active semester found for today. Please contact administrator.');
             }
 
             // Create or get today's session for this teacher
             $session = AttendanceSession::where('teacher_id', $user->id)
-                ->where('semester_id', $currentSemester->id)
+                ->where('school_year_id', $currentSchoolYear->id)
                 ->whereDate('started_at', $today)
                 ->first();
 
@@ -1149,7 +1149,7 @@ class AttendanceSessionController extends Controller
                 // Create a new session for the teacher
                 $session = AttendanceSession::create([
                     'teacher_id' => $user->id,
-                    'semester_id' => $currentSemester->id,
+                    'school_year_id' => $currentSchoolYear->id,
                     'session_name' => 'Daily Session - ' . $today->format('M d, Y'),
                     'session_token' => AttendanceSession::generateToken(),
                     'status' => 'active',
@@ -1158,24 +1158,24 @@ class AttendanceSessionController extends Controller
                 ]);
             }
 
-            $semester = $session->semester;
+            $schoolYear = $session->semester;
             $students = Student::with('user')
                 ->where('user_id', $session->teacher_id)
-                ->where('semester_id', $session->semester_id)
+                ->where('school_year_id', $session->school_year_id)
                 ->orderBy('name')
                 ->get();
 
             $recentAttendance = Attendance::with(['student', 'student.user'])
                 ->whereHas('student', function($query) use ($session) {
                     $query->where('user_id', $session->teacher_id)
-                          ->where('semester_id', $session->semester_id);
+                          ->where('school_year_id', $session->school_year_id);
                 })
                 ->whereDate('created_at', Carbon::today('Asia/Manila'))
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
 
-            $periodInfo = $this->getCurrentPeriodInfo($semester);
+            $periodInfo = $this->getCurrentPeriodInfo($schoolYear);
 
             Log::info('Teacher attendance live page accessed', [
                 'teacher_id' => $user->id,
@@ -1186,7 +1186,7 @@ class AttendanceSessionController extends Controller
 
             return view('teacher.attendance-live', [
                 'session' => $session,
-                'semester' => $semester,
+                'semester' => $schoolYear,
                 'students' => $students,
                 'teacher_name' => $user->name,
                 'recentAttendance' => $recentAttendance,
@@ -1277,7 +1277,7 @@ class AttendanceSessionController extends Controller
             // Find student
             $student = Student::with('user') 
                 ->where('user_id', $session->teacher_id)
-                ->where('semester_id', $session->semester_id)
+                ->where('school_year_id', $session->school_year_id)
                 ->where('stud_code', $qrData)
                 ->whereNotNull('stud_code')
                 ->where('stud_code', '!=', '')
@@ -1287,7 +1287,7 @@ class AttendanceSessionController extends Controller
                 Log::warning('Student not found with stud_code', [
                     'session_id' => $session->id,
                     'teacher_id' => $session->teacher_id,
-                    'semester_id' => $session->semester_id,
+                    'school_year_id' => $session->school_year_id,
                     'stud_code' => $qrData,
                     'ip_address' => request()->ip()
                 ]);

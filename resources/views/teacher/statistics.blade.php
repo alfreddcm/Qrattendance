@@ -1,13 +1,13 @@
- 
+
 <div class="container-fluid">
-    <!-- Page Header -->
+
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="text-primary">📊 Attendance Statistics Dashboard</h4>
+            <h4 class="text-primary"><i class="fas fa-chart-bar me-2"></i>Attendance Statistics Dashboard</h4>
          </div>
     </div>
 
-    <!-- Summary Statistics -->
+
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card text-center">
@@ -43,9 +43,9 @@
         </div>
     </div>
 
-    <!-- Charts Section -->
+
     <div class="row">
-        <!-- Attendance Trend Chart -->
+
         <div class="col-lg-6 mb-4">
             <div class="card">
                 <div class="card-header">
@@ -57,11 +57,11 @@
             </div>
         </div>
 
-        <!-- Absenteeism Rates Chart -->
+
         <div class="col-lg-6 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">📊 High Absenteeism Rates (>70%)</h6>
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>High Absenteeism Rates (>70%)</h6>
                 </div>
                 <div class="card-body">
                     <canvas id="absenteeismChart" height="300"></canvas>
@@ -69,11 +69,11 @@
             </div>
         </div>
 
-        <!-- Weekly Attendance Trend -->
+
         <div class="col-lg-6 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">📅 Weekly Attendance Pattern</h6>
+                    <h6 class="mb-0"><i class="fas fa-calendar-week me-2"></i>Weekly Attendance Pattern</h6>
                 </div>
                 <div class="card-body">
                     <canvas id="weeklyTrendChart" height="300"></canvas>
@@ -81,7 +81,7 @@
             </div>
         </div>
 
-        <!-- Time Patterns Chart -->
+
         <div class="col-lg-6 mb-4">
             <div class="card">
                 <div class="card-header">
@@ -93,7 +93,7 @@
             </div>
         </div>
 
-        <!-- Monthly Trend Chart -->
+
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header">
@@ -106,7 +106,7 @@
         </div>
     </div>
 
-    <!-- Loading Indicator -->
+
     <div id="loadingIndicator" class="text-center py-4" style="display: none;">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -115,7 +115,6 @@
     </div>
 </div>
 
-<!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -179,15 +178,15 @@ let attendanceTrendChart, absenteeismChart, weeklyTrendChart, timePatternsChart,
      const ctx4 = document.getElementById('timePatternsChart').getContext('2d');
     timePatternsChart = new Chart(ctx4, {
         type: 'line',
-        data: { 
+        data: {
             labels: [],
-            datasets: [] 
+            datasets: []
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { 
+                legend: {
                     position: 'top',
                     display: true
                 },
@@ -197,7 +196,7 @@ let attendanceTrendChart, absenteeismChart, weeklyTrendChart, timePatternsChart,
                 }
             },
             scales: {
-                x: { 
+                x: {
                     title: {
                         display: true,
                         text: 'Date'
@@ -245,10 +244,10 @@ let attendanceTrendChart, absenteeismChart, weeklyTrendChart, timePatternsChart,
 // Load all chart data
 async function loadAllData() {
     showLoading(true);
-    
+
     try {
          loadSummaryStats();
-        
+
          await Promise.all([
             loadAttendanceTrend(),
             loadAbsenteeismRates(),
@@ -256,7 +255,7 @@ async function loadAllData() {
             loadTimePatterns(),
             loadMonthlyTrend()
         ]);
-        
+
     } catch (error) {
         console.error('Error loading data:', error);
         alert('Error loading chart data. Please try again.');
@@ -269,19 +268,19 @@ async function loadAllData() {
     try {
         console.log('Loading summary stats...');
         const response = await fetch('/teacher/analytics/summary-stats');
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('Summary stats data:', data);
-        
+
         document.getElementById('totalStudents').textContent = data.total_students || 0;
         document.getElementById('attendanceRate').textContent = (data.average_attendance_rate || 0) + '%';
         document.getElementById('presentRecords').textContent = data.total_present_records || 0;
         document.getElementById('totalRecords').textContent = data.total_attendance_records || 0;
-        
+
         console.log('Summary stats updated successfully');
     } catch (error) {
         console.error('Error loading summary stats:', error);
@@ -296,7 +295,7 @@ async function loadAllData() {
  async function loadAttendanceTrend() {
     const response = await fetch('/teacher/analytics/attendance-trend');
     const data = await response.json();
-    
+
     attendanceTrendChart.data = data;
     attendanceTrendChart.update();
 }
@@ -305,7 +304,7 @@ async function loadAllData() {
 async function loadAbsenteeismRates() {
     const response = await fetch('/teacher/analytics/absenteeism-rates');
     const data = await response.json();
-    
+
     absenteeismChart.data = data;
     absenteeismChart.update();
 }
@@ -314,7 +313,7 @@ async function loadAbsenteeismRates() {
 async function loadWeeklyTrend() {
     const response = await fetch('/teacher/analytics/weekly-trend');
     const data = await response.json();
-    
+
     weeklyTrendChart.data = data;
     weeklyTrendChart.update();
 }
@@ -322,7 +321,7 @@ async function loadWeeklyTrend() {
  async function loadTimePatterns() {
     const response = await fetch('/teacher/analytics/time-patterns');
     const data = await response.json();
-    
+
     timePatternsChart.data = data;
     timePatternsChart.update();
 }
@@ -330,7 +329,7 @@ async function loadWeeklyTrend() {
  async function loadMonthlyTrend() {
     const response = await fetch('/teacher/analytics/monthly-trend');
     const data = await response.json();
-    
+
     monthlyTrendChart.data = data;
     monthlyTrendChart.update();
 }
@@ -339,4 +338,3 @@ async function loadWeeklyTrend() {
     document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
 }
 </script>
- 

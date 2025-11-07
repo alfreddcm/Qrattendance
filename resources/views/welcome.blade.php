@@ -13,7 +13,7 @@
         .nav-blur { backdrop-filter: blur(10px); background:rgba(255,255,255,0.85); border-bottom:1px solid rgba(0,0,0,.05); }
         .logo-box { width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e3f2ff,#ffffff); display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,.05); }
         .logo-box span { font-size:26px; font-weight:700; background:linear-gradient(90deg,var(--brand),var(--brand-accent)); -webkit-background-clip:text; color:transparent; }
-        header.hero { position:relative; flex:1; display:flex; align-items:center; padding: calc(70px + 1rem) 0 1.25rem; /* top accounts for fixed nav */ overflow:hidden; }
+        header.hero { position:relative; flex:1; display:flex; align-items:center; padding: calc(70px + 1rem) 0 1.25rem;  overflow:hidden; }
         @media (max-width: 576px){ header.hero { padding: calc(60px + .75rem) 0 1rem; } }
         .gradient-circle { position:absolute; width:480px; height:480px; background:radial-gradient(circle at 30% 30%,rgba(13,110,253,.17),transparent 70%); top:-140px; left:-140px; pointer-events:none; }
         .gradient-circle.two { bottom:-160px; right:-160px; top:auto; left:auto; background:radial-gradient(circle at 70% 70%,rgba(77,171,247,.16),transparent 70%); }
@@ -31,7 +31,6 @@
         .mini-item i { font-size:.9rem; color:var(--brand); }
         .footer-inline { position:fixed; left:0; bottom:0; width:100%; text-align:center; font-size:.65rem; color:#6c7a89; background:rgba(255,255,255,0.9); padding:.5rem 0; border-top:1px solid rgba(0,0,0,.05); z-index:1000; }
         @media (max-width: 992px){ .glass-panel { margin:2rem auto 0; } body { overflow:auto; } }
-        /* Allow scroll on very small heights to prevent content cut-off */
         @media (max-height: 620px){ body { overflow:auto; } }
     </style>
 </head>
@@ -40,7 +39,6 @@
   <div class="container d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
           <div class="logo-box"><span>
-
 
           </span>
         </div>
@@ -59,10 +57,10 @@
             <div class="col-lg-6 d-flex flex-column justify-content-center">
                 <div class="logo-placeholder flex-column text-center text-lg-start">
 
-                
+
                 </div>
                 <h1 class="mb-3">
-            
+
                 Scan-to-Notify <span class="text-primary">QR Attendance </span> with Parent Notification</h1>
                 <p class="tagline text-secondary mb-3">Streamline attendance capture, eliminate manual errors, and keep families informed in real time—all within a single secure platform.</p>
                 <div class="cta-buttons d-flex flex-wrap gap-2 mb-3">

@@ -18,15 +18,14 @@ class AttendanceCodeController extends Controller
         try {
             $validated = $request->validate([
                 'section_id' => 'nullable|exists:sections,id',
-                'duration' => 'nullable|integer|min:5|max:120', // 5 to 120 minutes
+                'duration' => 'nullable|integer|min:5|max:120',  
             ]);
 
             $teacher = Auth::user();
             $sectionId = $validated['section_id'] ?? null;
-            $duration = $validated['duration'] ?? 15; // Default 15 minutes
+            $duration = $validated['duration'] ?? 15;  
 
-            // Verify teacher has access to this section if provided
-            if ($sectionId) {
+             if ($sectionId) {
                 $section = Section::where('id', $sectionId)
                     ->where('teacher_id', $teacher->id)
                     ->first();
@@ -39,8 +38,7 @@ class AttendanceCodeController extends Controller
                 }
             }
 
-            // Create new code
-            $attendanceCode = AttendanceCode::createForTeacher(
+             $attendanceCode = AttendanceCode::createForTeacher(
                 $teacher->id,
                 $sectionId,
                 $duration
@@ -58,7 +56,8 @@ class AttendanceCodeController extends Controller
                 'data' => [
                     'code' => $attendanceCode->code,
                     'qr_code_url' => $attendanceCode->qr_code_url,
-                    'access_url' => url('/public/attendance?code=' . $attendanceCode->code)
+                    'access_url' => url('/public/attendance/' . $attendanceCode->code),
+                    'id' => $attendanceCode->id
                 ]
             ]);
 
@@ -75,9 +74,7 @@ class AttendanceCodeController extends Controller
         }
     }
 
-    /**
-     * Get current active code for teacher
-     */
+ 
     public function getActive(Request $request)
     {
         try {
@@ -101,7 +98,7 @@ class AttendanceCodeController extends Controller
                     'id' => $activeCode->id,
                     'code' => $activeCode->code,
                     'qr_code_url' => $activeCode->qr_code_url,
-                    'access_url' => url('/public/attendance?code=' . $activeCode->code),
+                    'access_url' => url('/public/attendance/' . $activeCode->code),
                     'section_id' => $activeCode->section_id,
                     'section_name' => $activeCode->section ? $activeCode->section->name : 'All Sections'
                 ]
@@ -119,9 +116,7 @@ class AttendanceCodeController extends Controller
         }
     }
 
-    /**
-     * Deactivate an attendance code
-     */
+ 
     public function deactivate(Request $request, $id)
     {
         try {
@@ -162,9 +157,7 @@ class AttendanceCodeController extends Controller
         }
     }
 
-    /**
-     * Validate a code (public access)
-     */
+  
     public function validate(Request $request)
     {
         $code = $request->input('code');
@@ -192,9 +185,35 @@ class AttendanceCodeController extends Controller
                 'teacher_name' => $attendanceCode->teacher->name ?? 'Teacher',
                 'school_name' => $attendanceCode->teacher->school->name ?? 'School',
                 'section_name' => $attendanceCode->section->name ?? 'All Sections',
-                'expires_at' => $attendanceCode->expires_at->format('Y-m-d H:i:s'),
-                'time_remaining' => $attendanceCode->time_remaining
+                'is_active' => $attendanceCode->is_active
             ]
         ]);
+    }
+
+ 
+    public function printCode($id)
+    {
+        try {
+            $teacher = Auth::user();
+            
+            $attendanceCode = AttendanceCode::with(['teacher.school', 'section'])
+                ->where('id', $id)
+                ->where('teacher_id', $teacher->id)
+                ->first();
+
+            if (!$attendanceCode) {
+                abort(404, 'Attendance code not found or you do not have permission to view it.');
+            }
+
+            return view('attendance-code.print-single', compact('attendanceCode'));
+
+        } catch (\Exception $e) {
+            Log::error('Error printing attendance code', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            abort(500, 'Failed to load attendance code for printing.');
+        }
     }
 }

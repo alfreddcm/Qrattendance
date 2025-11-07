@@ -27,7 +27,7 @@ class StudentsImport implements ToModel
             'contact_person_name' => $row[8] ?? null,
             'contact_person_relationship' => $row[9] ?? null,
             'contact_person_contact' => $row[10] ?? null,
-            'semester_id' => $row[11] ?? 1, // Default to semester 1 if not provided
+            'semester_id' => $row[11] ?? 1, 
             'user_id' => $this->userId,
         ]);
     }

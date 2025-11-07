@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        /* Materialize-inspired compact design */
+
         body {
             background: #f8f9fa;
             font-family: 'Roboto', Arial, sans-serif;
@@ -119,7 +119,7 @@
             border-color: #1976d2;
             box-shadow: 0 0 0 1.5px #1976d2aa;
         }
-        /* Configuration Panel Styles */
+
         .card {
             border: 1px solid #e9ecef;
             transition: all 0.2s ease;
@@ -143,14 +143,14 @@
             background-color: #28a745;
             border-color: #28a745;
         }
-        
-        /* Enhanced form controls */
+
+
         .form-select:focus, .form-control:focus {
             border-color: #1976d2;
             box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
         }
-        
-        /* Status indicator styles */
+
+
         #selectionStatus {
             transition: all 0.3s ease;
         }
@@ -164,19 +164,19 @@
         #selectionStatus.danger {
             background-color: #dc3545 !important;
         }
-        
-        /* Disabled state improvements */
+
+
         .form-select:disabled, .form-control:disabled {
             background-color: #f8f9fa;
             opacity: 0.6;
         }
-        
-        /* Disabled button styling */
+
+
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
-        
+
         #addRowBtn {
             min-width: 90px;
         }
@@ -190,7 +190,7 @@
 </head>
 <body>
     <div class="container">
-        {{-- Success/Error Message --}}
+
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
@@ -208,7 +208,7 @@
             </div>
         @endif
 
-        <!-- Header Section -->
+
         <div class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
@@ -222,7 +222,7 @@
                 </div>
             </div>
 
-            <!-- Assignment Configuration Panel -->
+
             <div class="card border-0 shadow-sm mb-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
                 <div class="card-header bg-transparent border-0 pb-1">
                     <h6 class="mb-0" style="color: #495057; font-weight: 600;">
@@ -234,9 +234,9 @@
                         $user = Auth::user();
                         $userSections = $user->role === 'teacher' ? \App\Models\Section::where('teacher_id', $user->id)->get() : collect();
                     @endphp
-                    
+
                     @if($user->role === 'admin')
-                        <!-- Admin Configuration Grid -->
+
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label for="admin_school_id" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
@@ -250,20 +250,26 @@
                                 </select>
                                 <div class="form-text" style="font-size: 0.75rem;">Select the target school</div>
                             </div>
-                            
+
                             <div class="col-md-3">
-                                <label for="admin_semester_id" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
-                                    <i class="bi bi-calendar3 me-1"></i>Semester
+                                <label for="admin_school_year_id" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
+                                    <i class="bi bi-calendar3 me-1"></i>School Year
                                 </label>
-                                <select id="admin_semester_id" name="semester_id" class="form-select" onchange="loadTeachersBySchool()" style="font-size: 0.9rem;">
-                                    <option value="">Choose semester...</option>
-                                    @foreach($semesters as $semester)
-                                        <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                                <select id="admin_school_year_id" name="school_year_id" class="form-select" onchange="loadTeachersBySchool()" style="font-size: 0.9rem;">
+                                    <option value="">Choose School Year...</option>
+                                    @foreach($schoolYears as $schoolYear)
+                                        <option value="{{ $schoolYear->id }}">
+                                            @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                                {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                            @else
+                                                {{ $schoolYear->name }}
+                                            @endif
+                                        </option>
                                     @endforeach
                                 </select>
                                 <div class="form-text" style="font-size: 0.75rem;">Select academic period</div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="admin_teacher_id" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
                                     <i class="bi bi-person-badge me-1"></i>Teacher
@@ -273,7 +279,7 @@
                                 </select>
                                 <div class="form-text" style="font-size: 0.75rem;">Select assigned teacher</div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="admin_section_id" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
                                     <i class="bi bi-diagram-3 me-1"></i>Section
@@ -284,11 +290,11 @@
                                 <div class="form-text" style="font-size: 0.75rem;">Select target section</div>
                             </div>
                         </div>
-                        
+
                     @elseif($user->role === 'teacher')
-                        <!-- Teacher Configuration Grid -->
+
                         <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
-                        
+
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label for="teacher_school" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
@@ -297,7 +303,7 @@
                                 <input type="text" id="teacher_school" class="form-control" value="{{ $user->school->name ?? 'No School Assigned' }}" readonly style="background-color: #f8f9fa; font-size: 0.9rem;">
                                 <div class="form-text" style="font-size: 0.75rem;">Your assigned school</div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="teacher_name" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
                                     <i class="bi bi-person-badge me-1"></i>Teacher
@@ -305,20 +311,26 @@
                                 <input type="text" id="teacher_name" class="form-control" value="{{ $user->name }}" readonly style="background-color: #f8f9fa; font-size: 0.9rem;">
                                 <div class="form-text" style="font-size: 0.75rem;">Current user</div>
                             </div>
-                            
+
                             <div class="col-md-3">
-                                <label for="teacher_semester" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
-                                    <i class="bi bi-calendar3 me-1"></i>Semester
+                                <label for="teacher_school_year" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
+                                    <i class="bi bi-calendar3 me-1"></i>School Year
                                 </label>
-                                <select id="teacher_semester" name="semester_id" class="form-select" onchange="updateTeacherSections()" style="font-size: 0.9rem;">
-                                    <option value="">Choose semester...</option>
-                                    @foreach($semesters as $semester)
-                                        <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                                <select id="teacher_school_year" name="school_year_id" class="form-select" onchange="updateTeacherSections()" style="font-size: 0.9rem;">
+                                    <option value="">Choose School Year...</option>
+                                    @foreach($schoolYears as $schoolYear)
+                                        <option value="{{ $schoolYear->id }}">
+                                            @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                                {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                            @else
+                                                {{ $schoolYear->name }}
+                                            @endif
+                                        </option>
                                     @endforeach
                                 </select>
                                 <div class="form-text" style="font-size: 0.75rem;">Select academic period</div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="teacher_section" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
                                     <i class="bi bi-diagram-3 me-1"></i>Section
@@ -327,7 +339,7 @@
                                     <option value="">Choose section...</option>
                                     @if($userSections->count() > 0)
                                         @foreach($userSections as $section)
-                                            <option value="{{ $section->id }}" data-teacher="{{ $section->teacher_id }}" data-semester="{{ $section->semester_id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">
+                                            <option value="{{ $section->id }}" data-teacher="{{ $section->teacher_id }}" data-School Year="{{ $section->school_year_id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">
                                                 Grade {{ $section->gradelevel }} - {{ $section->name }}
                                             </option>
                                         @endforeach
@@ -339,8 +351,8 @@
                             </div>
                         </div>
                     @endif
-                    
-                    <!-- Selection Status Indicator -->
+
+
                     <div class="mt-3 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
@@ -365,12 +377,12 @@
             @csrf
             @if(auth()->user()->role === 'admin')
                 <input type="hidden" name="user_id" id="selectedUserId" value="">
-                <input type="hidden" name="semester_id" id="selectedSemesterId" value="">
+                <input type="hidden" name="school_year_id" id="selectedSchoolYearId" value="">
                 <input type="hidden" name="section_id" id="selectedSectionId" value="">
                 <input type="hidden" name="school_id" id="selectedSchoolId" value="">
             @else
                 <input type="hidden" name="user_id" id="selecteduser_id" value="{{ $user->id }}">
-                <input type="hidden" name="semester_id" id="selectedSemester" value="">
+                <input type="hidden" name="school_year_id" id="selectedSchoolYear" value="">
                 <input type="hidden" name="section_id" id="selectedSection" value="">
             @endif
             <div class="table-responsive" style="height: 600px; overflow-y: auto;">
@@ -440,7 +452,7 @@
                             <td colspan="13" class="text-end fw-bold">
                                 Total Students: <span id="totalStudents">0</span>
                             </td>
-                            
+
                         </tr>
                     </tfoot>
                 </table>
@@ -459,7 +471,7 @@
         // Global validation state
         let validationState = {
             school: false,
-            semester: false,
+            School Year: false,
             teacher: false,
             section: false
         };
@@ -470,13 +482,13 @@
             const details = document.getElementById('selectionDetails');
             const readySwitch = document.getElementById('readyToImport');
             const submitBtn = document.getElementById('addToListBtn');
-            
+
             @if($user->role === 'admin')
-                const allSelected = validationState.school && validationState.semester && validationState.teacher && validationState.section;
+                const allSelected = validationState.school && validationState.School Year && validationState.teacher && validationState.section;
             @else
-                const allSelected = validationState.semester && validationState.section;
+                const allSelected = validationState.School Year && validationState.section;
             @endif
-            
+
             if (allSelected) {
                 status.className = 'badge bg-success me-2';
                 status.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Ready to import';
@@ -504,13 +516,13 @@
 
         // Teacher-specific functions
         @if($user->role === 'teacher')
-        document.getElementById('teacher_semester').addEventListener('change', function() {
-            document.getElementById('selectedSemester').value = this.value;
-            validationState.semester = this.value !== '';
+        document.getElementById('teacher_school_year').addEventListener('change', function() {
+            document.getElementById('selectedSchoolYear').value = this.value;
+            validationState.School Year = this.value !== '';
             updateTeacherSections();
             updateSelectionStatus();
         });
-        
+
         document.getElementById('teacher_section').addEventListener('change', function() {
             document.getElementById('selectedSection').value = this.value;
             validationState.section = this.value !== '';
@@ -519,25 +531,25 @@
         });
 
         function updateTeacherSections() {
-            const semesterSelect = document.getElementById('teacher_semester');
+            const schoolYearSelect = document.getElementById('teacher_school_year');
             const sectionSelect = document.getElementById('teacher_section');
-            const selectedSemesterId = semesterSelect.value;
-            
-            // Reset section validation when semester changes
+            const selectedSchoolYearId = schoolYearSelect.value;
+
+            // Reset section validation when School Year changes
             validationState.section = false;
-            
-            if (!selectedSemesterId) {
-                sectionSelect.innerHTML = '<option value="">Choose semester first...</option>';
+
+            if (!selectedSchoolYearId) {
+                sectionSelect.innerHTML = '<option value="">Choose School Year first...</option>';
                 sectionSelect.disabled = true;
                 updateSelectionStatus();
                 return;
             }
-            
-            // Filter sections by selected semester
+
+            // Filter sections by selected School Year
             sectionSelect.innerHTML = '<option value="">Choose section...</option>';
             sectionSelect.disabled = false;
             @foreach($userSections as $section)
-                if ('{{ $section->semester_id }}' === selectedSemesterId) {
+                if ('{{ $section->school_year_id }}' === selectedSchoolYearId) {
                     sectionSelect.innerHTML += '<option value="{{ $section->id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">Grade {{ $section->gradelevel }} - {{ $section->name }}</option>';
                 }
             @endforeach
@@ -546,11 +558,11 @@
         function updateTeacherSectionInfo() {
             const sectionSelect = document.getElementById('teacher_section');
             const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
-            
+
             if (selectedOption && selectedOption.value) {
                 const gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
                 const sectionName = selectedOption.getAttribute('data-name') || 'N/A';
-                
+
                 // Update all existing rows with section info
                 document.querySelectorAll('.grade-level-cell').forEach(cell => {
                     cell.textContent = gradeLevel;
@@ -573,55 +585,55 @@
         @if($user->role === 'admin')
         function loadSchoolData() {
             const schoolSelect = document.getElementById('admin_school_id');
-            const semesterSelect = document.getElementById('admin_semester_id');
+            const schoolYearSelect = document.getElementById('admin_school_year_id');
             const teacherSelect = document.getElementById('admin_teacher_id');
             const sectionSelect = document.getElementById('admin_section_id');
-            
+
             document.getElementById('selectedSchoolId').value = schoolSelect.value;
             validationState.school = schoolSelect.value !== '';
-            
+
             // Reset dependent validations
             validationState.teacher = false;
             validationState.section = false;
-            
+
             if (!schoolSelect.value) {
                 resetDropdown(teacherSelect, 'Choose school first...');
                 resetDropdown(sectionSelect, 'Choose teacher first...');
-                semesterSelect.disabled = true;
+                schoolYearSelect.disabled = true;
                 updateSelectionStatus();
                 return;
             }
-            
-            // Enable semester if school is selected
-            semesterSelect.disabled = false;
+
+            // Enable School Year if school is selected
+            schoolYearSelect.disabled = false;
             loadTeachersBySchool();
         }
-        
+
         function loadTeachersBySchool() {
             const schoolSelect = document.getElementById('admin_school_id');
-            const semesterSelect = document.getElementById('admin_semester_id');
+            const schoolYearSelect = document.getElementById('admin_school_year_id');
             const teacherSelect = document.getElementById('admin_teacher_id');
             const sectionSelect = document.getElementById('admin_section_id');
-            
-            document.getElementById('selectedSemesterId').value = semesterSelect.value;
-            validationState.semester = semesterSelect.value !== '';
-            
+
+            document.getElementById('selectedSchoolYearId').value = schoolYearSelect.value;
+            validationState.School Year = schoolYearSelect.value !== '';
+
             // Reset dependent validations
             validationState.teacher = false;
             validationState.section = false;
-            
-            if (!schoolSelect.value || !semesterSelect.value) {
-                resetDropdown(teacherSelect, 'Choose school and semester first...');
+
+            if (!schoolSelect.value || !schoolYearSelect.value) {
+                resetDropdown(teacherSelect, 'Choose school and School Year first...');
                 resetDropdown(sectionSelect, 'Choose teacher first...');
                 updateSelectionStatus();
                 return;
             }
-            
+
             // Show loading state
             teacherSelect.innerHTML = '<option value="">Loading teachers...</option>';
             teacherSelect.disabled = true;
             resetDropdown(sectionSelect, 'Choose teacher first...');
-            
+
             // Fetch teachers for the selected school
             fetch(`/admin/schools/${schoolSelect.value}/teachers`)
                 .then(response => response.json())
@@ -642,30 +654,30 @@
         }
                 });
         }
-        
+
         function loadSectionsByTeacher() {
             const teacherSelect = document.getElementById('admin_teacher_id');
-            const semesterSelect = document.getElementById('admin_semester_id');
+            const schoolYearSelect = document.getElementById('admin_school_year_id');
             const sectionSelect = document.getElementById('admin_section_id');
-            
+
             document.getElementById('selectedUserId').value = teacherSelect.value;
             validationState.teacher = teacherSelect.value !== '';
-            
+
             // Reset section validation
             validationState.section = false;
-            
+
             if (!teacherSelect.value) {
                 resetDropdown(sectionSelect, 'Choose teacher first...');
                 updateSelectionStatus();
                 return;
             }
-            
+
             // Show loading state
             sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
             sectionSelect.disabled = true;
-            
-            // Fetch sections for the selected teacher and semester
-            fetch(`/admin/teachers/${teacherSelect.value}/sections?semester_id=${semesterSelect.value}`)
+
+            // Fetch sections for the selected teacher and School Year
+            fetch(`/admin/teachers/${teacherSelect.value}/sections?school_year_id=${schoolYearSelect.value}`)
                 .then(response => response.json())
                 .then(data => {
                     sectionSelect.innerHTML = '<option value="">Choose section...</option>';
@@ -682,18 +694,18 @@
                     updateSelectionStatus();
                 });
         }
-        
+
         function updateSectionInfo() {
             const sectionSelect = document.getElementById('admin_section_id');
             const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
-            
+
             document.getElementById('selectedSectionId').value = sectionSelect.value;
             validationState.section = sectionSelect.value !== '';
-            
+
             if (selectedOption && selectedOption.value) {
                 const gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
                 const sectionName = selectedOption.getAttribute('data-name') || 'N/A';
-                
+
                 // Update all existing rows with section info
                 document.querySelectorAll('.grade-level-cell').forEach(cell => {
                     cell.textContent = gradeLevel;
@@ -709,10 +721,10 @@
                     cell.innerHTML = '<span class="text-muted">Select section</span>';
                 });
             }
-            
+
             updateSelectionStatus();
         }
-        
+
         function resetDropdown(selectElement, placeholder) {
             selectElement.innerHTML = `<option value="">${placeholder}</option>`;
             selectElement.disabled = true;
@@ -722,17 +734,17 @@
         // Form submission validation
         document.getElementById('studentsForm').addEventListener('submit', function(e) {
             @if($user->role === 'admin')
-                const allSelected = validationState.school && validationState.semester && validationState.teacher && validationState.section;
+                const allSelected = validationState.school && validationState.School Year && validationState.teacher && validationState.section;
             @else
-                const allSelected = validationState.semester && validationState.section;
+                const allSelected = validationState.School Year && validationState.section;
             @endif
-            
+
             if (!allSelected) {
                 e.preventDefault();
                 alert('Please complete all required selections before submitting.');
                 return false;
             }
-            
+
             // Check if there are any students to import
             const studentRows = document.querySelectorAll('#studentsTable tbody tr:not(:last-child)');
             if (studentRows.length === 0) {
@@ -760,12 +772,12 @@
         function addNewStudentRow() {
             let tbody = document.querySelector('#studentsTable tbody');
             let addRowBtnRow = document.getElementById('addRowBtn').closest('tr');
-            let rowCount = tbody.querySelectorAll('tr').length - 1; 
-            
+            let rowCount = tbody.querySelectorAll('tr').length - 1;
+
             // Get current section info for new rows
             let gradeLevel = 'N/A';
             let sectionName = 'N/A';
-            
+
             @if(auth()->user()->role === 'admin')
                 const sectionSelect = document.getElementById('admin_section_id');
                 if (sectionSelect && sectionSelect.value) {
@@ -781,7 +793,7 @@
                     sectionName = selectedOption.getAttribute('data-name') || 'N/A';
                 }
             @endif
-            
+
             let newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td class="row-number"></td>
@@ -818,7 +830,7 @@
         function updateRowNumbers() {
             let studentRows = document.querySelectorAll('#studentsTable tbody tr:not(:last-child)'); // Exclude "Add Row" button row
             let total = 0;
-            
+
             studentRows.forEach(function(row, idx) {
                 let num = row.querySelector('.row-number');
                 if (num) {
@@ -826,7 +838,7 @@
                     total++;
                 }
             });
-            
+
             document.getElementById('totalStudents').textContent = total;
             document.getElementById('totalStudentsHeader').textContent = total;
         }

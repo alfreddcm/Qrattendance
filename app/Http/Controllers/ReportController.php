@@ -3,7 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\Attendance;
 use App\Models\Student;
 use App\Services\SF2TemplateService;
@@ -15,37 +15,30 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $type = $request->input('type', 'daily');
-        $semesterId = $request->input('semester_id');
+        $schoolYearId = $request->input('school_year_id');
         $gradeSection = $request->input('grade_section');
-        $semesters = Semester::all();
+        $schoolYears = SchoolYear::all();
         $records = [];
  
-        $studentQuery = Student::where('user_id', Auth::id());
+        // Get students through teacher's sections
+        $teacherId = Auth::id();
+        $studentQuery = Student::whereHas('section', function($query) use ($teacherId) {
+            $query->where('teacher_id', $teacherId);
+        });
         
-        if ($semesterId) {
-            $studentQuery->where('semester_id', $semesterId);
-            $semester = Semester::find($semesterId);
+        if ($schoolYearId) {
+            $studentQuery->where('school_year_id', $schoolYearId);
+            $schoolYear = SchoolYear::find($schoolYearId);
         } else {
-            $semester = null;
+            $schoolYear = null;
         }
 
- 
-        if ($gradeSection) {
-            $parts = explode('|', $gradeSection);
-            if (count($parts) == 2) {
-                $gradeLevel = $parts[0];
-                $sectionName = $parts[1];
-                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $sectionName) {
-                    $query->where('gradelevel', $gradeLevel)->where('name', $sectionName);
-                });
-            }
-        }
-
-        $students = $studentQuery->orderBy('name')->get();
-
-         $gradeSectionOptionsQuery = Student::with('section')->where('user_id', Auth::id());
-        if ($semesterId) {
-            $gradeSectionOptionsQuery->where('semester_id', $semesterId);
+        // Get available grade/section options first
+        $gradeSectionOptionsQuery = Student::with('section')->whereHas('section', function($query) use ($teacherId) {
+            $query->where('teacher_id', $teacherId);
+        });
+        if ($schoolYearId) {
+            $gradeSectionOptionsQuery->where('school_year_id', $schoolYearId);
         }
         
         $gradeSectionOptions = $gradeSectionOptionsQuery
@@ -60,16 +53,34 @@ class ReportController extends Controller
             ->sort()
             ->values();
 
+        // If no grade_section is selected, use the first available option
+        if (!$gradeSection && $gradeSectionOptions->isNotEmpty()) {
+            $gradeSection = $gradeSectionOptions->first();
+        }
+ 
+        if ($gradeSection) {
+            $parts = explode('|', $gradeSection);
+            if (count($parts) == 2) {
+                $gradeLevel = $parts[0];
+                $sectionName = $parts[1];
+                $studentQuery->whereHas('section', function($query) use ($gradeLevel, $sectionName) {
+                    $query->where('gradelevel', $gradeLevel)->where('name', $sectionName);
+                });
+            }
+        }
+
+        $students = $studentQuery->orderBy('name')->get();
+
         if ($type === 'daily') {
 
             $date = $request->input('date', now()->toDateString());
 
-             if ($semester) {
-                $semester_start = \Carbon\Carbon::parse($semester->start_date)->toDateString();
-                $semester_end = \Carbon\Carbon::parse($semester->end_date)->toDateString();
-                if ($date < $semester_start || $date > $semester_end) {
+             if ($schoolYear) {
+                $schoolYear_start = \Carbon\Carbon::parse($schoolYear->start_date)->toDateString();
+                $schoolYear_end = \Carbon\Carbon::parse($schoolYear->end_date)->toDateString();
+                if ($date < $schoolYear_start || $date > $schoolYear_end) {
                      $records = collect();
-                    return view('teacher.report', compact('semesters', 'records', 'semester_start', 'semester_end', 'gradeSectionOptions'));
+                    return view('teacher.report', compact('schoolYears', 'records', 'schoolYear_start', 'schoolYear_end', 'gradeSectionOptions'));
                 }
             }
 
@@ -104,12 +115,12 @@ class ReportController extends Controller
                 ];
             });
         } elseif ($type === 'monthly') {
-             if ($semester) {
-                $semester_start = Carbon::parse($semester->start_date)->startOfDay();
-                $semester_end = Carbon::parse($semester->end_date)->endOfDay();
+             if ($schoolYear) {
+                $schoolYear_start = Carbon::parse($schoolYear->start_date)->startOfDay();
+                $schoolYear_end = Carbon::parse($schoolYear->end_date)->endOfDay();
             } else {
-                $semester_start = null;
-                $semester_end = null;
+                $schoolYear_start = null;
+                $schoolYear_end = null;
             }
 
             $month = $request->input('month'); 
@@ -123,10 +134,10 @@ class ReportController extends Controller
                 $end = now()->endOfMonth();
             }
 
-             if ($semester_start && $start < $semester_start) $start = $semester_start;
-            if ($semester_end && $end > $semester_end) $end = $semester_end;
+             if ($schoolYear_start && $start < $schoolYear_start) $start = $schoolYear_start;
+            if ($schoolYear_end && $end > $schoolYear_end) $end = $schoolYear_end;
 
-             if ($semester_start && $semester_end && $start > $semester_end) {
+             if ($schoolYear_start && $schoolYear_end && $start > $schoolYear_end) {
                 $classDays = [];
             } else {
                 $classDays = self::getClassDays($start, $end);
@@ -145,6 +156,8 @@ class ReportController extends Controller
                         'absent'     => 0,
                         'partial'    => 0,
                         'remarks'    => 'No class days in range',
+                        'rate'       => 0,
+                        'checks'     => [],
                     ];
                 });
             } else {
@@ -158,20 +171,30 @@ class ReportController extends Controller
                     $absent = 0;
                     $partial = 0;
 
+                    // Build daily checks for each class day
+                    $checks = [];
                     foreach ($classDays as $day) {
                         $dayAtt = $atts->get($day);
                         if ($dayAtt) {
                             if ($dayAtt->time_in_am && $dayAtt->time_out_am && $dayAtt->time_in_pm && $dayAtt->time_out_pm) {
                                 $present++;
+                                $checks[$day] = 'P';
                             } elseif ($dayAtt->time_in_am || $dayAtt->time_in_pm) {
                                 $partial++;
+                                $checks[$day] = 'H';
                             } else {
                                 $absent++;
+                                $checks[$day] = 'A';
                             }
                         } else {
                             $absent++;
+                            $checks[$day] = 'A';
                         }
                     }
+
+                    // compute rate: full present = 1, half-day counts as 0.5
+                    $attendancePoints = $present + ($partial * 0.5);
+                    $rate = $totalDays > 0 ? (int) round(($attendancePoints / $totalDays) * 100) : 0;
 
                     if ($present == $totalDays && $totalDays > 0) {
                         $remarks = 'Good';
@@ -191,13 +214,15 @@ class ReportController extends Controller
                         'absent'     => $absent,
                         'partial'    => $partial,
                         'remarks'    => $remarks,
+                        'rate'       => $rate,
+                        'checks'     => $checks,
                     ];
                 });
             }
         } elseif ($type === 'quarterly') {
-            if ($semester) {
-            $start = \Carbon\Carbon::parse($semester->start_date)->startOfDay();
-            $end = \Carbon\Carbon::parse($semester->end_date)->endOfDay();
+            if ($schoolYear) {
+            $start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
+            $end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
             } else {
             $start = now()->startOfYear();
             $end = now()->endOfYear();
@@ -217,60 +242,78 @@ class ReportController extends Controller
             });
             } else {
  
-                $records = $students->map(function ($student) use ($classDays) {
+                $totalDays = count($classDays);
+
+                $records = $students->map(function ($student) use ($classDays, $totalDays) {
                 $attendances = Attendance::where('student_id', $student->id)
                 ->whereIn('date', $classDays)
                 ->get()
                 ->keyBy('date');
 
                  $checks = [];
+                $present = 0;
+                $partial = 0;
+                $absent = 0;
+
                 foreach ($classDays as $date) {
-                $att = $attendances->get($date);
-                if ($att) {
-                    if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
-                    $checks[$date] = '✓';  
-                    } elseif ($att->time_in_am || $att->time_in_pm) {
-                    $checks[$date] = '◐'; 
+                    $att = $attendances->get($date);
+                    if ($att) {
+                        if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
+                            $present++;
+                            $checks[$date] = 'P';
+                        } elseif ($att->time_in_am || $att->time_in_pm) {
+                            $partial++;
+                            $checks[$date] = 'H';
+                        } else {
+                            $absent++;
+                            $checks[$date] = 'A';
+                        }
                     } else {
-                    $checks[$date] = '✗';  
+                        $absent++;
+                        $checks[$date] = 'A';
                     }
-                } else {
-                    $checks[$date] = '✗'; 
-                }
                 }
 
+                // compute rate: full present = 1, half-day = 0.5
+                $attendancePoints = $present + ($partial * 0.5);
+                $rate = $totalDays > 0 ? (int) round(($attendancePoints / $totalDays) * 100) : 0;
+
                 return (object)[
-                'id_no'    => $student->id_no,
-                'name'     => $student->name,
-                'grade_level' => $student->grade_level,
-                'section'  => $student->section_name,
-                'checks'   => $checks,
+                    'id_no'    => $student->id_no,
+                    'name'     => $student->name,
+                    'grade_level' => $student->grade_level,
+                    'section'  => $student->section_name,
+                    'checks'   => $checks,
+                    'present'  => $present,
+                    'absent'   => $absent,
+                    'partial'  => $partial,
+                    'rate'     => $rate,
                 ];
             });
             }
         }
 
 
-        $semester_start = $semester ? $semester->start_date : null;
-        $semester_end = $semester ? $semester->end_date : null;
+        $schoolYear_start = $schoolYear ? $schoolYear->start_date : null;
+        $schoolYear_end = $schoolYear ? $schoolYear->end_date : null;
 
-        return view('teacher.report', compact('semesters', 'records', 'semester_start', 'semester_end', 'gradeSectionOptions'));
+        return view('teacher.report', compact('schoolYears', 'records', 'schoolYear_start', 'schoolYear_end', 'gradeSectionOptions', 'gradeSection'));
     }
 
     public function exportCsv(Request $request)
     {
         $type = $request->input('type', 'daily');
-        $semesterId = $request->input('semester_id');
+        $schoolYearId = $request->input('school_year_id');
         $gradeSection = $request->input('grade_section');
-        $semesters = Semester::all();
+        $schoolYears = SchoolYear::all();
 
          $studentQuery = Student::where('user_id', Auth::id());
         
-        if ($semesterId) {
-            $studentQuery->where('semester_id', $semesterId);
-            $semester = Semester::find($semesterId);
+        if ($schoolYearId) {
+            $studentQuery->where('school_year_id', $schoolYearId);
+            $schoolYear = SchoolYear::find($schoolYearId);
         } else {
-            $semester = null;
+            $schoolYear = null;
         }
 
          if ($gradeSection) {
@@ -284,15 +327,62 @@ class ReportController extends Controller
             }
         }
 
-        $students = $studentQuery->get();
+        $students = $studentQuery->with('school')->get();
 
         $filename = 'attendance_report_' . now()->format('Ymd_His') . '.csv';
 
-        $callback = function () use ($type, $students, $semester) {
+        // Get school info and grade/section info
+        $gradeLevel = null;
+        $sectionName = null;
+        if ($gradeSection) {
+            $parts = explode('|', $gradeSection);
+            if (count($parts) == 2) {
+                $gradeLevel = $parts[0];
+                $sectionName = $parts[1];
+            }
+        }
+
+        $callback = function () use ($type, $students, $schoolYear, $gradeLevel, $sectionName) {
             $handle = fopen('php://output', 'w');
+
+            // Get school name from the first student's school
+            $schoolName = 'School Name Not Set';
+            if ($students->isNotEmpty() && $students->first()->school) {
+                $schoolName = $students->first()->school->name;
+            }
+
+            // Get school year from semester
+            $schoolYear = '';
+            if ($schoolYear) {
+                $schoolYear = $this->extractSchoolYearFromSemester($schoolYear->name);
+            } else {
+                $currentYear = \Carbon\Carbon::now()->year;
+                $currentMonth = \Carbon\Carbon::now()->month;
+                if ($currentMonth <= 6) {
+                    $schoolYear = ($currentYear - 1) . '-' . $currentYear;
+                } else {
+                    $schoolYear = $currentYear . '-' . ($currentYear + 1);
+                }
+            }
+
+            // Grade and Section - only show if a specific section is selected
+            if ($gradeLevel && $sectionName) {
+                $gradeSectionText = 'Grade ' . $gradeLevel . ' - ' . $sectionName;
+                // Write header information
+                fputcsv($handle, ['School Name:', $schoolName]);
+                fputcsv($handle, ['School Year:', $schoolYear]);
+                fputcsv($handle, ['Grade/Section:', $gradeSectionText]);
+            } else {
+                // No grade/section header if not filtered
+                fputcsv($handle, ['School Name:', $schoolName]);
+                fputcsv($handle, ['School Year:', $schoolYear]);
+            }
 
             if ($type === 'daily') {
                 $date = request()->input('date', now()->toDateString());
+                $formattedDate = \Carbon\Carbon::parse($date)->format('F d, Y');
+                fputcsv($handle, ['Report Type:', 'Daily - ' . $formattedDate]);
+                fputcsv($handle, []); // Empty row
                 fputcsv($handle, ['Date', 'ID No', 'Name', 'AM In', 'AM Out', 'PM In', 'PM Out', 'Status']);
                 $attendances = Attendance::whereDate('date', $date)->get()->keyBy('student_id');
                 foreach ($students as $student) {
@@ -324,12 +414,12 @@ class ReportController extends Controller
                     ]);
                 }
             } elseif ($type === 'monthly') {
-                 if ($semester) {
-                    $semester_start = \Carbon\Carbon::parse($semester->start_date)->startOfDay();
-                    $semester_end = \Carbon\Carbon::parse($semester->end_date)->endOfDay();
+                 if ($schoolYear) {
+                    $schoolYear_start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
+                    $schoolYear_end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
                 } else {
-                    $semester_start = null;
-                    $semester_end = null;
+                    $schoolYear_start = null;
+                    $schoolYear_end = null;
                 }
 
                 $month = request()->input('month');
@@ -342,28 +432,47 @@ class ReportController extends Controller
                     $end = now()->endOfMonth();
                 }
 
-                if ($semester_start && $start < $semester_start) $start = $semester_start;
-                if ($semester_end && $end > $semester_end) $end = $semester_end;
+                if ($schoolYear_start && $start < $schoolYear_start) $start = $schoolYear_start;
+                if ($schoolYear_end && $end > $schoolYear_end) $end = $schoolYear_end;
 
-                if ($semester_start && $semester_end && $start > $semester_end) {
+                $formattedMonth = $start->format('F Y');
+                $formattedStartDate = $start->format('d F Y');
+                $formattedEndDate = $end->format('d F Y');
+                fputcsv($handle, ['Report Type:', 'Monthly']);
+                fputcsv($handle, ['Date Range:', $formattedStartDate . ' - ' . $formattedEndDate]);
+                fputcsv($handle, []); // Empty row
+
+                if ($schoolYear_start && $schoolYear_end && $start > $schoolYear_end) {
                     $classDays = [];
                 } else {
                     $classDays = self::getClassDays($start, $end);
                 }
                 $totalDays = count($classDays);
 
-                fputcsv($handle, ['ID No', 'Name', 'Total Days', 'Present', 'Absent', 'Partial', 'Remarks']);
+                // Build header with No., ID No, Name, dates, and totals
+                $header = ['No.', 'ID No', 'Name'];
+                foreach ($classDays as $date) {
+                    $header[] = $date;
+                }
+                $header[] = 'Total P';
+                $header[] = 'Total H';
+                $header[] = 'Total A';
+                fputcsv($handle, $header);
+
+                $rowNumber = 1;
+                $totalPresent = 0;
+                $totalHalf = 0;
+                $totalAbsent = 0;
+
                 if (empty($classDays)) {
                     foreach ($students as $student) {
                         fputcsv($handle, [
+                            $rowNumber,
                             $student->id_no,
                             $student->name,
-                            0,
-                            0,
-                            0,
-                            0,
                             'No class days in range',
                         ]);
+                        $rowNumber++;
                     }
                 } else {
                     foreach ($students as $student) {
@@ -372,81 +481,145 @@ class ReportController extends Controller
                             ->get()
                             ->keyBy('date');
 
-                        $present = 0;
-                        $absent = 0;
-                        $partial = 0;
+                        $row = [$rowNumber, $student->id_no, $student->name];
+                        $studentPresent = 0;
+                        $studentHalf = 0;
+                        $studentAbsent = 0;
+
+                        // First column after name is column D (index 3), dates start at column D
+                        $startCol = 4; // Column D in Excel (A=1, B=2, C=3, D=4)
 
                         foreach ($classDays as $day) {
                             $dayAtt = $atts->get($day);
                             if ($dayAtt) {
                                 if ($dayAtt->time_in_am && $dayAtt->time_out_am && $dayAtt->time_in_pm && $dayAtt->time_out_pm) {
-                                    $present++;
+                                    $row[] = 'P';
+                                    $studentPresent++;
                                 } elseif ($dayAtt->time_in_am || $dayAtt->time_in_pm) {
-                                    $partial++;
+                                    $row[] = 'H';
+                                    $studentHalf++;
                                 } else {
-                                    $absent++;
+                                    $row[] = 'A';
+                                    $studentAbsent++;
                                 }
                             } else {
-                                $absent++;
+                                $row[] = 'A';
+                                $studentAbsent++;
                             }
                         }
 
-                        if ($present == $totalDays && $totalDays > 0) {
-                            $remarks = 'Good';
-                        } elseif ($present > 0 || $partial > 0) {
-                            $remarks = 'Poor';
-                        } else {
-                            $remarks = 'Bad';
-                        }
+                        $totalPresent += $studentPresent;
+                        $totalHalf += $studentHalf;
+                        $totalAbsent += $studentAbsent;
 
-                        fputcsv($handle, [
-                            $student->id_no,
-                            $student->name,
-                            $totalDays,
-                            $present,
-                            $absent,
-                            $partial,
-                            $remarks,
-                        ]);
+                        // Add Excel formulas for counting P, H, A in this row
+                        // Excel columns: A=No, B=ID, C=Name, D onwards are dates
+                        $lastDateCol = $this->numberToExcelColumn($startCol + count($classDays) - 1);
+                        $currentRow = $rowNumber + 1; // +1 because row 1 is header
+                        
+                        $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"P")';
+                        $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"H")';
+                        $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"A")';
+                        
+                        fputcsv($handle, $row);
+                        $rowNumber++;
                     }
-                }} elseif ($type === 'quarterly') {
-                if ($semester) {
-                    $start = \Carbon\Carbon::parse($semester->start_date)->startOfDay();
-                    $end = \Carbon\Carbon::parse($semester->end_date)->endOfDay();
+
+                    // Add summary section at the bottom
+                    fputcsv($handle, []); // Empty row
+                    fputcsv($handle, ['Summary']);
+                    fputcsv($handle, ['Total Present', $totalPresent]);
+                    fputcsv($handle, ['Total Half Day', $totalHalf]);
+                    fputcsv($handle, ['Total Absent', $totalAbsent]);
+                }
+                } elseif ($type === 'quarterly') {
+                if ($schoolYear) {
+                    $start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
+                    $end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
                 } else {
                     $start = now()->startOfYear();
                     $end = now()->endOfYear();
                 }
+                
+                $formattedStartDate = $start->format('d F Y');
+                $formattedEndDate = $end->format('d F Y');
+                fputcsv($handle, ['Report Type:', 'Quarterly']);
+                fputcsv($handle, ['Date Range:', $formattedStartDate . ' - ' . $formattedEndDate]);
+                fputcsv($handle, []); // Empty row
+                
                 $classDays = self::getClassDays($start, $end);
 
-                $header = ['ID No', 'Name'];
+                // Build header with No., ID No, Name, dates, and totals
+                $header = ['No.', 'ID No', 'Name'];
                 foreach ($classDays as $date) {
                     $header[] = $date;
                 }
+                $header[] = 'Total P';
+                $header[] = 'Total H';
+                $header[] = 'Total A';
                 fputcsv($handle, $header);
+
+                $rowNumber = 1;
+                $totalPresent = 0;
+                $totalHalf = 0;
+                $totalAbsent = 0;
 
                 foreach ($students as $student) {
                     $attendances = Attendance::where('student_id', $student->id)
                         ->whereIn('date', $classDays)
                         ->get()
                         ->keyBy('date');
-                    $row = [$student->id_no, $student->name];
+                    
+                    $row = [$rowNumber, $student->id_no, $student->name];
+                    $studentPresent = 0;
+                    $studentHalf = 0;
+                    $studentAbsent = 0;
+
+                    // First column after name is column D (index 3), dates start at column D
+                    $startCol = 4; // Column D in Excel (A=1, B=2, C=3, D=4)
+                    
                     foreach ($classDays as $date) {
                         $att = $attendances->get($date);
                         if ($att) {
                             if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
-                                $row[] = '/';  
+                                $row[] = 'P';
+                                $studentPresent++;
                             } elseif ($att->time_in_am || $att->time_in_pm) {
-                                $row[] = '='; 
+                                $row[] = 'H';
+                                $studentHalf++;
                             } else {
-                                $row[] = 'x'; 
+                                $row[] = 'A';
+                                $studentAbsent++;
                             }
                         } else {
-                            $row[] = '✗';
+                            $row[] = 'A';
+                            $studentAbsent++;
                         }
                     }
+
+                    $totalPresent += $studentPresent;
+                    $totalHalf += $studentHalf;
+                    $totalAbsent += $studentAbsent;
+
+                    // Add Excel formulas for counting P, H, A in this row
+                    // Excel columns: A=No, B=ID, C=Name, D onwards are dates
+                    $lastDateCol = $this->numberToExcelColumn($startCol + count($classDays) - 1);
+                    $currentRow = $rowNumber + 1; // +1 because row 1 is header
+                    
+                    $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"P")';
+                    $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"H")';
+                    $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"A")';
+                    
                     fputcsv($handle, $row);
+                    $rowNumber++;
                 }
+
+                // Add summary section at the bottom
+                fputcsv($handle, []); // Empty row
+                fputcsv($handle, ['Summary']);
+                fputcsv($handle, ['Total Present', $totalPresent]);
+                fputcsv($handle, ['Total Half Day', $totalHalf]);
+                fputcsv($handle, ['Total Absent', $totalAbsent]);
             }
 
             fclose($handle);
@@ -464,7 +637,7 @@ class ReportController extends Controller
     public function generateSF2(Request $request)
     {
         $request->validate([
-            'semester_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:semesters,id',
             'grade_section' => 'nullable|string',
             'month' => 'required|integer|min:1|max:12',
             'year' => 'required|integer|min:2020|max:2030',
@@ -472,12 +645,12 @@ class ReportController extends Controller
         ]);
 
         try {
-            $semester = Semester::find($request->semester_id);
+            $schoolYear = SchoolYear::find($request->school_year_id);
             $month = $request->month;
             $year = $request->year;
 
-             $semesterName = $semester->name;
-            $schoolYear = $this->extractSchoolYearFromSemester($semesterName);
+             $schoolYearName = $schoolYear->name;
+            $schoolYear = $this->extractSchoolYearFromSemester($schoolYearName);
             
              $gradeLevel = null;
             $section = null;
@@ -493,9 +666,9 @@ class ReportController extends Controller
             $sf2Service = new SF2TemplateService();
             
             $result = $sf2Service->generateSF2([
-                'semester_id' => $request->semester_id,
+                'school_year_id' => $request->school_year_id,
                 'school_year' => $schoolYear,
-                'grade_level' => $gradeLevel ?: $semesterName,
+                'grade_level' => $gradeLevel ?: $schoolYearName,
                 'section' => $section ?: 'All Students',
                 'month' => $month,
                 'year' => $year,
@@ -537,9 +710,9 @@ class ReportController extends Controller
     /**
      * Extract school year from semester name
      */
-    private function extractSchoolYearFromSemester($semesterName)
+    private function extractSchoolYearFromSemester($schoolYearName)
     {
-         if (preg_match('/(\d{4})/', $semesterName, $matches)) {
+         if (preg_match('/(\d{4})/', $schoolYearName, $matches)) {
             $year = (int)$matches[1];
             return ($year - 1) . '-' . $year;
         }
@@ -600,20 +773,20 @@ class ReportController extends Controller
  
     public function getSF2Options()
     {
-         $semesters = Semester::whereHas('students', function($query) {
+         $schoolYears = SchoolYear::whereHas('students', function($query) {
             $query->where('user_id', Auth::id());
         })->select('id', 'name', 'start_date', 'end_date')->orderBy('created_at', 'desc')->get();
 
-         $semestersWithDates = $semesters->map(function($semester) {
+         $schoolYearsWithDates = $schoolYears->map(function($schoolYear) {
             return [
-                'id' => $semester->id,
-                'name' => $semester->name,
-                'start_date' => $semester->start_date,
-                'end_date' => $semester->end_date,
-                'start_month' => \Carbon\Carbon::parse($semester->start_date)->month,
-                'start_year' => \Carbon\Carbon::parse($semester->start_date)->year,
-                'end_month' => \Carbon\Carbon::parse($semester->end_date)->month,
-                'end_year' => \Carbon\Carbon::parse($semester->end_date)->year
+                'id' => $schoolYear->id,
+                'name' => $schoolYear->name,
+                'start_date' => $schoolYear->start_date,
+                'end_date' => $schoolYear->end_date,
+                'start_month' => \Carbon\Carbon::parse($schoolYear->start_date)->month,
+                'start_year' => \Carbon\Carbon::parse($schoolYear->start_date)->year,
+                'end_month' => \Carbon\Carbon::parse($schoolYear->end_date)->month,
+                'end_year' => \Carbon\Carbon::parse($schoolYear->end_date)->year
             ];
         });
 
@@ -641,7 +814,7 @@ class ReportController extends Controller
         ];
 
         return response()->json([
-            'semesters' => $semestersWithDates,
+            'semesters' => $schoolYearsWithDates,
             'grade_section_options' => $gradeSection,
             'months' => $months
         ]);
@@ -667,7 +840,19 @@ class ReportController extends Controller
         }
     }
 
-
+    /**
+     * Convert column number to Excel column letter
+     * e.g., 1 => A, 2 => B, 27 => AA, etc.
+     */
+    private function numberToExcelColumn($num) {
+        $col = '';
+        while ($num > 0) {
+            $num--;
+            $col = chr(65 + ($num % 26)) . $col;
+            $num = intval($num / 26);
+        }
+        return $col;
+    }
 
         private static function getClassDays($start, $end) {
             $days = [];

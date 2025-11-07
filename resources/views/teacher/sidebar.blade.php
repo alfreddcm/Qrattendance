@@ -13,17 +13,17 @@
 
     <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
     <script src="{{ asset('js/all.min.js') }}"></script>
-    
+
     <style>
-        
+
         #camera-video {
-            transform: scaleX(-1); 
+            transform: scaleX(-1);
         }
-        
+
         #captured-photo {
-            transform: scaleX(-1); 
+            transform: scaleX(-1);
         }
-        
+
         .camera-btn {
             border-radius: 50%;
             width: 60px;
@@ -33,12 +33,12 @@
             justify-content: center;
             font-size: 1.5rem;
         }
-        
+
         .image-preview-container {
             position: relative;
             display: inline-block;
         }
-        
+
         .image-preview-container .btn-remove {
             position: absolute;
             top: 5px;
@@ -52,50 +52,50 @@
             align-items: center;
             justify-content: center;
         }
-        
-        
+
+
         .analytics-section {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
             margin-top: 20px;
         }
-        
+
         .analytics-card {
             border: none;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             transition: transform 0.2s;
         }
-        
+
         .analytics-card:hover {
             transform: translateY(-2px);
         }
-        
+
         .chart-container {
             position: relative;
             height: 300px;
         }
-        
+
         .btn-group .btn {
             border-radius: 0;
         }
-        
+
         .btn-group .btn:first-child {
             border-top-left-radius: 0.375rem;
             border-bottom-left-radius: 0.375rem;
         }
-        
+
         .btn-group .btn:last-child {
             border-top-right-radius: 0.375rem;
             border-bottom-right-radius: 0.375rem;
         }
-        
+
         .loading-spinner {
             display: none;
             text-align: center;
             padding: 20px;
         }
- 
+
         html, body {
             height: 100%;
             margin: 0;
@@ -317,21 +317,21 @@
         .sidebar.closed ~ .content {
             margin-left: 60px;
         }
-        
+
         .sticky-header {
             position: sticky;
             top: 0;
-            z-index: 997;  
+            z-index: 997;
             background: #f4f4f4;
-            padding: 20px 20px 20px 80px;  
+            padding: 20px 20px 20px 80px;
             margin: 0 -40px 20px -40px;
             border-bottom: 1px solid #e0e0e0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: 72px;  
+            height: 72px;
             display: flex;
             align-items: center;
         }
-        
+
         .sticky-header h2 {
             margin: 0;
             font-size: 1.75rem;
@@ -341,53 +341,53 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .sticky-header .subtitle {
             color: #6c757d;
             font-size: 0.875rem;
             margin: 5px 0 0 0;
             font-weight: normal;
         }
-        
+
         .sticky-header .page-actions {
             display: flex;
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
         }
-        
+
         @media (max-width: 768px) {
             .sticky-header {
                 padding: 15px 20px;
                 margin: 0 -20px 15px -20px;
             }
-            
+
             .sticky-header h2 {
                 font-size: 1.5rem;
             }
-            
+
             .sticky-header .d-flex {
                 flex-direction: column;
                 align-items: flex-start !important;
                 gap: 10px;
             }
-            
+
             .sticky-header .page-actions {
                 width: 100%;
                 justify-content: flex-start;
             }
         }
-        
+
         @media (max-width: 576px) {
             .sticky-header h2 {
                 font-size: 1.25rem;
             }
-            
+
             .sticky-header .page-actions {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
+
             .sticky-header .page-actions .btn {
                 width: 100%;
                 margin-bottom: 5px;
@@ -412,18 +412,18 @@
                 margin-left: 0;
             }
             .sticky-header {
-                padding: 15px 20px 15px 100px;  
+                padding: 15px 20px 15px 100px;
                 margin: 0 -20px 15px -20px;
-                height: 72px;  
+                height: 72px;
             }
         }
-        
+
         .sidebar.closed ~ .content .sticky-header {
-            padding-left: 80px; 
+            padding-left: 80px;
         }
-        
+
         .sidebar.closed ~ .content .sticky-header {
-            padding-left: 80px; 
+            padding-left: 80px;
         }
 </style>
 </head>
@@ -444,8 +444,8 @@
 
         <div class="logo">
             @if(auth()->user()->school && auth()->user()->school->logo)
-                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}" 
-                     alt="{{ auth()->user()->school->name ?? 'School' }} Logo" 
+                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                     alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <span style="display: none;">QR</span>
@@ -468,8 +468,8 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('teacher.semesters') }}" class="{{ request()->routeIs('teacher.semesters') ? 'active' : '' }}">
-                    <span class="icon"><i class="fas fa-layer-group"></i></span> <span>Semester and Sections</span>
+                <a href="{{ route('teacher.school-years') }}" class="{{ request()->routeIs('teacher.school-years') ? 'active' : '' }}">
+                    <span class="icon"><i class="fas fa-layer-group"></i></span> <span>School Year and Sections</span>
                 </a>
             </li>
             <li>
@@ -523,18 +523,18 @@
         }
         window.addEventListener('resize', checkMobileOverlay);
         window.addEventListener('DOMContentLoaded', checkMobileOverlay);
-  
+
         const hamburgerToggle = document.getElementById('hamburgerToggle');
         const sidebar = document.getElementById('sidebar');
 
-        
+
         if (localStorage.getItem('sidebarClosed') === 'true') {
             sidebar.classList.add('closed');
         }
 
         hamburgerToggle.addEventListener('click', () => {
             sidebar.classList.toggle('closed');
-            
+
             localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));
         });
     </script>

@@ -5,27 +5,25 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Section;
 use App\Models\User;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 
 class SectionSeeder extends Seeder
 {
     public function run()
     {
-        // Get the first teacher and semester for testing
-        $teacher = User::where('role', 'teacher')->first();
-        $semester = Semester::first();
+         $teacher = User::where('role', 'teacher')->first();
+        $schoolYear = SchoolYear::first();
         
-        if (!$teacher || !$semester) {
+        if (!$teacher || !$schoolYear) {
             $this->command->info('Please create a teacher user and semester first');
             return;
         }
 
-        // Create STEM Grade 11 Section
-        Section::create([
+         Section::create([
             'name' => 'STEM',
             'gradelevel' => 11,
             'teacher_id' => $teacher->id,
-            'semester_id' => $semester->id,
+            'school_year_id' => $schoolYear->id,
             'am_time_in_start' => '07:30:00',
             'am_time_in_end' => '08:00:00',
             'am_time_out_start' => '11:30:00',
@@ -40,7 +38,7 @@ class SectionSeeder extends Seeder
             'name' => 'HUMMS',
             'gradelevel' => 12,
             'teacher_id' => $teacher->id,
-            'semester_id' => $semester->id,
+            'school_year_id' => $schoolYear->id,
             'am_time_in_start' => '07:30:00',
             'am_time_in_end' => '08:00:00',
             'am_time_out_start' => '11:30:00',

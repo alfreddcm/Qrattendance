@@ -11,7 +11,7 @@
             </h4>
             <p class="subtitle fs-6 mb-0">Add, edit, and manage schools</p>
         </div>
-        
+
     </div>
 </div>
 
@@ -42,7 +42,7 @@
         </div>
     @endif
 
-    <!-- Compact Header -->
+
     <div class="header-row">
         <div class="header-content">
             <div class="header-left">
@@ -50,7 +50,7 @@
                 <span class="header-title">Schools</span>
                 <span class="header-count">{{ $schools->count() }} total</span>
             </div>
-            
+
             <div class="header-right">
                 <button class="btn-compact-primary" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
                     <i class="fas fa-plus me-1"></i>Add School
@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <!-- Schools Table -->
+
     <div class="table-container">
         <div class="card-header bg-primary text-white p-2">
             <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>All Schools</h6>
@@ -103,12 +103,12 @@
                             </td>
                             <td class="py-1">
                                 <div class="btn-group btn-group-sm" role="group">
-                                   <a href="{{ route('admin.edit-school', $school->id) }}" 
-                                                   class="btn btn-sm btn-outline-primary px-2 py-1" 
+                                   <a href="{{ route('admin.edit-school', $school->id) }}"
+                                                   class="btn btn-sm btn-outline-primary px-2 py-1"
                                                    title="Edit School">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" 
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1"
                                             onclick="deleteSchool({{ $school->id }}, '{{ $school->name }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -129,7 +129,7 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
+
             <div class="d-flex justify-content-center mt-2">
                 {{ $schools->links() }}
             </div>
@@ -137,7 +137,6 @@
     </div>
 </div>
 
-<!-- Add School Modal -->
 <div class="modal fade" id="addSchoolModal" tabindex="-1" aria-labelledby="addSchoolModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -187,8 +186,6 @@
     </div>
 </div>
 
-
-<!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteSchoolModal" tabindex="-1" aria-labelledby="deleteSchoolModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -249,7 +246,7 @@ function editSchool(id, schoolId, name, address, logo) {
         document.getElementById('edit_school_id').value = schoolId || '';
         document.getElementById('edit_name').value = name || '';
         document.getElementById('edit_address').value = address || '';
-        
+
         // Show current logo preview
         const logoPreview = document.getElementById('current_logo_preview');
         if (logo) {
@@ -257,9 +254,9 @@ function editSchool(id, schoolId, name, address, logo) {
         } else {
             logoPreview.innerHTML = '<small class="text-muted">No logo currently uploaded</small>';
         }
-        
+
         document.getElementById('editSchoolForm').action = `/admin/update-school/${id}`;
-        
+
         new bootstrap.Modal(document.getElementById('editSchoolModal')).show();
     } catch (error) {
         console.error('Error opening edit modal:', error);
@@ -271,7 +268,7 @@ function deleteSchool(id, name) {
     try {
         document.getElementById('deleteSchoolName').textContent = name || 'this school';
         document.getElementById('deleteSchoolForm').action = `/admin/delete-school/${id}`;
-        
+
         new bootstrap.Modal(document.getElementById('deleteSchoolModal')).show();
     } catch (error) {
         console.error('Error opening delete modal:', error);

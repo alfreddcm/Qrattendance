@@ -14,7 +14,7 @@ class AttendanceSession extends Model
     protected $fillable = [
         'session_token',
         'teacher_id',
-        'semester_id',
+        'school_year_id',
         'session_name',
         'status',
         'started_at',
@@ -49,11 +49,10 @@ class AttendanceSession extends Model
      * Create or get active session - ONLY ONE ACTIVE SESSION PER TEACHER
      * No expiry - session stays active until manually closed
      */
-    public static function createOrGetActiveSession($teacherId, $semesterId, $sessionName = null)
+    public static function createOrGetActiveSession($teacherId, $schoolYearId, $sessionName = null)
     {
-        // Check if there's already an active session for this teacher and semester
         $existingSession = self::where('teacher_id', $teacherId)
-                              ->where('semester_id', $semesterId)
+                              ->where('school_year_id', $schoolYearId)
                               ->where('status', 'active')
                               ->first();
                               
@@ -61,8 +60,6 @@ class AttendanceSession extends Model
             return $existingSession;
         }
 
-        // AUTOMATICALLY CLOSE ALL OTHER ACTIVE SESSIONS for this teacher
-        // This ensures only one session is active at a time
         $oldSessions = self::where('teacher_id', $teacherId)
             ->where('status', 'active')
             ->get();
@@ -100,7 +97,7 @@ class AttendanceSession extends Model
         return self::create([
             'session_token' => $token,
             'teacher_id' => $teacherId,
-            'semester_id' => $semesterId,
+            'school_year_id' => $schoolYearId,
             'session_name' => $sessionName ?: 'Attendance Session - ' . $now->format('M j, Y g:i A'),
             'started_at' => $now,
             'last_activity_at' => $now,
@@ -111,20 +108,17 @@ class AttendanceSession extends Model
         ]);
     }
 
-    /**
-     * Legacy methods - redirect to new method
-     */
-    public static function createSession($teacherId, $semesterId, $expiresInMinutes = null, $sessionName = null)
+    public static function createSession($teacherId, $schoolYearId, $expiresInMinutes = null, $sessionName = null)
     {
-        return self::createOrGetActiveSession($teacherId, $semesterId, $sessionName);
+        return self::createOrGetActiveSession($teacherId, $schoolYearId, $sessionName);
     }
 
-    public static function createDailySession($teacherId, $semesterId, $sessionName = null)
+    public static function createDailySession($teacherId, $schoolYearId, $sessionName = null)
     {
         $today = Carbon::now('Asia/Manila')->format('Y-m-d');
         
-         $existingSession = self::where('teacher_id', $teacherId)
-                              ->where('semester_id', $semesterId)
+        $existingSession = self::where('teacher_id', $teacherId)
+                              ->where('school_year_id', $schoolYearId)
                               ->where('status', 'active')
                               ->whereDate('started_at', $today)
                               ->first();
@@ -133,7 +127,7 @@ class AttendanceSession extends Model
             return $existingSession;
         }
 
-         $oldSessions = self::where('teacher_id', $teacherId)
+        $oldSessions = self::where('teacher_id', $teacherId)
             ->where('status', 'active')
             ->whereDate('started_at', '<', $today)
             ->get();
@@ -172,7 +166,7 @@ class AttendanceSession extends Model
         return self::create([
             'session_token' => $token,
             'teacher_id' => $teacherId,
-            'semester_id' => $semesterId,
+            'school_year_id' => $schoolYearId,
             'session_name' => $sessionName ?: 'Daily Session - ' . $now->format('M j, Y g:i A'),
             'started_at' => $now,
             'last_activity_at' => $now,
@@ -183,9 +177,9 @@ class AttendanceSession extends Model
         ]);
     }
 
-    public static function getTodaysSession($teacherId, $semesterId)
+    public static function getTodaysSession($teacherId, $schoolYearId)
     {
-        return self::createDailySession($teacherId, $semesterId);
+        return self::createDailySession($teacherId, $schoolYearId);
     }
 
     /**
@@ -255,9 +249,9 @@ class AttendanceSession extends Model
         }
 
         $now = Carbon::now('Asia/Manila');
-        $semester = $this->semester;
+        $schoolYear = $this->schoolYear;
         
-        if (!$semester) {
+        if (!$schoolYear) {
             return [
                 'allowed' => false,
                 'period' => null,
@@ -274,31 +268,31 @@ class AttendanceSession extends Model
             'end_time' => 'Always Available',
             'message' => 'Attendance recording available anytime with automatic status determination',
             'current_time' => $now->format('g:i A'),
-            'current_periods' => $this->getCurrentPeriodInfoPrivate($now, $semester)
+            'current_periods' => $this->getCurrentPeriodInfoPrivate($now, $schoolYear)
         ];
     }
 
     /**
      * Get current period information for display
      */
-    private function getCurrentPeriodInfoPrivate($now, $semester)
+    private function getCurrentPeriodInfoPrivate($now, $schoolYear)
     {
         $periods = [
             'AM Time In' => [
-                'start' => $semester->am_time_in_start,
-                'end' => $semester->am_time_in_end,
+                'start' => $schoolYear->am_time_in_start,
+                'end' => $schoolYear->am_time_in_end,
             ],
             'AM Time Out' => [
-                'start' => $semester->am_time_out_start,
-                'end' => $semester->am_time_out_end,
+                'start' => $schoolYear->am_time_out_start,
+                'end' => $schoolYear->am_time_out_end,
             ],
             'PM Time In' => [
-                'start' => $semester->pm_time_in_start,
-                'end' => $semester->pm_time_in_end,
+                'start' => $schoolYear->pm_time_in_start,
+                'end' => $schoolYear->pm_time_in_end,
             ],
             'PM Time Out' => [
-                'start' => $semester->pm_time_out_start,
-                'end' => $semester->pm_time_out_end,
+                'start' => $schoolYear->pm_time_out_start,
+                'end' => $schoolYear->pm_time_out_end,
             ],
         ];
 
@@ -352,10 +346,10 @@ class AttendanceSession extends Model
             }
         }
         
-         $semester = $this->semester;
-        if ($semester && $semester->am_time_in_start) {
-            $tomorrowMorning = Carbon::tomorrow('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start);
-            $tomorrowMorningEnd = Carbon::tomorrow('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end ?: '08:30:00');
+         $schoolYear = $this->schoolYear;
+        if ($schoolYear && $schoolYear->am_time_in_start) {
+            $tomorrowMorning = Carbon::tomorrow('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_in_start);
+            $tomorrowMorningEnd = Carbon::tomorrow('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_in_end ?: '08:30:00');
             
             return [
                 'period' => 'morning_time_in',
@@ -464,16 +458,16 @@ class AttendanceSession extends Model
     public function getCurrentPeriodInfo()
     {
         $now = Carbon::now('Asia/Manila');
-        $semester = $this->semester;
+        $schoolYear = $this->schoolYear;
         
-        if (!$semester) {
+        if (!$schoolYear) {
             return [
                 'active' => [],
                 'upcoming' => []
             ];
         }
         
-        return $this->getCurrentPeriodInfoPrivate($now, $semester);
+        return $this->getCurrentPeriodInfoPrivate($now, $schoolYear);
     }
 
     
@@ -519,9 +513,9 @@ class AttendanceSession extends Model
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function semester()
+    public function schoolYear()
     {
-        return $this->belongsTo(Semester::class);
+        return $this->belongsTo(SchoolYear::class, 'school_year_id');
     }
 
     

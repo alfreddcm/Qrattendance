@@ -14,7 +14,7 @@ class Section extends Model
         'name',
         'gradelevel',
         'teacher_id',
-        'semester_id',
+        'school_year_id',
         'am_time_in_start',
         'am_time_in_end',
         'am_time_out_start',
@@ -25,17 +25,11 @@ class Section extends Model
         'pm_time_out_end',
     ];
 
-    /**
-     * Relationship: Section belongs to a Semester
-     */
-    public function semester()
+    public function schoolYear()
     {
-        return $this->belongsTo(Semester::class, 'semester_id');
+        return $this->belongsTo(SchoolYear::class, 'school_year_id');
     }
 
-    /**
-     * Relationship: Section belongs to a Teacher (User) - legacy single teacher
-     */
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
@@ -71,13 +65,12 @@ class Section extends Model
      */
     public function isValidAttendanceTime($time = null, $period = null)
     {
-        $semester = $this->semester;
-        if (!$semester) {
+        $schoolYear = $this->schoolYear;
+        if (!$schoolYear) {
             return false;
         }
 
-        // First check if time is within semester periods
-        if (!$semester->isWithinValidPeriod($time)) {
+        if (!$schoolYear->isWithinValidPeriod($time)) {
             return false;
         }
 

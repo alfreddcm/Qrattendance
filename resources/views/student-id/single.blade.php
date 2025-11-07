@@ -19,8 +19,8 @@
             display: inline-block;
         }
         .student-id {
-            width: 85.6mm;  
-            height: 54mm;  
+            width: 85.6mm;
+            height: 54mm;
             border: 1px solid #333;
             background: #fff;
             padding: 0;
@@ -39,7 +39,7 @@
             border: none;
         }
         .qr-cell {
-            width: 35mm; /* Adjusted to match QR size */
+            width: 35mm;
             text-align: center;
             vertical-align: top;
             padding: 2mm;
@@ -88,7 +88,7 @@
             color: #666;
             font-style: italic;
         }
-        
+
         @media print {
             @page {
                 size: A4 landscape;
@@ -104,8 +104,8 @@
                 min-height: 100vh;
             }
             .student-id {
-                width: 85.6mm !important; 
-                height: 54mm !important; 
+                width: 85.6mm !important;
+                height: 54mm !important;
                 box-shadow: none;
                 border: 1px solid #000;
             }
@@ -126,7 +126,7 @@
                                 // Check if student has QR code in database
                                 $qrImageContent = '';
                                 $hasQrCode = false;
-                                
+
                                 if ($student->qr_code && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->qr_code)) {
                                     $qrPath = storage_path('app/public/' . $student->qr_code);
                                     if (file_exists($qrPath)) {

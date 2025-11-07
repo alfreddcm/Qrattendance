@@ -36,15 +36,15 @@
     }
 
     .sortable.sort-asc i::before {
-        content: "\f0de"; /* fa-sort-up */
+        content: "\f0de";
     }
 
     .sortable.sort-desc i::before {
-        content: "\f0dd"; /* fa-sort-down */
+        content: "\f0dd";
     }
 
     .sortable.sort-original i::before {
-        content: "\f162"; /* fa-sort-numeric-up */
+        content: "\f162";
     }
 
     .sortable.sort-asc i,
@@ -58,13 +58,13 @@
         opacity: 1;
     }
 
-    /* Enhanced badge styling */
+
     .badge {
         font-weight: 500;
         letter-spacing: 0.5px;
     }
 
-    /* Sort notification styling */
+
     .sort-notification {
         border-radius: 8px;
         border: none;
@@ -72,7 +72,7 @@
         font-size: 0.9rem;
     }
 
-    /* Sortable header enhancements */
+
     .sortable {
         user-select: none;
         transition: background-color 0.2s ease;
@@ -82,7 +82,7 @@
         background-color: rgba(0,123,255,0.1) !important;
     }
 
-    /* Table cell enhancements */
+
     .table td {
         padding: 0.6rem 0.4rem;
         vertical-align: middle;
@@ -98,7 +98,7 @@
         border-color: #dee2e6;
     }
 
-    /* Sticky header enhancement */
+
     .sticky-top {
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
@@ -108,7 +108,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">🗓️</span>
+                <i class="fas fa-calendar-check me-2"></i>
                 Attendance
             </h4>
             <p class="subtitle fs-6 mb-0">Manage sessions and view daily attendance records</p>
@@ -119,7 +119,7 @@
 
 <div class="container mt-4">
 
-    <!-- Attendance Access Code Section -->
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="card mb-4 shadow-sm">
@@ -138,7 +138,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div id="activeCodeDisplay" style="display: none;">
                         <div class="row">
                             <div class="col-md-6">
@@ -162,7 +162,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mt-3">
                             <div class="d-flex justify-content-between align-items-center flex-wrap">
                                 <div class="mb-2">
@@ -172,6 +172,9 @@
                                     </small>
                                 </div>
                                 <div class="mb-2">
+                                    <button type="button" class="btn btn-sm btn-primary me-2" onclick="printCode()" id="printCodeBtn" title="Print Code (Ctrl+P)">
+                                        <i class="fas fa-print me-1"></i>Print
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-success me-2" onclick="generateCode()">
                                         <i class="fas fa-sync-alt me-1"></i>Regenerate
                                     </button>
@@ -184,12 +187,12 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mt-3">
                             <div class="alert alert-info mb-0">
                                 <small>
                                     <i class="fas fa-info-circle me-2"></i>
-                                    Students can access attendance at: 
+                                    Students can access attendance at:
                                     <strong><span id="accessUrl"></span></strong>
                                     <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyAccessUrl()">
                                         <i class="fas fa-copy"></i>
@@ -203,7 +206,7 @@
         </div>
     </div>
 
-    <!-- QR Scanner Modal -->
+
     <div class="modal fade" id="qrScannerModal" tabindex="-1" aria-labelledby="qrScannerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -214,7 +217,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Scanner Mode Toggle -->
+
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="d-flex justify-content-center">
@@ -237,7 +240,7 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <!-- USB/2D Barcode Scanner Card -->
+
                             <div class="card shadow-sm border-primary" id="usb-scanner-card">
                                 <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="fas fa-barcode me-2"></i>2D Barcode Scanner (Primary)
@@ -265,7 +268,7 @@
                                 </div>
                             </div>
 
-                            <!-- Webcam Scanner Card -->
+
                             <div class="card shadow-sm border-secondary" id="webcam-scanner-card"
                                 style="display: none;">
                                 <div class="card-header bg-secondary text-white">
@@ -281,7 +284,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <!-- Time Period Status Card -->
+
                             <div class="card shadow-sm mb-3">
                                 <div class="card-header bg-info text-white">
                                     <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Current Time Period</h6>
@@ -290,32 +293,38 @@
                                     @php
                                     use Carbon\Carbon;
 
-                                    $semester = \App\Models\Semester::where('status', 'active')->first();
+                                    $schoolYear = \App\Models\SchoolYear::where('status', 'active')->first();
                                     $now = Carbon::now();
                                     $currentTimeDisplay = $now->format('g:i:s A');
                                     @endphp
 
                                     <div class="text-center">
-                                        @if($semester)
+                                        @if($schoolYear)
                                         <div class="alert alert-info mb-0">
                                             <i class="fas fa-calendar-alt me-2"></i>
-                                            <strong>� Active Semester:</strong> {{ $semester->name }}<br>
-                                            <small>{{ \Carbon\Carbon::parse($semester->start_date)->format('M j, Y') }} - 
-                                                {{ \Carbon\Carbon::parse($semester->end_date)->format('M j, Y') }}</small><br>
+                                            <strong>� Active School Year:</strong> 
+                                            @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                                {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                            @else
+                                                {{ $schoolYear->name }}
+                                            @endif
+                                            <br>
+                                            <small>{{ \Carbon\Carbon::parse($schoolYear->start_date)->format('M j, Y') }} -
+                                                {{ \Carbon\Carbon::parse($schoolYear->end_date)->format('M j, Y') }}</small><br>
                                             <small class="text-muted">Current Time: {{ $currentTimeDisplay }}</small>
                                         </div>
                                         @else
                                         <div class="alert alert-danger mb-0">
                                             <i class="fas fa-exclamation-triangle me-2"></i>
-                                            <strong>❌ No Active Semester</strong><br>
-                                            <small>Please configure an active semester</small>
+                                            <strong>❌ No Active School Year</strong><br>
+                                            <small>Please configure an active school year</small>
                                         </div>
                                         @endif
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Scan Results -->
+
                             <div id="qr-result">
                                 <div class="alert alert-info text-center">
                                     <strong>Scan a QR code to record attendance</strong>
@@ -345,7 +354,7 @@
         </div>
     </div>
 
-    <!-- Success Modal -->
+
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -357,7 +366,7 @@
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="successModalBody">
- 
+
             </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
@@ -366,7 +375,7 @@
         </div>
     </div>
 
-    <!-- Error Modal -->
+
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -386,7 +395,7 @@
         </div>
     </div>
 
-    <!-- Confirm Modal -->
+
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -397,7 +406,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="confirmModalBody">
-                    <!-- Confirmation message   -->
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -408,8 +417,6 @@
     </div>
 
 
-
-    <!-- Today's Recorded Attendance -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -427,7 +434,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- Search Section -->
+
                     <div class="row mb-3">
                         <div class="col-md-8">
                             <form class="d-flex align-items-center gap-2" method="GET" action="{{ route('teacher.attendance') }}">
@@ -436,8 +443,8 @@
                                 <button class="btn btn-outline-primary" type="submit">
                                     <i class="fas fa-search"></i>
                                 </button>
-                                
-                                <!-- Section Selector -->
+
+
                                 <select name="section_filter" class="form-select" style="min-width: 150px;" onchange="this.form.submit()">
                                     <option value="">All Sections</option>
                                     @php
@@ -455,7 +462,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                
+
                                 @if(request('search') || request('section_filter'))
                                     <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-secondary" title="Clear filters">
                                         <i class="fas fa-times"></i>
@@ -465,11 +472,11 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <small class="text-muted">
-                                 
+
                             </small>
                         </div>
                     </div>
-                    <!-- Attendance Table -->
+
                     <div class="table-responsive">
                         <div style="max-height: 420px; overflow-y: auto; width: 100%;">
                             <table class="table table table-striped align-middle bg-white">
@@ -520,13 +527,13 @@
                                                 <span class="text-muted" style="font-size: 0.8em;">-</span>
                                             @endif
                                         </td>
-                                        
+
                                         <td class="text-center">
                                             @php
                                                 $hasTimeIn = $row['time_in_am'] || $row['time_in_pm'];
                                                 $hasTimeOut = $row['time_out_am'] || $row['time_out_pm'];
                                             @endphp
-                                            
+
                                             @if($hasTimeIn && $hasTimeOut)
                                                 <span class="badge bg-success" style="font-size: 0.7em;">Present</span>
                                             @elseif($hasTimeIn)
@@ -549,7 +556,7 @@
                                         <td class="text-center" style="font-size: 0.8em;">
                                             {{ $row['time_out_pm'] ? \Carbon\Carbon::parse($row['time_out_pm'])->format('H:i') : '-' }}
                                         </td>
-                                        
+
                                     </tr>
                                     @empty
                                     <tr>
@@ -568,12 +575,12 @@
         </div>
     </div>
 
-  
-    <!-- Include HTML5 QR Code Library -->
+
+
     <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
-    /* 2D Barcode Scanner specific styles */
+
     #usb-scanner-input {
         transition: all 0.3s ease;
         font-weight: 600;
@@ -595,7 +602,7 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* Animation for successful scan */
+
     .scan-success {
         animation: scanSuccess 0.5s ease-in-out;
     }
@@ -614,14 +621,14 @@
         }
     }
 
-    /* QR Reader container styling */
+
     #qr-reader {
         border: 2px dashed #6c757d;
         border-radius: 8px;
         padding: 10px;
     }
 
-    /* Primary scanner emphasis */
+
     .border-primary {
         border-width: 2px !important;
     }
@@ -690,14 +697,29 @@
 
     function displayActiveCode(codeData) {
         activeCodeId = codeData.id;
-        
+
         document.getElementById('displayCode').textContent = codeData.code;
-        document.getElementById('qrCodeImage').src = codeData.qr_code_url;
+
+        // Handle QR code image
+        const qrImage = document.getElementById('qrCodeImage');
+        if (codeData.qr_code_url) {
+            qrImage.src = codeData.qr_code_url;
+            qrImage.style.display = 'block';
+            qrImage.onerror = function() {
+                console.error('Failed to load QR image:', codeData.qr_code_url);
+                this.style.display = 'none';
+                this.parentElement.innerHTML += '<p class="text-danger small">QR code image failed to load</p>';
+            };
+        } else {
+            qrImage.style.display = 'none';
+            qrImage.parentElement.innerHTML += '<p class="text-muted small">QR code not available</p>';
+        }
+
         document.getElementById('accessUrl').textContent = codeData.access_url;
-        
+
         document.getElementById('noActiveCode').style.display = 'none';
         document.getElementById('activeCodeDisplay').style.display = 'block';
-        
+
         // No need for frequent updates since there's no expiration
         if (updateInterval) clearInterval(updateInterval);
         updateInterval = setInterval(loadActiveCode, 300000); // Check every 5 minutes
@@ -706,7 +728,7 @@
     function showNoActiveCode() {
         document.getElementById('noActiveCode').style.display = 'block';
         document.getElementById('activeCodeDisplay').style.display = 'none';
-        
+
         if (updateInterval) {
             clearInterval(updateInterval);
             updateInterval = null;
@@ -715,7 +737,7 @@
 
     function deactivateCode() {
         if (!activeCodeId) return;
-        
+
         if (confirm('Are you sure you want to deactivate this code? Students will no longer be able to access attendance with this code.')) {
             fetch(`/teacher/attendance-code/${activeCodeId}/deactivate`, {
                 method: 'DELETE',
@@ -757,10 +779,21 @@
         });
     }
 
+    function printCode() {
+        if (!activeCodeId) {
+            showAlert('danger', 'No active code to print');
+            return;
+        }
+
+        // Open print page in new window
+        const printUrl = `/teacher/attendance-code/${activeCodeId}/print`;
+        window.open(printUrl, '_blank');
+    }
+
     function showAlert(type, message) {
         const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
         const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
-        
+
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
         alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
@@ -768,9 +801,9 @@
             <i class="fas fa-${icon} me-2"></i>${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
+
         document.body.appendChild(alertDiv);
-        
+
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
@@ -842,7 +875,7 @@
             `;
 
                     playNotificationSound(false);
-                    
+
                     // Return to ready state after 3 seconds for error messages
                     setTimeout(() => {
                         resetToReadyState();
@@ -860,7 +893,7 @@
             </div>
         `;
                 playNotificationSound(false);
-                
+
                 // Return to ready state after 3 seconds for errors
                 setTimeout(() => {
                     resetToReadyState();
@@ -871,7 +904,7 @@
     // Function to display student info with countdown timer
     function displayStudentInfoWithTimer(data) {
         let timeLeft = 5;
-        
+
         function updateDisplay() {
             document.getElementById('qr-result').innerHTML = `
                 <div class="alert alert-success text-center scan-success">
@@ -928,7 +961,7 @@
                 <small>Scan a QR code to record attendance</small>
             </div>
         `;
-        
+
         // Clear USB scanner input
         const usbInput = document.getElementById('usb-scanner-input');
         if (usbInput) {
@@ -1136,7 +1169,7 @@
                     <div class="row">
                         <div class="col-4"><strong>Session Name:</strong></div>
                         <div class="col-8">${data.session.name}</div>
-                         
+
                         <div class="col-8">
                             <div class="input-group input-group-sm">
                                 <input type="text" class="form-control" value="${data.session.public_url}" id="sessionUrlInput" readonly>
@@ -1263,7 +1296,6 @@
         );
     }
 
-
     function showAlert(type, message) {
         // Create or update an alert element
         let alertContainer = document.getElementById('alert-container');
@@ -1276,19 +1308,19 @@
             alertContainer.style.zIndex = '9999';
             document.body.appendChild(alertContainer);
         }
-        
+
         const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
         const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
-        
+
         const alertHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
                 <i class="fas ${iconClass} me-2"></i>${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;
-        
+
         alertContainer.innerHTML = alertHtml;
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => {
             const alert = alertContainer.querySelector('.alert');
@@ -1301,17 +1333,17 @@
     // Table sorting functionality
     function initializeTableSorting() {
         const sortableHeaders = document.querySelectorAll('.sortable');
-        
+
         console.log('Initializing table sorting, found headers:', sortableHeaders.length);
-        
+
         sortableHeaders.forEach(header => {
             header.addEventListener('click', function() {
                 console.log('Header clicked:', this.dataset.sort);
-                
+
                 const sortColumn = this.dataset.sort;
-                const currentSort = this.classList.contains('sort-asc') ? 'asc' : 
+                const currentSort = this.classList.contains('sort-asc') ? 'asc' :
                                    this.classList.contains('sort-desc') ? 'desc' : 'none';
-                
+
                 // Remove sort classes from all headers
                 sortableHeaders.forEach(h => {
                     h.classList.remove('sort-asc', 'sort-desc', 'sort-original');
@@ -1320,7 +1352,7 @@
                         icon.className = 'fas fa-sort ms-1';
                     }
                 });
-                
+
                 // Determine new sort direction (3-state cycle: none -> asc -> desc -> none)
                 let newSort = 'asc';
                 if (currentSort === 'none') {
@@ -1330,10 +1362,10 @@
                 } else if (currentSort === 'desc') {
                     newSort = 'original';
                 }
-                
+
                 // Add sort class to current header
                 this.classList.add(`sort-${newSort}`);
-                
+
                 // Update icon
                 const icon = this.querySelector('i');
                 if (icon) {
@@ -1348,9 +1380,9 @@
                         icon.style.color = '#28a745';
                     }
                 }
-                
+
                 console.log('Sorting by:', sortColumn, 'direction:', newSort);
-                
+
                 // Sort the table
                 sortTable(sortColumn, newSort);
             });
@@ -1363,22 +1395,22 @@
             console.log('Could not find table body');
             return;
         }
-        
+
         const rows = Array.from(tbody.querySelectorAll('tr'));
-        
+
         // Filter out empty state rows (rows with colspan)
         const dataRows = rows.filter(row => {
             const firstCell = row.cells[0];
             return firstCell && !firstCell.hasAttribute('colspan');
         });
-        
+
         if (dataRows.length === 0) {
             console.log('No data rows to sort');
             return;
         }
-        
+
         let sortedRows;
-        
+
         if (sortMode === 'original') {
             // Sort by original order (by data-original-index or just by current DOM order)
             sortedRows = [...dataRows].sort((a, b) => {
@@ -1394,11 +1426,11 @@
                     row.setAttribute('data-original-index', index);
                 }
             });
-            
+
             sortedRows = dataRows.sort((a, b) => {
                 let aVal = getCellValue(a, column);
                 let bVal = getCellValue(b, column);
-                
+
                 // Handle different data types
                 if (column === 'status') {
                     // Sort by status priority: Present > Partial > Time Out Only > Absent
@@ -1414,17 +1446,17 @@
                     aVal = aVal.toLowerCase();
                     bVal = bVal.toLowerCase();
                 }
-                
+
                 const ascending = sortMode === 'asc';
                 if (aVal < bVal) return ascending ? -1 : 1;
                 if (aVal > bVal) return ascending ? 1 : -1;
                 return 0;
             });
         }
-        
+
         // Clear the tbody and re-append sorted rows
         tbody.innerHTML = '';
-        
+
         // Re-append sorted rows and update row numbers
         sortedRows.forEach((row, index) => {
             // Update row number
@@ -1434,7 +1466,7 @@
             }
             tbody.appendChild(row);
         });
-        
+
         // If there were no data rows originally, add the empty state back
         if (rows.length > 0 && dataRows.length === 0) {
             tbody.innerHTML = `
@@ -1446,23 +1478,23 @@
                 </tr>
             `;
         }
-        
+
         // Add visual feedback
-        const sortInfo = sortMode === 'original' ? 'Original Order' : 
+        const sortInfo = sortMode === 'original' ? 'Original Order' :
                         sortMode === 'asc' ? 'A → Z' : 'Z → A';
         console.log(`Table sorted: ${column} (${sortInfo})`);
-        
+
         // Show a temporary sort notification
         showSortNotification(column, sortInfo);
     }
-    
+
     function showSortNotification(column, sortInfo) {
         // Remove any existing notifications
         const existingNotification = document.querySelector('.sort-notification');
         if (existingNotification) {
             existingNotification.remove();
         }
-        
+
         // Create notification element
         const notification = document.createElement('div');
         notification.className = 'sort-notification alert alert-info';
@@ -1475,25 +1507,25 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         `;
-        
+
         const columnDisplayNames = {
             'name': 'Student Name',
             'section': 'Section',
             'status': 'Status'
         };
-        
+
         notification.innerHTML = `
             <i class="fas fa-sort me-2"></i>
             <strong>Sorted by ${columnDisplayNames[column] || column}:</strong> ${sortInfo}
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         // Fade in
         setTimeout(() => {
             notification.style.opacity = '1';
         }, 10);
-        
+
         // Fade out and remove after 2 seconds
         setTimeout(() => {
             notification.style.opacity = '0';
@@ -1507,17 +1539,17 @@
 
     function getCellValue(row, column) {
         const columnMap = {
-            'name': 1,       
-            'section': 2,     
-            'status': 3      
+            'name': 1,
+            'section': 2,
+            'status': 3
         };
-        
+
         const columnIndex = columnMap[column];
         if (columnIndex === undefined) return '';
-        
+
         const cell = row.cells[columnIndex];
         if (!cell) return '';
-        
+
          if (column === 'name') {
              return cell.textContent.trim();
         } else if (column === 'section') {
@@ -1538,7 +1570,7 @@
      document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded, initializing table sorting...');
         initializeTableSorting();
-        
+
          setTimeout(() => {
             console.log('Re-initializing table sorting after timeout...');
             initializeTableSorting();

@@ -11,7 +11,7 @@
             </h4>
             <p class="subtitle fs-6 mb-0">Add, edit, and manage Student informations</p>
         </div>
-        
+
     </div>
 </div>
 
@@ -31,7 +31,7 @@
         </div>
     @endif
 
-      <!-- Filters -->
+
     <div class="card mb-3">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterFormTop" class="row g-2 align-items-center">
@@ -89,7 +89,7 @@
         </div>
     </div>
 
-     <!-- Main Header -->
+
     <div class="card shadow-sm sticky-card" style="margin-left: 1rem; margin-right: 1rem;">
         <div class="card-header bg-primary text-white p-3 sticky-card-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -100,32 +100,32 @@
                     </h6>
                     <span class="badge bg-light text-primary fs-6">{{ $students->count() }} total</span>
                 </div>
-                
+
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    
-                    
-                    <!-- Action Buttons -->
+
+
+
                     <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
                         <i class="fas fa-plus me-1"></i>Add Student
                     </button>
-                    
+
                     <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importStudentsModal">
                         <i class="fas fa-file-excel me-1"></i>Import Students
                     </button>
-                    
+
                     <button class="btn btn-success btn-sm" onclick="generateAllQrs()">
                         <i class="fas fa-magic me-1"></i>Generate All QR Codes
                     </button>
-                    
+
                     <button class="btn btn-info btn-sm" onclick="window.open('{{ route('student.ids.print.all') }}', '_blank')">
                         <i class="fas fa-print me-1"></i>Print All Student IDs
                     </button>
-                    
+
                 </div>
             </div>
         </div>
-        
-        <!-- Stats Row -->
+
+
         @php
             // Note: these counts compute on all students (pagination removed).
             $completeCount = $students->filter(function($s){
@@ -170,8 +170,8 @@
                 </div>
             </div>
         </div>
-        
-   
+
+
         <div class="card-body p-0">
             @if($students->count() > 0)
                 <div class="table-responsive" style="max-height: 73vh; overflow-y: auto;">
@@ -194,13 +194,13 @@
                             @foreach($students as $index => $student)
                             <tr>
                                 <td class="text-center fw-bold">{{ $loop->iteration }}</td>
-                                
-                                <!-- Photo Column -->
+
+
                                 <td class="text-center align-middle">
                                     @php
                                         $hasValidImage = false;
                                         $imageUrl = '';
-                                        
+
                                         if($student->picture) {
                                             // Check storage disk first
                                             if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
@@ -216,24 +216,24 @@
                                     @endphp
 
                                     @if($hasValidImage)
-                                        <img src="{{ $imageUrl }}" alt="Student Picture" 
-                                             class="rounded-circle" 
+                                        <img src="{{ $imageUrl }}" alt="Student Picture"
+                                             class="rounded-circle"
                                              style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dee2e6;">
                                     @else
-                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
                                              style="width: 50px; height: 50px; border: 2px solid #dee2e6;">
                                             <i class="fas fa-user text-muted"></i>
                                         </div>
                                     @endif
                                 </td>
-                                
-                                <!-- Name & ID Column -->
+
+
                                 <td>
                                     <div class="fw-bold">{{ $student->name }}</div>
                                     <small class="text-muted">ID: {{ $student->id_no ?? 'N/A' }}</small>
                                 </td>
-                                
-                                <!-- Section Column -->
+
+
                                 <td>
                                     @if($student->section)
                                         <span class="badge bg-primary">{{ $student->section->name }}</span><br>
@@ -243,8 +243,8 @@
                                         <small class="text-muted">Grade {{ $student->grade_level ?? 'N/A' }}</small>
                                     @endif
                                 </td>
-                                
-                                <!-- Gender Column -->
+
+
                                 <td class="text-center">
                                     @if($student->gender == 'M')
                                         <span>Male</span>
@@ -254,13 +254,13 @@
                                         <span>{{ $student->gender ?? 'N/A' }}</span>
                                     @endif
                                 </td>
-                                
-                                <!-- Age Column -->
+
+
                                 <td class="text-center">
                                     <span>{{ $student->age ?? 'N/A' }}</span>
                                 </td>
-                                
-                                <!-- Contact Details Column -->
+
+
                                 <td>
                                     <div class="small">
                                         @if($student->cp_no)
@@ -278,8 +278,8 @@
                                         @endif
                                     </div>
                                 </td>
-                                
-                                <!-- School & Teacher Column -->
+
+
                                 <td>
                                     <div class="small">
                                         @if($student->section && $student->section->teacher)
@@ -299,8 +299,8 @@
                                         </div>
                                     </div>
                                 </td>
-                                
-                                <!-- QR Code Column -->
+
+
                                 <td class="text-center">
                                     @php
                                         $hasQrCode = false;
@@ -324,9 +324,9 @@
                                     @endphp
 
                                     @if($hasQrCode)
-                                        <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code" 
-                                             style="width: 40px; height: 40px; border-radius: 4px;" 
-                                             data-bs-toggle="modal" data-bs-target="#qrModal{{ $student->id }}" 
+                                        <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
+                                             style="width: 40px; height: 40px; border-radius: 4px;"
+                                             data-bs-toggle="modal" data-bs-target="#qrModal{{ $student->id }}"
                                              class="cursor-pointer">
                                     @else
                                         <button class="btn btn-outline-warning btn-sm" onclick="generateQr({{ $student->id }})" title="Generate QR Code">
@@ -334,8 +334,8 @@
                                         </button>
                                     @endif
                                 </td>
-                                
-                                <!-- Actions Column -->
+
+
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -381,7 +381,6 @@
     </div>
 </div>
 
-<!-- Student Modals -->
 @foreach($students as $student)
 <div class="modal fade" id="infoModal{{ $student->id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ $student->id }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -394,14 +393,14 @@
             </div>
             <div class="modal-body p-3">
                 <div class="row g-3">
-                    <!-- Left Column - Photo & QR -->
+
                     <div class="col-md-4">
                         <div class="card border-0 bg-light h-100">
                             <div class="card-body text-center p-3">
                                 @php
                                     $hasValidModalImage = false;
                                     $modalImageUrl = '';
-                                    
+
                                     if($student->picture) {
                                         if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                                             $hasValidModalImage = true;
@@ -414,23 +413,23 @@
                                     }
                                 @endphp
 
-                                <!-- Student Photo -->
+
                                 @if($hasValidModalImage)
-                                    <img src="{{ $modalImageUrl }}" alt="Student Picture" 
-                                         class="rounded-circle mb-3" 
+                                    <img src="{{ $modalImageUrl }}" alt="Student Picture"
+                                         class="rounded-circle mb-3"
                                          style="width: 200px; height: 200px; object-fit: cover; border: 3px solid #6366f1;">
                                 @else
-                                    <div class="bg-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                    <div class="bg-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
                                          style="width: 200px; height: 200px; border: 3px solid #dee2e6;">
                                         <i class="fas fa-user text-muted" style="font-size: 60px;"></i>
                                     </div>
                                 @endif
-                                
-                                <!-- Student Name & ID -->
+
+
                                 <h6 class="mb-1 fw-bold">{{ $student->name }}</h6>
                                 <div class="badge bg-primary mb-3">{{ $student->id_no ?? 'N/A' }}</div>
 
-                                <!-- QR Code Section -->
+
                                 <div class="border-top pt-3">
                                     <div class="mb-2">
                                         <small class="text-muted fw-bold"><i class="fas fa-qrcode me-1"></i>QR Code</small>
@@ -441,10 +440,10 @@
                                         $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
                                     @endphp
                                     @if($qrSvgExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code" 
+                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code"
                                              class="border rounded" style="width: 180px; height: 180px;">
                                     @elseif($qrPngExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code" 
+                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code"
                                              class="border rounded" style="width: 180px; height: 180px;">
                                     @else
                                         <div class="text-muted">
@@ -457,10 +456,10 @@
                         </div>
                     </div>
 
-                    <!-- Right Column - Information -->
+
                     <div class="col-md-8">
                         <div class="row g-2">
-                            <!-- Personal Information -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-primary text-white py-2">
@@ -502,7 +501,7 @@
                                 </div>
                             </div>
 
-                            <!-- Academic Information -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-info text-white py-2">
@@ -535,11 +534,11 @@
                                                     </div>
                                                 </div>
                                             @endif
-                                            @if($student->semester)
+                                            @if($student->schoolYear)
                                                 <div class="col-12">
                                                     <div class="d-flex align-items-start py-1">
                                                         <small class="text-muted me-3" style="min-width: 60px;">Semester:</small>
-                                                        <span class="fw-semibold">{{ $student->semester->name ?? 'N/A' }}</span>
+                                                        <span class="fw-semibold">{{ $student->schoolYear->name ?? 'N/A' }}</span>
                                                     </div>
                                                 </div>
                                             @endif
@@ -548,7 +547,7 @@
                                 </div>
                             </div>
 
-                            <!-- Contact Information -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-success text-white py-2">
@@ -573,7 +572,7 @@
                                 </div>
                             </div>
 
-                            <!-- Emergency Contact -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-warning text-dark py-2">
@@ -623,7 +622,6 @@
 </div>
 @endforeach
 
-<!-- QR Code Modals -->
 @foreach($students as $student)
 <div class="modal fade" id="qrModal{{ $student->id }}" tabindex="-1" aria-labelledby="qrModalLabel{{ $student->id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -639,7 +637,7 @@
                     $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
                     $modalHasQrCode = false;
                     $modalQrImagePath = '';
-                    
+
                     if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
                         $modalHasQrCode = true;
                         $modalQrImagePath = $student->qr_code;
@@ -684,7 +682,6 @@
 </div>
 @endforeach
 
-<!-- Add Student Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form method="POST" action="{{ route('admin.students.store') }}" enctype="multipart/form-data">
@@ -698,7 +695,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <!-- Student Picture Section -->
+
                         <div class="col-12">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="bg-secondary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -725,7 +722,7 @@
                                             <i class="fa fa-upload me-1"></i>Upload File
                                         </button>
                                     </div>
-                                    
+
                                     <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
                                     <input type="hidden" id="captured_image" name="captured_image">
                                     <div id="image-preview" class="mt-2" style="display: none;">
@@ -741,7 +738,7 @@
                             </div>
                         </div>
 
-                        <!-- Basic Information -->
+
                         <div class="col-12">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -758,8 +755,8 @@
                             <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M.">
                         </div>
-                        
-                        <!-- Academic Information -->
+
+
                         <div class="col-12 mt-3">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="bg-success text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -798,8 +795,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <!-- Personal Information -->
+
+
                         <div class="col-12 mt-3">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="bg-info text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -828,8 +825,8 @@
                             <label for="address" class="form-label">Address</label>
                             <input type="text" class="form-control" id="address" name="address" placeholder="Complete address">
                         </div>
-                        
-                        <!-- Emergency Contact -->
+
+
                         <div class="col-12 mt-3">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="bg-danger text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -875,7 +872,6 @@
     </div>
 </div>
 
-<!-- Import Students Modal -->
 <div class="modal fade" id="importStudentsModal" tabindex="-1" aria-labelledby="importStudentsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -901,13 +897,13 @@
                                     <li class="mb-1">Save and upload file</li>
                                     <li class="mb-1">Review and confirm</li>
                                 </ol>
-                                
+
                                 <div class="d-grid mb-2">
                                     <a href="{{ route('admin.students.downloadTemplate') }}" class="btn btn-success btn-sm">
                                         <i class="fas fa-download me-1"></i>Download Template
                                     </a>
                                 </div>
-                                
+
                                 <div class="bg-light p-2 rounded">
                                     <small class="text-success fw-bold d-block mb-1">
                                         <i class="fas fa-check-circle me-1"></i>Supported Formats
@@ -924,7 +920,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <div class="card h-100 border-0 shadow-sm">
                             <div class="card-header bg-light border-0 py-2">
@@ -947,7 +943,7 @@
                                             </small>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-primary btn-sm">
                                             <i class="fas fa-upload me-1"></i>Upload & Import
@@ -958,7 +954,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row mt-3">
                     <div class="col-12">
                         <div class="alert alert-warning py-2 border-0">
@@ -991,7 +987,6 @@
     </div>
 </div>
 
-<!-- Camera Modal -->
 <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1036,34 +1031,34 @@ function openCameraModal() {
 
 function startCamera() {
     const video = document.getElementById('camera-video');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { 
-        showCameraError(); 
-        return; 
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showCameraError();
+        return;
     }
-    navigator.mediaDevices.getUserMedia({ 
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } 
+    navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
     })
-    .then(function(stream) { 
-        videoStream = stream; 
-        video.srcObject = stream; 
+    .then(function(stream) {
+        videoStream = stream;
+        video.srcObject = stream;
     })
-    .catch(function(err) { 
-        console.error('Error accessing camera:', err); 
-        showCameraError(); 
+    .catch(function(err) {
+        console.error('Error accessing camera:', err);
+        showCameraError();
     });
 }
 
-function showCameraError() { 
-    document.getElementById('camera-video').style.display = 'none'; 
-    document.getElementById('camera-error').style.display = 'block'; 
+function showCameraError() {
+    document.getElementById('camera-video').style.display = 'none';
+    document.getElementById('camera-error').style.display = 'block';
 }
 
 function capturePhoto() {
     const video = document.getElementById('camera-video');
     const canvas = document.getElementById('camera-canvas');
     const context = canvas.getContext('2d');
-    canvas.width = video.videoWidth; 
-    canvas.height = video.videoHeight; 
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0);
     const dataURL = canvas.toDataURL('image/jpeg', 0.8);
     document.getElementById('captured-photo').src = dataURL;
@@ -1073,38 +1068,38 @@ function capturePhoto() {
     document.getElementById('use-photo-btn').style.display = 'inline-block';
 }
 
-function retakePhoto() { 
-    document.getElementById('camera-preview').style.display = 'none'; 
-    document.getElementById('camera-video').style.display = 'block'; 
-    document.getElementById('retake-btn').style.display = 'none'; 
-    document.getElementById('use-photo-btn').style.display = 'none'; 
+function retakePhoto() {
+    document.getElementById('camera-preview').style.display = 'none';
+    document.getElementById('camera-video').style.display = 'block';
+    document.getElementById('retake-btn').style.display = 'none';
+    document.getElementById('use-photo-btn').style.display = 'none';
 }
 
 function usePhoto() {
     const dataURL = document.getElementById('captured-photo').src;
     document.getElementById('captured_image').value = dataURL;
     showImagePreview(dataURL);
-    stopCamera(); 
+    stopCamera();
     cameraModal.hide();
 }
 
-function stopCamera() { 
-    if (videoStream) { 
-        videoStream.getTracks().forEach(track => track.stop()); 
-        videoStream = null; 
-    } 
+function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
 }
 
-function showImagePreview(src) { 
-    const preview = document.getElementById('image-preview'); 
-    const previewImg = document.getElementById('preview-img'); 
+function showImagePreview(src) {
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
     const placeholder = document.querySelector('.student-photo-placeholder');
-    
+
      if (placeholder) {
         placeholder.style.display = 'none';
     }
-    
-     previewImg.src = src; 
+
+     previewImg.src = src;
     preview.style.display = 'block';
 }
 
@@ -1113,10 +1108,10 @@ function removePhoto() {
     const placeholder = document.querySelector('.student-photo-placeholder');
     const pictureInput = document.getElementById('picture');
     const capturedInput = document.getElementById('captured_image');
-    
+
      if (pictureInput) pictureInput.value = '';
     if (capturedInput) capturedInput.value = '';
-    
+
      preview.style.display = 'none';
     if (placeholder) {
         placeholder.style.display = 'flex';
@@ -1126,38 +1121,38 @@ function removePhoto() {
  document.getElementById('picture').addEventListener('change', function() {
     if (this.files && this.files[0]) {
         const file = this.files[0];
-        
+
         if (!file.type.startsWith('image/')) {
             alert('Please select an image file.');
             this.value = '';
             return;
         }
-        
+
         const reader = new FileReader();
-        reader.onload = function(e) { 
-            showImagePreview(e.target.result); 
-            document.getElementById('captured_image').value = ''; 
+        reader.onload = function(e) {
+            showImagePreview(e.target.result);
+            document.getElementById('captured_image').value = '';
         }
         reader.readAsDataURL(file);
     }
 });
 
- document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () { 
-    stopCamera(); 
+ document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () {
+    stopCamera();
 });
 
  function loadTeachersBySchool() {
     const schoolSelect = document.getElementById('admin_school_id');
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
-    
+
     const schoolId = schoolSelect.value;
-    
+
      teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
     sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
     teacherSelect.disabled = !schoolId;
     sectionSelect.disabled = true;
-    
+
     if (schoolId) {
         // Fetch teachers for this school
         fetch(`/admin/schools/${schoolId}/teachers`)
@@ -1181,12 +1176,12 @@ function removePhoto() {
 function loadSectionsByTeacher() {
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
-    
+
     const teacherId = teacherSelect.value;
-    
+
      sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
     sectionSelect.disabled = !teacherId;
-    
+
     if (teacherId) {
          fetch(`/admin/teachers/${teacherId}/sections`)
             .then(response => response.json())
@@ -1220,12 +1215,12 @@ function generateQr(studentId) {
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `/admin/students/${studentId}/generate-qr`;
-    
+
     const csrfToken = document.createElement('input');
     csrfToken.type = 'hidden';
     csrfToken.name = '_token';
     csrfToken.value = '{{ csrf_token() }}';
-    
+
     form.appendChild(csrfToken);
     document.body.appendChild(form);
     form.submit();
@@ -1237,16 +1232,16 @@ function generateAllQrs() {
         const originalText = button.innerHTML;
         button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
         button.disabled = true;
-        
+
          const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route("admin.students.generateQrs") }}';
-        
+
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = '_token';
         csrfToken.value = '{{ csrf_token() }}';
-        
+
         form.appendChild(csrfToken);
         document.body.appendChild(form);
         form.submit();
@@ -1258,21 +1253,21 @@ function generateAllQrs() {
  document.addEventListener('DOMContentLoaded', function() {
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
-    
+
      const initialSectionValue = sectionSelect ? sectionSelect.value : '';
 
     function populateSections(preserveSelection = true) {
         if(!teacherSelect || !sectionSelect) return;
         const selected = teacherSelect.selectedOptions[0];
         const sectionsData = selected ? selected.getAttribute('data-sections') : null;
-        
+
          let sectionToSelect = '';
         if (preserveSelection) {
              sectionToSelect = sectionSelect.value || initialSectionValue;
         }
-        
+
          sectionSelect.innerHTML = '<option value="">All Sections</option>';
-        
+
         if(sectionsData) {
             try {
                 const sections = JSON.parse(sectionsData);
@@ -1280,11 +1275,11 @@ function generateAllQrs() {
                     const opt = document.createElement('option');
                     opt.value = sec.id;
                     opt.text = (sec.section_name || sec.name) + ' (Grade ' + (sec.gradelevel || sec.grade_level || '') + ')';
-                    
+
                      if (sectionToSelect && sec.id == sectionToSelect) {
                         opt.selected = true;
                     }
-                    
+
                     sectionSelect.appendChild(opt);
                 });
             } catch(e) {
@@ -1297,7 +1292,7 @@ function generateAllQrs() {
         teacherSelect.addEventListener('change', function() {
              populateSections(false);
         });
-        
+
          populateSections(true);
     }
 });
@@ -1307,24 +1302,24 @@ function generateAllQrs() {
      .sticky-card {
         position: relative;
     }
-    
+
     .table-responsive {
         border-radius: 0 0 0.375rem 0.375rem;
     }
-    
+
     .sticky-top {
         background-color: #f8f9fa !important;
         z-index: 10;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    
+
     .sticky-top th {
         border-bottom: 2px solid #dee2e6;
         font-weight: 600;
         vertical-align: middle;
         padding: 12px 8px;
     }
-    
+
     .sticky-card-header {
         position: sticky;
         top: 0;
@@ -1332,72 +1327,72 @@ function generateAllQrs() {
         border-bottom: 1px solid rgba(255,255,255,0.2);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
+
     .table-responsive::-webkit-scrollbar {
         width: 8px;
     }
-    
+
     .table-responsive::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 4px;
     }
-    
+
     .table-responsive::-webkit-scrollbar-thumb {
         background: #6366f1;
         border-radius: 4px;
         transition: background 0.3s ease;
     }
-    
+
     .table-responsive::-webkit-scrollbar-thumb:hover {
         background: #4f46e5;
     }
-    
+
     .card-body {
         padding: 0 !important;
     }
-    
+
     .table {
         margin-bottom: 0 !important;
     }
-    
+
     .table tbody tr {
         border-bottom: 1px solid #dee2e6;
     }
-    
+
     .table tbody tr:hover {
         background-color: rgba(0, 123, 255, 0.04);
     }
-    
+
      .cursor-pointer {
         cursor: pointer;
     }
-    
+
      .sticky-header {
         z-index: 1020;
     }
-    
+
      .stats-row {
         position: relative;
         z-index: 1;
     }
-    
+
     .stat-card {
         border: none;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: transform 0.2s ease;
     }
-    
+
     .stat-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-    
+
     .stat-label {
         font-size: 0.875rem;
         color: #6c757d;
         font-weight: 600;
     }
-    
+
     .stat-value {
         font-size: 1.75rem;
         font-weight: 700;

@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use App\Models\Student;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,20 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(SchoolSeeder::class);
         $this->call(UsersSeeder::class);
-        $this->call([
-            SemesterSeeder::class,
-            SectionSeeder::class,  // Add sections after semesters
-        ]);
-
-        $semester = Semester::first();
-        $semesterId = $semester->id ?? 1;
-
-        $school = \App\Models\School::where('id', '1')->first();
-        $schoolId = $school ? $school->id : '1';
-
-        // Seed attendance records
-        $this->call([
-            StudentsWithAttendanceSeeder::class,
-        ]);
+        $this->call(SchoolYearsSeeder::class);
+        $this->call(SectionSeeder::class);
+        $this->call(SectionTeacherSeeder::class);
+        $this->call(AttendanceCodesSeeder::class);
+        $this->call(StudentsWithAttendanceSeeder::class);
+        $this->call(OutboundMessagesSeeder::class);
     }
 }

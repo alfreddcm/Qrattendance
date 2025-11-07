@@ -11,7 +11,7 @@
             </h4>
             <p class="subtitle fs-6 mb-0">System Overview</p>
         </div>
-        
+
     </div>
 </div>
 
@@ -36,7 +36,7 @@
                     </div>
                 </a>
             </div>
-            
+
             <div class="col-lg-3 col-md-6">
                 <a href="{{ route('admin.manage-sections') }}" class="text-decoration-none">
                     <div class="card stat-card text-white bg-success h-100">
@@ -55,7 +55,7 @@
                     </div>
                 </a>
             </div>
-            
+
             <div class="col-lg-3 col-md-6">
                 <a href="{{ route('admin.manage-teachers') }}" class="text-decoration-none">
                     <div class="card stat-card text-white bg-info h-100">
@@ -74,7 +74,7 @@
                     </div>
                 </a>
             </div>
-            
+
             <div class="col-lg-3 col-md-6">
                 <a href="##" class="text-decoration-none">
                     <div class="card stat-card text-white bg-warning h-100">
@@ -93,7 +93,7 @@
                     </div>
                 </a>
             </div>
-            
+
             <div class="col-lg-3 col-md-6">
                 <a href="{{ route('admin.teacher-attendance-reports') }}" class="text-decoration-none">
                     <div class="card stat-card text-white bg-secondary h-100">
@@ -145,9 +145,9 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-8">
-                <!-- Recent Attendance List -->
+
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="fas fa-list me-1"></i>Recent Attendance List</span>
@@ -234,7 +234,7 @@
                                                     $hasPMIn = $attendance->time_in_pm;
                                                     $hasPMOut = $attendance->time_out_pm;
                                                     $totalEntries = ($hasAMIn ? 1 : 0) + ($hasAMOut ? 1 : 0) + ($hasPMIn ? 1 : 0) + ($hasPMOut ? 1 : 0);
-                                                    
+
                                                     if ($totalEntries === 4) {
                                                         $statusClass = 'bg-success';
                                                         $statusText = 'Complete';
@@ -278,7 +278,7 @@
         </div>
     </div>
 </div>
- 
+
 </div>
 
 <script>
@@ -299,10 +299,10 @@ async function checkDatabaseStatus() {
         const statusElement = document.getElementById('databaseStatus');
         statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
         statusElement.className = 'badge bg-secondary';
-        
+
         const response = await fetch('{{ route("admin.system.status.database") }}');
         const data = await response.json();
-        
+
         if (data.status === 'online') {
             statusElement.innerHTML = '<i class="fas fa-check-circle me-1"></i>Online';
             statusElement.className = 'badge bg-success text-white';
@@ -323,38 +323,38 @@ async function checkSMSGatewayStatus() {
         const statusElement = document.getElementById('smsGatewayStatus');
         statusElement.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> Pinging...';
         statusElement.className = 'badge bg-secondary text-white';
-        
+
         const response = await fetch('{{ route("admin.system.status.sms") }}');
         const data = await response.json();
-        
+
         if (response.ok && data.status === 'online') {
             const responseTime = data.response_time || 'N/A';
             const httpCode = data.http_code || '';
-            
+
             statusElement.innerHTML = `<i class="fas fa-signal me-1"></i>Online`;
             statusElement.className = 'badge bg-success text-white';
-            
+
             // Add detailed tooltip with all information
             statusElement.title = `SMS Gateway Status: ${data.message}
 Gateway URL: ${data.gateway_url}
 Response Time: ${responseTime}
 HTTP Code: ${httpCode}
 Last Checked: ${new Date().toLocaleTimeString()}`;
-            
+
         } else {
             statusElement.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Offline';
             statusElement.className = 'badge bg-danger text-white';
-            
+
             // Add tooltip with error details
             statusElement.title = `SMS Gateway Error: ${data.message}
 Gateway URL: ${data.gateway_url || 'Not configured'}
 Timeout: ${data.timeout || 'N/A'}
 Last Checked: ${new Date().toLocaleTimeString()}`;
         }
-        
+
         // Log the result for debugging
         console.log('SMS Gateway Status:', data);
-        
+
     } catch (error) {
         const statusElement = document.getElementById('smsGatewayStatus');
         statusElement.innerHTML = '<i class="fas fa-times-circle me-1"></i>Error';
@@ -371,10 +371,10 @@ async function checkFileStorageStatus() {
         const statusElement = document.getElementById('fileStorageStatus');
         statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
         statusElement.className = 'badge bg-secondary';
-        
+
         const response = await fetch('{{ route("admin.system.status.storage") }}');
         const data = await response.json();
-        
+
         if (data.status === 'online') {
             statusElement.innerHTML = '<i class="fas fa-hdd me-1"></i>Available';
             statusElement.className = 'badge bg-success text-white';
@@ -397,7 +397,7 @@ async function checkFileStorageStatus() {
 function filterBySchool(schoolId) {
     const tableBody = document.getElementById('attendanceTableBody');
     const rows = tableBody.getElementsByTagName('tr');
-    
+
     for (let i = 0; i < rows.length; i++) {
         const schoolCell = rows[i].getElementsByTagName('td')[0];
         if (schoolCell && schoolId !== '') {
@@ -414,7 +414,7 @@ function sortTable(column) {
     const table = document.getElementById('recentAttendanceTable');
     const tbody = table.getElementsByTagName('tbody')[0];
     const rows = Array.from(tbody.getElementsByTagName('tr'));
-    
+
     let columnIndex = 0;
     switch(column) {
         case 'school': columnIndex = 0; break;
@@ -423,18 +423,18 @@ function sortTable(column) {
         case 'time': columnIndex = 3; break;
         case 'status': columnIndex = 4; break;
     }
-    
+
     rows.sort((a, b) => {
         const aText = a.cells[columnIndex].textContent.trim();
         const bText = b.cells[columnIndex].textContent.trim();
         return aText.localeCompare(bText);
     });
-    
+
     // Clear and re-append sorted rows
     while (tbody.firstChild) {
         tbody.removeChild(tbody.firstChild);
     }
-    
+
     rows.forEach(row => tbody.appendChild(row));
 }
 
@@ -464,11 +464,11 @@ setInterval(function() {
             }
         })
         .catch(error => console.error('Error updating stats:', error));
-}, 300000); 
+}, 300000);
 
  document.addEventListener('DOMContentLoaded', function() {
     checkSystemStatus();
-    
+
      setInterval(checkSystemStatus, 120000);
 });
 </script>
@@ -501,7 +501,6 @@ setInterval(function() {
     pointer-events: none;
 }
 
-/* Time Records Styling */
 .time-records {
     display: flex;
     flex-direction: column;
@@ -519,7 +518,6 @@ setInterval(function() {
     justify-content: flex-start;
 }
 
-/* Enhanced System Status Badges */
 .badge {
     transition: all 0.3s ease;
     cursor: help;
@@ -531,7 +529,6 @@ setInterval(function() {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Tooltip Styling */
 .badge[title]:hover::after {
     content: attr(title);
     position: absolute;
@@ -561,13 +558,11 @@ setInterval(function() {
     z-index: 1000;
 }
 
-/* SMS Gateway Specific Styling */
 #smsGatewayStatus {
     min-width: 80px;
     font-weight: 600;
 }
 
-/* Pulsing Animation for Checking States */
 @keyframes pulse-check {
     0% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.7; transform: scale(1.02); }
@@ -578,7 +573,6 @@ setInterval(function() {
     animation: pulse-check 1.5s ease-in-out infinite;
 }
 
-/* Status Color Indicators */
 .badge.bg-success {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
     border: 1px solid rgba(255,255,255,0.2);
@@ -600,7 +594,6 @@ setInterval(function() {
     border: 1px solid rgba(255,255,255,0.2);
 }
 
-/* System Status Card */
 .card-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -608,27 +601,24 @@ setInterval(function() {
     border-radius: 8px 8px 0 0 !important;
 }
 
-/* Recent Attendance Table */
 .table-hover tbody tr:hover {
     background-color: rgba(0,123,255,0.05);
     transform: scale(1.01);
     transition: all 0.2s ease;
 }
 
-/* Responsive Badge Text */
 @media (max-width: 768px) {
     .time-entry .badge {
         font-size: 0.65rem;
         padding: 2px 6px;
         min-width: 70px;
     }
-    
+
     .badge {
         font-size: 0.7rem;
     }
 }
 
-/* Loading Animation */
 @keyframes pulse {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -639,13 +629,11 @@ setInterval(function() {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Card Header Icons */
 .card-header i {
     margin-right: 8px;
     opacity: 0.9;
 }
 
-/* Progress Bars in Stat Cards */
 .progress {
     background-color: rgba(255,255,255,0.2);
     border-radius: 2px;
@@ -657,7 +645,6 @@ setInterval(function() {
     transition: width 0.6s ease;
 }
 
-/* Enhanced Table Styling */
 .table th {
     font-weight: 600;
     border-bottom: 2px solid #dee2e6;
@@ -669,13 +656,11 @@ setInterval(function() {
     border-color: #f1f3f4;
 }
 
-/* Button Enhancements */
 .btn-outline-primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,123,255,0.3);
 }
 
-/* Badge Color Variations for Time Entries */
 .badge.bg-success {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
 }

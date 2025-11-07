@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('students', function (Blueprint $table) {
@@ -25,23 +22,19 @@ return new class extends Migration
             $table->string('contact_person_contact', 20)->nullable();
             $table->string('qr_code')->nullable()->unique();
             $table->string('stud_code')->nullable()->unique();
-            $table->unsignedBigInteger('semester_id');
-            $table->foreignId('section_id')->nullable()->constrained('sections')->onDelete('cascade');
+            $table->unsignedBigInteger('school_year_id')->nullable();
+            $table->foreignId('section_id')->nullable()->constrained('sections')->onDelete('set null');
             $table->text('remarks')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('school_id')->nullable();
-
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('semester_id')->references('id')->on('semesters')->onDelete('cascade');
+            $table->foreign('school_year_id')->references('id')->on('school_years')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');        });
+            $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('students');

@@ -22,25 +22,22 @@ class AttendanceCode extends Model
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Relationship: Belongs to a teacher (User)
-     */
+    protected $appends = [
+        'qr_code_url',
+    ];
+
+
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    /**
-     * Relationship: Belongs to a section
-     */
     public function section()
     {
         return $this->belongsTo(Section::class);
     }
 
-    /**
-     * Generate a unique 6-digit code
-     */
+
     public static function generateUniqueCode()
     {
         do {
@@ -50,55 +47,55 @@ class AttendanceCode extends Model
         return $code;
     }
 
-    /**
-     * Generate QR code image and save it
-     */
+
     public function generateQrCode()
     {
-        $url = url('/public/attendance?code=' . $this->code);
+        $url = url('/public/attendance/' . $this->code);
         
-        // Generate QR code (using SVG format like student QR codes)
         $qrCode = QrCode::format('svg')
             ->size(300)
             ->errorCorrection('H')
             ->generate($url);
 
-        // Save to storage
         $filename = 'qr-codes/attendance-' . $this->code . '-' . time() . '.svg';
         Storage::disk('public')->put($filename, $qrCode);
+        
+        $publicPath = public_path($filename);
+        $publicDir = dirname($publicPath);
+        if (!file_exists($publicDir)) {
+            mkdir($publicDir, 0755, true);
+        }
+        file_put_contents($publicPath, $qrCode);
 
-        // Update model
         $this->qr_code_path = $filename;
         $this->save();
 
         return $filename;
     }
 
-    /**
-     * Check if code is valid (only checks if active, no expiration)
-     */
+
     public function isValid()
     {
         return $this->is_active;
     }
 
-    /**
-     * Deactivate this code
-     */
+
     public function deactivate()
     {
         $this->is_active = false;
         $this->save();
 
-        // Optionally delete QR code file
-        if ($this->qr_code_path && Storage::disk('public')->exists($this->qr_code_path)) {
-            Storage::disk('public')->delete($this->qr_code_path);
+        if ($this->qr_code_path) {
+            if (Storage::disk('public')->exists($this->qr_code_path)) {
+                Storage::disk('public')->delete($this->qr_code_path);
+            }
+            $publicPath = public_path($this->qr_code_path);
+            if (file_exists($publicPath)) {
+                unlink($publicPath);
+            }
         }
     }
 
-    /**
-     * Get active code for a teacher (no expiration check)
-     */
     public static function getActiveCodeForTeacher($teacherId, $sectionId = null)
     {
         $query = self::where('teacher_id', $teacherId)
@@ -111,12 +108,8 @@ class AttendanceCode extends Model
         return $query->first();
     }
 
-    /**
-     * Create a new attendance code for a teacher (no expiration)
-     */
     public static function createForTeacher($teacherId, $sectionId = null, $durationMinutes = null)
     {
-        // Deactivate any existing active codes for this teacher and section
         $existingCodes = self::where('teacher_id', $teacherId)
             ->where('is_active', true);
         
@@ -128,7 +121,6 @@ class AttendanceCode extends Model
             $code->deactivate();
         });
 
-        // Create new code (no expiration)
         $attendanceCode = self::create([
             'teacher_id' => $teacherId,
             'section_id' => $sectionId,
@@ -136,15 +128,11 @@ class AttendanceCode extends Model
             'is_active' => true,
         ]);
 
-        // Generate QR code
         $attendanceCode->generateQrCode();
 
         return $attendanceCode;
     }
 
-    /**
-     * Validate and retrieve code (no expiration check)
-     */
     public static function validateCode($code)
     {
         $attendanceCode = self::where('code', $code)
@@ -154,12 +142,13 @@ class AttendanceCode extends Model
         return $attendanceCode;
     }
 
-    /**
-     * Get QR code URL
-     */
     public function getQrCodeUrlAttribute()
     {
         if ($this->qr_code_path) {
+            $publicPath = public_path($this->qr_code_path);
+            if (file_exists($publicPath)) {
+                return url($this->qr_code_path);
+            }
             return Storage::disk('public')->url($this->qr_code_path);
         }
         return null;

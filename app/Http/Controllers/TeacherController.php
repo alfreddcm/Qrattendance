@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Concerns\ValidatesForResponse;
 use App\Models\Student;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\Attendance;
 use App\Models\Section;
 use Maatwebsite\Excel\Facades\Excel;
@@ -16,25 +16,22 @@ use Carbon\Carbon;
 class TeacherController extends Controller
 {
     use ValidatesForResponse;
-     
-    private function getCurrentSemesterId()
+      
+    private function getCurrentSchoolYearId()
     {
-        $currentSemester = Semester::getCurrentSemester();
-        return $currentSemester ? $currentSemester->id : null;
+        $user = Auth::user();
+        $currentSchoolYear = SchoolYear::getCurrentSchoolYear($user->school_id);
+        return $currentSchoolYear ? $currentSchoolYear->id : null;
     }
 
     
     public function dashboard(Request $request)
     {
-        $semesters = Semester::orderBy('start_date')->get();
-
-        $selectedSemester = $request->get('semester', $this->getCurrentSemesterId());
-
-        $studentCount = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->count();
-
-        $students = Student::where('semester_id', $selectedSemester)->where('user_id', Auth::id())->get();
-
-        $attendancesToday = Attendance::where('semester_id', $selectedSemester)
+        $schoolYears = SchoolYear::orderBy('start_date')->get();
+        $selectedSchoolYear = $request->get('semester', $this->getCurrentSchoolYearId());
+        $studentCount = Student::where('school_year_id', $selectedSchoolYear)->where('user_id', Auth::id())->count();
+        $students = Student::where('school_year_id', $selectedSchoolYear)->where('user_id', Auth::id())->get();
+        $attendancesToday = Attendance::where('school_year_id', $selectedSchoolYear)
             ->whereDate('date', now()->toDateString())
             ->pluck('student_id')
             ->toArray();
@@ -43,13 +40,13 @@ class TeacherController extends Controller
         $absentCount = max($students->count() - $presentCount, 0);
 
          $teacherSections = Section::where('teacher_id', Auth::id())
-            ->where('semester_id', $selectedSemester)
+            ->where('school_year_id', $selectedSchoolYear)
             ->get();
         
          $timePeriodsSource = $teacherSections->first();
-        $currentSemester = $semesters->where('id', $selectedSemester)->first();
+        $currentSchoolYear = $schoolYears->where('id', $selectedSchoolYear)->first();
         
-        $studentsWithMissingInfo = Student::where('semester_id', $selectedSemester)
+        $studentsWithMissingInfo = Student::where('school_year_id', $selectedSchoolYear)
             ->where('user_id', Auth::id())
             ->where(function($query) {
                 $query->whereNull('picture')
@@ -71,12 +68,11 @@ class TeacherController extends Controller
 
         
         $mostAbsent = null;
-        $totalDays = now()->diffInDays($semesters->where('id', $selectedSemester)->first()?->start_date ?? now()) + 1;
+        $totalDays = now()->diffInDays($schoolYears->where('id', $selectedSchoolYear)->first()?->start_date ?? now()) + 1;
         
-        // Calculate attendance counts for all students (needed for both mostAbsent/mostPunctual and section analytics)
-        $studentAttendanceCounts = collect();
+         $studentAttendanceCounts = collect();
         if ($totalDays > 0) {
-            $studentAttendanceCounts = Attendance::where('semester_id', $selectedSemester)
+            $studentAttendanceCounts = Attendance::where('school_year_id', $selectedSchoolYear)
                 ->whereIn('student_id', $students->pluck('id'))
                 ->selectRaw('student_id, COUNT(*) as attendance_count')
                 ->groupBy('student_id')
@@ -123,40 +119,38 @@ class TeacherController extends Controller
             }
         }
 
+        $user = Auth::user();
+        $currentSchoolYear = SchoolYear::getCurrentSchoolYear($user->school_id);
+        $selectedSchoolYearObj = $schoolYears->where('id', $selectedSchoolYear)->first();
         
-        $currentSemester = Semester::getCurrentSemester();
-        $selectedSemesterObj = $semesters->where('id', $selectedSemester)->first();
-        
-        // Override semester time periods with section time periods if available
-        if ($timePeriodsSource && $currentSemester) {
-            $currentSemester->am_time_in_start = $timePeriodsSource->am_time_in_start;
-            $currentSemester->am_time_in_end = $timePeriodsSource->am_time_in_end;
-            $currentSemester->am_time_out_start = $timePeriodsSource->am_time_out_start;
-            $currentSemester->am_time_out_end = $timePeriodsSource->am_time_out_end;
-            $currentSemester->pm_time_in_start = $timePeriodsSource->pm_time_in_start;
-            $currentSemester->pm_time_in_end = $timePeriodsSource->pm_time_in_end;
-            $currentSemester->pm_time_out_start = $timePeriodsSource->pm_time_out_start;
-            $currentSemester->pm_time_out_end = $timePeriodsSource->pm_time_out_end;
-        } elseif ($currentSemester) {
-            // Provide fallback time periods if no sections are configured
-            $currentSemester->am_time_in_start = $currentSemester->am_time_in_start ?? '07:00:00';
-            $currentSemester->am_time_in_end = $currentSemester->am_time_in_end ?? '07:30:00';
-            $currentSemester->am_time_out_start = $currentSemester->am_time_out_start ?? '11:30:00';
-            $currentSemester->am_time_out_end = $currentSemester->am_time_out_end ?? '12:00:00';
-            $currentSemester->pm_time_in_start = $currentSemester->pm_time_in_start ?? '13:00:00';
-            $currentSemester->pm_time_in_end = $currentSemester->pm_time_in_end ?? '13:30:00';
-            $currentSemester->pm_time_out_start = $currentSemester->pm_time_out_start ?? '16:30:00';
-            $currentSemester->pm_time_out_end = $currentSemester->pm_time_out_end ?? '17:00:00';
+         if ($timePeriodsSource && $currentSchoolYear) {
+            $currentSchoolYear->am_time_in_start = $timePeriodsSource->am_time_in_start;
+            $currentSchoolYear->am_time_in_end = $timePeriodsSource->am_time_in_end;
+            $currentSchoolYear->am_time_out_start = $timePeriodsSource->am_time_out_start;
+            $currentSchoolYear->am_time_out_end = $timePeriodsSource->am_time_out_end;
+            $currentSchoolYear->pm_time_in_start = $timePeriodsSource->pm_time_in_start;
+            $currentSchoolYear->pm_time_in_end = $timePeriodsSource->pm_time_in_end;
+            $currentSchoolYear->pm_time_out_start = $timePeriodsSource->pm_time_out_start;
+            $currentSchoolYear->pm_time_out_end = $timePeriodsSource->pm_time_out_end;
+        } elseif ($currentSchoolYear) {
+             $currentSchoolYear->am_time_in_start = $currentSchoolYear->am_time_in_start ?? '07:00:00';
+            $currentSchoolYear->am_time_in_end = $currentSchoolYear->am_time_in_end ?? '07:30:00';
+            $currentSchoolYear->am_time_out_start = $currentSchoolYear->am_time_out_start ?? '11:30:00';
+            $currentSchoolYear->am_time_out_end = $currentSchoolYear->am_time_out_end ?? '12:00:00';
+            $currentSchoolYear->pm_time_in_start = $currentSchoolYear->pm_time_in_start ?? '13:00:00';
+            $currentSchoolYear->pm_time_in_end = $currentSchoolYear->pm_time_in_end ?? '13:30:00';
+            $currentSchoolYear->pm_time_out_start = $currentSchoolYear->pm_time_out_start ?? '16:30:00';
+            $currentSchoolYear->pm_time_out_end = $currentSchoolYear->pm_time_out_end ?? '17:00:00';
         }
 
         
         $todaySession = null;
-        if ($currentSemester) {
+        if ($currentSchoolYear) {
             $today = Carbon::today('Asia/Manila');
             $todaySession = \App\Models\AttendanceSession::where('teacher_id', Auth::id())
                 ->whereDate('started_at', $today)
                 ->where('status', 'active')
-                ->with('semester')
+                ->with('schoolYear')
                 ->first();
         }
 
@@ -168,7 +162,7 @@ class TeacherController extends Controller
 
         // Section-based analytics
         $sectionAnalytics = [];
-        if ($currentSemester) {
+        if ($currentSchoolYear) {
             $sections = $students->groupBy(function($student) {
                 return $student->grade_level . '|' . $student->section_name;
             });
@@ -238,10 +232,10 @@ class TeacherController extends Controller
         $attendanceRate = $studentCount > 0 ? round(($presentCount / $studentCount) * 100, 1) . '%' : '0%';
         
         // Add student counts to teacher sections
-        $teacherSections = $teacherSections->map(function($section) use ($selectedSemester) {
-            $section->students_count = $section->students()->where('semester_id', $selectedSemester)->count();
+        $teacherSections = $teacherSections->map(function($section) use ($selectedSchoolYear) {
+            $section->students_count = $section->students()->where('school_year_id', $selectedSchoolYear)->count();
             $section->present_today = $section->students()
-                ->where('semester_id', $selectedSemester)
+                ->where('school_year_id', $selectedSchoolYear)
                 ->whereHas('attendances', function($query) {
                     $query->whereDate('date', now()->toDateString());
                 })
@@ -250,9 +244,9 @@ class TeacherController extends Controller
         });
 
         return view('teacher.dashboard', array_merge(compact(
-            'semesters',
-            'selectedSemester',
-            'currentSemester',
+            'schoolYears',
+            'selectedSchoolYear',
+            'currentSchoolYear',
             'studentCount',
             'presentCount',
             'absentCount',
@@ -272,10 +266,10 @@ class TeacherController extends Controller
     
     public function students()
     {
-        $selectedSemester = $this->getCurrentSemesterId();
+        $selectedSchoolYear = $this->getCurrentSchoolYearId();
         
         $students = Student::where('user_id', Auth::id())
-            ->where('semester_id', $selectedSemester)
+            ->where('school_year_id', $selectedSchoolYear)
             ->orderBy('id_no')
             ->get();
         
@@ -284,10 +278,10 @@ class TeacherController extends Controller
 
     public function message()
     {
-        $selectedSemester = $this->getCurrentSemesterId();
+        $selectedSchoolYear = $this->getCurrentSchoolYearId();
         
         $students = Student::where('user_id', Auth::id())
-            ->where('semester_id', $selectedSemester)
+            ->where('school_year_id', $selectedSchoolYear)
             ->orderBy('name')
             ->get();
         
@@ -297,16 +291,15 @@ class TeacherController extends Controller
     
     public function semesters()
     {
-        $semesters = Semester::orderBy('start_date', 'desc')->get();
+        $schoolYears = SchoolYear::orderBy('start_date', 'desc')->get();
         
-        // Get teacher's sections
         $sections = \App\Models\Section::where('teacher_id', Auth::id())
-            ->with(['semester'])
+            ->with(['schoolYear'])
             ->orderBy('gradelevel')
             ->orderBy('name')
             ->get();
             
-        return view('teacher.semester', compact('semesters', 'sections'));
+        return view('teacher.school-year', compact('schoolYears', 'sections'));
     }
 
     
@@ -314,7 +307,7 @@ class TeacherController extends Controller
     {
         Log::info('Semester update request', [
             'teacher_id' => Auth::id(),
-            'semester_id' => $request->semester_id,
+            'school_year_id' => $request->school_year_id,
             'new_status' => $request->status,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
@@ -322,7 +315,7 @@ class TeacherController extends Controller
 
         try {
             $request->validate([
-                'semester_id' => 'required|exists:semesters,id',
+                'school_year_id' => 'required|exists:semesters,id',
                 'status' => 'required|in:active,inactive',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
@@ -334,7 +327,7 @@ class TeacherController extends Controller
         } catch (\Exception $e) {
             Log::warning('Semester update validation failed', [
                 'teacher_id' => Auth::id(),
-                'semester_id' => $request->semester_id,
+                'school_year_id' => $request->school_year_id,
                 'validation_errors' => $e->getMessage(),
             ]);
             throw $e;
@@ -353,7 +346,7 @@ class TeacherController extends Controller
             return back()->withErrors(['pm_time_out_start' => 'PM time out start must be after AM time in end.']);
         }
 
-        $semester = Semester::findOrFail($request->semester_id);
+        $schoolYear = SchoolYear::findOrFail($request->school_year_id);
         
         $updateData = $request->only([
             'status', 'start_date', 'end_date',
@@ -367,7 +360,7 @@ class TeacherController extends Controller
         $updateData['pm_time_in_start'] = null;
         $updateData['pm_time_in_end'] = null;
         
-        $semester->update($updateData);
+        $schoolYear->update($updateData);
 
         return back()->with('success', 'Semester updated successfully!');
     }
@@ -375,22 +368,22 @@ class TeacherController extends Controller
     
     public function editSemester($id)
     {
-        $semester = Semester::findOrFail($id);
+        $schoolYear = SchoolYear::findOrFail($id);
         
         
-        $studentCount = Student::where('semester_id', $semester->id)->count();
-        $attendanceCount = Attendance::where('semester_id', $semester->id)->count();
+        $studentCount = Student::where('school_year_id', $schoolYear->id)->count();
+        $attendanceCount = Attendance::where('school_year_id', $schoolYear->id)->count();
         
         $responseData = [
-            'id' => $semester->id,
-            'name' => $semester->name,
-            'status' => $semester->status,
-            'start_date' => $semester->start_date,
-            'end_date' => $semester->end_date,
-            'am_time_in_start_input' => $semester->am_time_in_start_input,
-            'am_time_in_end_input' => $semester->am_time_in_end_input,
-            'pm_time_out_start_input' => $semester->pm_time_out_start_input,
-            'pm_time_out_end_input' => $semester->pm_time_out_end_input,
+            'id' => $schoolYear->id,
+            'name' => $schoolYear->name,
+            'status' => $schoolYear->status,
+            'start_date' => $schoolYear->start_date,
+            'end_date' => $schoolYear->end_date,
+            'am_time_in_start_input' => $schoolYear->am_time_in_start_input,
+            'am_time_in_end_input' => $schoolYear->am_time_in_end_input,
+            'pm_time_out_start_input' => $schoolYear->pm_time_out_start_input,
+            'pm_time_out_end_input' => $schoolYear->pm_time_out_end_input,
             'student_count' => $studentCount,
             'attendance_count' => $attendanceCount,
         ];
@@ -401,14 +394,14 @@ class TeacherController extends Controller
     
     public function getSemesterData($id)
     {
-        $semester = Semester::findOrFail($id);
+        $schoolYear = SchoolYear::findOrFail($id);
         return response()->json([
             'success' => true,
             'semester' => [
-                'id' => $semester->id,
-                'name' => $semester->name,
-                'start_date' => $semester->start_date,
-                'end_date' => $semester->end_date,
+                'id' => $schoolYear->id,
+                'name' => $schoolYear->name,
+                'start_date' => $schoolYear->start_date,
+                'end_date' => $schoolYear->end_date,
             ]
         ]);
     }

@@ -6,12 +6,12 @@
 
 @php
     use Illuminate\Support\Facades\Storage;
-    
+
     $missingQr = false;
     foreach($students as $student) {
-        
+
         if (!$student->qr_code || !Storage::disk('public')->exists($student->qr_code)) {
-            
+
             $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
             $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
             if (!$qrSvgExists) {
@@ -20,18 +20,18 @@
             }
         }
     }
-    $semesters = \App\Models\Semester::all();
-    $selectedSemester = request('semester_id');
- 
+    $schoolYears = \App\Models\SchoolYear::all();
+    $selectedSchoolYear = request('school_year_id');
+
     $sectionCounts = $students->groupBy(function($student) {
                     return $student->section ? $student->section->name : 'Unknown';
                 })->map(function($students, $sectionName) {
                     return [
                         'name' => $sectionName,
                         'count' => $students->count(),
-                        'icon' => $sectionName === 'STEM' ? 'fas fa-flask' : 
+                        'icon' => $sectionName === 'STEM' ? 'fas fa-flask' :
                                  ($sectionName === 'HUMMS' ? 'fas fa-book' : 'fas fa-users'),
-                        'color' => $sectionName === 'STEM' ? 'primary' : 
+                        'color' => $sectionName === 'STEM' ? 'primary' :
                                   ($sectionName === 'HUMMS' ? 'success' : 'info')
                     ];
                 })->filter(function($section) {
@@ -45,18 +45,13 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">👨‍🎓</span>
+                <i class="fas fa-user-graduate me-2"></i>
                 Student Management
             </h4>
             <p class="subtitle fs-6 mb-0">Manage student records and QR codes</p>
         </div>
     </div>
 </div>
-
-
-
-
-
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
@@ -75,17 +70,14 @@
     </div>
 @endif
 
-
-
 <div class="row mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">My Sections</h5>
         </div>
 
-
 <div class="row">
-    <!-- Search and Filter Row -->
+
 <div class="row mb-3">
     <div class="col-lg-8">
         <form method="GET" action="{{ route('teacher.students') }}" class="d-flex align-items-center gap-2 flex-wrap">
@@ -93,10 +85,10 @@
                 <input type="hidden" name="section_id" value="{{ request('section_id') }}">
             @endif
             <input type="text" name="search" placeholder="Search students..." class="form-control form-control-sm" value="{{ request('search') }}" style="width: 200px;">
-            <select name="semester_id" class="form-select form-select-sm" style="width: 150px;">
-                <option value="">All Semesters</option>
-                @foreach($semesters as $sem)
-                    <option value="{{ $sem->id }}" {{ $selectedSemester == $sem->id ? 'selected' : '' }}>
+            <select name="school_year_id" class="form-select form-select-sm" style="width: 150px;">
+                <option value="">All School Years</option>
+                @foreach($schoolYears as $sem)
+                    <option value="{{ $sem->id }}" {{ $selectedSchoolYear == $sem->id ? 'selected' : '' }}>
                         {{ $sem->name }}
                     </option>
                 @endforeach
@@ -115,11 +107,13 @@
             <button type="submit" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-search"></i>
             </button>
+            <a href="{{ route('teacher.students') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-redo"></i> Reset
+            </a>
         </form>
     </div>
 </div>
 </div>
-
 
         <div class="row">
 
@@ -153,24 +147,22 @@
     </div>
 </div>
 
-
-
 <div class="card shadow-sm sticky-card">
     <div class="card-header bg-primary text-white p-2 sticky-card-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
              <div class="d-flex align-items-center">
                 <h6 class="mb-0 fs-6 me-3">
-                    <span class="me-1">👨‍🎓</span>
+                    <i class="fas fa-user-graduate me-1"></i>
                     Student Records
                 </h6>
                 <span class="badge bg-light text-primary fs-6">{{ count($students) }} Students</span>
             </div>
-            
+
              <div class="d-flex align-items-center gap-2 flex-wrap">
                  <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
                     <i class="fas fa-plus me-1"></i>Add Student
                 </button>
-                
+
                 @if(count($students) > 0)
                     <div class="btn-group">
                         <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -196,7 +188,7 @@
                             @endif
                         </ul>
                     </div>
-               
+
                     <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="idActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-id-card me-1"></i>Student IDs
                     </button>
@@ -212,25 +204,25 @@
                         <i class="fas fa-download me-1"></i>Export
                     </a>
                 @endif
-                
+
                  <div class="border-start border-light ps-2 ms-1">
                     <form method="GET" action="{{ route('teacher.students') }}" class="d-flex align-items-center gap-1" id="sortForm">
                          @if(request('search'))
                             <input type="hidden" name="search" value="{{ request('search') }}">
                         @endif
-                        @if(request('semester_id'))
-                            <input type="hidden" name="semester_id" value="{{ request('semester_id') }}">
+                        @if(request('school_year_id'))
+                            <input type="hidden" name="school_year_id" value="{{ request('school_year_id') }}">
                         @endif
                         @if(request('grade_section'))
                             <input type="hidden" name="grade_section" value="{{ request('grade_section') }}">
                         @endif
-                        
+
                         <select name="sort_by" class="form-select form-select-sm" style="width: 90px;" onchange="this.form.submit()">
                             <option value="name" {{ request('sort_by', 'name') == 'name' ? 'selected' : '' }}>Name</option>
                             <option value="gender" {{ request('sort_by') == 'gender' ? 'selected' : '' }}>Gender</option>
                             <option value="age" {{ request('sort_by') == 'age' ? 'selected' : '' }}>Age</option>
                         </select>
-                        
+
                         <select name="sort_order" class="form-select form-select-sm" style="width: 65px;" onchange="this.form.submit()">
                             <option value="asc" {{ request('sort_order', 'asc') == 'asc' ? 'selected' : '' }}>A-Z</option>
                             <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Z-A</option>
@@ -240,7 +232,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card-body p-0">
         @if(count($students) > 0)
             <div class="table-responsive" style="max-height: 73vh; overflow-y: auto;">
@@ -272,12 +264,12 @@
                         @foreach($students as $index => $student)
                         <tr>
                             <td class="text-center fw-bold">{{ $index + 1 }}</td>
-                            
+
                              <td class="text-center align-middle">
                                 @php
                                     $hasValidImage = false;
                                     $imageUrl = '';
-                                    
+
                                     if($student->picture) {
                                         // Check storage disk first
                                         if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
@@ -293,25 +285,23 @@
                                 @endphp
 
                                 @if($hasValidImage)
-                                    <img src="{{ $imageUrl }}" alt="Student Picture" 
-                                         class="rounded-circle" 
+                                    <img src="{{ $imageUrl }}" alt="Student Picture"
+                                         class="rounded-circle"
                                          style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dee2e6;">
                                 @else
-                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
                                          style="width: 50px; height: 50px; border: 2px solid #dee2e6;">
                                         <i class="fas fa-user text-muted"></i>
                                     </div>
                                 @endif
 
-
-
                             </td>
-                            
+
                              <td>
                                 <div class="fw-bold">{{ $student->name }}</div>
                                 <small class="text-muted">ID: {{ $student->id_no }}</small>
                             </td>
-                            
+
                              <td>
                                 @if($student->section)
                                     <span class="badge bg-primary">{{ $student->section->name }}</span><br>
@@ -321,7 +311,7 @@
                                     <small class="text-muted">Grade {{ $student->grade_level ?? 'N/A' }}</small>
                                 @endif
                             </td>
-                            
+
                              <td class="text-center">
                                 @if($student->gender == 'M')
                                     <span class=" ">Male</span>
@@ -331,11 +321,11 @@
                                     <span class=" ">{{ $student->gender }}</span>
                                 @endif
                             </td>
-                            
+
                              <td class="text-center">
                                 <span class=" ">{{ $student->age }}</span>
                             </td>
-                            
+
                              <td>
                                 <div class="small">
                                     @if($student->cp_no)
@@ -348,7 +338,7 @@
                                     @endif
                                 </div>
                             </td>
-                            
+
                              <td class="text-center">
                                 @php
                                 $hasQrCode = false;
@@ -378,26 +368,26 @@
                                          data-bs-target="#qrModal{{ $student->id }}"
                                          title="Click to view larger QR code">
                                 @else
-                                    <button type="button" class="btn btn-outline-primary btn-sm" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#generateQrModal{{ $student->id }}" 
+                                    <button type="button" class="btn btn-outline-primary btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#generateQrModal{{ $student->id }}"
                                             title="Generate QR">
                                         <i class="fas fa-qrcode"></i>
                                     </button>
                                 @endif
                             </td>
-                            
+
                              <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-outline-primary btn-sm" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#infoModal{{ $student->id }}" 
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#infoModal{{ $student->id }}"
                                             title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split" 
-                                            type="button" 
-                                            data-bs-toggle="dropdown" 
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
                                             aria-expanded="false">
                                         <span class="visually-hidden">Toggle Dropdown</span>
                                     </button>
@@ -457,14 +447,14 @@
             </div>
             <div class="modal-body p-3">
                 <div class="row g-3">
-                    <!-- Left Column - Photo & QR -->
+
                     <div class="col-md-4">
                         <div class="card border-0 bg-light h-100">
                             <div class="card-body text-center p-3">
                                 @php
                                     $hasValidModalImage = false;
                                     $modalImageUrl = '';
-                                    
+
                                     if($student->picture) {
                                         if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                                             $hasValidModalImage = true;
@@ -477,23 +467,23 @@
                                     }
                                 @endphp
 
-                                <!-- Student Photo -->
+
                                 @if($hasValidModalImage)
-                                    <img src="{{ $modalImageUrl }}" alt="Student Picture" 
-                                         class="rounded-circle mb-3" 
+                                    <img src="{{ $modalImageUrl }}" alt="Student Picture"
+                                         class="rounded-circle mb-3"
                                          style="width: 200px; height: 200px; object-fit: cover; border: 3px solid #6366f1;">
                                 @else
-                                    <div class="bg-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                    <div class="bg-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
                                          style="width: 200px; height: 200px; border: 3px solid #dee2e6;">
                                         <i class="fas fa-user text-muted" style="font-size: 60px;"></i>
                                     </div>
                                 @endif
-                                
-                                <!-- Student Name & ID -->
+
+
                                 <h6 class="mb-1 fw-bold">{{ $student->name }}</h6>
                                 <div class="badge bg-primary mb-3">{{ $student->id_no }}</div>
 
-                                <!-- QR Code Section -->
+
                                 <div class="border-top pt-3">
                                     <div class="mb-2">
                                         <small class="text-muted fw-bold"><i class="fas fa-qrcode me-1"></i>QR Code</small>
@@ -504,10 +494,10 @@
                                         $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
                                     @endphp
                                     @if($qrSvgExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code" 
+                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code"
                                              class="border rounded" style="width: 180px; height: 180px;">
                                     @elseif($qrPngExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code" 
+                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code"
                                              class="border rounded" style="width: 180px; height: 180px;">
                                     @else
                                         <div class="text-muted">
@@ -520,10 +510,10 @@
                         </div>
                     </div>
 
-                    <!-- Right Column - Information -->
+
                     <div class="col-md-8">
                         <div class="row g-2">
-                            <!-- Personal Information -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-primary text-white py-2">
@@ -565,7 +555,7 @@
                                 </div>
                             </div>
 
-                            <!-- Contact Information -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-success text-white py-2">
@@ -590,7 +580,7 @@
                                 </div>
                             </div>
 
-                            <!-- Emergency Contact -->
+
                             <div class="col-12">
                                 <div class="card border-0 bg-light">
                                     <div class="card-header bg-warning text-dark py-2">
@@ -652,19 +642,19 @@
             </div>
             <div class="modal-body text-center">
                 @php
-                    
+
                     $modalQrImagePath = ''  ;
                     $modalHasQrCode = false;
-                    
+
                     if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
                         $modalHasQrCode = true;
                         $modalQrImagePath = $student->qr_code;
                     } else {
-                        
+
                         $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
                         $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
                         $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
-                        
+
                         if ($qrSvgExists) {
                             $modalHasQrCode = true;
                             $modalQrImagePath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
@@ -675,7 +665,7 @@
                     }
                 @endphp
                 @if($modalHasQrCode)
-                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code" 
+                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code"
                          style="width: 250px; height: 250px; border: 2px solid #dee2e6; border-radius: 10px;">
                 @else
                     <div class="text-muted">
@@ -730,7 +720,7 @@
 </div>
 @endforeach
 
-        
+
         <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <form method="POST" action="{{ route('teacher.students.add') }}" enctype="multipart/form-data">
@@ -771,337 +761,15 @@
                                                     <i class="fa fa-upload me-1"></i>Upload File
                                                 </button>
                                             </div>
-                                            
-                                             <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
-                                            <input type="hidden" id="captured_image" name="captured_image">
-                                            <div id="image-preview" class="mt-2" style="display: none;">
-                                                <img id="preview-img" src="" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; border: 3px solid #28a745;">
-                                                <div class="mt-2">
-                                                    <button type="button" class="btn btn-danger btn-sm" onclick="removePhoto()">
-                                                        <i class="fa fa-trash"></i> Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <small class="text-muted">Upload a student photo or take a photo with camera</small>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                 <div class="col-12">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        <h6 class="mb-0 text-primary fw-bold">Basic Information</h6>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 2024-001">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M.">
-                                </div>
-                                
-                                 <div class="col-12 mt-3">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-success text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-graduation-cap"></i>
-                                        </div>
-                                        <h6 class="mb-0 text-success fw-bold">Academic Information</h6>
-                                    </div>
-                                </div>
-                                <div class="col-md-8">
-                                    <label for="section_id" class="form-label">Grade & Section <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="section_id" name="section_id" required>
-                                        <option value="">Select Grade & Section</option>
-                                        @foreach($teacherSections as $section)
-                                            <option value="{{ $section->id }}" data-grade="{{ $section->gradelevel }}">
-                                                Grade {{ $section->gradelevel }} - {{ $section->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="semester_id" class="form-label">Semester</label>
-                                    <select class="form-select" id="semester_id" name="semester_id">
-                                        <option value="">Select Semester</option>
-                                        @foreach(\App\Models\Semester::all() as $semester)
-                                            <option value="{{ $semester->id }}">{{ $semester->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                
-                                 <div class="col-12 mt-3">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-info text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-id-card"></i>
-                                        </div>
-                                        <h6 class="mb-0 text-info fw-bold">Personal Information</h6>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="gender" name="gender" required>
-                                        <option value="">Select Gender</option>
-                                        <option value="M">Male</option>
-                                        <option value="F">Female</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="age" name="age" min="13" max="25" required placeholder="Age">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="cp_no" class="form-label">Contact Number</label>
-                                    <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX">
-                                </div>
-                                <div class="col-md-12">
-                                    <label for="address" class="form-label">Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" placeholder="Complete address">
-                                </div>
-                                
-                                 <div class="col-12 mt-3">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-danger text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-phone"></i>
-                                        </div>
-                                        <h6 class="mb-0 text-danger fw-bold">Emergency Contact <span class="text-danger">*</span></h6>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="contact_person_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" required placeholder="Parent/Guardian name">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                                    <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX">
-                                </div>
-                                <div class="col-md-12">
-                                    <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="contact_person_relationship" name="contact_person_relationship" required>
-                                        <option value="">Select Relationship</option>
-                                        <option value="Parent">Parent</option>
-                                        <option value="Guardian">Guardian</option>
-                                        <option value="Sibling">Sibling</option>
-                                        <option value="Relative">Relative</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importStudentsModal" data-bs-dismiss="modal">
-                                <i class="fas fa-file-excel me-1"></i>Import Excel File
-                            </button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i>Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i>Add Student
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-         <div class="modal fade" id="importStudentsModal" tabindex="-1" aria-labelledby="importStudentsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white py-2">
-                        <h6 class="modal-title" id="importStudentsModalLabel">
-                            <i class="fas fa-file-excel me-1"></i>Import Students from Excel
-                        </h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-3">
-                        <div class="row g-3">
-                             <div class="col-md-6">
-                                <div class="card h-100 border-0 shadow-sm">
-                                    <div class="card-header bg-light border-0 py-2">
-                                        <small class="text-success fw-bold">
-                                            <i class="fas fa-list-ol me-1"></i>Quick Steps
-                                        </small>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <ol class="mb-2 small">
-                                            <li class="mb-1">Download template file</li>
-                                            <li class="mb-1">Fill in student data</li>
-                                            <li class="mb-1">Save and upload file</li>
-                                            <li class="mb-1">Review and confirm</li>
-                                        </ol>
-                                        
-                                        <div class="d-grid mb-2">
-                                            <a href="{{ route('teacher.students.downloadTemplate') }}" class="btn btn-success btn-sm">
-                                                <i class="fas fa-download me-1"></i>Download Template
-                                            </a>
-                                        </div>
-                                        
-                                        <div class="bg-light p-2 rounded">
-                                            <small class="text-success fw-bold d-block mb-1">
-                                                <i class="fas fa-check-circle me-1"></i>Supported Formats
-                                            </small>
-                                            <div class="row g-1">
-                                                <div class="col-6">
-                                                    <small class="d-flex align-items-center">
-                                                        <i class="fas fa-file-excel text-success me-1"></i>.xlsx, .xls, .csv
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            <small class="text-muted">Max: 5MB</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                             <div class="col-md-6">
-                                <div class="card h-100 border-0 shadow-sm">
-                                    <div class="card-header bg-light border-0 py-2">
-                                        <small class="text-primary fw-bold">
-                                            <i class="fas fa-upload me-1"></i>Upload Your File
-                                        </small>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <form action="{{ route('import.upload') }}" method="POST" enctype="multipart/form-data">
-                                            @csrf
-                                            <div class="mb-3">
-                                                <label for="file" class="form-label small">Select Excel or CSV File</label>
-                                                <div class="border-2 border-dashed border-primary rounded p-3 text-center bg-light">
-                                                    <div class="mb-2">
-                                                        <i class="fas fa-cloud-upload-alt fa-2x text-primary"></i>
-                                                    </div>
-                                                    <input type="file" name="file" id="file" class="form-control form-control-sm" accept=".csv, .xls, .xlsx" required>
-                                                    <small class="form-text text-muted mt-1 d-block">
-                                                        Choose template format file
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="d-grid">
-                                                <button type="submit" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-upload me-1"></i>Upload & Import
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                         <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="alert alert-warning py-2 border-0">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
-                                        <div>
-                                            <small class="fw-bold text-warning d-block mb-1">Important Notes</small>
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <ul class="mb-0" style="font-size: 0.75rem;">
-                                                        <li>Fill all required fields: Student ID, Name <strong>(LN, FN MI.)</strong>, Gender (M/F), Age, Address, Contact Phone, Emergency Contact Name, Relationship (Parent/Guardian/etc),  Emergency Contact Phone</li>
-                                                        <li>Name format must be: <strong>Last Name, First Name Middle Initial.</strong> (example: Dela Cruz, Juan M.)</li>
-                                                        <li>Student IDs must be unique - duplicates will be skipped</li>
-                                                     </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer py-2">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Close
-                        </button>
-                    </div>
-                </</div>
-            </div>
-        </div>
-
-<!-- Camera Modal -->
-<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true" style="z-index: 1070 !important;">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cameraModalLabel">
-                    <i class="fa fa-camera me-2"></i>Take Photo
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="camera-container">
-                    <video id="camera-video" autoplay playsinline class="camera-video" style="width: 100%; max-width: 400px; border-radius: 15px; border: 3px solid #007bff;"></video>
-                    <canvas id="camera-canvas" style="display: none;"></canvas>
-                </div>
-                <div id="camera-controls" class="mt-3">
-                    <button type="button" class="btn btn-primary" onclick="capturePhoto()">
-                        <i class="fa fa-camera"></i> Capture Photo
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="retakePhoto()" style="display: none;" id="retake-btn">
-                        <i class="fa fa-redo"></i> Retake
-                    </button>
-                </div>
-                <div id="camera-preview" class="mt-3" style="display: none;">
-                    <img id="captured-photo" src="" alt="Captured Photo" style="width: 200px; height: 200px; object-fit: cover; border-radius: 15px; border: 3px solid #28a745;">
-                </div>
-                <div id="camera-error" class="mt-3 alert alert-danger" style="display: none;">
-                    <i class="fa fa-exclamation-triangle"></i> Camera not available. Please upload a file instead.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="usePhoto()" id="use-photo-btn" style="display: none;">
-                    <i class="fa fa-check"></i> Use Photo
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
- <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center">
-            <div class="modal-body">
-                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <div>
-                    <strong>Generating QR Code(s), please wait...</strong>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-     .table-responsive {
-        border-radius: 0 0 0.375rem 0.375rem;
-    }
-    
-    .sticky-top {
-        background-color: #f8f9fa !important;
-        z-index: 10;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    
-    .sticky-top th {
-        border-bottom: 2px solid #dee2e6;
-        font-weight: 600;
-        vertical-align: middle;
-        padding: 12px 8px;
-    }
-    
-    /* Sort notification styling */
+                                             <input type="file" class="form-control d-none" id="picture" name="picture" accept="image
     .sort-notification {
         border-radius: 8px;
         border: none;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         font-size: 0.9rem;
     }
-    
+
      .sticky-card-header {
         position: sticky;
         top: 0;
@@ -1109,66 +777,66 @@
         border-bottom: 1px solid rgba(255,255,255,0.2);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
+
      .table-responsive::-webkit-scrollbar {
         width: 8px;
     }
-    
+
     .table-responsive::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 4px;
     }
-    
+
     .table-responsive::-webkit-scrollbar-thumb {
         background: #6366f1;
         border-radius: 4px;
         transition: background 0.3s ease;
     }
-    
+
     .table-responsive::-webkit-scrollbar-thumb:hover {
         background: #4f46e5;
     }
-    
+
      .card-body {
         padding: 0 !important;
     }
-    
+
     .table {
         margin-bottom: 0 !important;
     }
-    
+
      .table tbody tr {
         border-bottom: 1px solid #dee2e6;
     }
-    
+
     .table tbody tr:hover {
         background-color: rgba(0, 123, 255, 0.04);
     }
-    
+
      .row::-webkit-scrollbar {
         width: 8px;
     }
-    
+
     .row::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 10px;
     }
-    
+
     .row::-webkit-scrollbar-thumb {
         background: #6366f1;
         border-radius: 10px;
         transition: background 0.3s ease;
     }
-    
+
     .row::-webkit-scrollbar-thumb:hover {
         background: #4f46e5;
     }
-    
+
      .row {
         scrollbar-width: thin;
         scrollbar-color: #6366f1 #f1f1f1;
     }
-    
+
      .icon-circle {
         width: 45px;
         height: 45px;
@@ -1179,15 +847,15 @@
         font-size: 18px;
         font-weight: bold;
     }
-    
+
     .bg-primary-subtle {
         background-color: rgba(13, 110, 253, 0.1);
     }
-    
+
     .bg-success-subtle {
         background-color: rgba(25, 135, 84, 0.1);
     }
-    
+
     .bg-info-subtle {
         background-color: rgba(13, 202, 240, 0.1);
     }
@@ -1201,12 +869,12 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .student-card:hover {
         box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
         transform: translateY(-2px);
     }
-    
+
     .card-header-custom {
         background: linear-gradient(135deg, #6366f1, #8b5cf6);
         color: white;
@@ -1215,57 +883,57 @@
         font-weight: 600;
         font-size: 0.85rem;
     }
-    
+
     .header-actions {
         display: flex;
         align-items: center;
         gap: 4px;
     }
-    
+
     .btn-xs {
         padding: 3px 6px;
         font-size: 0.7rem;
         border-radius: 4px;
     }
-    
+
     .btn-outline-light {
         border-color: rgba(255,255,255,0.3);
         color: white;
     }
-    
+
     .btn-outline-light:hover {
         background-color: rgba(255,255,255,0.2);
         border-color: rgba(255,255,255,0.5);
         color: white;
     }
-    
+
     .dropdown-menu {
         font-size: 0.85rem;
         min-width: 140px;
     }
-    
+
     .dropdown-item {
         padding: 6px 12px;
     }
-    
+
     .dropdown-item:hover {
         background-color: #f8f9fa;
     }
-    
+
     .card-body-custom {
         padding: 12px;
         flex: 1;
         display: flex;
         flex-direction: column;
     }
-    
+
     .student-image-section {
         height: 80px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
+
     .student-photo {
         width: 60px;
         height: 60px;
@@ -1273,7 +941,7 @@
         border-radius: 50%;
         border: 2px solid #6366f1;
     }
-    
+
     .student-photo-placeholder {
         width: 60px;
         height: 60px;
@@ -1286,7 +954,7 @@
         color: #6c757d;
         font-size: 24px;
     }
-    
+
     .student-info-section {
         padding-left: 8px;
         height: auto;
@@ -1294,7 +962,7 @@
         flex-direction: column;
         justify-content: flex-start;
     }
-    
+
     .student-name {
         font-size: 0.85rem;
         font-weight: 600;
@@ -1302,40 +970,40 @@
         margin-bottom: 3px;
         line-height: 1.2;
     }
-    
+
     .student-id-text {
         font-size: 0.7rem;
         color: #6b7280;
         margin-bottom: 4px;
     }
-    
+
     .student-details {
         display: flex;
         flex-direction: column;
         gap: 3px;
     }
-    
+
     .detail-item {
         display: flex;
         align-items: center;
         gap: 4px;
         margin-bottom: 2px;
     }
-    
+
     .detail-label {
         font-size: 0.7rem;
         color: #6b7280;
     }
-    
+
     .badge {
         font-size: 0.65rem;
         padding: 2px 6px;
     }
-    
+
     .bg-pink {
         background-color: #ec4899 !important;
     }
-    
+
     .qr-code-display {
         width: 50px;
         height: 50px;
@@ -1344,11 +1012,11 @@
         cursor: pointer;
         transition: transform 0.2s ease;
     }
-    
+
     .qr-code-display:hover {
         transform: scale(1.05);
     }
-    
+
     .qr-generate-btn {
         width: 50px;
         height: 50px;
@@ -1360,29 +1028,29 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .additional-info {
         margin-top: 4px;
         padding-top: 4px;
         border-top: 1px solid #f1f5f9;
         flex: 1;
     }
-    
+
     .info-item {
         padding: 0 2px ;
         margin-bottom: 4px;
     }
-    
+
     .info-item small {
         font-size: 0.7rem;
         color: #6b7280;
         font-weight: 500;
     }
-    
+
      .editable-field {
         position: relative;
     }
-    
+
     .editable-field .edit-btn {
         opacity: 0.6;
         transition: opacity 0.2s ease;
@@ -1391,76 +1059,76 @@
         background-color: rgba(13, 110, 253, 0.1);
         border-color: rgba(13, 110, 253, 0.3);
     }
-    
+
     .editable-field:hover .edit-btn {
         opacity: 1;
         background-color: rgba(13, 110, 253, 0.2);
         border-color: rgba(13, 110, 253, 0.5);
     }
-    
+
     .editable-input .input-group {
         max-width: 200px;
     }
-    
+
     .editable-input .form-control,
     .editable-input .form-select {
         font-size: 0.8rem;
         padding: 0.25rem 0.5rem;
     }
-    
+
     .editable-input .btn {
         padding: 0.25rem 0.5rem;
         font-size: 0.7rem;
     }
-    
+
     .student-name .edit-btn {
         margin-left: 0.5rem;
     }
-    
+
     .detail-item .edit-btn {
         margin-left: 0.25rem;
     }
-    
+
     .info-item div {
         font-size: 0.75rem;
         color: #374151;
         line-height: 1.2;
     }
-    
+
     @media (max-width: 768px) {
         .student-card {
             height: auto;
             min-height: 200px;
         }
-        
+
         .student-photo, .student-photo-placeholder {
             width: 50px;
             height: 50px;
         }
-        
+
         .qr-code-display, .qr-generate-btn {
             width: 40px;
             height: 40px;
         }
-        
+
         .header-actions {
             gap: 2px;
         }
-        
+
         .btn-xs {
             padding: 2px 4px;
             font-size: 0.65rem;
         }
     }
-    
+
      #cameraModal {
         z-index: 1070 !important;
     }
-    
+
     #cameraModal .modal-backdrop {
         z-index: 1065 !important;
     }
-    
+
      #addStudentModal {
         z-index: 1055 !important;
     }
@@ -1469,7 +1137,7 @@
 <script>
  document.addEventListener('DOMContentLoaded', function() {
      loadAvailableSections();
-    
+
       const emergencyToggle = document.querySelector('[data-bs-target="#emergencyContact"]');
      if (emergencyToggle) {
          emergencyToggle.addEventListener('click', function() {
@@ -1500,7 +1168,7 @@
              }
          });
      }
-    
+
       const fileInput = document.getElementById('file');
      if (fileInput) {
          fileInput.addEventListener('change', function() {
@@ -1512,13 +1180,13 @@
              }
          });
      }
-    
+
       const addStudentForm = document.querySelector('#addStudentModal form');
      if (addStudentForm) {
          addStudentForm.addEventListener('submit', function(e) {
              const requiredFields = this.querySelectorAll('[required]');
              let isValid = true;
-             
+
              requiredFields.forEach(field => {
                  if (!field.value.trim()) {
                      field.classList.add('is-invalid');
@@ -1528,7 +1196,7 @@
                      field.classList.add('is-valid');
                  }
              });
-             
+
              if (!isValid) {
                  e.preventDefault();
                  const firstInvalid = this.querySelector('.is-invalid');
@@ -1539,7 +1207,7 @@
              }
          });
      }
-    
+
      document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1547,14 +1215,14 @@
             enterEditMode(editableField);
         });
     });
-    
+
      document.addEventListener('click', function(e) {
         if (e.target.closest('.save-btn')) {
             e.preventDefault();
             const editableField = e.target.closest('.editable-field');
             saveField(editableField);
         }
-        
+
         if (e.target.closest('.cancel-btn')) {
             e.preventDefault();
             const editableField = e.target.closest('.editable-field');
@@ -1583,14 +1251,14 @@ function enterEditMode(editableField) {
     const display = editableField.querySelector('.editable-display');
     const input = editableField.querySelector('.editable-input');
     const field = editableField.dataset.field;
-    
+
     display.style.display = 'none';
     input.style.display = 'block';
-    
+
     if (field === 'section') {
         populateSectionOptions(editableField);
     }
-    
+
      const inputElement = input.querySelector('input, select');
     if (inputElement) {
         inputElement.focus();
@@ -1602,15 +1270,15 @@ function populateSectionOptions(editableField) {
     const currentGradeLevel = editableField.closest('.student-info-section')
         .querySelector('[data-field="grade_level"] .badge').textContent.trim();
     const currentSection = editableField.querySelector('.badge').textContent.trim();
-    
+
     select.innerHTML = '';
-    
+
      const currentOption = document.createElement('option');
     currentOption.value = currentSection;
     currentOption.textContent = currentSection;
     currentOption.selected = true;
     select.appendChild(currentOption);
-    
+
      const gradeData = availableSections.find(g => g.grade_level === currentGradeLevel);
     if (gradeData) {
         gradeData.sections.forEach(section => {
@@ -1622,7 +1290,7 @@ function populateSectionOptions(editableField) {
             }
         });
     }
-    
+
      availableSections.forEach(gradeData => {
         if (gradeData.grade_level !== currentGradeLevel) {
             gradeData.sections.forEach(section => {
@@ -1633,12 +1301,12 @@ function populateSectionOptions(editableField) {
             });
         }
     });
-    
+
      const newOption = document.createElement('option');
     newOption.value = '_new_';
     newOption.textContent = '+ Add New Section';
     select.appendChild(newOption);
-    
+
      select.addEventListener('change', function() {
         if (this.value === '_new_') {
             const newSection = prompt('Enter new section name:');
@@ -1661,23 +1329,23 @@ function saveField(editableField) {
     const field = editableField.dataset.field;
     const inputElement = editableField.querySelector('.editable-input input, .editable-input select');
     const newValue = inputElement.value.trim();
-    
+
     if (!newValue) {
         alert('Value cannot be empty');
         return;
     }
-    
+
      const saveBtn = editableField.querySelector('.save-btn');
     const originalHTML = saveBtn.innerHTML;
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     saveBtn.disabled = true;
-    
+
      const updateData = {
         [field]: newValue,
         _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         _method: 'PATCH'
     };
-    
+
      fetch(`/teacher/students/${studentId}/quick-update`, {
         method: 'POST',
         headers: {
@@ -1706,11 +1374,11 @@ function saveField(editableField) {
 
 function updateFieldDisplay(editableField, newValue, field) {
     const display = editableField.querySelector('.editable-display');
-    
+
     if (field === 'name') {
         const nameElement = display.querySelector('.student-name');
         nameElement.innerHTML = `${newValue} <button class="btn btn-sm btn-outline-primary ms-1 edit-btn" title="Edit Name"><i class="fas fa-edit" style="font-size: 0.7rem;"></i></button>`;
-        
+
          const editBtn = nameElement.querySelector('.edit-btn');
         editBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1729,7 +1397,7 @@ function cancelEdit(editableField) {
 function exitEditMode(editableField) {
     const display = editableField.querySelector('.editable-display');
     const input = editableField.querySelector('.editable-input');
-    
+
     display.style.display = 'block';
     input.style.display = 'none';
 }
@@ -1746,9 +1414,9 @@ function showAlert(type, message) {
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    
+
     document.body.appendChild(alertDiv);
-    
+
      setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
@@ -1770,31 +1438,31 @@ function showAlert(type, message) {
          var loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
         loadingModal.show();
     });
-    
- 
+
+
     let videoStream = null;
 
     console.log('Camera script loaded - functions being defined');
 
- 
+
 
      window.toggleCamera = function() {
         console.log('=== TOGGLE CAMERA FUNCTION CALLED ===');
-        
+
         try {
             const cameraView = document.getElementById('camera-view');
             const photoControls = document.getElementById('photo-controls');
-            
+
             console.log('cameraView element:', cameraView);
             console.log('photoControls element:', photoControls);
             console.log('current cameraView display style:', cameraView ? cameraView.style.display : 'element not found');
-            
+
             if (!cameraView) {
                 console.error('ERROR: camera-view element not found in DOM');
                 alert('Camera view element not found. Please refresh the page.');
                 return;
             }
-            
+
             if (cameraView.style.display === 'none' || cameraView.style.display === '') {
                 console.log('Showing camera view...');
                 cameraView.style.display = 'block';
@@ -1812,36 +1480,36 @@ function showAlert(type, message) {
 
     window.startCamera = function() {
         console.log('=== START CAMERA FUNCTION CALLED ===');
-        
+
         try {
             const video = document.getElementById('camera-video');
             console.log('camera-video element:', video);
-            
+
             if (!video) {
                 console.error('ERROR: camera-video element not found');
                 alert('Camera video element not found');
                 return;
             }
-            
+
              console.log('Checking camera support...');
             console.log('navigator.mediaDevices:', navigator.mediaDevices);
             console.log('getUserMedia:', navigator.mediaDevices ? navigator.mediaDevices.getUserMedia : 'not available');
-            
+
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 console.error('ERROR: Camera not supported on this device/browser');
                 alert('Camera not supported on this device/browser');
                 window.closeCamera();
                 return;
             }
-            
+
             console.log('Camera supported, requesting camera access...');
-            
-            navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    width: { ideal: 640 }, 
+
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
                     height: { ideal: 480 },
-                    facingMode: 'user'  
-                } 
+                    facingMode: 'user'
+                }
             })
             .then(function(stream) {
                 console.log('Camera access granted, stream received:', stream);
@@ -1864,15 +1532,15 @@ function showAlert(type, message) {
 
     window.closeCamera = function() {
         console.log('=== CLOSE CAMERA FUNCTION CALLED ===');
-        
+
         try {
             const cameraView = document.getElementById('camera-view');
             const video = document.getElementById('camera-video');
-            
+
             console.log('cameraView element:', cameraView);
             console.log('video element:', video);
             console.log('videoStream:', videoStream);
-            
+
              if (videoStream) {
                 console.log('Stopping video stream tracks...');
                 videoStream.getTracks().forEach(track => {
@@ -1884,12 +1552,12 @@ function showAlert(type, message) {
             } else {
                 console.log('No video stream to stop');
             }
-            
+
              if (cameraView) {
                 cameraView.style.display = 'none';
                 console.log('Camera view hidden');
             }
-            
+
             if (video) {
                 video.srcObject = null;
                 console.log('Video source cleared');
@@ -1901,32 +1569,32 @@ function showAlert(type, message) {
 
     window.capturePhoto = function() {
         console.log('=== CAPTURE PHOTO FUNCTION CALLED ===');
-        
+
         try {
             const video = document.getElementById('camera-video');
             const canvas = document.getElementById('camera-canvas');
-            
+
             if (!video || !canvas) {
                 console.error('ERROR: video or canvas element not found');
                 alert('Required elements not found');
                 return;
             }
-            
+
             const ctx = canvas.getContext('2d');
-            
+
              canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            
+
             console.log('Canvas dimensions set:', canvas.width, 'x', canvas.height);
-            
+
              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
+
              const dataURL = canvas.toDataURL('image/jpeg', 0.8);
             console.log('Photo captured, data URL length:', dataURL.length);
-            
+
              document.getElementById('captured_image').value = dataURL;
             window.showImagePreview(dataURL);
-            
+
              window.closeCamera();
             console.log('Photo capture completed');
         } catch (error) {
@@ -1939,7 +1607,7 @@ function showAlert(type, message) {
         console.log('showImagePreview called with src length:', src ? src.length : 'null');
         const preview = document.getElementById('image-preview');
         const previewImg = document.getElementById('preview-img');
-        
+
         if (preview && previewImg) {
             previewImg.src = src;
             preview.style.display = 'block';
@@ -1948,22 +1616,22 @@ function showAlert(type, message) {
             console.error('Preview elements not found');
         }
     }
-    
+
     window.removePhoto = function() {
         console.log('removePhoto called');
          const pictureInput = document.getElementById('picture');
         const capturedInput = document.getElementById('captured_image');
         const preview = document.getElementById('image-preview');
         const previewImg = document.getElementById('preview-img');
-        
+
         if (pictureInput) pictureInput.value = '';
         if (capturedInput) capturedInput.value = '';
         if (preview) preview.style.display = 'none';
         if (previewImg) previewImg.src = '';
-        
+
         console.log('Photo removed and preview hidden');
     }
-    
+
      const pictureInput = document.getElementById('picture');
     if (pictureInput) {
         pictureInput.addEventListener('change', function(e) {
@@ -1981,37 +1649,37 @@ function showAlert(type, message) {
             }
         });
     }
-    
+
      let videoStream = null;
     let cameraModal = null;
-    
+
      window.openCameraModal = function() {
         cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
         cameraModal.show();
-        
+
          document.getElementById('camera-preview').style.display = 'none';
         document.getElementById('retake-btn').style.display = 'none';
         document.getElementById('use-photo-btn').style.display = 'none';
         document.getElementById('camera-error').style.display = 'none';
         document.getElementById('camera-video').style.display = 'block';
-        
+
         startCamera();
     }
-    
+
      function startCamera() {
         const video = document.getElementById('camera-video');
-        
+
          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showCameraError();
             return;
         }
-        
-        navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                width: { ideal: 640 }, 
+
+        navigator.mediaDevices.getUserMedia({
+            video: {
+                width: { ideal: 640 },
                 height: { ideal: 480 },
                 facingMode: 'user'
-            } 
+            }
         })
         .then(function(stream) {
             videoStream = stream;
@@ -2022,81 +1690,81 @@ function showAlert(type, message) {
             showCameraError();
         });
     }
-    
+
      window.capturePhoto = function() {
         const video = document.getElementById('camera-video');
         const canvas = document.getElementById('camera-canvas');
         const ctx = canvas.getContext('2d');
-        
+
          canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
          const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-        
+
          const capturedPhoto = document.getElementById('captured-photo');
         capturedPhoto.src = dataURL;
-        
+
          document.getElementById('camera-video').style.display = 'none';
         document.getElementById('camera-preview').style.display = 'block';
         document.getElementById('retake-btn').style.display = 'inline-block';
         document.getElementById('use-photo-btn').style.display = 'inline-block';
     }
-    
+
      window.retakePhoto = function() {
         document.getElementById('camera-preview').style.display = 'none';
         document.getElementById('retake-btn').style.display = 'none';
         document.getElementById('use-photo-btn').style.display = 'none';
         document.getElementById('camera-video').style.display = 'block';
     }
-    
+
      window.usePhoto = function() {
         const capturedPhoto = document.getElementById('captured-photo');
         const dataURL = capturedPhoto.src;
-        
+
          document.getElementById('captured_image').value = dataURL;
-        
+
          showImagePreview(dataURL);
-        
+
          stopCamera();
         cameraModal.hide();
     }
-    
+
      function showCameraError() {
         document.getElementById('camera-video').style.display = 'none';
         document.getElementById('camera-error').style.display = 'block';
     }
-    
+
      function stopCamera() {
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
             videoStream = null;
         }
     }
-    
+
      window.showImagePreview = function(src) {
         const preview = document.getElementById('image-preview');
         const previewImg = document.getElementById('preview-img');
-        
+
         if (preview && previewImg) {
             previewImg.src = src;
             preview.style.display = 'block';
         }
     }
-    
+
      window.removePhoto = function() {
          const pictureInput = document.getElementById('picture');
         const capturedInput = document.getElementById('captured_image');
         const preview = document.getElementById('image-preview');
         const previewImg = document.getElementById('preview-img');
-        
+
         if (pictureInput) pictureInput.value = '';
         if (capturedInput) capturedInput.value = '';
         if (preview) preview.style.display = 'none';
         if (previewImg) previewImg.src = '';
     }
-    
+
      const cameraModalElement = document.getElementById('cameraModal');
     if (cameraModalElement) {
         cameraModalElement.addEventListener('hidden.bs.modal', function () {

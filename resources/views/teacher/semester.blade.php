@@ -1,5 +1,5 @@
 @extends('teacher/sidebar')
-@section('title', 'Manage Semesters')
+@section('title', 'Manage School Years & Sections')
 @section('content')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -9,12 +9,12 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">📚</span>
-                Manage Semesters
+                <i class="fas fa-layer-group me-2"></i>
+                School Year and Sections
             </h4>
-            <p class="subtitle fs-6 mb-0">View and edit semester information (Contact admin to create new semesters)</p>
+            <p class="subtitle fs-6 mb-0">View school year information (Contact admin to create new school years)</p>
         </div>
-        
+
     </div>
 </div>
 
@@ -62,7 +62,7 @@
                             <p class="text-muted">Contact your administrator to create semesters for your school.</p>
                             <div class="alert alert-info mt-3">
                                 <i class="fas fa-info-circle me-2"></i>
-                                <strong>Note:</strong> Only administrators can create new semesters. You can edit existing semester details.
+                                <strong>Note:</strong> Only administrators can create new semesters.
                             </div>
                         </div>
                     @else
@@ -95,7 +95,7 @@
                                                     <span class="badge bg-success ms-2">Current</span>
                                                 @endif
                                             </td>
-                                          
+
                                             <td>
                                                 <i class="fas fa-calendar-check me-1 text-muted"></i>
                                                 {{ \Carbon\Carbon::parse($semester->start_date)->format('M j, Y') }}
@@ -115,7 +115,7 @@
                                                     <span class="badge bg-info">Upcoming</span>
                                                 @endif
                                             </td>
-                                         
+
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -126,14 +126,14 @@
                 <div class="card-footer">
                     <div class="text-muted">
                         <i class="fas fa-info-circle me-2"></i>
-                        <small>To create new semesters, please contact your administrator. You can edit existing semester details only.</small>
+                        <small>To create new semesters, please contact your administrator.</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Section Management Section -->
+
     @if(!$semesters->isEmpty())
     <div class="row mt-4">
         <div class="col-12">
@@ -144,12 +144,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Section Overview:</strong> View section details and time schedules. Contact your administrator to make changes.
-                    </div>
-                    
-                    <!-- Section List Table -->
+                
                     <div class="table-responsive">
                         <table class="table table-hover align-middle" id="sectionsTable">
                             <thead class="table-light">
@@ -157,7 +152,7 @@
                                     <th width="5%">#</th>
                                     <th width="15%">Section Name</th>
                                     <th width="10%">Grade Level</th>
-                             
+
                                      <th width="12%">AM Time In</th>
                                     <th width="12%">AM Time Out</th>
                                     <th width="12%">PM Time In</th>
@@ -176,12 +171,12 @@
                                             <td>
                                                 <span class="badge bg-primary">Grade {{ $section->gradelevel }}</span>
                                             </td>
-                                         
-                                           
+
+
                                             <td>
                                                 <small class="text-muted">
                                                     @if($section->am_time_in_start && $section->am_time_in_end)
-                                                        {{ \Carbon\Carbon::parse($section->am_time_in_start)->format('g:i A') }} - 
+                                                        {{ \Carbon\Carbon::parse($section->am_time_in_start)->format('g:i A') }} -
                                                         {{ \Carbon\Carbon::parse($section->am_time_in_end)->format('g:i A') }}
                                                     @else
                                                         --
@@ -191,7 +186,7 @@
                                             <td>
                                                 <small class="text-muted">
                                                     @if($section->am_time_out_start && $section->am_time_out_end)
-                                                        {{ \Carbon\Carbon::parse($section->am_time_out_start)->format('g:i A') }} - 
+                                                        {{ \Carbon\Carbon::parse($section->am_time_out_start)->format('g:i A') }} -
                                                         {{ \Carbon\Carbon::parse($section->am_time_out_end)->format('g:i A') }}
                                                     @else
                                                         --
@@ -201,7 +196,7 @@
                                             <td>
                                                 <small class="text-muted">
                                                     @if($section->pm_time_in_start && $section->pm_time_in_end)
-                                                        {{ \Carbon\Carbon::parse($section->pm_time_in_start)->format('g:i A') }} - 
+                                                        {{ \Carbon\Carbon::parse($section->pm_time_in_start)->format('g:i A') }} -
                                                         {{ \Carbon\Carbon::parse($section->pm_time_in_end)->format('g:i A') }}
                                                     @else
                                                         --
@@ -211,7 +206,7 @@
                                             <td>
                                                 <small class="text-muted">
                                                     @if($section->pm_time_out_start && $section->pm_time_out_end)
-                                                        {{ \Carbon\Carbon::parse($section->pm_time_out_start)->format('g:i A') }} - 
+                                                        {{ \Carbon\Carbon::parse($section->pm_time_out_start)->format('g:i A') }} -
                                                         {{ \Carbon\Carbon::parse($section->pm_time_out_end)->format('g:i A') }}
                                                     @else
                                                         --
@@ -230,7 +225,7 @@
                                 @else
                                     <tr>
                                         <td colspan="8" class="text-center text-muted">
-                                            <i class="fas fa-layer-group me-2"></i>No sections found. Click "Add Section" to create one.
+                                            <i class="fas fa-layer-group me-2"></i>No sections found.
                                         </td>
                                     </tr>
                                 @endif
@@ -241,7 +236,7 @@
                 <div class="card-footer">
                     <div class="text-muted">
                         <i class="fas fa-info-circle me-2"></i>
-                        <small>Sections help organize students and generate detailed analytics. Configure sections based on your school's structure.</small>
+                        <small>Sections help organize students and generate detailed analytics.</small>
                     </div>
                 </div>
             </div>
@@ -250,8 +245,6 @@
     @endif
 </div>
 
-
-<!-- View Semester Modal -->
 <div class="modal fade" id="viewSemesterModal" tabindex="-1" aria-labelledby="viewSemesterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -266,7 +259,7 @@
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Semester Information:</strong> View semester details and schedules. Contact your administrator to make changes.
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-1">
@@ -285,7 +278,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-1">
@@ -314,90 +307,6 @@
     </div>
 </div>
 
-<!-- delete -->
-<!-- <div class="modal fade" id="deleteSemesterModal" tabindex="-1" aria-labelledby="deleteSemesterModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <form id="deleteSemesterForm" method="POST">
-            @csrf
-            @method('DELETE')
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="deleteSemesterModalLabel">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Dangerous Action - Delete Semester
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-danger" role="alert">
-                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Critical Warning!</h6>
-                        <p class="mb-0">This action is <strong>IRREVERSIBLE</strong> and will permanently delete:</p>
-                    </div>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="text-center p-1 bg-light rounded">
-                                <i class="fas fa-graduation-cap fa-2x text-primary mb-2"></i>
-                                <h6>Semester Data</h6>
-                                <p class="text-muted mb-0">Name, dates, schedules</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-1 bg-light rounded">
-                                <i class="fas fa-users fa-2x text-warning mb-2"></i>
-                                <h6>All Students</h6>
-                                <p class="text-muted mb-0">Enrolled in this semester</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-1 bg-light rounded">
-                                <i class="fas fa-clipboard-check fa-2x text-danger mb-2"></i>
-                                <h6>Attendance Records</h6>
-                                <p class="text-muted mb-0">All historical data</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-warning">
-                        <div class="card-header bg-warning text-dark">
-                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Semester to Delete:</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Name:</strong> <span id="deleteSemesterName" class="text-danger"></span></p>
-                                    <p><strong>Duration:</strong> <span id="deleteSemesterDuration"></span></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Students Enrolled:</strong> <span id="deleteSemesterStudents" class="badge bg-warning text-dark"></span></p>
-                                    <p><strong>Attendance Records:</strong> <span id="deleteSemesterAttendance" class="badge bg-info"></span></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
-                            <label class="form-check-label text-danger" for="confirmDelete">
-                                <strong>I understand that this action cannot be undone and all related data will be permanently lost.</strong>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancel - Keep Semester
-                    </button>
-                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>
-                        <i class="fas fa-trash me-1"></i>Delete Permanently
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div> -->
-
-<!-- Add/Edit Section Modal -->
 <div class="modal fade" id="sectionModal" tabindex="-1" aria-labelledby="sectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <form id="sectionForm">
@@ -413,8 +322,8 @@
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Section Details:</strong> View section information and time schedules. Contact your administrator to make changes.
                     </div>
-                    
-                    <!-- Basic Information -->
+
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="mb-1">
@@ -447,8 +356,8 @@
                     <h6 class="mb-1">
                         <i class="fas fa-clock me-2"></i>Time Schedule Configuration
                     </h6>
-                    
-                    <!-- Morning Sessions -->
+
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card border-success">
@@ -494,7 +403,7 @@
                         </div>
                     </div>
 
-                    <!-- Afternoon Sessions -->
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card border-warning">
@@ -540,7 +449,7 @@
                         </div>
                     </div>
 
-                  
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -553,43 +462,34 @@
 </div>
 
 <script>
-// Section Management Functions
-let sections = @json($sections ?? []);
+ let sections = @json($sections ?? []);
 let editingSection = null;
 let loadingSections = false;
 
-// Initial render of sections from Laravel data
-function initializeSections() {
-    // Sections are already rendered by Laravel, no need to do anything
-    console.log('Sections initialized with Laravel data');
+ function initializeSections() {
+     console.log('Sections initialized with Laravel data');
 }
 
-// Reload sections from database after CRUD operations
-async function reloadSections() {
-    // Simply reload the page to get fresh Laravel data
-    window.location.reload();
+ async function reloadSections() {
+     window.location.reload();
 }
 
 function viewSection(sectionId) {
-    // Find the section object
-    const section = sections.find(s => s.id == sectionId);
+     const section = sections.find(s => s.id == sectionId);
     if (!section) {
         showAlert('info', 'Section not found.');
         return;
     }
 
-    // Set modal to view mode
-    document.getElementById('sectionModalTitle').textContent = 'View Section Details';
+     document.getElementById('sectionModalTitle').textContent = 'View Section Details';
     document.getElementById('sectionSubmitText').textContent = 'Close';
-    
-    // Fill form with current data (read-only)
-    document.getElementById('sectionName').value = section.name || '';
+
+     document.getElementById('sectionName').value = section.name || '';
     document.getElementById('sectionName').disabled = true;
     document.getElementById('sectionGradeLevel').value = section.gradelevel || '';
     document.getElementById('sectionGradeLevel').disabled = true;
-    
-    // Time fields (read-only)
-    document.getElementById('amTimeInStart').value = section.am_time_in_start || '';
+
+     document.getElementById('amTimeInStart').value = section.am_time_in_start || '';
     document.getElementById('amTimeInStart').disabled = true;
     document.getElementById('amTimeInEnd').value = section.am_time_in_end || '';
     document.getElementById('amTimeInEnd').disabled = true;
@@ -605,7 +505,7 @@ function viewSection(sectionId) {
     document.getElementById('pmTimeOutStart').disabled = true;
     document.getElementById('pmTimeOutEnd').value = section.pm_time_out_end || '';
     document.getElementById('pmTimeOutEnd').disabled = true;
-    
+
     var modal = new bootstrap.Modal(document.getElementById('sectionModal'));
     modal.show();
 }
@@ -617,42 +517,37 @@ function showAlert(type, message) {
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    
+
     const container = document.querySelector('.container');
     container.insertBefore(alertDiv, container.firstChild);
-    
-    // Auto dismiss after 5 seconds
-    setTimeout(() => {
+
+     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
         }
     }, 5000);
 }
 
- 
+
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeSections();
 });
 
-// Semester Management Functions
-function viewSemesterDetails(semesterId) {
-    // Find the semester in the data
-    const semester = @json($semesters).find(s => s.id == semesterId);
+ function viewSemesterDetails(semesterId) {
+     const semester = @json($semesters).find(s => s.id == semesterId);
     if (!semester) {
         showAlert('info', 'Semester not found.');
         return;
     }
 
-    // Populate the view form
-    document.getElementById('view_name').value = semester.name || '';
+     document.getElementById('view_name').value = semester.name || '';
     document.getElementById('view_status').value = semester.status || '';
     document.getElementById('view_start_date').value = semester.start_date || '';
     document.getElementById('view_end_date').value = semester.end_date || '';
-    
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('viewSemesterModal'));
+
+     const modal = new bootstrap.Modal(document.getElementById('viewSemesterModal'));
     modal.show();
 }
 

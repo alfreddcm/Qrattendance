@@ -11,9 +11,9 @@ use Mpdf\Mpdf;
 class StudentIdController extends Controller
 {
     
-    private function getCurrentSemesterId()
+    private function getCurrentSchoolYearId()
     {
-        $semesters = \App\Models\Semester::orderBy('start_date')->get();
+        $semesters = \App\Models\SchoolYear::orderBy('start_date')->get();
         return $semesters->last()?->id;
     }
 
@@ -106,17 +106,17 @@ class StudentIdController extends Controller
     //         abort(403, 'Unauthorized access. Teachers can only download their own students\' IDs.');
     //     }
 
-    //     $selectedSemester = $this->getCurrentSemesterId();
+    //     $selectedSchoolYear = $this->getCurrentSchoolYearId();
 
     //     $students = Student::with(['school', 'user'])
     //         ->where('user_id', $teacherId)
-    //         ->where('semester_id', $selectedSemester)
+    //         ->where('school_year_id', $selectedSchoolYear)
     //         ->get();
          
-    //     \Log::info("Download by teacher {$teacherId}, semester {$selectedSemester}: Found {$students->count()} students");
+    //     \Log::info("Download by teacher {$teacherId}, semester {$selectedSchoolYear}: Found {$students->count()} students");
         
     //     if ($students->count() === 0) {
-    //         \Log::warning("Teacher {$teacherId} has no students assigned for semester {$selectedSemester}");
+    //         \Log::warning("Teacher {$teacherId} has no students assigned for semester {$selectedSchoolYear}");
             
             
     //         $teacher = User::find($teacherId);
@@ -160,18 +160,18 @@ class StudentIdController extends Controller
             abort(403, 'This endpoint is only available for teachers.');
         }
 
-        $selectedSemester = $this->getCurrentSemesterId();
+        $selectedSchoolYear = $this->getCurrentSchoolYearId();
 
         $students = Student::with(['school', 'user'])
             ->where('user_id', $currentUser->id)
-            ->where('semester_id', $selectedSemester)
+            ->where('school_year_id', $selectedSchoolYear)
             ->get();
          
-        \Log::info("Download my students for teacher {$currentUser->id}, semester {$selectedSemester}: Found {$students->count()} students");
+        \Log::info("Download my students for teacher {$currentUser->id}, semester {$selectedSchoolYear}: Found {$students->count()} students");
          
         
         if ($students->count() === 0) {
-            \Log::warning("Teacher {$currentUser->id} has no students assigned for semester {$selectedSemester}");
+            \Log::warning("Teacher {$currentUser->id} has no students assigned for semester {$selectedSchoolYear}");
             
             return response()->view('errors.no-students', [
                 'message' => "No students found for your account in the current semester.",
@@ -259,11 +259,11 @@ class StudentIdController extends Controller
             abort(403, 'You can only print student IDs for your own students.');
         }
 
-        $selectedSemester = $this->getCurrentSemesterId();
+        $selectedSchoolYear = $this->getCurrentSchoolYearId();
 
         $students = Student::with(['school', 'user'])
             ->where('user_id', $teacherId)
-            ->where('semester_id', $selectedSemester)
+            ->where('school_year_id', $selectedSchoolYear)
             ->get();
          
         if ($students->count() === 0) {
@@ -287,11 +287,11 @@ class StudentIdController extends Controller
             abort(403, 'This endpoint is only available for teachers.');
         }
 
-        $selectedSemester = $this->getCurrentSemesterId();
+        $selectedSchoolYear = $this->getCurrentSchoolYearId();
 
         $students = Student::with(['school', 'user'])
             ->where('user_id', $currentUser->id)
-            ->where('semester_id', $selectedSemester)
+            ->where('school_year_id', $selectedSchoolYear)
             ->get();
          
         if ($students->count() === 0) {

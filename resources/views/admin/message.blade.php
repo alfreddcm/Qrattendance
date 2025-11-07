@@ -3,17 +3,17 @@
 @section('content')
 
 <div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 2rem;" >
         <div>
             <h4 class="fs-5 mb-1">
-                <i class="fas fa-sms me-2"></i>
                 SMS Messages
             </h4>
             <p class="subtitle fs-6 mb-0">Send SMS notifications and announcements</p>
         </div>
-        
+
     </div>
 </div>
+                <i class="fas fa-sms me-2"></i>
 
 <div class="container-fluid">
 
@@ -91,7 +91,6 @@
             <div class="row align-items-center">
                 <div class="col">
                     <h6 class="mb-0 text-white"><i class="fas fa-history me-2"></i>Message History</h6>
-                    <!-- Inline SMS Status Display -->
                     <small id="smsStatusDisplay" class="text-white-50 d-block mt-1">
                         <i class="fas fa-satellite-dish me-1"></i>
                         <span id="smsStatusText">Checking gateway status...</span>
@@ -138,7 +137,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <nav aria-label="Messages pagination" class="mt-3">
                 <ul class="pagination pagination-sm justify-content-center" id="pagination">
                 </ul>
@@ -147,7 +146,6 @@
     </div>
 </div>
 
-<!-- Compose SMS Modal -->
 <div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -230,7 +228,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-2" id="teacherInfoPanel" style="display:none;">
                         <div class="card border-info mb-0">
                             <div class="card-header bg-light py-1 px-2">
@@ -286,7 +284,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-2">
                         <label for="messageTemplate" class="form-label mb-1">Message Template</label>
                         <select class="form-select form-select-sm" id="messageTemplate" onchange="applyTemplate()">
@@ -300,7 +298,7 @@
                             <option value="holiday">Holiday Notice</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-2">
                         <label for="messageText" class="form-label mb-1">Message</label>
                         <textarea class="form-control form-control-sm" id="messageText" rows="4" maxlength="1000" placeholder="Type your message here..."></textarea>
@@ -309,8 +307,7 @@
                             <div class="form-text small">Estimated SMS: <span id="smsCount">1</span></div>
                         </div>
                     </div>
-                    
-                    <!-- Auto Signature Settings -->
+
                     <div class="mb-1">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="autoSignature" checked>
@@ -339,7 +336,6 @@
     </div>
 </div>
 
-<!-- Message Detail Modal -->
 <div class="modal fade" id="messageDetailModal" tabindex="-1" aria-labelledby="messageDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -350,7 +346,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="messageDetailContent">
-                <!-- content -->
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -359,7 +355,6 @@
     </div>
 </div>
 
-<!-- Alert Modal -->
 <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -368,7 +363,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="alertModalBody">
-                <!-- Alert message will be inserted here -->
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">OK</button>
@@ -385,7 +380,6 @@
     text-overflow: ellipsis;
 }
 
-/* Compact Info Panels */
 #teacherInfoPanel .card-body,
 #studentInfoPanel .card-body {
     font-size: 0.875rem;
@@ -396,7 +390,6 @@
     font-size: 0.8rem !important;
 }
 
-/* Enhanced SMS Status Button and Header Styling */
 #checkSmsStatusBtn {
     position: relative;
     transition: all 0.3s ease;
@@ -423,7 +416,6 @@
     transform: rotate(10deg) scale(1.1);
 }
 
-/* Header button backgrounds */
 .card-header.bg-primary .btn {
     border: 2px solid transparent;
     font-weight: 500;
@@ -488,7 +480,6 @@
     color: white;
 }
 
-/* SMS Status Display in Header */
 #smsStatusDisplay {
     font-size: 0.75rem;
     transition: all 0.3s ease;
@@ -553,10 +544,10 @@ function loadTeachers() {
             if (data.success) {
                 console.log('Teachers loaded:', data.teachers);
                 allTeachers = data.teachers;
-                
+
                 const teacherSelect = $('#teacherSelect');
                 teacherSelect.empty().append('<option value="">Choose a teacher...</option>');
-                
+
                 data.teachers.forEach(teacher => {
                     const option = $('<option></option>')
                         .val(teacher.id)
@@ -588,10 +579,10 @@ function loadStudents() {
             if (data.success) {
                 console.log('Students loaded:', data.students);
                 allStudents = data.students;
-                
+
                 const studentSelect = $('#studentSelect');
                 studentSelect.empty().append('<option value="">Choose a student...</option>');
-                
+
                 data.students.forEach(student => {
                     const option = $('<option></option>')
                         .val(student.id)
@@ -621,13 +612,13 @@ function loadMessages() {
         end_date: $('#endDate').val(),
         page: currentPage
     };
-    
+
     Object.keys(filters).forEach(key => {
         if (!filters[key]) delete filters[key];
     });
-    
+
     const queryString = new URLSearchParams(filters).toString();
-    
+
     fetch(`/admin/outbound-messages?${queryString}`)
         .then(response => {
             if (!response.ok) {
@@ -661,17 +652,17 @@ function loadMessages() {
 
 function displayMessages(messages) {
     const tbody = $('#messagesTableBody');
-    
+
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
         displayEmptyState('No messages found');
         return;
     }
-    
+
     console.log('Displaying messages:', messages);
-    
+
     const rows = messages.map(message => {
         const statusBadge = getStatusBadge(message.status);
-        
+
         // Handle different recipient types
         let recipientDisplay = '';
         if (message.recipient_type === 'broadcast') {
@@ -683,11 +674,11 @@ function displayMessages(messages) {
         } else {
             recipientDisplay = 'Custom Number';
         }
-        
+
         const senderName = message.admin ? message.admin.name : (message.teacher ? message.teacher.name : 'System');
-        const messagePreview = message.message && message.message.length > 70 ? 
+        const messagePreview = message.message && message.message.length > 70 ?
             message.message.substring(0, 70) + '...' : (message.message || 'No message');
-        
+
         return `
             <tr>
                 <td class="py-1 small">${formatDateTimeCompact(message.created_at)}</td>
@@ -709,7 +700,7 @@ function displayMessages(messages) {
             </tr>
         `;
     }).join('');
-    
+
     tbody.html(rows);
 }
 
@@ -736,32 +727,32 @@ function getStatusBadge(status) {
 
 function updatePagination(pagination) {
     if (!pagination) return;
-    
+
     currentPage = pagination.current_page;
     totalPages = pagination.last_page;
-    
+
     const paginationEl = $('#pagination');
-    
+
     if (totalPages <= 1) {
         paginationEl.empty();
         return;
     }
-    
+
     let paginationHtml = '';
-    
+
     if (currentPage > 1) {
         paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a></li>`;
     }
-    
+
     for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
         const activeClass = i === currentPage ? 'active' : '';
         paginationHtml += `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
     }
-    
+
     if (currentPage < totalPages) {
         paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a></li>`;
     }
-    
+
     paginationEl.html(paginationHtml);
 }
 
@@ -785,7 +776,7 @@ function clearFilters() {
 
 function toggleRecipientOptions() {
     const selectedType = $('input[name="recipientType"]:checked').val();
-    
+
     // Hide all option divs and info panels
     $('#allTeachersDiv').hide();
     $('#teacherSelectDiv').hide();
@@ -794,7 +785,7 @@ function toggleRecipientOptions() {
     $('#customNumberDiv').hide();
     $('#teacherInfoPanel').hide();
     $('#studentInfoPanel').hide();
-    
+
     // Show relevant options based on selection
     if (selectedType === 'all_teachers') {
         $('#allTeachersDiv').show();
@@ -824,19 +815,19 @@ function onTeacherSelect() {
     const teacherSelect = $('#teacherSelect');
     const selectedValue = teacherSelect.val();
     const selectedOption = teacherSelect.find('option:selected');
-    
+
     if (selectedValue && selectedValue !== '') {
         const teacherName = selectedOption.text();
         const teacherSection = selectedOption.data('section') || 'Not assigned';
         const teacherPhone = selectedOption.data('phone') || 'No phone contact';
         const teacherSchool = selectedOption.data('school') || 'Unknown';
-        
+
         $('#teacherInfoName').text(teacherName);
         $('#teacherInfoSection').text(teacherSection);
         $('#teacherInfoContact').text(teacherPhone);
         $('#teacherInfoSchool').text(teacherSchool);
         $('#teacherInfoPanel').show();
-        
+
         const currentTemplate = $('#messageTemplate').val();
         if (currentTemplate) {
             applyTemplate();
@@ -851,19 +842,19 @@ function onStudentSelect() {
     const studentSelect = $('#studentSelect');
     const selectedValue = studentSelect.val();
     const selectedOption = studentSelect.find('option:selected');
-    
+
     if (selectedValue && selectedValue !== '') {
         const studentName = selectedOption.text();
         const studentTeacher = selectedOption.data('teacher') || 'Unknown';
         const parentContact = selectedOption.data('parent') || 'No parent contact';
         const parentName = selectedOption.data('parent-name') || 'Unknown';
-        
+
         $('#studentInfoName').text(studentName);
         $('#studentInfoTeacher').text(studentTeacher);
         $('#studentInfoContact').text(parentContact);
         $('#studentInfoParent').text(parentName);
         $('#studentInfoPanel').show();
-        
+
         const currentTemplate = $('#messageTemplate').val();
         if (currentTemplate) {
             applyTemplate();
@@ -878,14 +869,14 @@ function applyTemplate() {
     if (template && messageTemplates[template]) {
         const selectedType = $('input[name="recipientType"]:checked').val();
         let message = messageTemplates[template];
-        
+
         const today = new Date().toLocaleDateString('en-PH', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
         message = message.replace(/\[DATE\]/g, today);
-        
+
         // Replace placeholders based on recipient type
         if (selectedType === 'specific_teacher') {
             const selectedTeacher = $('#teacherSelect option:selected').text();
@@ -898,7 +889,7 @@ function applyTemplate() {
                 message = message.replace(/\[STUDENT_NAME\]/g, selectedStudent);
             }
         }
-        
+
         // Replace common placeholders with placeholder text
         message = message.replace(/\[DETAILS\]/g, '[Please specify details]');
         message = message.replace(/\[TIME\]/g, '[Please specify time]');
@@ -908,9 +899,9 @@ function applyTemplate() {
         message = message.replace(/\[SUBJECT\]/g, '[Please specify subject]');
         message = message.replace(/\[START_TIME\]/g, '[Start time]');
         message = message.replace(/\[END_TIME\]/g, '[End time]');
-        
+
         $('#messageText').val(message).trigger('input');
-        
+
         if ($('#autoSignature').is(':checked')) {
             addSignature();
         }
@@ -920,9 +911,9 @@ function applyTemplate() {
 function addSignature() {
     const messageArea = $('#messageText');
     let currentMessage = removeSignature(messageArea.val().trim());
-    
+
     const signature = `\n\nFrom:\n${adminInfo.name}\n${adminInfo.title}\n${adminInfo.school}`;
-    
+
     messageArea.val(currentMessage + signature).trigger('input');
 }
 
@@ -939,20 +930,20 @@ function sendSMS() {
     let phoneNumber = '';
     let teacherId = null;
     let studentId = null;
-    
+
     if (selectedType === 'all_teachers') {
         phoneNumber = 'all_teachers';
     } else if (selectedType === 'specific_teacher') {
         teacherId = $('#teacherSelect').val();
-        
+
         if (!teacherId) {
             showAlert('Please select a teacher', 'warning');
             return;
         }
-        
+
         const selectedOption = $('#teacherSelect option:selected');
         phoneNumber = selectedOption.data('phone');
-        
+
         if (!phoneNumber) {
             showAlert('Selected teacher has no contact number', 'warning');
             return;
@@ -961,15 +952,15 @@ function sendSMS() {
         phoneNumber = 'all_parents';
     } else if (selectedType === 'specific_student') {
         studentId = $('#studentSelect').val();
-        
+
         if (!studentId) {
             showAlert('Please select a student', 'warning');
             return;
         }
-        
+
         const selectedOption = $('#studentSelect option:selected');
         phoneNumber = selectedOption.data('parent');
-        
+
         if (!phoneNumber) {
             showAlert('Selected student has no parent/guardian contact number', 'warning');
             return;
@@ -980,37 +971,37 @@ function sendSMS() {
             showAlert('Please enter a valid 10-digit phone number', 'warning');
             return;
         }
-        
+
         phoneNumber = '+63' + customNumberInput;
     } else {
         showAlert('Please select a recipient type', 'warning');
         return;
     }
-    
+
     const message = $('#messageText').val().trim();
     if (!message) {
         showAlert('Please enter a message', 'warning');
         return;
     }
-    
+
     const data = {
         number: phoneNumber,
         message: message,
         send_to_all: selectedType.includes('all_'),
         recipient_type: selectedType
     };
-    
+
     if (teacherId) {
         data.teacher_id = teacherId;
     }
-    
+
     if (studentId) {
         data.student_id = studentId;
     }
-    
+
     const sendBtn = $('.modal-footer .btn-primary');
     sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
-    
+
     fetch('/admin/send-sms', {
         method: 'POST',
         headers: {
@@ -1049,46 +1040,46 @@ async function testSMSGateway() {
     const text = document.getElementById('checkSmsStatusText');
     const spinner = document.getElementById('checkSmsStatusSpinner');
     const startTime = Date.now();
-    
+
     btn.disabled = true;
     btn.classList.remove('btn-success', 'btn-danger', 'btn-warning');
     btn.classList.add('btn-secondary');
     spinner.classList.remove('d-none');
     text.textContent = 'Pinging...';
-    
+
     try {
         const response = await fetch('/admin/system/status/sms');
         const data = await response.json();
         const responseTime = Date.now() - startTime;
-        
+
         if (data.status === 'online') {
             const pingTime = data.response_time || responseTime + 'ms';
-            
+
             // Success state - button only
             btn.classList.remove('btn-secondary');
             btn.classList.add('btn-success');
             text.textContent = `Online (${pingTime})`;
-            
+
             setTimeout(() => {
                 text.textContent = 'Ping Gateway';
             }, 3000);
-            
+
         } else {
             const pingTime = responseTime + 'ms';
-            
+
              btn.classList.remove('btn-secondary');
             btn.classList.add('btn-danger');
             text.textContent = `Offline (${pingTime})`;
-            
+
          }
     } catch (error) {
         const responseTime = Date.now() - startTime;
-        
+
          btn.classList.remove('btn-secondary');
         btn.classList.add('btn-danger');
         text.textContent = `Error (${responseTime}ms)`;
-        
-         
+
+
         console.error('SMS Gateway ping failed:', error);
     } finally {
         btn.disabled = false;
@@ -1116,7 +1107,7 @@ function viewMessage(messageId) {
 function showMessageDetails(message) {
      let recipientDisplay = '';
     let recipientIcon = '';
-    
+
     if (message.recipient_type === 'broadcast') {
         recipientDisplay = `Broadcast (${message.recipient_count || 'Multiple'} recipients)`;
         recipientIcon = '<i class="fas fa-broadcast-tower text-primary me-1"></i>';
@@ -1130,7 +1121,7 @@ function showMessageDetails(message) {
         recipientDisplay = 'Custom Number: ' + (message.contact_number || 'Unknown');
         recipientIcon = '<i class="fas fa-phone text-warning me-1"></i>';
     }
-    
+
     const senderName = message.admin ? message.admin.name : (message.teacher ? message.teacher.name : 'System');
     const content = `
         <div class="row mb-3">
@@ -1164,7 +1155,7 @@ function showMessageDetails(message) {
             </div>
         </div>
     `;
-    
+
     $('#messageDetailContent').html(content);
     $('#messageDetailModal').modal('show');
 }
@@ -1178,13 +1169,13 @@ function formatDateTimeCompact(dateTime) {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (date.toDateString() === today.toDateString()) {
         return 'Today ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else {
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
                date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
 }
@@ -1204,19 +1195,19 @@ function showAlert(message, type) {
     const modalTitle = $('#alertModalLabel');
     const modalBody = $('#alertModalBody');
     const modal = $('#alertModal');
-    
+
     const titles = {
         success: '<i class="fas fa-check-circle text-success me-2"></i>Success',
         danger: '<i class="fas fa-exclamation-triangle text-danger me-2"></i>Error',
         warning: '<i class="fas fa-exclamation-triangle text-warning me-2"></i>Warning',
         info: '<i class="fas fa-info-circle text-info me-2"></i>Information'
     };
-    
+
     modalTitle.html(titles[type] || titles.info);
     modalBody.text(message);
-    
+
     modal.modal('show');
-    
+
     if (type === 'success') {
         setTimeout(() => {
             modal.modal('hide');
@@ -1227,13 +1218,13 @@ function showAlert(message, type) {
 function formatCustomNumber() {
     const input = $('#customNumber');
     let value = input.val().replace(/\D/g, '');
-    
+
     if (value.length > 10) {
         value = value.substring(0, 10);
     }
-    
+
     input.val(value);
-    
+
     if (value.length === 10 && value.startsWith('9')) {
         input.removeClass('is-invalid').addClass('is-valid');
     } else if (value.length > 0) {
@@ -1246,24 +1237,24 @@ function formatCustomNumber() {
 $(document).ready(function() {
     console.log('Document ready - initializing Admin SMS message interface...');
     console.log('jQuery version:', $.fn.jquery);
-    
+
     // Load data
     loadTeachers();
     loadStudents();
     loadMessages();
-    
+
     // Character count handler
     $('#messageText').on('input', function() {
         const text = $(this).val();
         const charCount = text.length;
         const smsCount = Math.ceil(charCount / 160) || 1;
-        
+
         $('#charCount').text(charCount);
         $('#smsCount').text(smsCount);
     });
-    
+
     console.log('Event handlers attached successfully');
-    
+
     // Auto signature handler
     $('#autoSignature').on('change', function() {
         if (this.checked) {
@@ -1274,37 +1265,37 @@ $(document).ready(function() {
             messageArea.val(currentMessage).trigger('input');
         }
     });
-    
+
     // Selection handlers
     $('#teacherSelect').on('change', function() {
         onTeacherSelect();
     });
-    
+
     $('#studentSelect').on('change', function() {
         onStudentSelect();
     });
-    
+
     // Custom number formatting
     $('#customNumber').on('input', function() {
         formatCustomNumber();
     });
-    
+
     // Recipient type change handler
     $('input[name="recipientType"]').on('change', function() {
         toggleRecipientOptions();
     });
-    
+
     // Initialize recipient options
     toggleRecipientOptions();
-    
+
     // Auto refresh messages every 30 seconds
     setInterval(loadMessages, 30000);
-    
+
     // Pre-load SMS Gateway status on page load (like dashboard)
     setTimeout(() => {
         testSMSGateway();
     }, 1000); // Wait 1 second after page load
-    
+
     // Auto-check SMS status every 2 minutes
     setInterval(() => {
         testSMSGateway();

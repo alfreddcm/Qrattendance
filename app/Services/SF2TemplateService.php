@@ -44,7 +44,7 @@ class SF2TemplateService
             }
 
             // Validate parameters
-            $semesterId = $params['semester_id'];
+            $schoolYearId = $params['school_year_id'];
             $schoolYear = $params['school_year'];
             $gradeLevel = $params['grade_level'];
             $section = $params['section'];
@@ -100,7 +100,7 @@ class SF2TemplateService
             $this->populateClassInfo($worksheet, $gradeLevel, $section, $month, $year, $schoolYear);
 
             // Get students for the specified semester with optional grade/section filtering
-            $studentsQuery = Student::with('section')->where('semester_id', $semesterId);
+            $studentsQuery = Student::with('section')->where('school_year_id', $schoolYearId);
             
             // Add user filter based on context
             if ($teacherId) {
@@ -144,7 +144,7 @@ class SF2TemplateService
             }
 
             // Populate student data and attendance
-            $attendanceData = $this->populateStudentData($worksheet, $students, $month, $year, $user, $semesterId);
+            $attendanceData = $this->populateStudentData($worksheet, $students, $month, $year, $user, $schoolYearId);
 
             // Generate filename
             $gradeSection = $filterGradeLevel && $filterSection ? "_{$filterGradeLevel}_{$filterSection}" : '';
@@ -329,7 +329,7 @@ class SF2TemplateService
     /**
      * Populate student data and attendance marks
      */
-    private function populateStudentData($worksheet, $students, $month, $year, $user = null, $semesterId = null)
+    private function populateStudentData($worksheet, $students, $month, $year, $user = null, $schoolYearId = null)
     {
         // Separate students by gender
         $maleStudents = $students->filter(function($student) {
@@ -353,7 +353,7 @@ class SF2TemplateService
         $this->populateMonthlyTotals($worksheet, $maleData, $femaleData);
         
         // Populate summary statistics and teacher info
-        $this->populateMonthlyStatistics($worksheet, $maleStudents->count(), $femaleStudents->count(), $maleData, $femaleData, $month, $year, $user, $semesterId);
+        $this->populateMonthlyStatistics($worksheet, $maleStudents->count(), $femaleStudents->count(), $maleData, $femaleData, $month, $year, $user, $schoolYearId);
         
         // Collect any data warnings
         $warnings = [];
@@ -550,13 +550,13 @@ class SF2TemplateService
     /**
      * Populate monthly statistics summary
      */
-    private function populateMonthlyStatistics($worksheet, $maleCount, $femaleCount, $maleData, $femaleData, $month, $year, $user = null, $semesterId = null)
+    private function populateMonthlyStatistics($worksheet, $maleCount, $femaleCount, $maleData, $femaleData, $month, $year, $user = null, $schoolYearId = null)
     {
         $totalStudents = $maleCount + $femaleCount;
         $workingDays = $this->getWorkingDaysInMonth($month, $year);
         
         // Get students for consecutive absence calculation
-        $studentsQuery = Student::where('semester_id', $semesterId);
+        $studentsQuery = Student::where('school_year_id', $schoolYearId);
         if ($user && $user->role === 'teacher') {
             $studentsQuery->where('user_id', $user->id);
         }

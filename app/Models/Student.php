@@ -26,7 +26,7 @@ class Student extends Model
         'contact_person_contact',
         'qr_code',
         'stud_code',
-        'semester_id',
+        'school_year_id',
         'section_id',
         'remarks',
         'user_id',
@@ -47,13 +47,11 @@ class Student extends Model
         return $this->section ? $this->section->name : null;
     }
 
-    // Relationship: Student belongs to a Semester
-    public function semester()
+    public function schoolYear()
     {
-        return $this->belongsTo(Semester::class, 'semester_id');
+        return $this->belongsTo(SchoolYear::class, 'school_year_id');
     }
 
-    // Relationship: Student belongs to a Section
     public function section()
     {
         return $this->belongsTo(Section::class, 'section_id');

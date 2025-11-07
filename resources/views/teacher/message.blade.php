@@ -2,19 +2,19 @@
 @section('title', 'SMS Messages')
 @section('content')
 
-
 <div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;">
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">💬</span>
-                SMS Messages
+               <i class="fas fa-comments me-2"></i>
+                Messages
             </h4>
             <p class="subtitle fs-6 mb-0">View and manage SMS message history</p>
         </div>
-            
+
     </div>
 </div>
+
 
 <div class="container mt-4">
      <div class="row mb-4">
@@ -91,7 +91,7 @@
         <div class="row align-items-center">
             <div class="col">
                 <h6 class="mb-0 text-white"><i class="fas fa-history me-2"></i>Message History</h6>
-                <!-- Inline SMS Status Display -->
+
                 <small id="smsStatusDisplay" class="text-white-50 d-block mt-1">
                     <i class="fas fa-satellite-dish me-1"></i>
                     <span id="smsStatusText">Checking gateway status...</span>
@@ -138,7 +138,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
              <nav aria-label="Messages pagination" class="mt-3">
                 <ul class="pagination pagination-sm justify-content-center" id="pagination">
                  </ul>
@@ -147,7 +147,6 @@
     </div>
 </div>
 
-<!-- Compose SMS Modal -->
 <div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -174,7 +173,7 @@
                                     <i class="fas fa-user me-2"></i>Specific Student
                                 </label>
                             </div>
-                          
+
                         </div>
                         <div class="col-md-6">
                             <div id="allParentsDiv">
@@ -189,9 +188,9 @@
                                 <select class="form-select form-select-sm" id="studentSelect" onchange="onStudentSelect()">
                                     <option value="">Choose a student...</option>
                                     @foreach($students as $student)
-                                        <option value="{{ $student->id }}" 
-                                                data-phone="{{ $student->contact_person_contact ?? '' }}" 
-                                                data-parent="{{ $student->contact_person_contact ?? '' }}" 
+                                        <option value="{{ $student->id }}"
+                                                data-phone="{{ $student->contact_person_contact ?? '' }}"
+                                                data-parent="{{ $student->contact_person_contact ?? '' }}"
                                                 data-parent-name="{{ $student->contact_person_name ?? 'Unknown' }}">
                                             {{ $student->name }}
                                         </option>
@@ -208,7 +207,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                      <div class="mb-2" id="studentInfoPanel" style="display:none;">
                         <div class="card border-info mb-0">
                             <div class="card-header bg-light py-1 px-2">
@@ -236,7 +235,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-2">
                         <label for="messageTemplate" class="form-label mb-1">Message Template</label>
                         <select class="form-select form-select-sm" id="messageTemplate" onchange="applyTemplate()">
@@ -250,7 +249,7 @@
                             <option value="performance">Academic Performance</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-2">
                         <label for="messageText" class="form-label mb-1">Message</label>
                         <textarea class="form-control form-control-sm" id="messageText" rows="4" maxlength="1000" placeholder="Type your message here..."></textarea>
@@ -259,8 +258,8 @@
                             <div class="form-text small">Estimated SMS: <span id="smsCount">1</span></div>
                         </div>
                     </div>
-                    
-                    <!-- Auto Signature Settings -->
+
+
                     <div class="mb-1">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="autoSignature" checked>
@@ -289,7 +288,6 @@
     </div>
 </div>
 
-<!-- Message Detail Modal -->
 <div class="modal fade" id="messageDetailModal" tabindex="-1" aria-labelledby="messageDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -300,7 +298,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="messageDetailContent">
- <!-- content  -->
+
         </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -309,7 +307,6 @@
     </div>
 </div>
 
-<!-- Alert Modal -->
 <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -318,7 +315,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="alertModalBody">
-                <!-- Alert message will be inserted here -->
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">OK</button>
@@ -349,7 +346,6 @@
     text-overflow: ellipsis;
 }
 
-/* Compact table styles */
 #messagesTable {
     font-size: 0.875rem;
 }
@@ -372,7 +368,6 @@
     margin-bottom: 1rem;
 }
 
-/* Alert Modal Styles */
 #alertModal .modal-sm {
     max-width: 400px;
 }
@@ -390,7 +385,6 @@
     padding: 0.5rem 1rem;
 }
 
-/* Compact Student Info */
 #studentInfoPanel .card-body {
     font-size: 0.875rem;
 }
@@ -399,7 +393,6 @@
     font-size: 0.8rem !important;
 }
 
-/* Enhanced SMS Status Button and Header Styling */
 #checkSmsStatusBtn {
     position: relative;
     transition: all 0.3s ease;
@@ -426,7 +419,6 @@
     transform: rotate(10deg) scale(1.1);
 }
 
-/* Header button backgrounds */
 .card-header.bg-primary .btn {
     border: 2px solid transparent;
     font-weight: 500;
@@ -491,7 +483,6 @@
     color: white;
 }
 
-/* SMS Status Display in Header */
 #smsStatusDisplay {
     font-size: 0.75rem;
     transition: all 0.3s ease;
@@ -555,24 +546,24 @@ function loadStudents() {
             console.log('Students loaded:', students);
             console.log('First student data:', students[0]);
             allStudents = students;
-            
+
             // Populate the filter dropdown
             const studentFilter = $('#studentFilter');
             studentFilter.empty().append('<option value="">All Students</option>');
-            
+
             // Populate the select dropdown for sending messages
             const studentSelect = $('#studentSelect');
             studentSelect.empty().append('<option value="">Select Student</option>');
-            
+
             students.forEach(student => {
                 console.log(`Student ${student.name}: section=${student.section}, grade=${student.grade_level}`);
-                
+
                 // Create option for filter dropdown
                 const filterOption = $('<option></option>')
                     .val(student.id)
                     .text(student.name.trim());
                 studentFilter.append(filterOption);
-                
+
                 // Create option for select dropdown (with data attributes)
                 const selectOption = $('<option></option>')
                     .val(student.id)
@@ -602,13 +593,13 @@ function loadStudents() {
         end_date: $('#endDate').val(),
         page: currentPage
     };
-    
+
     Object.keys(filters).forEach(key => {
         if (!filters[key]) delete filters[key];
     });
-    
+
     const queryString = new URLSearchParams(filters).toString();
-    
+
     fetch(`/teacher/outbound-messages?${queryString}`)
         .then(response => {
             if (!response.ok) {
@@ -617,7 +608,7 @@ function loadStudents() {
             return response.json();
         })
         .then(data => {
-            console.log('API response:', data); 
+            console.log('API response:', data);
             if (data.success) {
                 if (!data.messages || !Array.isArray(data.messages) || data.messages.length === 0) {
                     displayEmptyState('No messages found');
@@ -642,17 +633,17 @@ function loadStudents() {
 
  function displayMessages(messages) {
     const tbody = $('#messagesTableBody');
-    
+
      if (!messages || !Array.isArray(messages) || messages.length === 0) {
         displayEmptyState('No messages found');
         return;
     }
-    
+
     console.log('Displaying messages:', messages); // Debug log
-    
+
     const rows = messages.map(message => {
         const statusBadge = getStatusBadge(message.status);
-        
+
         // Handle different recipient types
         let recipientDisplay = '';
         if (message.recipient_type === 'broadcast') {
@@ -660,11 +651,11 @@ function loadStudents() {
         } else {
             recipientDisplay = message.student ? message.student.name : 'Custom Number';
         }
-        
+
         const teacherName = message.teacher ? message.teacher.name : 'Unknown Teacher';
-        const messagePreview = message.message && message.message.length > 70 ? 
+        const messagePreview = message.message && message.message.length > 70 ?
             message.message.substring(0, 70) + '...' : (message.message || 'No message');
-        
+
         return `
             <tr>
                 <td class="py-1 small">${formatDateTimeCompact(message.created_at)}</td>
@@ -681,13 +672,13 @@ function loadStudents() {
                         <button class="btn btn-outline-primary btn-sm" onclick="viewMessage(${message.id})" title="View Details">
                             <i class="fas fa-eye"></i>
                         </button>
-                         
+
                     </div>
                 </td>
             </tr>
         `;
     }).join('');
-    
+
     tbody.html(rows);
 }
 
@@ -714,32 +705,32 @@ function loadStudents() {
 
  function updatePagination(pagination) {
     if (!pagination) return;
-    
+
     currentPage = pagination.current_page;
     totalPages = pagination.last_page;
-    
+
     const paginationEl = $('#pagination');
-    
+
     if (totalPages <= 1) {
         paginationEl.empty();
         return;
     }
-    
+
     let paginationHtml = '';
-    
+
      if (currentPage > 1) {
         paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a></li>`;
     }
-    
+
      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
         const activeClass = i === currentPage ? 'active' : '';
         paginationHtml += `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
     }
-    
+
      if (currentPage < totalPages) {
         paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a></li>`;
     }
-    
+
     paginationEl.html(paginationHtml);
 }
 
@@ -763,12 +754,12 @@ function loadStudents() {
 
  function toggleRecipientOptions() {
     const selectedType = $('input[name="recipientType"]:checked').val();
-    
+
      $('#allParentsDiv').hide();
     $('#studentSelectDiv').hide();
     $('#customNumberDiv').hide();
     $('#studentInfoPanel').hide();
-    
+
      if (selectedType === 'all_parents') {
         $('#allParentsDiv').show();
     } else if (selectedType === 'specific_student') {
@@ -776,7 +767,7 @@ function loadStudents() {
          const selectedValue = $('#studentSelect').val();
         if (selectedValue) {
             $('#studentInfoPanel').show();
-            onStudentSelect();  
+            onStudentSelect();
         }
     } else if (selectedType === 'custom') {
         $('#customNumberDiv').show();
@@ -788,14 +779,14 @@ function loadStudents() {
     if (template && messageTemplates[template]) {
         const selectedType = $('input[name="recipientType"]:checked').val();
         let message = messageTemplates[template];
-        
+
          const today = new Date().toLocaleDateString('en-PH', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
         message = message.replace(/\[DATE\]/g, today);
-        
+
         // Replace student-specific placeholders
         if (selectedType === 'specific_student') {
             const selectedStudent = $('#studentSelect option:selected').text();
@@ -807,11 +798,11 @@ function loadStudents() {
         } else {
              message = message.replace(/\[STUDENT_NAME\]/g, 'your child');
         }
-        
+
         message = message.replace(/\[SECTION\]/g, teacherInfo.section);
-        
+
         $('#messageText').val(message).trigger('input');
-        
+
          if ($('#autoSignature').is(':checked')) {
             addSignature();
         }
@@ -823,14 +814,14 @@ function onStudentSelect() {
     const studentSelect = $('#studentSelect');
     const selectedValue = studentSelect.val();
     const selectedOption = studentSelect.find('option:selected');
-    
+
     if (selectedValue && selectedValue !== '') {
         const studentName = selectedOption.text();
         const studentSection = selectedOption.data('section') || 'Not assigned';
         const studentGrade = selectedOption.data('grade') || '';
         const parentContact = selectedOption.data('parent') || 'No parent contact';
         const parentName = selectedOption.data('parent-name') || 'Unknown';
-        
+
         console.log('Selected student data:', {
             name: studentName,
             section: studentSection,
@@ -838,23 +829,23 @@ function onStudentSelect() {
             rawSectionData: selectedOption.data('section'),
             rawGradeData: selectedOption.data('grade')
         });
-        
+
         // Display combined grade and section if both are available
-        const sectionDisplay = studentGrade && studentSection && studentSection !== 'Not assigned' ? 
-            `${studentGrade} - ${studentSection}` : 
+        const sectionDisplay = studentGrade && studentSection && studentSection !== 'Not assigned' ?
+            `${studentGrade} - ${studentSection}` :
             (studentSection || 'Not assigned');
-        
+
         console.log('Final section display:', sectionDisplay);
-        
+
         $('#studentInfoName').text(studentName);
         $('#studentInfoSection').text(sectionDisplay);
         $('#studentInfoContact').text(parentContact);
         $('#studentInfoParent').text(parentName);
         $('#studentInfoPanel').show();
-        
+
          const currentTemplate = $('#messageTemplate').val();
         if (currentTemplate) {
-            applyTemplate(); 
+            applyTemplate();
         }
     } else {
          $('#studentInfoPanel').hide();
@@ -864,14 +855,14 @@ function onStudentSelect() {
 function addSignature() {
     const messageArea = $('#messageText');
     let currentMessage = messageArea.val().trim();
-    
+
     const signatureStart = currentMessage.lastIndexOf('\n\nFrom:\n');
     if (signatureStart !== -1) {
         currentMessage = currentMessage.substring(0, signatureStart);
     }
-    
+
     const signature = `\n\nFrom:\n ${teacherInfo.name}\n${teacherInfo.section}\n${teacherInfo.school}`;
-    
+
     messageArea.val(currentMessage + signature).trigger('input');
 }
 
@@ -880,20 +871,20 @@ function sendSMS() {
     const selectedType = $('input[name="recipientType"]:checked').val();
     let phoneNumber = '';
     let studentId = null;
-    
+
     if (selectedType === 'all_parents') {
         phoneNumber = 'all_parents';
     } else if (selectedType === 'specific_student') {
         studentId = $('#studentSelect').val();
-        
+
         if (!studentId) {
             showAlert('Please select a student', 'warning');
             return;
         }
-        
+
          const selectedOption = $('#studentSelect option:selected');
         phoneNumber = selectedOption.data('parent');
-        
+
         if (!phoneNumber) {
             showAlert('Selected student has no parent/guardian contact number', 'warning');
             return;
@@ -904,32 +895,32 @@ function sendSMS() {
             showAlert('Please enter a valid 10-digit phone number', 'warning');
             return;
         }
-        
+
         phoneNumber = '+63' + customNumberInput;
     } else {
         showAlert('Please select a recipient type', 'warning');
         return;
     }
-    
+
     const message = $('#messageText').val().trim();
     if (!message) {
         showAlert('Please enter a message', 'warning');
         return;
     }
-    
+
     const data = {
         number: phoneNumber,
         message: message,
         send_to_all: selectedType === 'all_parents'
     };
-    
+
     if (studentId) {
         data.student_id = studentId;
     }
-    
+
     const sendBtn = $('.modal-footer .btn-primary');
     sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
-    
+
     fetch('/teacher/send-sms', {
         method: 'POST',
         headers: {
@@ -948,8 +939,8 @@ function sendSMS() {
             $('#smsCount').text('1');
              $('#allParentsRadio').prop('checked', true);
             toggleRecipientOptions();
-            loadMessages(); 
-        
+            loadMessages();
+
         } else {
             showAlert('Error: ' + data.message, 'danger');
         }
@@ -969,7 +960,7 @@ function checkMessageStatus(messageId) {
         .then(data => {
             if (data.status === 'success') {
                 showAlert(`Message status: ${data.delivery_status}`, 'info');
-                loadMessages(); 
+                loadMessages();
             } else {
                 showAlert('Error checking status: ' + data.message, 'warning');
             }
@@ -986,50 +977,50 @@ async function testSMSGateway() {
     const text = document.getElementById('checkSmsStatusText');
     const spinner = document.getElementById('checkSmsStatusSpinner');
     const startTime = Date.now();
-    
+
     btn.disabled = true;
     btn.classList.remove('btn-success', 'btn-danger', 'btn-warning');
     btn.classList.add('btn-secondary');
     spinner.classList.remove('d-none');
     text.textContent = 'Pinging...';
-    
+
     try {
         const response = await fetch('/teacher/system/status/sms');
         const data = await response.json();
         const responseTime = Date.now() - startTime;
-        
+
         if (data.status === 'online') {
             const pingTime = data.response_time || responseTime + 'ms';
-            
+
             // Success state - button only
             btn.classList.remove('btn-secondary');
             btn.classList.add('btn-success');
             text.textContent = `Online (${pingTime})`;
-            
+
             setTimeout(() => {
                 text.textContent = 'Ping Gateway';
             }, 3000);
-            
+
         } else {
             const pingTime = responseTime + 'ms';
-            
+
             // Error state - button only (stays red until manually clicked)
             btn.classList.remove('btn-secondary');
             btn.classList.add('btn-danger');
             text.textContent = `Offline (${pingTime})`;
-            
+
             // No auto-reset - stays red until user clicks again
         }
     } catch (error) {
         const responseTime = Date.now() - startTime;
-        
+
         // Error state - button only (stays red until manually clicked)
         btn.classList.remove('btn-secondary');
         btn.classList.add('btn-danger');
         text.textContent = `Error (${responseTime}ms)`;
-        
+
         // No auto-reset - stays red until user clicks again
-        
+
         console.error('SMS Gateway ping failed:', error);
     } finally {
         btn.disabled = false;
@@ -1058,7 +1049,7 @@ async function testSMSGateway() {
     // Handle different recipient types
     let recipientDisplay = '';
     let recipientIcon = '';
-    
+
     if (message.recipient_type === 'broadcast') {
         recipientDisplay = `All Parents (${message.recipient_count || 'Multiple'} recipients)`;
         recipientIcon = '<i class="fas fa-users text-primary me-1"></i>';
@@ -1069,7 +1060,7 @@ async function testSMSGateway() {
         recipientDisplay = 'Custom Number: ' + (message.contact_number || 'Unknown');
         recipientIcon = '<i class="fas fa-phone text-warning me-1"></i>';
     }
-    
+
     const teacherName = message.teacher ? message.teacher.name : 'Unknown Teacher';
     const content = `
         <div class="row mb-3">
@@ -1103,7 +1094,7 @@ async function testSMSGateway() {
             </div>
         </div>
     `;
-    
+
     $('#messageDetailContent').html(content);
     $('#messageDetailModal').modal('show');
 }
@@ -1117,13 +1108,13 @@ function formatDateTimeCompact(dateTime) {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (date.toDateString() === today.toDateString()) {
         return 'Today ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else {
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
                date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
 }
@@ -1143,19 +1134,19 @@ function showAlert(message, type) {
      const modalTitle = $('#alertModalLabel');
     const modalBody = $('#alertModalBody');
     const modal = $('#alertModal');
-    
+
      const titles = {
         success: '<i class="fas fa-check-circle text-success me-2"></i>Success',
         danger: '<i class="fas fa-exclamation-triangle text-danger me-2"></i>Error',
         warning: '<i class="fas fa-exclamation-triangle text-warning me-2"></i>Warning',
         info: '<i class="fas fa-info-circle text-info me-2"></i>Information'
     };
-    
+
     modalTitle.html(titles[type] || titles.info);
     modalBody.text(message);
-   
+
      modal.modal('show');
-    
+
      if (type === 'success') {
         setTimeout(() => {
             modal.modal('hide');
@@ -1182,16 +1173,16 @@ function addSignature() {
 
  function formatCustomNumber() {
     const input = $('#customNumber');
-    let value = input.val().replace(/\D/g, '');  
-    
- 
+    let value = input.val().replace(/\D/g, '');
+
+
     if (value.length > 10) {
         value = value.substring(0, 10);
     }
-    
+
     input.val(value);
-    
- 
+
+
     if (value.length === 10 && value.startsWith('9')) {
         input.removeClass('is-invalid').addClass('is-valid');
     } else if (value.length > 0) {
@@ -1204,20 +1195,20 @@ function addSignature() {
  $(document).ready(function() {
     console.log('Document ready - initializing SMS message interface...');
     console.log('jQuery version:', $.fn.jquery);
-   loadStudents(); 
+   loadStudents();
     loadMessages();
-    
+
      $('#messageText').on('input', function() {
         const text = $(this).val();
         const charCount = text.length;
         const smsCount = Math.ceil(charCount / 160) || 1;
-        
+
         $('#charCount').text(charCount);
         $('#smsCount').text(smsCount);
     });
-    
+
     console.log('Event handlers attached successfully');
-    
+
      $('#autoSignature').on('change', function() {
         if (this.checked) {
             addSignature();
@@ -1227,28 +1218,28 @@ function addSignature() {
             messageArea.val(currentMessage).trigger('input');
         }
     });
-    
+
      $('#studentSelect').on('change', function() {
         onStudentSelect();
     });
-    
+
      $('#customNumber').on('input', function() {
         formatCustomNumber();
     });
-    
+
      $('#recipientType').on('change', function() {
         toggleRecipientOptions();
     });
-    
+
      toggleRecipientOptions();
-    
+
      setInterval(loadMessages, 30000);
-     
+
      // Pre-load SMS Gateway status on page load (like dashboard)
      setTimeout(() => {
          testSMSGateway();
      }, 1000); // Wait 1 second after page load
-     
+
      // Auto-check SMS status every 2 minutes
      setInterval(() => {
          testSMSGateway();

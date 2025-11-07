@@ -6,8 +6,8 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">⚙️</span>
-                Account Settings
+                <i class="fas fa-cog me-2"></i>
+                Manage Account
             </h4>
             <p class="subtitle fs-6 mb-0">Manage your profile and security settings</p>
         </div>
@@ -16,7 +16,7 @@
 
 <div class="container" style="max-width: 600px;">
 
-    <!-- Success/Error Alerts -->
+
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -30,7 +30,7 @@
         </div>
     @endif
 
-    <!-- Account Info Card -->
+
     <div class="card mb-3 shadow-sm">
         <div class="card-header bg-primary text-white p-2">
             <h6 class="mb-0 fs-6">
@@ -90,10 +90,9 @@
         </div>
     </div>
 
-   
+
 </div>
 
-<!-- Password Change Modal -->
 <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form id="passwordChangeForm" method="POST" action="{{ route('teacher.account.password') }}">
@@ -155,7 +154,6 @@
   </div>
 </div>
 
-{{-- Bootstrap Icons CDN --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 <script>

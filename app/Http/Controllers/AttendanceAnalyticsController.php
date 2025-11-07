@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Student;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\AttendanceSession;
 use Illuminate\Http\Request;
@@ -18,29 +18,26 @@ class AttendanceAnalyticsController extends Controller
     public function statistics(Request $request)
     {
         $teacherId = Auth::id();
-        $currentSemester = $this->getCurrentSemester();
+        $currentSchoolYear = $this->getCurrentSchoolYear();
         $sections = $this->getTeacherSections($teacherId);
         
-        return view('teacher.statistics', compact('currentSemester', 'sections'));
+        return view('teacher.statistics', compact('currentSchoolYear', 'sections'));
     }
 
-    /**
-     * Display today's attendance overview page
-     */
     public function attendanceToday(Request $request)
     {
         $teacherId = Auth::id();
         $teacher = Auth::user();
         
-         $currentSemester = Semester::where('status', 'active')->first();
-        if (!$currentSemester) {
-            $currentSemester = Semester::latest('created_at')->first();
+         $currentSchoolYear = SchoolYear::where('status', 'active')->first();
+        if (!$currentSchoolYear) {
+            $currentSchoolYear = SchoolYear::latest('created_at')->first();
         }
         
          if ($teacher->school_id) {
-            $semesters = Semester::where('school_id', $teacher->school_id)->orderBy('created_at', 'desc')->get();
+            $schoolYears = SchoolYear::where('school_id', $teacher->school_id)->orderBy('created_at', 'desc')->get();
         } else {
-            $semesters = Semester::orderBy('created_at', 'desc')->get();
+            $schoolYears = SchoolYear::orderBy('created_at', 'desc')->get();
         }
         
          $sections = $this->getTeacherSections($teacherId);
@@ -48,12 +45,12 @@ class AttendanceAnalyticsController extends Controller
          $activeSessions = AttendanceSession::where('teacher_id', $teacherId)
             ->whereDate('created_at', today())
             ->where('status', 'active')
-            ->with('semester')
+            ->with('schoolYear')
             ->get();
             
          $recentSessions = AttendanceSession::where('teacher_id', $teacherId)
             ->where('status', 'closed')
-            ->with('semester')
+            ->with('schoolYear')
             ->latest()
             ->take(10)
             ->get();
@@ -63,9 +60,12 @@ class AttendanceAnalyticsController extends Controller
          $search = $request->get('search');
         $sectionFilter = $request->get('section_filter');
         
-         $studentsQuery = Student::where('user_id', $teacherId);
-        if ($currentSemester) {
-            $studentsQuery->where('semester_id', $currentSemester->id);
+         // Get students through teacher's sections
+        $studentsQuery = Student::whereHas('section', function($query) use ($teacherId) {
+            $query->where('teacher_id', $teacherId);
+        });
+        if ($currentSchoolYear) {
+            $studentsQuery->where('school_year_id', $currentSchoolYear->id);
         }
         
          if ($search) {
@@ -127,7 +127,7 @@ class AttendanceAnalyticsController extends Controller
         return view('teacher.attendance', compact(
             'activeSessions',
             'recentSessions', 
-            'semesters',
+            'schoolYears',
             'sections',
             'totalPresent',
             'totalAbsent', 
@@ -138,9 +138,6 @@ class AttendanceAnalyticsController extends Controller
         ));
     }
 
-    /**
-     * Get attendance trend data for Chart.js
-     */
     public function getAttendanceTrend(Request $request)
     {
         $teacherId = Auth::id();
@@ -177,9 +174,7 @@ class AttendanceAnalyticsController extends Controller
         return response()->json($chartData);
     }
 
-    /**
-     * Get absenteeism rate data for Chart.js
-     */
+ 
     public function getAbsenteeismRates(Request $request)
     {
         $teacherId = Auth::id();
@@ -517,9 +512,9 @@ class AttendanceAnalyticsController extends Controller
     /**
      * Get current semester with date validation
      */
-    private function getCurrentSemester()
+    private function getCurrentSchoolYear()
     {
-        return Semester::where('school_id', Auth::user()->school_id)
+        return SchoolYear::where('school_id', Auth::user()->school_id)
             ->whereDate('start_date', '<=', Carbon::now())
             ->whereDate('end_date', '>=', Carbon::now())
             ->first();
@@ -534,7 +529,7 @@ class AttendanceAnalyticsController extends Controller
             // First try direct teacher assignment
             $sections = Section::where('teacher_id', $teacherId)
                 ->withCount('students')
-                ->with(['semester'])
+                ->with(['schoolYear'])
                 ->get();
 
             Log::info('Teacher Sections Debug:', [
@@ -549,7 +544,7 @@ class AttendanceAnalyticsController extends Controller
                     $query->where('teacher_id', $teacherId);
                 })
                 ->withCount('students')
-                ->with(['semester'])
+                ->with(['schoolYear'])
                 ->get();
 
                 Log::info('Teacher Sections Many-to-Many Debug:', [
@@ -575,18 +570,22 @@ class AttendanceAnalyticsController extends Controller
      */
     private function getValidatedFilters(Request $request)
     {
-        $currentSemester = $this->getCurrentSemester();
+        // Always use current school year
+        $currentSchoolYear = SchoolYear::where('status', 'active')->first();
+        if (!$currentSchoolYear) {
+            $currentSchoolYear = SchoolYear::latest('created_at')->first();
+        }
         
-        $defaultStartDate = $currentSemester ? 
-            $currentSemester->start_date->toDateString() : 
+        $defaultStartDate = $currentSchoolYear ? 
+            $currentSchoolYear->start_date->toDateString() : 
             Carbon::now()->subMonth()->toDateString();
             
-        $defaultEndDate = $currentSemester ? 
-            $currentSemester->end_date->toDateString() : 
+        $defaultEndDate = $currentSchoolYear ? 
+            $currentSchoolYear->end_date->toDateString() : 
             Carbon::now()->toDateString();
 
         return [
-            'semester_id' => $request->get('semester_id', $currentSemester ? $currentSemester->id : null),
+            'school_year_id' => $currentSchoolYear ? $currentSchoolYear->id : null,
             'section_id' => $request->get('section_id', 'all'),
             'start_date' => $request->get('start_date', $defaultStartDate),
             'end_date' => $request->get('end_date', $defaultEndDate)
@@ -623,8 +622,8 @@ class AttendanceAnalyticsController extends Controller
             // Start with students in teacher's sections
             $studentsQuery = Student::whereIn('section_id', $teacherSectionIds);
 
-            if ($filters['semester_id']) {
-                $studentsQuery->where('semester_id', $filters['semester_id']);
+            if ($filters['school_year_id']) {
+                $studentsQuery->where('school_year_id', $filters['school_year_id']);
             }
 
             if ($filters['section_id'] && $filters['section_id'] !== 'all') {

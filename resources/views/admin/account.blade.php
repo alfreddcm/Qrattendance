@@ -16,7 +16,7 @@
 
 <div class="container" style="max-width: 600px;">
 
-    <!-- Success/Error Alerts -->
+
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -30,7 +30,7 @@
         </div>
     @endif
 
-    <!-- Account Info Card -->
+
     <div class="card mb-3 shadow-sm">
         <div class="card-header bg-primary text-white p-2">
             <h6 class="mb-0 fs-6">
@@ -84,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Password Change Card -->
+
     <div class="card shadow-sm">
         <div class="card-header bg-warning text-dark p-2">
             <h6 class="mb-0 fs-6">
@@ -128,7 +128,7 @@
         </div>
     </div>
 
-    <!-- Account Information Display -->
+
     <div class="card mt-3 shadow-sm">
         <div class="card-header bg-info text-white p-2">
             <h6 class="mb-0 fs-6">
@@ -166,10 +166,10 @@
         </div>
     </div>
 
-    <!-- Security Notice -->
+
     <div class="alert alert-info mt-3" role="alert">
         <i class="fas fa-shield-alt me-2"></i>
-        <strong>Security Notice:</strong> As an administrator, your account has elevated privileges. 
+        <strong>Security Notice:</strong> As an administrator, your account has elevated privileges.
         Please use a strong password and keep your account information secure.
     </div>
 

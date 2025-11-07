@@ -1,6 +1,6 @@
 @if(isset($records) && count($records))
 @if(request('type', 'daily') == 'daily')
-<!-- Daily Report -->
+
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0">
@@ -10,7 +10,7 @@
     </div>
     <div class="card-body p-0">
         <div style="overflow-x:auto; max-height:600px">
-            <table class="table table-striped table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark sticky-top">
                     <tr>
                         <th scope="col" class="text-center" style="min-width: 50px;">#</th>
@@ -44,7 +44,7 @@
                             @if($row->status == 'Present')
                                 <span class="badge bg-success">Present</span>
                             @elseif($row->status == 'Partial')
-                                <span class="badge bg-warning">Partial</span>
+                                <span class="badge bg-warning">Half Day</span>
                             @else
                                 <span class="badge bg-danger">Absent</span>
                             @endif
@@ -85,7 +85,7 @@
     </div>
 </div>
 
- 
+
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-info text-white">
         <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Daily Summary</h6>
@@ -101,7 +101,7 @@
                 <div class="row g-2">
                     @php
                         $present = $records->where('status', 'Present')->count();
-                        $partial = $records->where('status', 'Partial')->count();  
+                        $partial = $records->where('status', 'Partial')->count();
                         $absent = $records->where('status', 'Absent')->count();
                         $total = $records->count();
                     @endphp
@@ -117,7 +117,7 @@
                         <div class="card bg-warning text-white summary-card">
                             <div class="card-body text-center p-3">
                                 <h4 class="mb-1">{{ $partial }}</h4>
-                                <small>Partial</small>
+                                <small>Half Day</small>
                             </div>
                         </div>
                     </div>
@@ -144,7 +144,7 @@
 </div>
 
 @elseif(request('type') == 'monthly')
- 
+
 <div class="card shadow-sm">
     <div class="card-header bg-success text-white">
         <h5 class="mb-0">
@@ -153,24 +153,29 @@
         </h5>
     </div>
     <div class="card-body p-0">
-        <div style="overflow-x:auto; max-height:600px">
-            <table class="table table-striped table-hover align-middle mb-0">
+        <div style="overflow-x:auto; max-height:600px; max-width: 100%">
+            <table class="table  table-hover align-middle mb-0">
                 <thead class="table-dark sticky-top">
                     <tr>
-                        <th scope="col" class="text-center" style="min-width: 50px;">#</th>
-                        <th scope="col" style="min-width: 200px;">Student Name</th>
+                        <th scope="col" class="sticky-col text-center" style="min-width: 50px;">#</th>
+                        <th scope="col" class="sticky-col-name" style="min-width: 200px;">Student Name</th>
+                        <th scope="col" class="sticky-col-summary text-center" style="min-width: 150px;">Summary</th>
+                        @if(count($records) > 0 && isset($records->first()->checks))
+                            @foreach ($records->first()->checks as $date => $val)
+                            <th scope="col" class="text-center" style="min-width: 70px;">
+                                {{ \Carbon\Carbon::parse($date)->format('m/d') }}
+                            </th>
+                            @endforeach
+                        @endif
                         <th scope="col" class="text-center" style="min-width: 100px;">Total Days</th>
-                        <th scope="col" class="text-center" style="min-width: 100px;">Present</th>
-                        <th scope="col" class="text-center" style="min-width: 100px;">Absent</th>
-                        <th scope="col" class="text-center" style="min-width: 100px;">Partial</th>
                         <th scope="col" class="text-center" style="min-width: 120px;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($records as $i => $row)
                     <tr>
-                        <td class="text-center fw-bold">{{ $i+1 }}</td>
-                        <td>
+                        <td class="sticky-col text-center fw-bold">{{ $i+1 }}</td>
+                        <td class="sticky-col-name">
                             <div class="d-flex align-items-center">
                                 <div class="avatar-sm bg-light rounded-circle me-2 d-flex align-items-center justify-content-center">
                                     <i class="fas fa-user text-muted"></i>
@@ -184,17 +189,41 @@
                                 </div>
                             </div>
                         </td>
+                        <td class="sticky-col-summary text-start" style="padding: 8px 12px;">
+                            <div style="font-size: 11px; line-height: 1.5;">
+                                <div class="mb-1">
+                                    <strong class="text-success">Present:</strong> 
+                                    <span class="fw-bold text-success">{{ $row->present }}</span>
+                                </div>
+                                <div class="mb-1">
+                                    <strong class="text-danger">Absent:</strong> 
+                                    <span class="fw-bold text-danger">{{ $row->absent }}</span>
+                                </div>
+                                <div>
+                                    <strong class="text-warning">Half Day:</strong> 
+                                    <span class="fw-bold text-warning">{{ $row->partial }}</span>
+                                </div>
+                                <div class="mt-1">
+                                    <strong>Rate:</strong>
+                                    <span class="fw-bold ms-1">{{ isset($row->rate) ? $row->rate : 0 }}%</span>
+                                </div>
+                            </div>
+                        </td>
+                        @if(isset($row->checks))
+                            @foreach ($row->checks as $check)
+                            <td class="text-center" style="padding: 4px;">
+                                @if($check == 'P')
+                                    <span class="fw-bold text-success" style="font-size: 14px;">P</span>
+                                @elseif($check == 'H')
+                                    <span class="fw-bold text-warning" style="font-size: 14px;">H</span>
+                                @else
+                                    <span class="fw-bold text-danger" style="font-size: 14px;">A</span>
+                                @endif
+                            </td>
+                            @endforeach
+                        @endif
                         <td class="text-center">
                             <span class="badge bg-secondary">{{ $row->total_day }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-success">{{ $row->present }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-danger">{{ $row->absent }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-warning">{{ $row->partial }}</span>
                         </td>
                         <td class="text-center">
                             <span class="badge bg-info">{{ $row->remarks }}</span>
@@ -207,7 +236,6 @@
     </div>
 </div>
 
-<!-- Monthly Summary Chart -->
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-success text-white">
         <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Monthly Summary</h6>
@@ -239,7 +267,7 @@
                         <div class="card bg-warning text-white summary-card">
                             <div class="card-body text-center p-3">
                                 <h4 class="mb-1">{{ $totalPartial }}</h4>
-                                <small>Total Partial</small>
+                                <small>Total Half Day</small>
                             </div>
                         </div>
                     </div>
@@ -255,7 +283,7 @@
                         <div class="card bg-primary text-white summary-card">
                             <div class="card-body text-center p-3">
                                 <h4 class="mb-1">{{ $totalPossible }}</h4>
-                                <small>Total Possible</small>
+                                <small>Total Days</small>
                             </div>
                         </div>
                     </div>
@@ -265,21 +293,22 @@
     </div>
 </div>
 @elseif(request('type') == 'quarterly')
-<!-- Quarterly Report -->
+
 <div class="card shadow-sm">
     <div class="card-header bg-warning text-dark">
         <h5 class="mb-0">
             <i class="fas fa-calendar-check me-2"></i>
-            Quarterly Attendance Tracking
+            Quarterly Attendance Summary
         </h5>
     </div>
     <div class="card-body p-0">
-        <div style="overflow-x:auto; max-height:500px; max-width: 100%">
-            <table class="table table-striped table-hover align-middle mb-0">
+        <div style="overflow-x:auto; max-height:600px; max-width: 100%">
+            <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark sticky-top">
                     <tr>
                         <th scope="col" class="sticky-col text-center" style="min-width: 50px;">#</th>
-                        <th scope="col" class="sticky-col" style="min-width: 200px;">Student Name</th>
+                        <th scope="col" class="sticky-col-name" style="min-width: 200px;">Student Name</th>
+                        <th scope="col" class="sticky-col-summary text-center" style="min-width: 150px;">Summary</th>
                         @if(count($records) > 0 && isset($records->first()->checks))
                             @foreach ($records->first()->checks as $date => $val)
                             <th scope="col" class="text-center" style="min-width: 70px;">
@@ -291,9 +320,22 @@
                 </thead>
                 <tbody>
                     @foreach ($records as $i => $record)
+                    @php
+                        $presentCount = 0;
+                        $absentCount = 0;
+                        $partialCount = 0;
+                        
+                        if(isset($record->checks)) {
+                            foreach($record->checks as $check) {
+                                if($check == 'P') $presentCount++;
+                                elseif($check == 'H') $partialCount++;
+                                else $absentCount++;
+                            }
+                        }
+                    @endphp
                     <tr>
                         <td class="sticky-col text-center fw-bold">{{ $i+1 }}</td>
-                        <td class="sticky-col">
+                        <td class="sticky-col-name">
                             <div class="d-flex align-items-center">
                                 <div class="avatar-sm bg-light rounded-circle me-2 d-flex align-items-center justify-content-center">
                                     <i class="fas fa-user text-muted"></i>
@@ -307,15 +349,35 @@
                                 </div>
                             </div>
                         </td>
+                        <td class="sticky-col-summary text-start" style="padding: 8px 12px;">
+                            <div style="font-size: 11px; line-height: 1.5;">
+                                <div class="mb-1">
+                                    <strong class="text-success">Present:</strong> 
+                                    <span class="fw-bold text-success">{{ $presentCount }}</span>
+                                </div>
+                                <div class="mb-1">
+                                    <strong class="text-danger">Absent:</strong> 
+                                    <span class="fw-bold text-danger">{{ $absentCount }}</span>
+                                </div>
+                                <div>
+                                    <strong class="text-warning">Half Day:</strong> 
+                                    <span class="fw-bold text-warning">{{ $partialCount }}</span>
+                                </div>
+                                    <div class="mt-1">
+                                        <strong>Rate:</strong>
+                                        <span class="fw-bold ms-1">{{ isset($record->rate) ? $record->rate : 0 }}%</span>
+                                    </div>
+                            </div>
+                        </td>
                         @if(isset($record->checks))
                             @foreach ($record->checks as $check)
-                            <td class="text-center">
-                                @if($check == '✓')
-                                    <span class="badge bg-success">Present</span>
-                                @elseif($check == '◐')
-                                    <span class="badge bg-warning">Partial</span>
+                            <td class="text-center" style="padding: 4px;">
+                                @if($check == 'P')
+                                    <span class="fw-bold text-success" style="font-size: 14px;">P</span>
+                                @elseif($check == 'H')
+                                    <span class="fw-bold text-warning" style="font-size: 14px;">H</span>
                                 @else
-                                    <span class="badge bg-danger">Absent</span>
+                                    <span class="fw-bold text-danger" style="font-size: 14px;">A</span>
                                 @endif
                             </td>
                             @endforeach
@@ -328,7 +390,6 @@
     </div>
 </div>
 
-<!-- Quarterly Summary Chart -->
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-warning text-dark">
         <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Quarterly Summary</h6>
@@ -346,14 +407,14 @@
                     $totalPresent = 0;
                     $totalPartial = 0;
                     $totalAbsent = 0;
-                    
+
                     if(count($records) > 0) {
                         foreach($records as $record) {
                             if(isset($record->checks)) {
                                 foreach($record->checks as $check) {
                                     $totalDays++;
-                                    if($check == '✓') $totalPresent++;
-                                    elseif($check == '◐') $totalPartial++;
+                                    if($check == 'P') $totalPresent++;
+                                    elseif($check == 'H') $totalPartial++;
                                     else $totalAbsent++;
                                 }
                             }
@@ -411,104 +472,177 @@
 </div>
 @endif
 
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <style>
-/* Fix sticky header overlap issue */
-.sticky-top {
-    top: 0px !important; /* Offset for main sticky header */
-    z-index: 1020 !important; /* Below hamburger button */
-}
 
-.sticky-col {
-    position: sticky;
-    left: 0;
-    z-index: 10;
-    background-color: #fff;
-    border-right: 2px solid #dee2e6;
-}
-
-.table-dark .sticky-col {
-    background-color: #212529;
-}
-
-.avatar-sm {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-}
-
-.progress {
-    background-color: #e9ecef;
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-/* Consistent table styling */
-.table th {
-    font-weight: 600;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.table td {
-    vertical-align: middle;
-    font-size: 14px;
-}
-
-.card-header h5 {
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.badge {
-    font-size: 12px;
-    font-weight: 500;
-    padding: 6px 12px;
-}
-
-
-@media (max-width: 768px) {
-    .table th, .table td {
-        font-size: 12px;
-        padding: 8px;
+    .sticky-top {
+        top: 0px !important;
+        z-index: 1020 !important;
     }
-    
+
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .sticky-col {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background-color: #fff !important;
+        background-clip: padding-box;
+        border-right: 1px solid rgba(0,0,0,0.06) !important;
+        box-shadow: none !important;
+        width: 50px;
+        min-width: 50px;
+    }
+
+    .sticky-col-name {
+        position: sticky;
+        left: 50px; 
+        z-index: 10;
+        background-color: #fff !important;
+        background-clip: padding-box;
+        border-right: 1px solid rgba(0,0,0,0.06) !important;
+        box-shadow: none !important;
+        width: 200px;
+        min-width: 200px;
+    }
+
+    .sticky-col-summary {
+        position: sticky;
+        left: 250px; /* Width of # + Name columns */
+        z-index: 9;
+        background-color: #fff !important;
+        background-clip: padding-box;
+        border-right: 1px solid rgba(0,0,0,0.06) !important;
+        box-shadow: none !important;
+        width: 180px;
+        min-width: 180px;
+    }
+
+    .table-dark .sticky-col {
+        background-color: #212529 !important;
+        border-right: 2px solid #495057 !important;
+    }
+
+    .table-dark .sticky-col-name {
+        background-color: #212529 !important;
+        border-right: 2px solid #495057 !important;
+    }
+
+    .table-dark .sticky-col-summary {
+        background-color: #212529 !important;
+        border-right: 2px solid #495057 !important;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) .sticky-col,
+    .table-striped tbody tr:nth-of-type(odd) .sticky-col-name,
+    .table-striped tbody tr:nth-of-type(odd) .sticky-col-summary {
+        background-color: rgba(0,0,0,.05) !important;
+    }
+
+    .table-striped tbody tr:nth-of-type(even) .sticky-col,
+    .table-striped tbody tr:nth-of-type(even) .sticky-col-name,
+    .table-striped tbody tr:nth-of-type(even) .sticky-col-summary {
+        background-color: #fff !important;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem;
+        vertical-align: middle;
+        border: none !important;
+    }
+
+    .table-striped tbody tr {
+        border-bottom: none !important;
+    }
+
+    .table {
+        border-collapse: collapse !important;
+    }
+
+    .table tbody {
+        border: none !important;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.03) !important;
+    }
+
     .avatar-sm {
-        width: 24px;
-        height: 24px;
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
         font-size: 12px;
+        font-weight: bold;
     }
-    
+
+    .table th {
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table td {
+        vertical-align: middle;
+        font-size: 14px;
+    }
+
+    .card-header h5 {
+        font-weight: 600;
+        font-size: 16px;
+    }
+
     .badge {
-        font-size: 10px;
-        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 6px 12px;
     }
-}
 
-/* Enhance chart container */
-.chart-container {
-    position: relative;
-    height: 300px;
-    margin: 20px 0;
-}
+    @media (max-width: 768px) {
+        .table th, .table td {
+            font-size: 12px;
+            padding: 8px;
+        }
 
-/* Summary cards styling */
-.summary-card {
-    transition: transform 0.2s ease-in-out;
-}
+        .avatar-sm {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+        }
 
-.summary-card:hover {
-    transform: translateY(-2px);
-}
+        .badge {
+            font-size: 10px;
+            padding: 4px 8px;
+        }
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+
+    .summary-card {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+    }
 </style>
 
 <script>
@@ -518,10 +652,9 @@ function isWeekend(dateString) {
     return day === 0 || day === 6;
 }
 
-// Chart initialization
-document.addEventListener('DOMContentLoaded', function() {
+ document.addEventListener('DOMContentLoaded', function() {
     const type = '{{ request("type", "daily") }}';
-    
+
     if (type === 'daily') {
         initializeDailyChart();
     } else if (type === 'monthly') {
@@ -534,16 +667,16 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeDailyChart() {
     const ctx = document.getElementById('dailyChart');
     if (!ctx) return;
-    
+
     @php
         $present = $records->where('status', 'Present')->count();
-        $partial = $records->where('status', 'Partial')->count();  
+        $partial = $records->where('status', 'Partial')->count();
         $absent = $records->where('status', 'Absent')->count();
-    @endphp   
+    @endphp
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Present', 'Partial', 'Absent'],
+            labels: ['Present', 'Half Day', 'Absent'],
             datasets: [{
                 data: [{{ $present }}, {{ $partial }}, {{ $absent }}],
                 backgroundColor: [
@@ -588,12 +721,12 @@ function initializeDailyChart() {
 function initializeMonthlyChart() {
     const ctx = document.getElementById('monthlyChart');
     if (!ctx) return;
-    
+
     const students = @json($records->pluck('name'));
     const present = @json($records->pluck('present'));
     const absent = @json($records->pluck('absent'));
     const partial = @json($records->pluck('late'));
-    
+
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -605,7 +738,7 @@ function initializeMonthlyChart() {
                 borderColor: '#28a745',
                 borderWidth: 1
             }, {
-                label: 'Partial',
+                label: 'Half Day',
                 data: partial,
                 backgroundColor: '#ffc107',
                 borderColor: '#ffc107',
@@ -654,31 +787,31 @@ function initializeMonthlyChart() {
 function initializeQuarterlyChart() {
     const ctx = document.getElementById('quarterlyChart');
     if (!ctx) return;
-    
+
     @php
         $totalDays = 0;
         $totalPresent = 0;
         $totalPartial = 0;
         $totalAbsent = 0;
-        
+
         if(count($records) > 0) {
             foreach($records as $record) {
                 if(isset($record->checks)) {
                     foreach($record->checks as $check) {
                         $totalDays++;
-                        if($check == '✓') $totalPresent++;
-                        elseif($check == '◐') $totalPartial++;
+                        if($check == 'P') $totalPresent++;
+                        elseif($check == 'H') $totalPartial++;
                         else $totalAbsent++;
                     }
                 }
             }
         }
     @endphp
-    
+
     new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: ['Full Present', 'Partial', 'Absent'],
+            labels: ['Full Present', 'Half Day', 'Absent'],
             datasets: [{
                 data: [{{ $totalPresent }}, {{ $totalPartial }}, {{ $totalAbsent }}],
                 backgroundColor: [
@@ -742,14 +875,14 @@ $(function() {
             $('#date').val('');
             return false;
         }
-        
+
         // Show loading spinner
         const submitBtn = document.querySelector('#filterForm button[type="submit"]');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
             submitBtn.disabled = true;
         }
-        
+
         $('#filterForm').submit();
     });
 });

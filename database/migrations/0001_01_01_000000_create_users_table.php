@@ -24,10 +24,10 @@ return new class extends Migration
             $table->string('phone_number')->nullable();
             $table->string('position')->nullable();
             $table->unsignedBigInteger('school_id')->nullable();
-            $table->string('section_name')->nullable();
+            $table->unsignedBigInteger('section_id')->nullable();
             $table->timestamps();
             
-             $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');
+            $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');
             
   
         });

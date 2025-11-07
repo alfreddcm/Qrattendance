@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentsImport;
 use App\Models\Student;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\User;
 
 use App\Http\Controllers\Controller;
@@ -68,10 +68,10 @@ class ImportController extends Controller
                 return redirect()->back()->with('error', 'Invalid file format. The file must contain at least 4 columns (ID, Name, Gender, Age).');
             }
             
-            $semesters = Semester::all();
-            if ($semesters->isEmpty()) {
+            $schoolYears = SchoolYear::all();
+            if ($schoolYears->isEmpty()) {
                 Storage::disk('public')->delete($path);
-                return redirect()->back()->with('error', 'No semesters found in the system. Please create a semester first.');
+                return redirect()->back()->with('error', 'No school years found in the system. Please create a school year first.');
             }
 
             $user = Auth::user();
@@ -94,7 +94,7 @@ class ImportController extends Controller
             return view('import.preview', [
                 'data' => $data[0],
                 'file' => $path,
-                'semesters' => $semesters,
+                'semesters' => $schoolYears,
                 'teachers' => $teachers,
                 'schools' => $schools,
                 'userSections' => $userSections,
@@ -119,7 +119,7 @@ class ImportController extends Controller
         try {
             \Log::info('Import process started', [
                 'user_id' => $request->input('user_id'),
-                'semester_id' => $request->input('semester_id'),
+                'school_year_id' => $request->input('school_year_id'),
                 'section_id' => $request->input('section_id'),
                 'selectedUserId' => $request->input('selectedUserId'),
                 'selectedSectionId' => $request->input('selectedSectionId'),
@@ -128,7 +128,7 @@ class ImportController extends Controller
             ]);
 
             $students = $request->input('students');  
-            $semester_id = $request->input('semester_id'); 
+            $schoolYear_id = $request->input('school_year_id'); 
             $user_id = $request->input('user_id');
             
              $section_id = null;
@@ -141,29 +141,29 @@ class ImportController extends Controller
 
             $school_id = User::where('id', $user_id)->value('school_id');
 
-            if (!$students || !$semester_id || !$user_id) {
-                \Log::warning('Import failed: Missing students data or semester selection', [
+            if (!$students || !$schoolYear_id || !$user_id) {
+                \Log::warning('Import failed: Missing students data or school year selection', [
                     'user_id' => $user_id,
-                    'semester_id' => $semester_id,
+                    'school_year_id' => $schoolYear_id,
                     'section_id' => $section_id
                 ]);
-                return redirect()->back()->with('error', 'Missing students data or semester selection. Please go back and try again.');
+                return redirect()->back()->with('error', 'Missing students data or school year selection. Please go back and try again.');
             }
 
             if (!$section_id) {
                 \Log::warning('Import failed: No section selected', [
                     'user_id' => $user_id,
-                    'semester_id' => $semester_id
+                    'school_year_id' => $schoolYear_id
                 ]);
                 return redirect()->back()->with('error', 'Please select a section for the students.');
             }
 
-             $semester = Semester::find($semester_id);
-            if (!$semester) {
-                \Log::warning('Import failed: Selected semester does not exist', [
-                    'semester_id' => $semester_id
+             $schoolYear = SchoolYear::find($schoolYear_id);
+            if (!$schoolYear) {
+                \Log::warning('Import failed: Selected school year does not exist', [
+                    'school_year_id' => $schoolYear_id
                 ]);
-                return redirect()->back()->with('error', 'Selected semester does not exist. Please select a valid semester.');
+                return redirect()->back()->with('error', 'Selected school year does not exist. Please select a valid school year.');
             }
 
              if (!Auth::check()) {
@@ -216,7 +216,7 @@ class ImportController extends Controller
                     }
 
                     $existingStudent = Student::where('id_no', $idNo)
-                        ->where('semester_id', $semester_id)
+                        ->where('school_year_id', $schoolYear_id)
                         ->where('user_id', $user_id)
                         ->first();
 
@@ -255,7 +255,7 @@ class ImportController extends Controller
                         'contact_person_name'           => isset($row[6]) ? trim(substr($row[6], 0, 255)) : null,
                         'contact_person_relationship'   => isset($row[8]) ? trim(substr($row[8], 0, 255)) : null,
                         'contact_person_contact'        => $contactPersonContact,
-                        'semester_id'                   => $semester_id,
+                        'school_year_id'                   => $schoolYear_id,
                         'section_id'                    => $section_id,
                         'user_id'                       => $user_id,
                         'school_id'                     => $school_id
@@ -271,14 +271,14 @@ class ImportController extends Controller
                             \Log::info('Student updated during import', [
                                 'id_no' => $idNo,
                                 'user_id' => $user_id,
-                                'semester_id' => $semester_id
+                                'school_year_id' => $schoolYear_id
                             ]);
                         } else {
                             $skipped++;
                             \Log::info('Student skipped (no changes)', [
                                 'id_no' => $idNo,
                                 'user_id' => $user_id,
-                                'semester_id' => $semester_id
+                                'school_year_id' => $schoolYear_id
                             ]);
                             continue;
                         }
@@ -288,7 +288,7 @@ class ImportController extends Controller
                         \Log::info('Student created during import', [
                             'id_no' => $idNo,
                             'user_id' => $user_id,
-                            'semester_id' => $semester_id
+                            'school_year_id' => $schoolYear_id
                         ]);
                     }
                     
@@ -299,7 +299,7 @@ class ImportController extends Controller
                             'row' => $index + 1,
                             'id_no' => $idNo,
                             'user_id' => $user_id,
-                            'semester_id' => $semester_id,
+                            'school_year_id' => $schoolYear_id,
                             'error' => $e->getMessage()
                         ]);
                     } else {
@@ -308,7 +308,7 @@ class ImportController extends Controller
                             'row' => $index + 1,
                             'id_no' => $idNo,
                             'user_id' => $user_id,
-                            'semester_id' => $semester_id,
+                            'school_year_id' => $schoolYear_id,
                             'error' => $e->getMessage()
                         ]);
                     }
@@ -318,7 +318,7 @@ class ImportController extends Controller
                         'row' => $index + 1,
                         'id_no' => $idNo ?? null,
                         'user_id' => $user_id,
-                        'semester_id' => $semester_id,
+                        'school_year_id' => $schoolYear_id,
                         'error' => $e->getMessage()
                     ]);
                 }
@@ -342,7 +342,7 @@ class ImportController extends Controller
                 
                 \Log::warning('Import completed with errors', [
                     'user_id' => $user_id,
-                    'semester_id' => $semester_id,
+                    'school_year_id' => $schoolYear_id,
                     'added' => $added,
                     'skipped' => $skipped,
                     'errors' => $errors
@@ -358,14 +358,14 @@ class ImportController extends Controller
             if ($added == 0 && $skipped == 0) {
                 \Log::info('Import completed: No students imported', [
                     'user_id' => $user_id,
-                    'semester_id' => $semester_id
+                    'school_year_id' => $schoolYear_id
                 ]);
                 return redirect()->route('teacher.students')->with('error', 'No students were imported. Please check your file format and data.');
             }
 
             \Log::info('Import completed successfully', [
                 'user_id' => $user_id,
-                'semester_id' => $semester_id,
+                'school_year_id' => $schoolYear_id,
                 'added' => $added,
                 'skipped' => $skipped
             ]);
@@ -378,7 +378,7 @@ class ImportController extends Controller
                 'user' => Auth::id(),
                 'file' => $request->file('file')?->getClientOriginalName(),
                 'user_id' => $request->input('user_id'),
-                'semester_id' => $request->input('semester_id'),
+                'school_year_id' => $request->input('school_year_id'),
                 'trace' => $e->getTraceAsString()
             ]);
             

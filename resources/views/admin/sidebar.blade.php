@@ -9,10 +9,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- FontAwesome from CDN with fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="{{ asset('js/all.min.js') }}"></script>
-    
+
     <style>
         body {
             background: #f8fffe;
@@ -246,7 +245,7 @@
         }
 
         .hamburger {
-            display: none; /* Hide the old hamburger button */
+            display: none;
         }
 
         .sticky-header {
@@ -317,7 +316,6 @@
             padding-left: 80px;
         }
 
-        /* Custom Card Styles */
         .card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -339,7 +337,7 @@
             padding: 16px 20px;
         }
 
- 
+
 
         .table {
             background: #fff;
@@ -379,7 +377,6 @@
             vertical-align: middle;
         }
 
-        /* Custom Button Styles */
         .btn-primary {
             background: #00a86b;
             border: 1px solid #00a86b;
@@ -447,7 +444,6 @@
             border-radius: 6px;
         }
 
-        /* Custom Badge Styles */
         .badge {
             border-radius: 6px;
             padding: 4px 8px;
@@ -467,7 +463,6 @@
             background: #06b6d4 !important;
         }
 
-        /* Custom Alert Styles */
         .alert {
             border-radius: 8px;
             border: 1px solid;
@@ -487,7 +482,6 @@
             border-color: #fecaca;
         }
 
-        /* Custom Modal Styles */
         .modal-content {
             background: #fff;
             border: none;
@@ -519,7 +513,6 @@
             padding: 16px 24px;
         }
 
-        /* Custom Form Styles */
         .form-control {
             border: 1px solid #d1d5db;
             border-radius: 8px;
@@ -542,7 +535,6 @@
             font-size: 0.875em;
         }
 
-        /* Custom Select Styles */
         .form-select {
             border: 1px solid #d1d5db;
             border-radius: 8px;
@@ -556,7 +548,6 @@
             box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
         }
 
-        /* Custom Pagination Styles */
         .pagination .page-link {
             color: #00a86b;
             border: 1px solid #d1d5db;
@@ -578,7 +569,6 @@
             color: #fff;
         }
 
-        /* Custom Border Colors */
         .border-primary {
             border-color: #00a86b !important;
         }
@@ -591,7 +581,6 @@
             border-color: #06b6d4 !important;
         }
 
-        /* Text Colors */
         .text-primary {
             color: #00a86b !important;
         }
@@ -608,12 +597,10 @@
             color: #6b7280 !important;
         }
 
-        /* Container Styles */
         .container-fluid {
             color: #374151;
         }
 
-        /* Stats Card Special Styling */
         .stats-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -630,18 +617,15 @@
             font-weight: 700;
         }
 
-        /* Table responsive wrapper */
         .table-responsive {
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        /* File input styling */
         .form-control[type="file"] {
             padding: 8px 12px;
         }
 
-        /* Logo preview styling */
         .logo-preview {
             width: 80px;
             height: 80px;
@@ -658,27 +642,25 @@
             text-align: center;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .card {
                 margin-bottom: 15px;
             }
-            
+
             .table-responsive {
                 border-radius: 8px;
             }
-            
+
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
-            
+
             .sidebar.show {
                 transform: translateX(0);
             }
         }
 
-        /* Global Admin Card Styles - Compact and Consistent Design */
         .card {
             border: none;
             border-radius: 12px;
@@ -719,7 +701,6 @@
             padding: 0.75rem 1rem;
         }
 
-        /* Compact Statistics Cards */
         .stats-card {
             border-left: 4px solid transparent;
             transition: all 0.3s ease;
@@ -749,7 +730,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* Compact Tables */
+
         .table-compact {
             font-size: 0.85rem;
         }
@@ -765,7 +746,7 @@
             font-size: 0.75rem;
         }
 
-        /* Action Buttons */
+
         .btn-action {
             padding: 0.375rem 0.75rem;
             border-radius: 8px;
@@ -778,7 +759,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Modal Improvements */
+
         .modal-content {
             border: none;
             border-radius: 12px;
@@ -790,7 +771,7 @@
             border-bottom: 1px solid #e9ecef;
         }
 
-        /* Form Controls */
+
         .form-control,
         .form-select {
             border-radius: 8px;
@@ -804,21 +785,21 @@
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
 
-        /* Badges */
+
         .badge {
             font-weight: 500;
             border-radius: 6px;
             padding: 0.4em 0.7em;
         }
 
-        /* Alerts */
+
         .alert {
             border: none;
             border-radius: 10px;
             border-left: 4px solid;
         }
 
-        /* Pagination */
+
         .pagination {
             margin-bottom: 0;
         }
@@ -835,7 +816,7 @@
             border-color: #667eea;
         }
 
-        /* Sticky Header */
+
         .sticky-header {
             background: white;
             padding: 1rem 0;
@@ -845,34 +826,34 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        /* Responsive Grid Improvements */
+
         @media (max-width: 768px) {
             .card {
                 margin-bottom: 1rem;
             }
-            
+
             .card-header {
                 padding: 0.5rem 0.75rem;
             }
-            
+
             .card-body {
                 padding: 0.75rem;
             }
-            
+
             .stats-card .stat-value {
                 font-size: 1.25rem;
             }
         }
 
-        /* ===== GLOBAL ADMIN DESIGN SYSTEM ===== */
-        
-        /* Content Container */
+
+
+
         .container-fluid {
             padding-left: 0;
             padding-right: 0;
         }
-        
-        /* Header Row Layout */
+
+
         .header-row {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
@@ -881,7 +862,7 @@
             margin-right: 1rem;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
-        
+
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -889,19 +870,19 @@
             padding: 0.75rem 1.5rem;
             color: white;
         }
-        
+
         .header-left {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .header-title {
             font-size: 1.1rem;
             font-weight: 600;
             margin-right: 0.5rem;
         }
-        
+
         .header-count {
             background: rgba(255, 255, 255, 0.2);
             padding: 0.25rem 0.75rem;
@@ -909,26 +890,26 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
-        
+
         .header-center {
             display: flex;
             gap: 0.5rem;
             align-items: center;
         }
-        
+
         .header-form {
             display: flex;
             gap: 0.5rem;
             align-items: center;
         }
-        
+
         .header-right {
             display: flex;
             gap: 0.5rem;
             align-items: center;
         }
-        
-        /* Compact Form Controls */
+
+
         .form-control-compact {
             padding: 0.375rem 0.75rem;
             font-size: 0.875rem;
@@ -938,19 +919,19 @@
             color: white;
             min-width: 120px;
         }
-        
+
         .form-control-compact::placeholder {
             color: rgba(255, 255, 255, 0.7);
         }
-        
+
         .form-control-compact:focus {
             border-color: rgba(255, 255, 255, 0.5);
             box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.15);
             outline: none;
         }
-        
-        /* Compact Buttons */
+
+
         .btn-compact-primary {
             background: #28a745;
             border: 1px solid #28a745;
@@ -965,14 +946,14 @@
             align-items: center;
             gap: 0.25rem;
         }
-        
+
         .btn-compact-primary:hover {
             background: #218838;
             border-color: #218838;
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
         }
-        
+
         .btn-compact-secondary {
             background: #6c757d;
             border: 1px solid #6c757d;
@@ -987,13 +968,13 @@
             align-items: center;
             gap: 0.25rem;
         }
-        
+
         .btn-compact-secondary:hover {
             background: #5a6268;
             border-color: #5a6268;
             transform: translateY(-1px);
         }
-        
+
         .btn-compact-warning {
             background: #ffc107;
             border: 1px solid #ffc107;
@@ -1008,13 +989,13 @@
             align-items: center;
             gap: 0.25rem;
         }
-        
+
         .btn-compact-warning:hover {
             background: #e0a800;
             border-color: #e0a800;
             transform: translateY(-1px);
         }
-        
+
         .btn-compact-danger {
             background: #dc3545;
             border: 1px solid #dc3545;
@@ -1029,14 +1010,14 @@
             align-items: center;
             gap: 0.25rem;
         }
-        
+
         .btn-compact-danger:hover {
             background: #c82333;
             border-color: #c82333;
             transform: translateY(-1px);
         }
-        
-        /* Compact Table */
+
+
         .table-container {
             background: white;
             border-radius: 12px;
@@ -1045,17 +1026,17 @@
             margin-left: 1rem;
             margin-right: 1rem;
         }
-        
+
         .table-compact {
             width: 100%;
             margin: 0;
             border-collapse: collapse;
         }
-        
+
         .table-compact thead {
             background: #f8f9fa;
         }
-        
+
         .table-compact thead th {
             padding: 0.75rem 1rem;
             font-size: 0.75rem;
@@ -1066,27 +1047,27 @@
             border: none;
             border-bottom: 1px solid #dee2e6;
         }
-        
+
         .table-compact tbody tr {
             border-bottom: 1px solid #f3f4f6;
             transition: background-color 0.2s;
         }
-        
+
         .table-compact tbody tr:hover {
             background: #f8f9fa;
         }
-        
+
         .table-compact tbody tr:last-child {
             border-bottom: none;
         }
-        
+
         .table-compact tbody td {
             padding: 0.75rem 1rem;
             vertical-align: middle;
             border: none;
         }
-        
-        /* Student/Data Display Elements */
+
+
         .student-photo {
             width: 40px;
             height: 40px;
@@ -1094,7 +1075,7 @@
             object-fit: cover;
             border: 2px solid #e9ecef;
         }
-        
+
         .student-photo-placeholder {
             width: 40px;
             height: 40px;
@@ -1106,54 +1087,54 @@
             border: 2px solid #e9ecef;
             color: #6c757d;
         }
-        
+
         .student-info .name,
         .name {
             font-weight: 600;
             color: #2c3e50;
             margin-bottom: 0.25rem;
         }
-        
+
         .student-info .details,
         .details {
             font-size: 0.875rem;
             color: #6c757d;
             line-height: 1.4;
         }
-        
+
         .contact-info .name {
             font-weight: 600;
             color: #2c3e50;
         }
-        
+
         .contact-info .phone {
             font-size: 0.875rem;
             color: #6c757d;
         }
-        
+
         .school-name {
             font-weight: 500;
             color: #2c3e50;
         }
-        
+
         .date-range {
             font-size: 0.875rem;
             color: #6c757d;
         }
-        
+
         .time-ranges {
             font-size: 0.875rem;
             line-height: 1.4;
         }
-        
+
         .qr-code-small {
             width: 60px;
             height: 60px;
             object-fit: contain;
             border-radius: 4px;
         }
-        
-        /* Badge Styles */
+
+
         .badge-success {
             background: #d4edda;
             color: #155724;
@@ -1162,7 +1143,7 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
+
         .badge-warning {
             background: #fff3cd;
             color: #856404;
@@ -1171,7 +1152,7 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
+
         .badge-secondary {
             background: #e2e3e5;
             color: #6c757d;
@@ -1180,49 +1161,49 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
-        /* Button Groups */
+
+
         .btn-group {
             display: flex;
             gap: 0.25rem;
         }
-        
-        /* Empty State */
+
+
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
             color: #6c757d;
         }
-        
+
         .empty-state i {
             font-size: 3rem;
             margin-bottom: 1rem;
             opacity: 0.5;
         }
-        
+
         .empty-state h5 {
             margin-bottom: 0.5rem;
             color: #6c757d;
         }
-        
+
         .empty-state p {
             margin: 0;
             opacity: 0.8;
         }
-        
-        /* Pagination */
+
+
         .pagination-wrapper {
             padding: 1rem;
             display: flex;
             justify-content: center;
             border-top: 1px solid #f3f4f6;
         }
-        
+
         .pagination-wrapper .pagination {
             margin: 0;
         }
-        
-        /* ===== END GLOBAL DESIGN SYSTEM ===== */
+
+
     </style>
 </head>
 <body>
@@ -1258,8 +1239,8 @@
                 </a>
             </li>
                         <li>
-                <a href="{{ route('admin.manage-semesters') }}" class="{{ request()->routeIs('admin.manage-semesters') ? 'active' : '' }}">
-                    <span class="icon"><i class="fas fa-calendar-alt"></i></span> <span>Semesters</span>
+                <a href="{{ route('admin.manage-school-years') }}" class="{{ request()->routeIs('admin.manage-school-years') ? 'active' : '' }}">
+                    <span class="icon"><i class="fas fa-calendar-alt"></i></span> <span>School Year</span>
                 </a>
             </li>
             <li>
@@ -1277,7 +1258,7 @@
                     <span class="icon"><i class="fas fa-comments"></i></span> <span>Message</span>
                 </a>
             </li>
-             
+
             <li>
                 <a href="{{ route('admin.teacher-attendance-reports') }}" class="{{ request()->routeIs('admin.teacher-attendance-reports') ? 'active' : '' }}">
                     <span class="icon"><i class="fas fa-chalkboard-teacher"></i></span> <span>Teacher Reports</span>
@@ -1306,21 +1287,19 @@
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const sidebar = document.getElementById('sidebar');
         const content = document.getElementById('content');
-        
-        // Load saved state
-        if (localStorage.getItem('sidebarClosed') === 'true') {
+
+         if (localStorage.getItem('sidebarClosed') === 'true') {
             sidebar.classList.add('closed');
             content.classList.add('expanded');
         }
-        
+
         hamburgerMenu.addEventListener('click', () => {
             sidebar.classList.toggle('closed');
             content.classList.toggle('expanded');
             localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));
         });
-        
-        // Global helper to display flash messages from AJAX JSON responses
-        function showFlashFromJson(payload) {
+
+         function showFlashFromJson(payload) {
             try {
                 if(!payload) return;
                 const container = document.getElementById('flash-messages');
@@ -1356,16 +1335,13 @@
                 btn.setAttribute('aria-label', 'Close');
                 wrapper.appendChild(btn);
 
-                // insert at top
-                container.prepend(wrapper);
+                 container.prepend(wrapper);
             } catch(e) {
-                // silent
-                console.error('flash helper error', e);
+                 console.error('flash helper error', e);
             }
         }
 
-        // Intercept fetch responses globally (optional): hook fetch to auto-handle 422 JSON
-        (function(){
+         (function(){
             if(!window.fetch) return;
             const originalFetch = window.fetch;
             window.fetch = function(){
@@ -1373,8 +1349,7 @@
                     if(resp && resp.status === 422) {
                         const clone = resp.clone();
                         clone.json().then(json => {
-                            // only show if structure matches
-                            if(json && (json.errors || json.message)) {
+                             if(json && (json.errors || json.message)) {
                                 showFlashFromJson(json);
                             }
                         }).catch(()=>{});

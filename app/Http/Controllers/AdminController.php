@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\School;
 use App\Models\Section;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
 use Illuminate\Support\Facades\Hash;
@@ -24,7 +24,7 @@ use Carbon\Carbon;
 class AdminController extends Controller
 {
     use ValidatesForResponse;
-    
+     
     public function dashboard()
     {
         $totalTeachers = User::where('role', 'teacher')->count();
@@ -65,7 +65,7 @@ class AdminController extends Controller
 
     private function validateOrRespond(Request $request, array $rules)
     {
-        return $this->validateForResponse($request, $rules);
+        return $request->validate($rules);
     }
 
  
@@ -226,16 +226,12 @@ class AdminController extends Controller
 
     public function storeSchool(Request $request)
     {
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'school_id' => 'required|string|unique:schools,school_id|max:20'
         ]);
-
-        if (is_object($validated)) {
-            return $validated;
-        }
 
         $logoPath = null;
         if ($request->hasFile('logo')) {
@@ -268,16 +264,12 @@ class AdminController extends Controller
     {
         $school = School::findOrFail($id);
         
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'school_id' => 'required|string|max:20|unique:schools,school_id,' . $school->id
         ]);
-
-        if (is_object($validated)) {
-            return $validated;
-        }
 
         $logoPath = $school->logo;
         if ($request->hasFile('logo')) {
@@ -298,26 +290,20 @@ class AdminController extends Controller
         return redirect()->route('admin.edit-school', $school->id)->with('success', 'School updated successfully!');
     }
 
-    /**
-     * Delete school and cascade delete all related data
-     */
+ 
     public function deleteSchool($id)
     {
         $school = School::findOrFail($id);
         
-        // Get all teachers in this school
-        $teachers = User::where('role', 'teacher')
+         $teachers = User::where('role', 'teacher')
                         ->where('school_id', $school->school_id)
                         ->get();
         
         foreach ($teachers as $teacher) {
-            // Get students associated with this teacher
-            $students = Student::where('user_id', $teacher->id)->get();
+             $students = Student::where('user_id', $teacher->id)->get();
             
-            // Delete students and their files
-            foreach ($students as $student) {
-                // Clear QR code files
-                if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
+             foreach ($students as $student) {
+                 if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
                     Storage::disk('public')->delete($student->qr_code);
                 }
                 
@@ -335,9 +321,9 @@ class AdminController extends Controller
         }
         
         // Delete all semesters for this school
-        $semesters = Semester::where('school_id', $school->school_id)->get();
-        foreach ($semesters as $semester) {
-            $semester->delete();
+        $schoolYears = SchoolYear::where('school_id', $school->school_id)->get();
+        foreach ($schoolYears as $schoolYear) {
+            $schoolYear->delete();
         }
         
         // Delete school logo if exists
@@ -373,10 +359,9 @@ class AdminController extends Controller
         $teachers = $query->paginate(10);
         
         $schools = School::all();
-        $sections = \App\Models\Section::with(['teacher', 'semester', 'students'])->get();
-        $semesters = \App\Models\Semester::all();
+        $sections = \App\Models\Section::with(['teacher', 'schoolYear', 'students'])->get();
+        $schoolYears = \App\Models\SchoolYear::all();
         
-        // Calculate statistics using both legacy and new relationships
         $teachersWithSections = User::where('role', 'teacher')
                                    ->where(function($query) {
                                        $query->whereNotNull('section_id')
@@ -408,7 +393,7 @@ class AdminController extends Controller
             'total_students_in_sections' => \App\Models\Student::whereNotNull('section_id')->count(),
         ];
 
-        return view('admin.manage-teachers', compact('teachers', 'schools', 'sections', 'semesters', 'stats'));
+        return view('admin.manage-teachers', compact('teachers', 'schools', 'sections', 'schoolYears', 'stats'));
     }
 
     /**
@@ -794,7 +779,7 @@ class AdminController extends Controller
             'teacher_id' => 'required|exists:users,id',
             'section_name' => 'required|string|max:255',
             'grade_level' => 'required|integer|min:1|max:12',
-            'semester_id' => 'required|exists:semesters,id'
+            'school_year_id' => 'required|exists:school_years,id'
         ])) return $resp;
 
         \DB::beginTransaction();
@@ -813,7 +798,7 @@ class AdminController extends Controller
                 'name' => $request->section_name,
                 'gradelevel' => $request->grade_level,
                 'teacher_id' => $teacher->id,
-                'semester_id' => $request->semester_id
+                'school_year_id' => $request->school_year_id
             ]);
 
             // Update teacher's section reference
@@ -886,10 +871,7 @@ class AdminController extends Controller
      */
     public function manageSemesters()
     {
-        $semesters = Semester::with('school')->orderBy('start_date', 'desc')->paginate(10);
-        $schools = School::all();
-
-        return view('admin.manage-semesters', compact('semesters', 'schools'));
+        return redirect()->route('admin.manage-school-years');
     }
 
     /**
@@ -918,7 +900,7 @@ class AdminController extends Controller
                 'school_id' => $request->school_id,
             ];
 
-           $tableColumns = \Schema::getColumnListing('semesters');
+           $tableColumns = \Schema::getColumnListing('school_years');
             
             if (in_array('am_time_in_start', $tableColumns)) {
                 $createData['am_time_in_start'] = $request->am_time_in_start;
@@ -933,7 +915,7 @@ class AdminController extends Controller
                 $createData['pm_time_out_end'] = $request->pm_time_out_end;
             }
 
-            Semester::create($createData);
+            SchoolYear::create($createData);
 
             return redirect()->back()->with('success', 'Semester created successfully!');
             
@@ -948,7 +930,7 @@ class AdminController extends Controller
     public function updateSemester(Request $request, $id)
     {
         try {
-            $semester = Semester::findOrFail($id);
+            $schoolYear = SchoolYear::findOrFail($id);
             if ($resp = $this->validateOrRespond($request, [
                 'name' => 'required|string|max:255',
                 'status' => 'required|in:active,inactive',
@@ -971,7 +953,7 @@ class AdminController extends Controller
             ];
 
             // Check if time columns exist in the database before adding them
-            $tableColumns = \Schema::getColumnListing('semesters');
+            $tableColumns = \Schema::getColumnListing('school_years');
             
             if (in_array('am_time_in_start', $tableColumns)) {
                 $updateData['am_time_in_start'] = $request->am_time_in_start;
@@ -986,7 +968,7 @@ class AdminController extends Controller
                 $updateData['pm_time_out_end'] = $request->pm_time_out_end;
             }
 
-            $semester->update($updateData);
+            $schoolYear->update($updateData);
             return redirect()->back()->with('success', 'Semester updated successfully!');
             
         } catch (\Exception $e) {
@@ -999,10 +981,10 @@ class AdminController extends Controller
      */
     public function deleteSemester($id)
     {
-        $semester = Semester::findOrFail($id);
+        $schoolYear = SchoolYear::findOrFail($id);
         
          $teachers = User::where('role', 'teacher')
-                        ->where('school_id', $semester->school_id)
+                        ->where('school_id', $schoolYear->school_id)
                         ->get();
         
         foreach ($teachers as $teacher) {
@@ -1024,9 +1006,9 @@ class AdminController extends Controller
             $teacher->delete();
         }
         
-         $semester->delete();
+         $schoolYear->delete();
 
-        return redirect()->route('admin.manage-semesters')->with('success', 'Semester and related teachers/students deleted successfully!');
+        return redirect()->route('admin.manage-school-years')->with('success', 'School year and related teachers/students deleted successfully!');
     }
 
     /**
@@ -1034,7 +1016,7 @@ class AdminController extends Controller
      */
     public function manageStudents(Request $request)
     {
-        $query = Student::with(['user:id,name,email', 'school:id,name,address', 'section.teacher:id,name', 'section.teachers:id,name', 'semester:id,name']);
+        $query = Student::with(['user:id,name,email', 'school:id,name,address', 'section.teacher:id,name', 'section.teachers:id,name', 'schoolYear:id,name']);
         
          if ($request->filled('search')) {
             $search = $request->search;
@@ -1052,8 +1034,8 @@ class AdminController extends Controller
             $query->where('school_id', $request->school_id);
         }
         
-        if ($request->filled('semester_id')) {
-            $query->where('semester_id', $request->semester_id);
+        if ($request->filled('school_year_id')) {
+            $query->where('school_year_id', $request->school_year_id);
         }
         
          if ($request->filled('teacher_id')) {
@@ -1105,12 +1087,9 @@ class AdminController extends Controller
         $students = $query->get();
         
     $schools = School::select('id', 'name')->orderBy('name')->get();
-    // Load teachers with their section(s) relationship so views can show assigned section labels
     $teachers = User::where('role', 'teacher')->with(['section', 'sections'])->orderBy('name')->get();
-    // Provide semesters for the top filter (manageStudents view expects $semesters)
-    $semesters = Semester::orderBy('created_at', 'desc')->get();
+    $schoolYears = SchoolYear::orderBy('created_at', 'desc')->get();
         
-        // Get grade-section options for the filter dropdown
         $gradeSectionOptions = Student::with('section')
             ->whereHas('section')
             ->get()
@@ -1123,7 +1102,7 @@ class AdminController extends Controller
             ->unique('value')
             ->values();
 
-    return view('admin.manage-students', compact('students', 'schools', 'teachers', 'gradeSectionOptions', 'semesters'));
+    return view('admin.manage-students', compact('students', 'schools', 'teachers', 'gradeSectionOptions', 'schoolYears'));
     }
 
     /**
@@ -1164,12 +1143,12 @@ class AdminController extends Controller
     public function teacherAttendanceReports(Request $request)
     {
         $schools = School::all();
-        $semesters = Semester::all();
+        $schoolYears = SchoolYear::all();
         $teachers = User::where('role', 'teacher')->with(['school', 'section'])->get();
-        $sections = Section::with(['semester', 'teacher'])->get();
+        $sections = Section::with(['schoolYear', 'teacher'])->get();
         
         $type = $request->input('type', 'daily');
-        $semesterId = $request->input('semester_id');
+        $schoolYearId = $request->input('school_year_id');
         $gradeSection = $request->input('grade_section');
         $teacherId = $request->input('teacher_id');
         $schoolId = $request->input('school_id');
@@ -1217,12 +1196,12 @@ class AdminController extends Controller
                 break;
             case 'quarterly':
                 // For quarterly reports, use semester dates
-                if ($semesterId) {
-                    $semester = Semester::find($semesterId);
-                    if ($semester) {
+                if ($schoolYearId) {
+                    $schoolYear = SchoolYear::find($schoolYearId);
+                    if ($schoolYear) {
                         $request->merge([
-                            'start_date' => $semester->start_date,
-                            'end_date' => $semester->end_date
+                            'start_date' => $schoolYear->start_date,
+                            'end_date' => $schoolYear->end_date
                         ]);
                     }
                 }
@@ -1236,7 +1215,7 @@ class AdminController extends Controller
         }
         
         // Handle SF2 generation request
-        if ($request->has('generate_sf2') && $request->filled(['semester_id', 'report_month', 'report_year'])) {
+        if ($request->has('generate_sf2') && $request->filled(['school_year_id', 'report_month', 'report_year'])) {
             return $this->generateAdminSF2($request);
         }
         
@@ -1275,13 +1254,13 @@ class AdminController extends Controller
             $reportData = $this->generateTeacherAttendanceReportData($request);
         }
         
-        $semester = $semesterId ? Semester::find($semesterId) : null;
-        $semester_start = $semester ? $semester->start_date : null;
-        $semester_end = $semester ? $semester->end_date : null;
+        $schoolYear = $schoolYearId ? SchoolYear::find($schoolYearId) : null;
+        $schoolYear_start = $schoolYear ? $schoolYear->start_date : null;
+        $schoolYear_end = $schoolYear ? $schoolYear->end_date : null;
 
         return view('admin.teacher-attendance-reports', compact(
-            'schools', 'semesters', 'teachers', 'sections', 'attendanceData', 'reportData',
-            'records', 'semester_start', 'semester_end', 'gradeSectionOptions', 'type'
+            'schools', 'schoolYears', 'teachers', 'sections', 'attendanceData', 'reportData',
+            'records', 'schoolYear_start', 'schoolYear_end', 'gradeSectionOptions', 'type'
         ));
     }
 
@@ -1301,21 +1280,21 @@ class AdminController extends Controller
     public function getAdminSF2Options(Request $request)
     {
         // Get available semesters - all semesters for admin
-        $semesters = Semester::select('id', 'name', 'start_date', 'end_date')
+        $schoolYears = SchoolYear::select('id', 'name', 'start_date', 'end_date')
                            ->orderBy('created_at', 'desc')
                            ->get();
 
         // Add semester date information for month filtering
-        $semestersWithDates = $semesters->map(function($semester) {
+        $schoolYearsWithDates = $schoolYears->map(function($schoolYear) {
             return [
-                'id' => $semester->id,
-                'name' => $semester->name,
-                'start_date' => $semester->start_date,
-                'end_date' => $semester->end_date,
-                'start_month' => \Carbon\Carbon::parse($semester->start_date)->month,
-                'start_year' => \Carbon\Carbon::parse($semester->start_date)->year,
-                'end_month' => \Carbon\Carbon::parse($semester->end_date)->month,
-                'end_year' => \Carbon\Carbon::parse($semester->end_date)->year
+                'id' => $schoolYear->id,
+                'name' => $schoolYear->name,
+                'start_date' => $schoolYear->start_date,
+                'end_date' => $schoolYear->end_date,
+                'start_month' => \Carbon\Carbon::parse($schoolYear->start_date)->month,
+                'start_year' => \Carbon\Carbon::parse($schoolYear->start_date)->year,
+                'end_month' => \Carbon\Carbon::parse($schoolYear->end_date)->month,
+                'end_year' => \Carbon\Carbon::parse($schoolYear->end_date)->year
             ];
         });
 
@@ -1344,7 +1323,7 @@ class AdminController extends Controller
         ];
 
         return response()->json([
-            'semesters' => $semestersWithDates,
+            'semesters' => $schoolYearsWithDates,
             'grade_sections' => $gradeSection,
             'months' => $months
         ]);
@@ -1474,7 +1453,7 @@ class AdminController extends Controller
      */
     private function getFilteredStudents(Request $request)
     {
-        $studentQuery = Student::with(['section', 'user', 'school', 'semester']);
+        $studentQuery = Student::with(['section', 'user', 'school', 'schoolYear']);
         
         if ($request->filled('teacher_id')) {
             $studentQuery->where('user_id', $request->teacher_id);
@@ -1484,8 +1463,8 @@ class AdminController extends Controller
             $studentQuery->where('school_id', $request->school_id);
         }
         
-        if ($request->filled('semester_id')) {
-            $studentQuery->where('semester_id', $request->semester_id);
+        if ($request->filled('school_year_id')) {
+            $studentQuery->where('school_year_id', $request->school_year_id);
         }
         
         if ($request->filled('section_id')) {
@@ -1522,8 +1501,8 @@ class AdminController extends Controller
             $query->where('school_id', $request->school_id);
         }
         
-        if ($request->filled('semester_id')) {
-            $query->where('semester_id', $request->semester_id);
+        if ($request->filled('school_year_id')) {
+            $query->where('school_year_id', $request->school_year_id);
         }
         
         return $query->get()
@@ -1545,12 +1524,12 @@ class AdminController extends Controller
     {
         $date = $request->input('start_date', now()->toDateString());
         
-        $semester = $request->filled('semester_id') ? Semester::find($request->semester_id) : null;
+        $schoolYear = $request->filled('school_year_id') ? SchoolYear::find($request->school_year_id) : null;
         
-        if ($semester) {
-            $semester_start = Carbon::parse($semester->start_date)->toDateString();
-            $semester_end = Carbon::parse($semester->end_date)->toDateString();
-            if ($date < $semester_start || $date > $semester_end) {
+        if ($schoolYear) {
+            $schoolYear_start = Carbon::parse($schoolYear->start_date)->toDateString();
+            $schoolYear_end = Carbon::parse($schoolYear->end_date)->toDateString();
+            if ($date < $schoolYear_start || $date > $schoolYear_end) {
                 return collect();
             }
         }
@@ -1595,14 +1574,14 @@ class AdminController extends Controller
      */
     private function generateMonthlyReport($students, Request $request)
     {
-        $semester = $request->filled('semester_id') ? Semester::find($request->semester_id) : null;
+        $schoolYear = $request->filled('school_year_id') ? SchoolYear::find($request->school_year_id) : null;
         
-        if ($semester) {
-            $semester_start = Carbon::parse($semester->start_date)->startOfDay();
-            $semester_end = Carbon::parse($semester->end_date)->endOfDay();
+        if ($schoolYear) {
+            $schoolYear_start = Carbon::parse($schoolYear->start_date)->startOfDay();
+            $schoolYear_end = Carbon::parse($schoolYear->end_date)->endOfDay();
         } else {
-            $semester_start = null;
-            $semester_end = null;
+            $schoolYear_start = null;
+            $schoolYear_end = null;
         }
 
         $month = $request->input('month') ?: $request->input('start_date');
@@ -1615,10 +1594,10 @@ class AdminController extends Controller
             $end = now()->endOfMonth();
         }
 
-        if ($semester_start && $start < $semester_start) $start = $semester_start;
-        if ($semester_end && $end > $semester_end) $end = $semester_end;
+        if ($schoolYear_start && $start < $schoolYear_start) $start = $schoolYear_start;
+        if ($schoolYear_end && $end > $schoolYear_end) $end = $schoolYear_end;
 
-        if ($semester_start && $semester_end && $start > $semester_end) {
+        if ($schoolYear_start && $schoolYear_end && $start > $schoolYear_end) {
             $classDays = [];
         } else {
             $classDays = $this->getClassDays($start, $end);
@@ -1697,11 +1676,11 @@ class AdminController extends Controller
      */
     private function generateQuarterlyReport($students, Request $request)
     {
-        $semester = $request->filled('semester_id') ? Semester::find($request->semester_id) : null;
+        $schoolYear = $request->filled('school_year_id') ? SchoolYear::find($request->school_year_id) : null;
         
-        if ($semester) {
-            $start = Carbon::parse($semester->start_date)->startOfDay();
-            $end = Carbon::parse($semester->end_date)->endOfDay();
+        if ($schoolYear) {
+            $start = Carbon::parse($schoolYear->start_date)->startOfDay();
+            $end = Carbon::parse($schoolYear->end_date)->endOfDay();
         } else {
             // If no semester selected, use current academic year
             $start = now()->startOfYear();
@@ -1804,9 +1783,9 @@ class AdminController extends Controller
             });
         }
         
-        if ($request->filled('semester_id')) {
+        if ($request->filled('school_year_id')) {
             $query->whereHas('student', function($q) use ($request) {
-                $q->where('semester_id', $request->semester_id);
+                $q->where('school_year_id', $request->school_year_id);
             });
         }
         
@@ -1828,10 +1807,10 @@ class AdminController extends Controller
     /**
      * Extract school year from semester name
      */
-    private function extractSchoolYearFromSemester($semesterName)
+    private function extractSchoolYearFromSemester($schoolYearName)
     {
         // Try to extract year from semester name (e.g., "1st Semester 2025" -> "2024-2025")
-        if (preg_match('/(\d{4})/', $semesterName, $matches)) {
+        if (preg_match('/(\d{4})/', $schoolYearName, $matches)) {
             $year = (int)$matches[1];
             return ($year - 1) . '-' . $year;
         }
@@ -1866,9 +1845,9 @@ class AdminController extends Controller
             });
         }
         
-        if ($request->filled('semester_id')) {
+        if ($request->filled('school_year_id')) {
             $baseQuery->whereHas('student', function($q) use ($request) {
-                $q->where('semester_id', $request->semester_id);
+                $q->where('school_year_id', $request->school_year_id);
             });
         }
         
@@ -1986,9 +1965,9 @@ class AdminController extends Controller
     {
         $schools = School::all();
         $teachers = User::where('role', 'teacher')->get();
-        $semesters = Semester::all();
+        $schoolYears = SchoolYear::all();
         
-        return view('admin.manage-students-new', compact('schools', 'teachers', 'semesters'));
+        return view('admin.manage-students-new', compact('schools', 'teachers', 'schoolYears'));
     }
 
     /**
@@ -1996,12 +1975,12 @@ class AdminController extends Controller
      */
     public function manageSections()
     {
-        $sections = Section::with(['semester', 'teachers', 'students'])->paginate(10);
+        $sections = Section::with(['schoolYear', 'teachers', 'students'])->paginate(10);
         $schools = School::all();
         $teachers = User::where('role', 'teacher')->get();
-        $semesters = Semester::where('status', 'active')->get();
+        $schoolYears = SchoolYear::where('status', 'active')->get();
         
-        return view('admin.manage-sections', compact('sections', 'schools', 'teachers', 'semesters'));
+        return view('admin.manage-sections', compact('sections', 'schools', 'teachers', 'schoolYears'));
     }
 
     /**
@@ -2039,7 +2018,7 @@ class AdminController extends Controller
      */
     public function semester()
     {
-        return redirect()->route('admin.manage-semesters');
+        return redirect()->route('admin.manage-school-years');
     }
 
     /**
@@ -2062,7 +2041,7 @@ class AdminController extends Controller
      */
     public function storeStudent(Request $request)
     {
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'id_no' => 'required|string|max:255|unique:students,id_no',
             'name' => 'required|string|max:255',
             'gender' => 'required|string|max:1',
@@ -2076,10 +2055,6 @@ class AdminController extends Controller
             'user_id' => 'nullable|exists:users,id',
         ]);
 
-        if (is_object($validated)) {
-            return $validated;
-        }
-
         Student::create($request->all());
 
         return redirect()->route('admin.manage-students')->with('success', 'Student added successfully.');
@@ -2091,7 +2066,7 @@ class AdminController extends Controller
     public function updateStudent(Request $request, $id)
     {
         $student = Student::findOrFail($id);
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'id_no' => 'required|string|max:255|unique:students,id_no,' . $id,
             'name' => 'required|string|max:255',
             'gender' => 'required|string|max:1',
@@ -2103,10 +2078,6 @@ class AdminController extends Controller
             'contact_person_contact' => 'nullable|string|max:15',
             'school_id' => 'nullable|exists:schools,school_id',
         ]);
-
-        if (is_object($validated)) {
-            return $validated;
-        }
 
         $student->update($request->all());
 
@@ -2140,14 +2111,10 @@ class AdminController extends Controller
      */
     public function bulkDeleteStudents(Request $request)
     {
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'student_ids' => 'required|array',
             'student_ids.*' => 'exists:students,id'
         ]);
-
-        if (is_object($validated)) {
-            return $validated;
-        }
 
         $students = Student::whereIn('id', $request->student_ids)->get();
 
@@ -2638,7 +2605,7 @@ class AdminController extends Controller
             }
 
             // Get sections where teacher is assigned (both legacy teacher_id and many-to-many)
-            $sections = Section::with(['semester', 'students'])
+            $sections = Section::with(['schoolYear', 'students'])
                               ->where(function($query) use ($teacherId) {
                                   $query->where('teacher_id', $teacherId)
                                         ->orWhereHas('teachers', function($subQuery) use ($teacherId) {
@@ -2652,7 +2619,7 @@ class AdminController extends Controller
                                       'name' => $section->name,
                                       'gradelevel' => $section->gradelevel,
                                       'display_name' => "Grade {$section->gradelevel} - {$section->name}",
-                                      'semester_name' => $section->semester ? $section->semester->name : 'No Semester',
+                                      'semester_name' => $section->schoolYear ? $section->schoolYear->name : 'No Semester',
                                       'students_count' => $section->students->count(),
                                       'value' => $section->gradelevel . '|' . $section->name // For grade_section filter format
                                   ];
@@ -2694,7 +2661,7 @@ class AdminController extends Controller
             'address' => 'required|string|max:500',
             'cp_no' => 'required|string|max:15',
             'section_id' => 'required|exists:sections,id',
-            'semester_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:school_years,id',
             'contact_person_name' => 'nullable|string|max:255',
             'contact_person_relationship' => 'nullable|string|max:50',
             'contact_person_contact' => 'nullable|string|max:15',
@@ -2770,14 +2737,14 @@ class AdminController extends Controller
     public function getSectionsByTeacher($teacherId)
     {
         // Get sections where teacher is assigned (both legacy teacher_id and many-to-many)
-        $sections = Section::with(['semester', 'students'])
+        $sections = Section::with(['schoolYear', 'students'])
                           ->where(function($query) use ($teacherId) {
                               $query->where('teacher_id', $teacherId)
                                     ->orWhereHas('teachers', function($subQuery) use ($teacherId) {
                                         $subQuery->where('users.id', $teacherId);
                                     });
                           })
-                          ->select('id', 'name', 'gradelevel', 'semester_id', 'teacher_id')
+                          ->select('id', 'name', 'gradelevel', 'school_year_id', 'teacher_id')
                           ->orderBy('gradelevel')
                           ->orderBy('name')
                           ->get()
@@ -2787,7 +2754,7 @@ class AdminController extends Controller
                                   'name' => $section->name,
                                   'gradelevel' => $section->gradelevel,
                                   'display_name' => "Grade {$section->gradelevel} - {$section->name}",
-                                  'semester_name' => $section->semester ? $section->semester->name : 'No Semester',
+                                  'semester_name' => $section->schoolYear ? $section->schoolYear->name : 'No Semester',
                                   'students_count' => $section->students->count(),
                                   'value' => $section->gradelevel . '|' . $section->name // For grade_section filter format
                               ];
@@ -2829,13 +2796,13 @@ class AdminController extends Controller
     /**
      * Get valid months for a semester based on start and end dates
      */
-    public function getSemesterMonths($semesterId)
+    public function getSemesterMonths($schoolYearId)
     {
         try {
-            $semester = Semester::findOrFail($semesterId);
+            $schoolYear = SchoolYear::findOrFail($schoolYearId);
             
-            $startDate = Carbon::parse($semester->start_date);
-            $endDate = Carbon::parse($semester->end_date);
+            $startDate = Carbon::parse($schoolYear->start_date);
+            $endDate = Carbon::parse($schoolYear->end_date);
             
             $months = [];
             $current = $startDate->copy()->startOfMonth();
@@ -2860,9 +2827,9 @@ class AdminController extends Controller
                 'success' => true,
                 'months' => $months,
                 'semester' => [
-                    'name' => $semester->name,
-                    'start_date' => $semester->start_date->format('Y-m-d'),
-                    'end_date' => $semester->end_date->format('Y-m-d')
+                    'name' => $schoolYear->name,
+                    'start_date' => $schoolYear->start_date->format('Y-m-d'),
+                    'end_date' => $schoolYear->end_date->format('Y-m-d')
                 ]
             ]);
         } catch (\Exception $e) {
@@ -2876,7 +2843,7 @@ class AdminController extends Controller
     /**
      * Get schools by semester for cascading dropdown
      */
-    public function getSchoolsBySemester($semesterId)
+    public function getSchoolsBySemester($schoolYearId)
     {
         // For now, return all schools since semester-school relationship might not be direct
         // You can modify this logic based on your specific business requirements
@@ -2903,16 +2870,12 @@ class AdminController extends Controller
     {
         $admin = Auth::user();
         
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $admin->id,
             'username' => 'required|string|max:255|unique:users,username,' . $admin->id,
             'phone_number' => 'nullable|string|max:20',
         ]);
-
-        if (is_object($validated)) {
-            return $validated;
-        }
 
         $admin->update([
             'name' => $request->name,
@@ -2931,14 +2894,10 @@ class AdminController extends Controller
     {
         $admin = Auth::user();
         
-        $validated = $this->validateForResponse($request, [
+        $validated = $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|string|min:8|confirmed',
         ]);
-
-        if (is_object($validated)) {
-            return $validated;
-        }
 
         // Check if current password is correct
         if (!Hash::check($request->current_password, $admin->password)) {
@@ -2951,5 +2910,15 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.account')->with('success', 'Password updated successfully!');
+    }
+
+    /**
+     * Refresh CSRF token (AJAX endpoint)
+     */
+    public function refreshCsrf()
+    {
+        return response()->json([
+            'token' => csrf_token()
+        ]);
     }
 }

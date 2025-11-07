@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Semester;
+use App\Models\SchoolYear;
 use App\Models\School;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
@@ -14,10 +15,8 @@ use App\Http\Controllers\Concerns\ValidatesForResponse;
 class SemesterController extends Controller
 {
     use ValidatesForResponse;
-    /**
-     * Display a listing of the semesters.
-     */
-    public function index()
+    
+     public function index()
     {
         try {
             Log::info('Semester index accessed', [
@@ -27,15 +26,18 @@ class SemesterController extends Controller
 
             $user = Auth::user();
             
-            // Get semesters based on user role
-            if ($user->role === 'admin') {
+             if ($user->role === 'admin') {
                 $semesters = Semester::with('school')
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
+
+                $schoolYears = SchoolYear::with('school')
+                    ->orderBy('school_year_start', 'desc')
+                    ->get();
                     
                  $schools = School::orderBy('name')->get();
                 
-                 $sections = \App\Models\Section::with(['semester', 'teacher', 'students'])
+                 $sections = \App\Models\Section::with(['schoolYear', 'teacher', 'students'])
                     ->orderBy('gradelevel')
                     ->orderBy('name')
                     ->get();
@@ -50,12 +52,17 @@ class SemesterController extends Controller
                     'sections_count' => $sections->count()
                 ]);
 
-                return view('admin.manage-semesters', compact('semesters', 'schools', 'sections', 'teachers'));
+                return view('admin.manage-semesters', compact('semesters', 'schoolYears', 'schools', 'sections', 'teachers'));
             } else {
                  $semesters = Semester::with('school')
                     ->where('school_id', $user->school_id)
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
+
+                $schoolYears = SchoolYear::with('school')
+                    ->where('school_id', $user->school_id)
+                    ->orderBy('school_year_start', 'desc')
+                    ->get();
                     
                 Log::info('Teacher viewing school semesters', [
                     'user_id' => $user->id,
@@ -64,12 +71,12 @@ class SemesterController extends Controller
                 ]);
 
                  $sections = \App\Models\Section::where('teacher_id', $user->id)
-                    ->with(['semester'])
+                    ->with(['schoolYear'])
                     ->orderBy('gradelevel')
                     ->orderBy('name')
                     ->get();
 
-                return view('teacher.semester', compact('semesters', 'sections'));
+                return view('teacher.semester', compact('semesters', 'schoolYears', 'sections'));
             }
             
         } catch (\Exception $e) {

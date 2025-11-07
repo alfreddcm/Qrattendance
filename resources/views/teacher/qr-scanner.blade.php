@@ -5,58 +5,58 @@
 @php
 use Carbon\Carbon;
 
-$semester = \App\Models\Semester::where('status', 'active')->first();
-$school = $semester->school ?? null;
+$schoolYear = \App\Models\SchoolYear::where('status', 'active')->first();
+$school = $schoolYear->school ?? null;
 $now = Carbon::now('Asia/Manila');
 
 // Define time periods for attendance tracking
 $timeSchedules = [];
-if ($semester) {
+if ($schoolYear) {
     // AM Time In
-    if ($semester->am_time_in_start && $semester->am_time_in_end) {
+    if ($schoolYear->am_time_in_start && $schoolYear->am_time_in_end) {
         $timeSchedules[] = [
             'type' => 'am_time_in',
             'label' => 'AM Time In',
-            'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_in_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end)
+            'start' => Carbon::createFromFormat('H:i:s', $schoolYear->am_time_in_start)->format('g:i A'),
+            'end' => Carbon::createFromFormat('H:i:s', $schoolYear->am_time_in_end)->format('g:i A'),
+            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_in_start),
+            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_in_end)
         ];
     }
-    
+
     // AM Time Out
-    if ($semester->am_time_out_start && $semester->am_time_out_end) {
+    if ($schoolYear->am_time_out_start && $schoolYear->am_time_out_end) {
         $timeSchedules[] = [
             'type' => 'am_time_out',
             'label' => 'AM Time Out',
-            'start' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->am_time_out_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_end)
+            'start' => Carbon::createFromFormat('H:i:s', $schoolYear->am_time_out_start)->format('g:i A'),
+            'end' => Carbon::createFromFormat('H:i:s', $schoolYear->am_time_out_end)->format('g:i A'),
+            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_out_start),
+            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_out_end)
         ];
     }
-    
+
     // PM Time In
-    if ($semester->pm_time_in_start && $semester->pm_time_in_end) {
+    if ($schoolYear->pm_time_in_start && $schoolYear->pm_time_in_end) {
         $timeSchedules[] = [
             'type' => 'pm_time_in',
             'label' => 'PM Time In',
-            'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_in_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_end)
+            'start' => Carbon::createFromFormat('H:i:s', $schoolYear->pm_time_in_start)->format('g:i A'),
+            'end' => Carbon::createFromFormat('H:i:s', $schoolYear->pm_time_in_end)->format('g:i A'),
+            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_in_start),
+            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_in_end)
         ];
     }
-    
+
     // PM Time Out
-    if ($semester->pm_time_out_start && $semester->pm_time_out_end) {
+    if ($schoolYear->pm_time_out_start && $schoolYear->pm_time_out_end) {
         $timeSchedules[] = [
             'type' => 'pm_time_out',
-            'label' => 'PM Time Out', 
-            'start' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_start)->format('g:i A'),
-            'end' => Carbon::createFromFormat('H:i:s', $semester->pm_time_out_end)->format('g:i A'),
-            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start),
-            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_end)
+            'label' => 'PM Time Out',
+            'start' => Carbon::createFromFormat('H:i:s', $schoolYear->pm_time_out_start)->format('g:i A'),
+            'end' => Carbon::createFromFormat('H:i:s', $schoolYear->pm_time_out_end)->format('g:i A'),
+            'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_out_start),
+            'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_out_end)
         ];
     }
 }
@@ -82,7 +82,7 @@ $attendanceCounts = [
 foreach ($todayAttendance as $record) {
     $recordTime = $record->time_in ?: $record->time_out;
     if (!$recordTime) continue;
-    
+
     foreach ($timeSchedules as $schedule) {
         if ($recordTime->between($schedule['start_time'], $schedule['end_time'])) {
             switch ($schedule['type']) {
@@ -114,11 +114,11 @@ $recentRecords = \App\Models\Attendance::with('student')
     ->latest()
     ->take(8)
     ->get();
-    
+
 foreach ($recentRecords as $record) {
     $recordTime = $record->time_in ?: $record->time_out;
     $interpretedStatus = 'Unknown';
-    
+
     if ($recordTime) {
         foreach ($timeSchedules as $schedule) {
             if ($recordTime->between($schedule['start_time'], $schedule['end_time'])) {
@@ -127,7 +127,7 @@ foreach ($recentRecords as $record) {
             }
         }
     }
-    
+
     $record->interpreted_status = $interpretedStatus;
     $recentAttendance->push($record);
 }
@@ -153,7 +153,7 @@ foreach ($recentRecords as $record) {
         color: #1f2937;
     }
 
-    /* Header Section */
+
     .modern-header {
         background: white;
         box-shadow: var(--card-shadow);
@@ -211,7 +211,7 @@ foreach ($recentRecords as $record) {
         line-height: 1.3;
     }
 
-    /* Main Layout */
+
     .main-layout {
         max-width: 1400px;
         margin: 0 auto;
@@ -223,7 +223,7 @@ foreach ($recentRecords as $record) {
         margin-bottom: 2rem;
     }
 
-    /* Modern Card Styles */
+
     .modern-card {
         background: white;
         border-radius: 16px;
@@ -236,7 +236,7 @@ foreach ($recentRecords as $record) {
         box-shadow: var(--card-shadow-lg);
     }
 
-    /* Left Panel - Large Photo */
+
     .photo-panel {
         display: flex;
         flex-direction: column;
@@ -282,7 +282,7 @@ foreach ($recentRecords as $record) {
         letter-spacing: 2px;
     }
 
-    /* Center Panel - Student Info */
+
     .student-info-panel {
         display: flex;
         flex-direction: column;
@@ -333,7 +333,7 @@ foreach ($recentRecords as $record) {
         justify-content: center;
     }
 
-    /* Attendance Status */
+
     .attendance-status {
         background: var(--primary-color);
         color: white;
@@ -364,7 +364,7 @@ foreach ($recentRecords as $record) {
         opacity: 0.9;
     }
 
-    /* Attendance Record Table */
+
     .attendance-table {
         overflow: hidden;
     }
@@ -406,14 +406,14 @@ foreach ($recentRecords as $record) {
         color: #6b7280;
     }
 
-    /* Right Panel - Controls */
+
     .control-panel {
         display: flex;
         flex-direction: column;
         gap: 1rem;
     }
 
-    /* Clock Card */
+
     .clock-card {
         background: var(--primary-color);
         color: white;
@@ -434,7 +434,7 @@ foreach ($recentRecords as $record) {
         font-family: 'Courier New', monospace;
     }
 
-    /* Scanner Card */
+
     .scanner-card {
         padding: 1.5rem;
     }
@@ -485,7 +485,7 @@ foreach ($recentRecords as $record) {
         color: #6b7280;
     }
 
-    /* Summary Card */
+
     .summary-card {
         background: var(--primary-color);
         color: white;
@@ -532,7 +532,7 @@ foreach ($recentRecords as $record) {
         margin: 0.75rem 0;
     }
 
-    /* Bottom Panel - Recent Students */
+
     .recent-students {
         max-width: 1400px;
         margin: 0 auto;
@@ -577,19 +577,19 @@ foreach ($recentRecords as $record) {
         color: #6b7280;
     }
 
-    /* Responsive Design */
+
     @media (max-width: 1200px) {
         .main-layout {
             grid-template-columns: 1fr;
             gap: 1rem;
         }
-        
+
         .header-content {
             flex-direction: column;
             gap: 1rem;
             text-align: center;
         }
-        
+
         .system-title {
             max-width: none;
         }
@@ -603,11 +603,11 @@ foreach ($recentRecords as $record) {
         .modern-header {
             padding: 1rem;
         }
-        
+
         .recent-students {
             grid-template-columns: repeat(2, 1fr);
         }
-        
+
         .large-photo-container {
             height: 250px;
         }
@@ -631,7 +631,7 @@ foreach ($recentRecords as $record) {
         }
     }
 
-    /* Loading States */
+
     .loading-overlay {
         position: fixed;
         top: 0;
@@ -661,7 +661,7 @@ foreach ($recentRecords as $record) {
 </style>
 
 <div class="container-fluid p-0">
-    <!-- Header Section -->
+
     <header class="modern-header">
         <div class="header-content">
             <div class="school-brand">
@@ -683,9 +683,9 @@ foreach ($recentRecords as $record) {
         </div>
     </header>
 
-    <!-- Main Content Layout -->
+
     <main class="main-layout">
-        <!-- Left Panel: Large Student Photo -->
+
         <aside class="photo-panel">
             <div class="modern-card photo-card">
                 <div class="large-photo-container" id="student-photo">
@@ -695,9 +695,9 @@ foreach ($recentRecords as $record) {
             </div>
         </aside>
 
-        <!-- Center Panel: Student Information & Attendance Records -->
+
         <section class="student-info-panel">
-            <!-- Student Name and Section -->
+
             <div class="modern-card student-card">
                 <div class="student-info-header">
                     <div class="info-field">
@@ -709,8 +709,8 @@ foreach ($recentRecords as $record) {
                         <div class="field-value" id="student-section">SECTION</div>
                     </div>
                 </div>
-                
-                <!-- Attendance Status -->
+
+
                 <div class="attendance-status" id="status-card">
                     <div class="status-text">WAITING TO SCAN</div>
                     <div class="status-action">READY</div>
@@ -719,7 +719,7 @@ foreach ($recentRecords as $record) {
                 </div>
             </div>
 
-            <!-- Attendance Record Table -->
+
             <div class="modern-card attendance-table">
                 <div class="table-header">ATTENDANCE RECORD</div>
                 <div class="table-rows">
@@ -743,15 +743,15 @@ foreach ($recentRecords as $record) {
             </div>
         </section>
 
-        <!-- Right Panel: Clock, Scanner & Summary -->
+
         <aside class="control-panel">
-            <!-- Digital Clock -->
+
             <div class="modern-card clock-card">
                 <div class="clock-header">TODAY IS: {{ strtoupper($now->format('D, M j, Y')) }}</div>
                 <div class="digital-time" id="current-time">--:--:-- --</div>
             </div>
 
-            <!-- Scanner Controls -->
+
             <div class="modern-card scanner-card">
                 <div class="scanner-toggles">
                     <button class="scanner-btn active" id="usb-toggle">
@@ -762,11 +762,11 @@ foreach ($recentRecords as $record) {
                     </button>
                 </div>
 
-                <!-- USB Scanner Input -->
+
                 <div id="usb-scanner-section">
-                    <input type="text" 
-                           id="usb-scanner-input" 
-                           class="scanner-input" 
+                    <input type="text"
+                           id="usb-scanner-input"
+                           class="scanner-input"
                            placeholder="Ready to scan..."
                            autocomplete="off">
                     <div class="scanner-status">
@@ -776,7 +776,7 @@ foreach ($recentRecords as $record) {
                     </div>
                 </div>
 
-                <!-- Webcam QR Scanner -->
+
                 <div id="webcam-scanner-section" style="display: none;">
                     <div id="qr-reader" style="width: 100%; height: 200px; border-radius: 8px; overflow: hidden;"></div>
                     <div class="text-center mt-2">
@@ -787,7 +787,7 @@ foreach ($recentRecords as $record) {
                 </div>
             </div>
 
-            <!-- Today's Attendance Summary -->
+
             <div class="modern-card summary-card">
                 <div class="summary-header">TODAY'S ATTENDANCE</div>
                 <div class="summary-stats">
@@ -813,7 +813,7 @@ foreach ($recentRecords as $record) {
         </aside>
     </main>
 
-    <!-- Bottom Panel: Recent Students -->
+
     <section class="recent-students">
         @forelse($recentAttendance->take(5) as $record)
             <div class="student-tile">
@@ -833,37 +833,35 @@ foreach ($recentRecords as $record) {
     </section>
 </div>
 
-<!-- Loading Overlay -->
 <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
 </div>
 
-<!-- Scripts -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-    // Global variables  
+    // Global variables
     let html5QrcodeScanner = null;
     let usbScannerTimeout = null;
     let currentStudentId = null;
-    
+
     // Update digital clock
     function updateDateTime() {
         const now = new Date();
-        const timeOptions = { 
+        const timeOptions = {
             timeZone: 'Asia/Manila',
             hour12: true,
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
         };
-        
+
         document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
     }
 
     // Update attendance record status based on student scan
     function updateAttendanceRecord(studentId) {
         if (!studentId) return;
-        
+
         // Reset all statuses first
         document.querySelectorAll('.row-status').forEach(status => {
             status.textContent = 'Not Recorded';
@@ -895,7 +893,7 @@ foreach ($recentRecords as $record) {
     document.addEventListener('DOMContentLoaded', function() {
         updateDateTime();
         setInterval(updateDateTime, 1000);
-        
+
         // Initialize scanner functionality
         initializeScanner();
     });
@@ -912,12 +910,12 @@ foreach ($recentRecords as $record) {
                     e.target.value = ''; // Clear input for next scan
                 }
             });
-            
+
             // Keep USB input focused
             usbInput.addEventListener('blur', function() {
                 setTimeout(() => this.focus(), 100);
             });
-            
+
             usbInput.focus();
         }
 
@@ -935,17 +933,17 @@ foreach ($recentRecords as $record) {
         // Hide webcam section
         document.getElementById('webcam-scanner-section').style.display = 'none';
         document.getElementById('usb-scanner-section').style.display = 'block';
-        
+
         // Update toggle buttons
         document.getElementById('usb-toggle').classList.add('active');
         document.getElementById('webcam-toggle').classList.remove('active');
-        
+
         // Stop webcam scanner if running
         if (html5QrcodeScanner) {
             html5QrcodeScanner.clear().catch(err => console.log('Error stopping webcam:', err));
             html5QrcodeScanner = null;
         }
-        
+
         // Focus on USB input
         setTimeout(() => {
             document.getElementById('usb-scanner-input').focus();
@@ -956,11 +954,11 @@ foreach ($recentRecords as $record) {
         // Show webcam section
         document.getElementById('usb-scanner-section').style.display = 'none';
         document.getElementById('webcam-scanner-section').style.display = 'block';
-        
+
         // Update toggle buttons
         document.getElementById('webcam-toggle').classList.add('active');
         document.getElementById('usb-toggle').classList.remove('active');
-        
+
         // Initialize webcam scanner
         setTimeout(() => {
             initializeWebcamScanner();
@@ -971,20 +969,20 @@ foreach ($recentRecords as $record) {
         if (html5QrcodeScanner) {
             html5QrcodeScanner.clear().catch(err => console.log('Error clearing previous scanner:', err));
         }
-        
+
         function onScanSuccess(decodedText, decodedResult) {
             console.log('Webcam QR detected:', decodedText);
             processQRCode(decodedText);
         }
-        
+
         function onScanFailure(error) {
             // Silent fail - normal when no QR in frame
         }
-        
+
         try {
             html5QrcodeScanner = new Html5QrcodeScanner(
                 "qr-reader",
-                { 
+                {
                     fps: 10,
                     qrbox: { width: 200, height: 200 },
                     rememberLastUsedCamera: true,
@@ -993,7 +991,7 @@ foreach ($recentRecords as $record) {
                 },
                 false
             );
-            
+
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
         } catch (error) {
             console.error('Error initializing webcam scanner:', error);
@@ -1034,7 +1032,7 @@ foreach ($recentRecords as $record) {
         // Show processing state
         const studentData = parseQRData(cleanedQRData);
         updateStudentDisplay(studentData);
-        
+
         // Show loading
         document.getElementById('loading-overlay').style.display = 'flex';
 
@@ -1056,18 +1054,18 @@ foreach ($recentRecords as $record) {
                     updateStudentDisplayWithServerData(data.student, data);
                     currentStudentId = data.student.id;
                     updateAttendanceRecord(data.student.id);
-                    
+
                     // Update status card with success
                     const now = new Date();
-                    const timeStr = now.toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
+                    const timeStr = now.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
                         minute: '2-digit',
-                        hour12: true 
+                        hour12: true
                     });
-                    
+
                     updateStatusCard('ATTENDANCE RECORDED!', data.time_period || 'TIME IN', timeStr, '{{ $now->format('F j, Y') }}');
                     playNotificationSound(true);
-                    
+
                     // Reset after 5 seconds
                     setTimeout(() => {
                         resetStudentDisplay();
@@ -1076,7 +1074,7 @@ foreach ($recentRecords as $record) {
                 } else {
                     updateStatusCard('ACCESS DENIED', 'ERROR', '--:--', data.message || 'Please try again');
                     playNotificationSound(false);
-                    
+
                     // Reset after 3 seconds for errors
                     setTimeout(() => {
                         resetStudentDisplay();
@@ -1087,7 +1085,7 @@ foreach ($recentRecords as $record) {
                 console.error('Error:', error);
                 updateStatusCard('SYSTEM ERROR', 'ERROR', '--:--', 'Please try again');
                 playNotificationSound(false);
-                
+
                 // Reset after 3 seconds for errors
                 setTimeout(() => {
                     resetStudentDisplay();
@@ -1109,7 +1107,7 @@ foreach ($recentRecords as $record) {
                 section: 'Loading...'
             };
         }
-        
+
         // Fallback - treat as simple student ID
         return {
             id: qrData,
@@ -1160,9 +1158,9 @@ foreach ($recentRecords as $record) {
         document.getElementById('student-photo').innerHTML = '<i class="fas fa-user-graduate"></i><div class="photo-text">PHOTO</div>';
         document.getElementById('student-name').textContent = 'STUDENT NAME';
         document.getElementById('student-section').textContent = 'SECTION';
-        
+
         updateStatusCard('WAITING TO SCAN', 'READY', '--:--', '{{ $now->format('F j, Y') }}');
-        
+
         currentStudentId = null;
     }
 

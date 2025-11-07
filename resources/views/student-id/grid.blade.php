@@ -13,19 +13,19 @@
         }
         .page {
             width: 100%;
-            max-width: 287mm; /* A4 landscape width (297mm - 10mm margins) */
+            max-width: 287mm;
         }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 columns to fit more */
-            gap: 3mm; /* Minimal gap */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3mm;
             justify-items: center;
             align-items: start;
             max-width: 287mm;
         }
         .student-id {
-            width: 85.6mm; /* 3.375 inches = 85.6mm */
-            height: 54mm; /* 2.125 inches = 54mm */
+            width: 85.6mm;
+            height: 54mm;
             border: 1px solid #333;
             background: #fff;
             padding: 0;
@@ -46,7 +46,7 @@
             border: none;
         }
         .qr-cell {
-            width: 35mm; /* Adjusted to match QR size */
+            width: 35mm;
             text-align: center;
             vertical-align: top;
             padding: 2mm;
@@ -95,11 +95,11 @@
             color: #666;
             font-style: italic;
         }
-        
+
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 5mm; /* Minimal margins */
+                margin: 5mm;
             }
             body {
                 margin: 0;
@@ -107,18 +107,18 @@
                 background: #fff;
             }
             .page {
-                max-width: 287mm; /* A4 landscape width minus minimal margins */
+                max-width: 287mm;
             }
             .grid-container {
                 display: grid;
-                grid-template-columns: repeat(3, 1fr); /* 3 columns */
-                gap: 2mm; /* Minimal gap for printing */
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2mm;
                 justify-items: center;
                 align-items: start;
             }
             .student-id {
-                width: 85.6mm !important; /* 3.375 inches */
-                height: 54mm !important; /* 2.125 inches */
+                width: 85.6mm !important;
+                height: 54mm !important;
                 margin: 0;
                 box-shadow: none;
                 break-inside: avoid;
@@ -147,7 +147,7 @@
                                 @php
                                     $qrImageContent = '';
                                     $hasQrCode = false;
-                                    
+
                                     if ($student->qr_code && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->qr_code)) {
                                         $qrPath = storage_path('app/public/' . $student->qr_code);
                                         if (file_exists($qrPath)) {

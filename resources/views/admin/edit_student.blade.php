@@ -27,7 +27,7 @@
         position: relative;
         overflow: hidden;
     }
- 
+
 
     .placeholder-icon {
         font-size: 1.8rem;
@@ -147,7 +147,7 @@
             </h4>
             <p class="subtitle fs-6 mb-0">Editing student {{ $student->name }} </p>
         </div>
-        
+
     </div>
 </div>
 
@@ -184,7 +184,7 @@
                 <div class="col-md-3">
                     <label for="picture" class="form-label small fw-bold">Photo</label>
                     <div class="d-flex flex-column align-items-center">
-                        <!-- Current/Existing Photo Container -->
+
                         <div id="current-photo-container">
                             @if($student->picture)
                                 <div class="mb-1">
@@ -204,8 +204,8 @@
                                 <small class="text-muted text-center">No photo</small>
                             @endif
                         </div>
-                        
-                        <!-- New Photo Preview Container (initially hidden) -->
+
+
                         <div id="image-preview" class="mt-1" style="display: none;">
                             <div class="preview-container">
                                 <img id="preview-img" src="" alt="Preview" class="preview-image" style="display: block;">
@@ -215,7 +215,7 @@
                             </div>
                             <small class="text-success text-center d-block mt-1">Ready</small>
                         </div>
-                        
+
                         <div class="upload-buttons mt-1">
                             <button type="button" class="btn btn-primary btn-sm upload-btn" onclick="openCameraModal()" title="Take Photo">
                                 <i class="fa fa-camera"></i>
@@ -224,10 +224,10 @@
                                 <i class="fa fa-upload"></i>
                             </button>
                         </div>
-                        
+
                         <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
                         <input type="hidden" id="captured_image" name="captured_image">
-                        
+
                         <small class="form-text text-muted text-center mt-1">Max: 2MB</small>
                     </div>
                 </div>
@@ -287,10 +287,16 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label for="semester_id" class="form-label small">Semester</label>
-                    <select class="form-select form-select-sm" id="semester_id" name="semester_id" required>
-                        @foreach(\App\Models\Semester::all() as $semester)
-                            <option value="{{ $semester->id }}" {{ $student->semester_id == $semester->id ? 'selected' : '' }}>{{ $semester->name }}</option>
+                    <label for="school_year_id" class="form-label small">School Year</label>
+                    <select class="form-select form-select-sm" id="school_year_id" name="school_year_id" required>
+                        @foreach(\App\Models\SchoolYear::all() as $schoolYear)
+                            <option value="{{ $schoolYear->id }}" {{ $student->school_year_id == $schoolYear->id ? 'selected' : '' }}>
+                                @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                    {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                @else
+                                    {{ $schoolYear->name }}
+                                @endif
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -300,7 +306,7 @@
                     <input type="text" class="form-control form-control-sm" id="address" name="address" value="{{ $student->address }}" required>
                 </div>
 
-                <!-- Contact Person Information -->
+
                 <div class="col-md-12"><hr class="my-2"><h6 class="small text-muted">Contact Person Information</h6></div>
 
                 <div class="col-md-4">
@@ -335,7 +341,6 @@
     </div>
 </div>
 
-<!-- Camera Modal -->
 <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -413,28 +418,28 @@ function usePhoto() {
 
 function stopCamera() { if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; } }
 
-function showImagePreview(src) { 
-    const preview = document.getElementById('image-preview'); 
-    const previewImg = document.getElementById('preview-img'); 
+function showImagePreview(src) {
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
     const currentPhotoContainer = document.getElementById('current-photo-container');
-    
+
     // Hide the current/no photo container
     currentPhotoContainer.style.display = 'none';
-    
+
     // Ensure the image loads properly
     previewImg.onload = function() {
         preview.style.display = 'block';
     };
-    
+
     previewImg.onerror = function() {
         console.error('Error loading image preview');
         preview.style.display = 'none';
         // Show the current photo container again if preview fails
         currentPhotoContainer.style.display = 'block';
     };
-    
+
     // Set the source and make sure it's visible
-    previewImg.src = src; 
+    previewImg.src = src;
     previewImg.style.display = 'block';
 }
 
@@ -444,18 +449,18 @@ document.getElementById('cameraModal').addEventListener('hidden.bs.modal', funct
 document.getElementById('picture').addEventListener('change', function() {
     if (this.files && this.files[0]) {
         const file = this.files[0];
-        
+
         // Check if it's an image file
         if (!file.type.startsWith('image/')) {
             alert('Please select an image file.');
             this.value = ''; // Clear the input
             return;
         }
-        
+
         const reader = new FileReader();
-        reader.onload = function(e) { 
-            showImagePreview(e.target.result); 
-            document.getElementById('captured_image').value = ''; 
+        reader.onload = function(e) {
+            showImagePreview(e.target.result);
+            document.getElementById('captured_image').value = '';
         }
         reader.readAsDataURL(file);
     }

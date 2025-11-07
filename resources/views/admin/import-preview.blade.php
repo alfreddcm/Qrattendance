@@ -13,7 +13,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <!-- Summary Section -->
+
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <div class="alert alert-info">
@@ -47,7 +47,7 @@
                     @endif
 
                     @if(count($data) > 0)
-                        <!-- Preview Table -->
+
                         <div class="table-responsive">
                             <h6><i class="fas fa-table me-2"></i>Preview of Valid Records (First 10)</h6>
                             <table class="table table-bordered table-striped">
@@ -86,7 +86,7 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                            
+
                             @if(count($data) > 10)
                                 <p class="text-muted">
                                     <i class="fas fa-info-circle me-1"></i>
@@ -95,19 +95,19 @@
                             @endif
                         </div>
 
-                        <!-- Action Buttons -->
+
                         <div class="mt-4">
                             <div class="row">
                                 <div class="col-md-6">
                                     <form action="{{ route('admin.students.import') }}" method="POST" class="d-inline">
                                         @csrf
                                         <input type="hidden" name="confirm_import" value="1">
-                                        <button type="submit" class="btn btn-success btn-lg me-2" 
+                                        <button type="submit" class="btn btn-success btn-lg me-2"
                                                 @if(count($errors) > 0) disabled title="Fix errors before importing" @endif>
                                             <i class="fas fa-check me-2"></i>Confirm Import ({{ count($data) }} records)
                                         </button>
                                     </form>
-                                    
+
                                     <a href="{{ route('admin.manage-students') }}" class="btn btn-secondary btn-lg">
                                         <i class="fas fa-times me-2"></i>Cancel
                                     </a>
@@ -138,33 +138,33 @@
     .bg-pink {
         background-color: #e91e63 !important;
     }
-    
+
     .card {
         border-radius: 10px;
         border: none;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
-    
+
     .card-header {
         border-radius: 10px 10px 0 0 !important;
     }
-    
+
     .table th {
         font-weight: 600;
         font-size: 0.9rem;
     }
-    
+
     .badge {
         font-size: 0.8rem;
         padding: 0.5rem 0.75rem;
         border-radius: 15px;
     }
-    
+
     .btn {
         border-radius: 8px;
         font-weight: 500;
     }
-    
+
     .alert {
         border-radius: 8px;
         border: none;

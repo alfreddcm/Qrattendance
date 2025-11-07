@@ -8,7 +8,7 @@ use Carbon\Carbon;
 class Attendance extends Model
 {
     protected $fillable = [
-        'semester_id',
+        'school_year_id',
         'student_id',
         'school_id',
         'teacher_id',
@@ -27,9 +27,9 @@ class Attendance extends Model
         return $this->belongsTo(Student::class);
     }
 
-    public function semester()
+    public function schoolYear()
     {
-        return $this->belongsTo(Semester::class);
+        return $this->belongsTo(SchoolYear::class, 'school_year_id');
     }
 
     public function school()
@@ -47,9 +47,9 @@ class Attendance extends Model
         return $query->whereBetween('date', [$startDate, $endDate]);
     }
 
-    public function scopeForSemester($query, $semesterId)
+    public function scopeForSchoolYear($query, $schoolYearId)
     {
-        return $query->where('semester_id', $semesterId);
+        return $query->where('school_year_id', $schoolYearId);
     }
 
     public function scopeWithMorningAttendance($query)

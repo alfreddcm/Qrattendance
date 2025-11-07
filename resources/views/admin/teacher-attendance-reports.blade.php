@@ -2,7 +2,6 @@
 @section('title', 'Teacher Attendance Reports')
 @section('content')
 
-<!-- Custom CSS for enhanced styling -->
 <style>
 .filter-card {
     border: none;
@@ -68,7 +67,7 @@
     .filter-header {
         padding: 1rem;
     }
-    
+
     .filter-section {
         padding: 1rem;
     }
@@ -76,7 +75,7 @@
 </style>
 
 <div class="container-fluid py-4">
-    <!-- Page Header -->
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
@@ -96,8 +95,8 @@
             </div>
         </div>
     </div>
-    
-    <!-- Advanced Filters Card -->
+
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="card filter-card">
@@ -114,7 +113,7 @@
                 </div>
                 <div class="card-body p-4">
                     <form id="filterForm" method="GET" action="{{ route('admin.teacher-attendance-reports') }}">
-                        <!-- Report Configuration Section -->
+
                         <div class="filter-section">
                             <h6 class="text-primary mb-3 fw-semibold">
                                 <i class="fas fa-cog me-2"></i>Report Configuration
@@ -135,7 +134,7 @@
                             </div>
                         </div>
 
-                        <!-- Location & Personnel Section -->
+
                         <div class="filter-section">
                             <h6 class="text-success mb-3 fw-semibold">
                                 <i class="fas fa-users me-2"></i>Location & Personnel Filters
@@ -206,25 +205,25 @@
                             </div>
                         </div>
 
-                        <!-- Academic Period Section -->
+
                         <div class="filter-section">
                             <h6 class="text-info mb-3 fw-semibold">
                                 <i class="fas fa-calendar-alt me-2"></i>Academic Period
                             </h6>
                             <div class="row g-4">
-                                <!-- Semester Selection (Always shown, required for Quarterly) -->
+
                                 <div class="col-lg-3 col-md-6">
                                     <div class="form-floating">
                                         <select name="semester_id" id="semester_id" class="form-select">
-                                            <option value="">All Semesters</option>
-                                            @foreach($semesters as $semester)
+                                            <option value="">All School Years</option>
+                                            @foreach($schoolYears as $semester)
                                                 <option value="{{ $semester->id }}" {{ request('semester_id') == $semester->id ? 'selected' : '' }}>
                                                     {{ $semester->name }}
                                                 </option>
                                             @endforeach
                                         </select>
                                         <label for="semester_id">
-                                            <i class="fas fa-graduation-cap text-info me-2"></i>Semester
+                                            <i class="fas fa-graduation-cap text-info me-2"></i>School Year
                                         </label>
                                     </div>
                                     <div class="mt-2" style="display: none;">
@@ -275,7 +274,7 @@
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
+
                         <div class="d-flex justify-content-end gap-3">
                             <button type="button" class="btn btn-outline-secondary px-4" onclick="clearFilters()">
                                 <i class="fas fa-eraser me-2"></i>Clear All Filters
@@ -290,7 +289,7 @@
         </div>
     </div>
 
-    <!-- Report Preview Section -->
+
     <div class="row mt-4">
         <div class="col-12">
             <div id="previewArea">
@@ -321,8 +320,8 @@
             </div>
         </div>
     </div>
-    
-    <!-- Export Options (Show only when data is available) -->
+
+
     @if(isset($records) && count($records) > 0)
     <div class="row mt-4">
         <div class="col-12">
@@ -361,7 +360,6 @@
     @endif
 </div>
 
-<!-- Enhanced SF2 Generation Modal -->
 <div class="modal fade" id="sf2Modal" tabindex="-1" aria-labelledby="sf2ModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content border-0 shadow">
@@ -376,17 +374,17 @@
                     <i class="fas fa-info-circle me-2"></i>
                     Configure the parameters below to generate a detailed SF2 attendance form.
                 </div>
-                
+
                 <form id="sf2Form">
                     @csrf
                     <div class="row g-4">
-                        <!-- Institution Details -->
+
                         <div class="col-12">
                             <h6 class="text-primary mb-3 fw-semibold border-bottom pb-2">
                                 <i class="fas fa-building me-2"></i>Institution Details
                             </h6>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <select name="school_id" id="sf2_school" class="form-select" required>
@@ -406,20 +404,20 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <select name="semester_id" id="sf2_semester" class="form-select" required>
-                                    <option value="">Select Semester</option>
-                                    @foreach($semesters as $semester)
+                                    <option value="">Select School Year</option>
+                                    @foreach($schoolYears as $semester)
                                         <option value="{{ $semester->id }}" {{ request('semester_id') == $semester->id ? 'selected' : '' }}>
                                             {{ $semester->name }}
                                         </option>
                                     @endforeach
                                 </select>
                                 <label for="sf2_semester">
-                                    <i class="fas fa-graduation-cap text-primary me-2"></i>Semester
+                                    <i class="fas fa-graduation-cap text-primary me-2"></i>School Year
                                 </label>
                             </div>
                         </div>
 
-                        <!-- Personnel & Section -->
+
                         <div class="col-12">
                             <h6 class="text-success mb-3 fw-semibold border-bottom pb-2">
                                 <i class="fas fa-users me-2"></i>Personnel & Section Selection
@@ -464,7 +462,7 @@
                             </div>
                         </div>
 
-                        <!-- Time Period -->
+
                         <div class="col-12">
                             <h6 class="text-info mb-3 fw-semibold border-bottom pb-2">
                                 <i class="fas fa-calendar-alt me-2"></i>Report Period
@@ -515,7 +513,6 @@
     </div>
 </div>
 
-<!-- SF2 Result Modal -->
 <div class="modal fade" id="sf2ResultModal" tabindex="-1" aria-labelledby="sf2ResultModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow">
@@ -551,10 +548,10 @@
 $(document).ready(function() {
     updateFilterFields();
     setupCascadingDropdowns();
-    
+
     // Update fields when type changes
     $('#type').change(updateFilterFields);
-    
+
     // Update months when semester changes
     $('#semester_id').change(updateMonthsForSemester);
     $('#sf2_semester').change(updateSF2MonthsForSemester);
@@ -562,10 +559,10 @@ $(document).ready(function() {
 
 function updateFilterFields() {
     var type = $('#type').val();
-    
+
     // Hide all date/period fields first
     $('#singleDateField, #monthField').hide();
-    
+
     // Show fields based on report type
     if(type === 'daily') {
         // Daily: Show only single date selection
@@ -582,7 +579,7 @@ function updateFilterFields() {
 function setupCascadingDropdowns() {
     // Load enhanced school data on page load
     loadEnhancedSchoolData();
-    
+
     // When school changes, update teachers
     $('#school_id').change(function() {
         var schoolId = $(this).val();
@@ -591,13 +588,13 @@ function setupCascadingDropdowns() {
         $('#teacher_id').html('<option value="">All Teachers</option>');
         $('#grade_section').html('<option value="">All Sections</option>');
     });
-    
+
     // When teacher changes, update grade sections
     $('#teacher_id').change(function() {
         var teacherId = $(this).val();
         updateGradeSectionsByTeacher(teacherId);
     });
-    
+
     // SF2 Modal cascading dropdowns
     $('#sf2_school').change(function() {
         var schoolId = $(this).val();
@@ -606,7 +603,7 @@ function setupCascadingDropdowns() {
         $('#sf2_teacher').html('<option value="">All Teachers</option>');
         $('#sf2_grade_section').html('<option value="">All Sections</option>');
     });
-    
+
     $('#sf2_teacher').change(function() {
         var teacherId = $(this).val();
         updateSF2GradeSections(teacherId);
@@ -618,23 +615,23 @@ function loadEnhancedSchoolData() {
         .done(function(schools) {
             var $schoolSelect = $('#school_id');
             var currentValue = $schoolSelect.val();
-            
+
             $schoolSelect.html('<option value="">All Schools</option>');
             schools.forEach(function(school) {
-                var optionText = school.teachers_count > 0 
+                var optionText = school.teachers_count > 0
                     ? `${school.name} (${school.teachers_count} teachers)`
                     : `${school.name} (No teachers)`;
-                    
+
                 var $option = $(`<option value="${school.id}">${optionText}</option>`);
                 if (school.teachers_count === 0) {
                     $option.css('color', '#999');
                 }
                 $schoolSelect.append($option);
             });
-            
+
             // Update info span
             $('#schoolInfo').text(`${schools.length} schools available`);
-            
+
             // Restore previous selection
             if (currentValue) {
                 $schoolSelect.val(currentValue);
@@ -647,36 +644,36 @@ function loadEnhancedSchoolData() {
 
 function updateTeachersBySchool(schoolId) {
     var $teacherSelect = $('#teacher_id');
-    
+
     if (!schoolId) {
         $teacherSelect.html('<option value="">All Teachers</option>');
         $('#teacherInfo').text('Select a school to filter teachers');
         return;
     }
-    
+
     $teacherSelect.html('<option value="">Loading...</option>').prop('disabled', true);
-    
+
     $.get(`/admin/schools/${schoolId}/teachers`)
         .done(function(teachers) {
             $teacherSelect.html('<option value="">All Teachers</option>').prop('disabled', false);
-            
+
             if (teachers.length === 0) {
                 $teacherSelect.append('<option value="" disabled>No teachers found in this school</option>');
                 $('#teacherInfo').text('No teachers available').removeClass('info-badge').addClass('badge bg-warning');
                 return;
             }
-            
+
             $('#teacherInfo').text(`${teachers.length} teachers available`).removeClass('badge bg-warning').addClass('info-badge');
-            
+
             teachers.forEach(function(teacher) {
-                var optionText = teacher.sections_count > 0 
+                var optionText = teacher.sections_count > 0
                     ? `${teacher.name} (${teacher.sections_count} sections)`
                     : `${teacher.name} (No sections)`;
-                    
+
                 if (teacher.sections_preview) {
                     optionText += ` - ${teacher.sections_preview}`;
                 }
-                
+
                 var $option = $(`<option value="${teacher.id}">${optionText}</option>`);
                 if (teacher.sections_count === 0) {
                     $option.css('color', '#999');
@@ -692,33 +689,33 @@ function updateTeachersBySchool(schoolId) {
 
 function updateGradeSectionsByTeacher(teacherId) {
     var $sectionSelect = $('#grade_section');
-    
+
     if (!teacherId) {
         $sectionSelect.html('<option value="">All Sections</option>');
         $('#sectionInfo').text('Select a teacher to filter sections');
         return;
     }
-    
+
     $sectionSelect.html('<option value="">Loading...</option>').prop('disabled', true);
-    
+
     $.get(`/api/teacher-sections/${teacherId}`)
         .done(function(sections) {
             $sectionSelect.html('<option value="">All Sections</option>').prop('disabled', false);
-            
+
             if (sections.length === 0) {
                 $sectionSelect.append('<option value="" disabled>No sections assigned to this teacher</option>');
                 $('#sectionInfo').text('No sections available').removeClass('info-badge').addClass('badge bg-warning');
                 return;
             }
-            
+
             $('#sectionInfo').text(`${sections.length} sections available`).removeClass('badge bg-warning').addClass('info-badge');
-            
+
             sections.forEach(function(section) {
                 var optionText = `${section.display_name} (${section.students_count} students)`;
                 if (section.semester_name && section.semester_name !== 'No Semester') {
                     optionText += ` - ${section.semester_name}`;
                 }
-                
+
                 var $option = $(`<option value="${section.value}">${optionText}</option>`);
                 if (section.students_count === 0) {
                     $option.css('color', '#999');
@@ -734,23 +731,23 @@ function updateGradeSectionsByTeacher(teacherId) {
 
 function updateSF2Teachers(schoolId) {
     var $teacherSelect = $('#sf2_teacher');
-    
+
     if (!schoolId) {
         $teacherSelect.html('<option value="">All Teachers</option>');
         return;
     }
-    
+
     $teacherSelect.html('<option value="">Loading...</option>').prop('disabled', true);
-    
+
     $.get(`/admin/schools/${schoolId}/teachers`)
         .done(function(teachers) {
             $teacherSelect.html('<option value="">All Teachers</option>').prop('disabled', false);
-            
+
             teachers.forEach(function(teacher) {
-                var optionText = teacher.sections_count > 0 
+                var optionText = teacher.sections_count > 0
                     ? `${teacher.name} (${teacher.sections_count} sections)`
                     : `${teacher.name} (No sections)`;
-                    
+
                 $teacherSelect.append(`<option value="${teacher.id}">${optionText}</option>`);
             });
         })
@@ -761,18 +758,18 @@ function updateSF2Teachers(schoolId) {
 
 function updateSF2GradeSections(teacherId) {
     var $sectionSelect = $('#sf2_grade_section');
-    
+
     if (!teacherId) {
         $sectionSelect.html('<option value="">All Sections</option>');
         return;
     }
-    
+
     $sectionSelect.html('<option value="">Loading...</option>').prop('disabled', true);
-    
+
     $.get(`/api/teacher-sections/${teacherId}`)
         .done(function(sections) {
             $sectionSelect.html('<option value="">All Sections</option>').prop('disabled', false);
-            
+
             sections.forEach(function(section) {
                 var optionText = `${section.display_name} (${section.students_count} students)`;
                 $sectionSelect.append(`<option value="${section.value}">${optionText}</option>`);
@@ -785,32 +782,32 @@ function updateSF2GradeSections(teacherId) {
 
 function updateMonthsForSemester() {
     var semesterId = $('#semester_id').val();
-    
+
     if (!semesterId) {
-        $('#semesterInfo').text('Select semester to filter months');
+        $('#semesterInfo').text('Select school year to filter months');
         return;
     }
-    
+
     $.get(`/admin/semesters/${semesterId}/months`)
         .done(function(data) {
             var $monthSelect = $('#report_month');
             var currentMonth = $monthSelect.val();
-            
+
             $monthSelect.html('');
-            
+
             if (data.months && data.months.length > 0) {
                 data.months.forEach(function(month) {
                     var option = `<option value="${month.number}">${month.name}</option>`;
                     $monthSelect.append(option);
                 });
-                
+
                 // Try to restore selection or select first valid month
                 if (data.months.find(m => m.number == currentMonth)) {
                     $monthSelect.val(currentMonth);
                 } else {
                     $monthSelect.val(data.months[0].number);
                 }
-                
+
                 $('#semesterInfo').text(`${data.semester_name} (${data.date_range})`);
                 $('#monthInfo').text(`${data.months.length} months available in this semester`);
             } else {
@@ -825,22 +822,22 @@ function updateMonthsForSemester() {
 
 function updateSF2MonthsForSemester() {
     var semesterId = $('#sf2_semester').val();
-    
+
     if (!semesterId) return;
-    
+
     $.get(`/admin/semesters/${semesterId}/months`)
         .done(function(data) {
             var $monthSelect = $('#sf2_month');
             var currentMonth = $monthSelect.val();
-            
+
             $monthSelect.html('');
-            
+
             if (data.months && data.months.length > 0) {
                 data.months.forEach(function(month) {
                     var option = `<option value="${month.number}">${month.name}</option>`;
                     $monthSelect.append(option);
                 });
-                
+
                 // Try to restore selection or select first valid month
                 if (data.months.find(m => m.number == currentMonth)) {
                     $monthSelect.val(currentMonth);
@@ -861,16 +858,16 @@ function clearFilters() {
 // SF2 Generation
 $('#generateSF2Btn').click(function() {
     var formData = new FormData($('#sf2Form')[0]);
-    
+
     // Validation
-    if (!formData.get('school_id') || !formData.get('semester_id') || 
+    if (!formData.get('school_id') || !formData.get('semester_id') ||
         !formData.get('month') || !formData.get('year')) {
         showError('Please fill in all required fields (School, Semester, Month, Year)');
         return;
     }
-    
+
     $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Generating...');
-    
+
     $.post('{{ route("admin.sf2.generate") }}', formData, {
         processData: false,
         contentType: false
@@ -902,18 +899,18 @@ function showError(message) {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    
+
     // Remove existing alerts
     $('.alert-danger').remove();
-    
+
     // Add new alert to container
     $('.container-fluid').prepend(alertHtml);
-    
+
     // Auto-hide after 8 seconds
     setTimeout(function() {
         $('.alert-danger').fadeOut();
     }, 8000);
-    
+
     // Scroll to top to show the error
     $('html, body').animate({ scrollTop: 0 }, 500);
 }

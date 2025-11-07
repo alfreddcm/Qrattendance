@@ -3,13 +3,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Student;
-use App\Models\Semester;
+use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\AttendanceSession;
 use App\Models\OutboundMessage;
 use App\Services\AndroidSmsGatewayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
 
@@ -85,13 +87,13 @@ class AttendanceController extends Controller
             return response()->json(['success' => false, 'message' => 'Student verification failed. Please contact your teacher.']);
         }
 
-        $semester = Semester::find($student->semester_id);
-        if (!$semester || $semester->status !== 'active') {
+        $schoolYear = SchoolYear::find($student->school_year_id);
+        if (!$schoolYear || $schoolYear->status !== 'active') {
             Log::warning('No active semester', [
                 'scanner_type' => $scannerType,
                 'student_id' => $student->id,
                 'student_name' => $student->name,
-                'semester_id' => $student->semester_id,
+                'school_year_id' => $student->school_year_id,
                 'user_id' => Auth::id(),
             ]);
             return response()->json(['success' => false, 'message' => 'No active semester.']);
@@ -99,7 +101,7 @@ class AttendanceController extends Controller
 
          $attendance = Attendance::firstOrCreate([
             'student_id' => $student->id,
-            'semester_id' => $semester->id,
+            'school_year_id' => $schoolYear->id,
             'date' => Carbon::now()->toDateString(),
         ], [
             'school_id' => Auth::user()->school_id,
@@ -188,7 +190,7 @@ class AttendanceController extends Controller
                     'name' => $student->name,
                     'picture' => $student->picture,
                     'section' => $student->section ? $student->section->name : 'No Section',
-                    'semester' => $semester->name ?? "Semester {$student->semester_id}",
+                    'semester' => $schoolYear->name ?? "Semester {$student->school_year_id}",
                 ],
                 'status' => $recordedPeriod['message'],
                 'time_period' => $recordedPeriod['label'],
@@ -213,7 +215,7 @@ class AttendanceController extends Controller
                 'name' => $student->name,
                 'picture' => $student->picture,
                 'section' => $student->section ? $student->section->name : 'No Section',
-                'semester' => $semester->name ?? "Semester {$student->semester_id}",
+                'semester' => $schoolYear->name ?? "Semester {$student->school_year_id}",
             ],
             'status' => 'Period determination failed',
             'current_time' => $now->format('g:i:s A'),
@@ -292,7 +294,7 @@ class AttendanceController extends Controller
             return false;
         }
 
-         if (empty($student->semester_id)) {
+         if (empty($student->school_year_id)) {
             Log::warning('Student missing semester assignment', [
                 'student_id' => $student->id,
                 'student_name' => $student->name,
@@ -507,8 +509,8 @@ class AttendanceController extends Controller
                 return response()->json(['success' => false, 'message' => 'Student not found.']);
             }
 
-            $semester = Semester::find($student->semester_id);
-            if (!$semester) {
+            $schoolYear = SchoolYear::find($student->school_year_id);
+            if (!$schoolYear) {
                 return response()->json(['success' => false, 'message' => 'No semester found.']);
             }
 
@@ -519,28 +521,28 @@ class AttendanceController extends Controller
 
             // Define time periods
             $timeSchedules = [];
-            if ($semester->am_time_in_start && $semester->am_time_in_end) {
+            if ($schoolYear->am_time_in_start && $schoolYear->am_time_in_end) {
                 $timeSchedules['am_time_in'] = [
-                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_start),
-                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_in_end)
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_in_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_in_end)
                 ];
             }
-            if ($semester->am_time_out_start && $semester->am_time_out_end) {
+            if ($schoolYear->am_time_out_start && $schoolYear->am_time_out_end) {
                 $timeSchedules['am_time_out'] = [
-                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_start),
-                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->am_time_out_end)
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_out_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->am_time_out_end)
                 ];
             }
-            if ($semester->pm_time_in_start && $semester->pm_time_in_end) {
+            if ($schoolYear->pm_time_in_start && $schoolYear->pm_time_in_end) {
                 $timeSchedules['pm_time_in'] = [
-                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_start),
-                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_in_end)
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_in_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_in_end)
                 ];
             }
-            if ($semester->pm_time_out_start && $semester->pm_time_out_end) {
+            if ($schoolYear->pm_time_out_start && $schoolYear->pm_time_out_end) {
                 $timeSchedules['pm_time_out'] = [
-                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_start),
-                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($semester->pm_time_out_end)
+                    'start_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_out_start),
+                    'end_time' => Carbon::today('Asia/Manila')->setTimeFromTimeString($schoolYear->pm_time_out_end)
                 ];
             }
 
@@ -591,10 +593,675 @@ class AttendanceController extends Controller
         }
     }
 
+    public function teacherRecordAttendance(Request $request)
+    {
+        try {
+            $teacher = Auth::user();
+            if (!$teacher || $teacher->role !== 'teacher') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Teacher access required.'
+                ], 403);
+            }
+
+            $request->validate([
+                'student_id' => 'required|exists:students,id',
+                'section_id' => 'required|exists:sections,id',
+                'attendance_type' => 'required|in:time_in_am,time_out_am,time_in_pm,time_out_pm',
+                'override_time' => 'nullable|date_format:H:i',
+                'status' => 'nullable|in:Early,On Time,Tardy,Late',
+                'remarks' => 'nullable|string|max:255',
+            ]);
+
+            $student = Student::with('section', 'semester')->findOrFail($request->student_id);
+
+            if ($student->section_id != $request->section_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student does not belong to this section'
+                ], 403);
+            }
+
+            $section = Section::find($request->section_id);
+            if ($section->teacher_id != $teacher->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have access to this section'
+                ], 403);
+            }
+
+            // Get or create active session
+            $session = AttendanceSession::where('teacher_id', $teacher->id)
+                ->where('section_id', $section->id)
+                ->where('status', 'active')
+                ->whereDate('started_at', today())
+                ->first();
+
+            $recordTime = $request->override_time 
+                ? Carbon::createFromFormat('H:i', $request->override_time)
+                : now();
+
+            $status = $request->status ?? $this->calculateAttendanceStatus(
+                $section,
+                $request->attendance_type,
+                $recordTime
+            );
+
+            $columnMap = [
+                'time_in_am' => ['column' => 'time_in_am', 'status_column' => 'am_status'],
+                'time_out_am' => ['column' => 'time_out_am', 'status_column' => 'am_status'],
+                'time_in_pm' => ['column' => 'time_in_pm', 'status_column' => 'pm_status'],
+                'time_out_pm' => ['column' => 'time_out_pm', 'status_column' => 'pm_status'],
+            ];
+
+            $mapping = $columnMap[$request->attendance_type];
+
+            $attendance = $this->saveAttendanceRecord(
+                $student->id,
+                $student->school_year_id,
+                $section->id,
+                $session ? $session->id : null,
+                $mapping['column'],
+                $mapping['status_column'],
+                $status,
+                $teacher->id,
+                $request->remarks ? "Manual entry | {$request->remarks}" : 'Manually recorded by teacher',
+                $recordTime
+            );
+
+            $this->queueAttendanceNotification(
+                $student,
+                $attendance,
+                $request->attendance_type,
+                $teacher->id
+            );
+
+            Log::info('Teacher manually recorded attendance', [
+                'teacher_id' => $teacher->id,
+                'student_id' => $student->id,
+                'attendance_type' => $request->attendance_type,
+                'status' => $status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $this->getAttendanceSuccessMessage($request->attendance_type, $status),
+                'attendance' => $attendance,
+                'student' => [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'id_no' => $student->id_no,
+                ],
+                'recorded_time' => $recordTime->format('h:i A'),
+                'status' => $status,
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error in teacher manual attendance recording', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to record attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function teacherRecordBulkAttendance(Request $request)
+    {
+        try {
+            $teacher = Auth::user();
+            if (!$teacher || $teacher->role !== 'teacher') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Teacher access required.'
+                ], 403);
+            }
+
+            $request->validate([
+                'section_id' => 'required|exists:sections,id',
+                'attendance_type' => 'required|in:time_in_am,time_out_am,time_in_pm,time_out_pm',
+                'students' => 'required|array',
+                'students.*.student_id' => 'required|exists:students,id',
+                'students.*.status' => 'nullable|in:Early,On Time,Tardy,Late',
+                'students.*.time' => 'nullable|date_format:H:i',
+                'students.*.remarks' => 'nullable|string|max:255',
+            ]);
+
+            $section = Section::findOrFail($request->section_id);
+            if ($section->teacher_id != $teacher->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have access to this section'
+                ], 403);
+            }
+
+            // Get or create active session
+            $session = AttendanceSession::where('teacher_id', $teacher->id)
+                ->where('section_id', $section->id)
+                ->where('status', 'active')
+                ->whereDate('started_at', today())
+                ->first();
+
+            $schoolYear = SchoolYear::findOrFail($section->school_year_id);
+
+            $result = $this->processBulkAttendanceRecord(
+                $section->id,
+                $schoolYear->id,
+                $session ? $session->id : null,
+                $request->attendance_type,
+                $request->students,
+                $teacher->id
+            );
+
+            Log::info('Teacher bulk recorded attendance', [
+                'teacher_id' => $teacher->id,
+                'section_id' => $section->id,
+                'attendance_type' => $request->attendance_type,
+                'total' => $result['total'],
+                'recorded' => $result['recorded'],
+                'failed' => $result['failed']
+            ]);
+
+            return response()->json($result, $result['success'] ? 200 : 400);
+
+        } catch (Exception $e) {
+            Log::error('Error in teacher bulk attendance recording', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to record bulk attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get attendance report for a section
+     * Route: GET /api/teacher/attendance/report
+     */
+    public function getAttendanceReport(Request $request)
+    {
+        try {
+            $teacher = Auth::user();
+            if (!$teacher || $teacher->role !== 'teacher') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Teacher access required.'
+                ], 403);
+            }
+
+            $request->validate([
+                'section_id' => 'required|exists:sections,id',
+                'date_from' => 'required|date',
+                'date_to' => 'required|date|after_or_equal:date_from',
+            ]);
+
+            $section = Section::findOrFail($request->section_id);
+            if ($section->teacher_id != $teacher->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have access to this section'
+                ], 403);
+            }
+
+            $attendances = Attendance::with(['student'])
+                ->where('section_id', $request->section_id)
+                ->whereBetween('date', [$request->date_from, $request->date_to])
+                ->orderBy('date')
+                ->orderBy('student_id')
+                ->get();
+
+            $students = Student::where('section_id', $request->section_id)->get();
+
+            $report = [
+                'section' => [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                    'gradelevel' => $section->gradelevel,
+                ],
+                'period' => [
+                    'from' => $request->date_from,
+                    'to' => $request->date_to,
+                ],
+                'total_students' => $students->count(),
+                'summary' => [
+                    'total_records' => $attendances->count(),
+                    'on_time' => $attendances->where('am_status', 'On Time')->count() + $attendances->where('pm_status', 'On Time')->count(),
+                    'late' => $attendances->where('am_status', 'Late')->count() + $attendances->where('pm_status', 'Late')->count(),
+                    'tardy' => $attendances->where('am_status', 'Tardy')->count() + $attendances->where('pm_status', 'Tardy')->count(),
+                ],
+                'students' => [],
+            ];
+
+            foreach ($students as $student) {
+                $studentAttendances = $attendances->where('student_id', $student->id);
+                
+                $report['students'][] = [
+                    'student_id' => $student->id,
+                    'id_no' => $student->id_no,
+                    'name' => $student->name,
+                    'total_days' => $studentAttendances->unique('date')->count(),
+                    'records' => $studentAttendances->values(),
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'report' => $report
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error generating attendance report', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate report: ' . $e->getMessage()
+            ], 500);
+        }
+    }
  
     private function timeToMinutes($time)
     {
         $parts = explode(':', $time);
         return ($parts[0] * 60) + $parts[1];
+    }
+
+    private function smartTimeDetection(int $studentId, int $schoolYearId, ?int $sessionId = null): array
+    {
+        $now = now();
+        $today = $now->toDateString();
+        $currentHour = $now->hour;
+        
+        $isAM = $currentHour < 12;
+        $period = $isAM ? 'AM' : 'PM';
+
+        $query = Attendance::where('student_id', $studentId)
+            ->where('school_year_id', $schoolYearId)
+            ->whereDate('date', $today);
+            
+        if ($sessionId) {
+            $query->where('attendance_session_id', $sessionId);
+        }
+        
+        $todayAttendance = $query->first();
+
+        // SCENARIO 1: No attendance record yet today
+        if (!$todayAttendance) {
+            if ($isAM) {
+                return [
+                    'valid' => true,
+                    'type' => 'time_in_am',
+                    'column' => 'time_in_am',
+                    'status_column' => 'am_status',
+                    'period' => 'AM',
+                    'action' => 'Recording morning time in'
+                ];
+            } else {
+                return [
+                    'valid' => true,
+                    'type' => 'time_in_pm',
+                    'column' => 'time_in_pm',
+                    'status_column' => 'pm_status',
+                    'period' => 'PM',
+                    'action' => 'Recording afternoon time in'
+                ];
+            }
+        }
+
+        if ($isAM) {
+            if ($todayAttendance->time_in_am && !$todayAttendance->time_out_am) {
+                $timeInAM = Carbon::parse($todayAttendance->time_in_am);
+                if ($now->diffInMinutes($timeInAM) < 30) {
+                    return [
+                        'valid' => false,
+                        'error' => 'Too early to record time out. Minimum 30 minutes required after time in.'
+                    ];
+                }
+
+                return [
+                    'valid' => true,
+                    'type' => 'time_out_am',
+                    'column' => 'time_out_am',
+                    'status_column' => 'am_status',
+                    'period' => 'AM',
+                    'action' => 'Recording morning time out'
+                ];
+            }
+
+            if ($todayAttendance->time_in_am && $todayAttendance->time_out_am) {
+                return [
+                    'valid' => false,
+                    'error' => 'AM attendance already completed. Time in: ' . 
+                              Carbon::parse($todayAttendance->time_in_am)->format('h:i A') . 
+                              ', Time out: ' . 
+                              Carbon::parse($todayAttendance->time_out_am)->format('h:i A')
+                ];
+            }
+
+            return [
+                'valid' => true,
+                'type' => 'time_in_am',
+                'column' => 'time_in_am',
+                'status_column' => 'am_status',
+                'period' => 'AM',
+                'action' => 'Recording morning time in'
+            ];
+        }
+
+        if (!$isAM) {
+            if ($todayAttendance->time_in_pm && !$todayAttendance->time_out_pm) {
+                $timeInPM = Carbon::parse($todayAttendance->time_in_pm);
+                if ($now->diffInMinutes($timeInPM) < 30) {
+                    return [
+                        'valid' => false,
+                        'error' => 'Too early to record time out. Minimum 30 minutes required after time in.'
+                    ];
+                }
+
+                return [
+                    'valid' => true,
+                    'type' => 'time_out_pm',
+                    'column' => 'time_out_pm',
+                    'status_column' => 'pm_status',
+                    'period' => 'PM',
+                    'action' => 'Recording afternoon time out'
+                ];
+            }
+
+            if ($todayAttendance->time_in_pm && $todayAttendance->time_out_pm) {
+                return [
+                    'valid' => false,
+                    'error' => 'PM attendance already completed. Time in: ' . 
+                              Carbon::parse($todayAttendance->time_in_pm)->format('h:i A') . 
+                              ', Time out: ' . 
+                              Carbon::parse($todayAttendance->time_out_pm)->format('h:i A')
+                ];
+            }
+
+            return [
+                'valid' => true,
+                'type' => 'time_in_pm',
+                'column' => 'time_in_pm',
+                'status_column' => 'pm_status',
+                'period' => 'PM',
+                'action' => 'Recording afternoon time in'
+            ];
+        }
+
+        return [
+            'valid' => false,
+            'error' => 'Unable to determine attendance type'
+        ];
+    }
+
+    private function calculateAttendanceStatus(Section $section, string $attendanceType, Carbon $recordTime): string
+    {
+        if (str_contains($attendanceType, 'time_out')) {
+            return 'On Time';
+        }
+
+        $gracePeriod = 10;
+        
+        if (str_contains($attendanceType, '_am')) {
+            if (!$section->am_time_in_start) {
+                return 'On Time';
+            }
+            
+            $expectedTime = Carbon::parse($section->am_time_in_start);
+            
+            if ($recordTime->lessThan($expectedTime->copy()->subMinutes(15))) {
+                return 'Early';
+            }
+            
+            if ($recordTime->lessThanOrEqualTo($expectedTime->copy()->addMinutes($gracePeriod))) {
+                return 'On Time';
+            }
+            
+            if ($recordTime->lessThanOrEqualTo($expectedTime->copy()->addMinutes(30))) {
+                return 'Tardy';
+            }
+            
+            return 'Late';
+        } else {
+            if (!$section->pm_time_in_start) {
+                return 'On Time';
+            }
+            
+            $expectedTime = Carbon::parse($section->pm_time_in_start);
+            
+            if ($recordTime->lessThan($expectedTime->copy()->subMinutes(15))) {
+                return 'Early';
+            }
+            
+            if ($recordTime->lessThanOrEqualTo($expectedTime->copy()->addMinutes($gracePeriod))) {
+                return 'On Time';
+            }
+            
+            if ($recordTime->lessThanOrEqualTo($expectedTime->copy()->addMinutes(30))) {
+                return 'Tardy';
+            }
+            
+            return 'Late';
+        }
+    }
+
+    private function saveAttendanceRecord(
+        int $studentId,
+        int $schoolYearId,
+        int $sectionId,
+        ?int $sessionId,
+        string $columnToUpdate,
+        string $statusColumn,
+        string $status,
+        ?int $teacherId = null,
+        ?string $remarks = null,
+        ?Carbon $overrideTime = null
+    ): Attendance {
+        $today = now()->toDateString();
+        $recordTime = $overrideTime ?? now();
+
+        $attendanceData = [
+            'student_id' => $studentId,
+            'school_year_id' => $schoolYearId,
+            'date' => $today,
+        ];
+        
+        if ($sessionId) {
+            $attendanceData['attendance_session_id'] = $sessionId;
+        }
+        
+        $attendance = Attendance::firstOrNew($attendanceData);
+
+        if (!$attendance->exists) {
+            $attendance->school_id = Student::find($studentId)->school_id;
+            $attendance->teacher_id = $teacherId;
+        }
+
+        $attendance->$columnToUpdate = $recordTime;
+        $attendance->$statusColumn = $status;
+        
+        if ($remarks) {
+            $attendance->remarks = $remarks;
+        } else {
+            $attendance->remarks = $this->generateAttendanceRemarks($columnToUpdate, $status, $recordTime);
+        }
+        
+        $attendance->save();
+
+        return $attendance;
+    }
+
+    private function generateAttendanceRemarks(string $attendanceType, string $status, Carbon $recordedTime): string
+    {
+        $remarks = [];
+
+        if (str_contains($attendanceType, 'time_in')) {
+            $remarks[] = 'Scanned at ' . $recordedTime->format('h:i A');
+            
+            if ($status === 'Late' || $status === 'Tardy') {
+                $period = str_contains($attendanceType, '_am') ? 'morning' : 'afternoon';
+                $remarks[] = "{$status} for {$period} session";
+            }
+        } else {
+            $remarks[] = 'Time out recorded at ' . $recordedTime->format('h:i A');
+        }
+
+        return implode(' | ', $remarks);
+    }
+
+    private function getAttendanceSuccessMessage(string $attendanceType, string $status): string
+    {
+        $messages = [
+            'time_in_am' => "✓ Morning time in recorded - {$status}",
+            'time_out_am' => '✓ Morning time out recorded successfully',
+            'time_in_pm' => "✓ Afternoon time in recorded - {$status}",
+            'time_out_pm' => '✓ Afternoon time out recorded successfully',
+        ];
+
+        return $messages[$attendanceType] ?? 'Attendance recorded';
+    }
+
+    private function queueAttendanceNotification(Student $student, Attendance $attendance, string $attendanceType, int $teacherId): void
+    {
+        try {
+            if (!$student->contact_person_contact) {
+                Log::info('No contact number for student, skipping notification', [
+                    'student_id' => $student->id
+                ]);
+                return;
+            }
+
+            $message = $this->generateNotificationMessage($student, $attendanceType, $attendance);
+
+            OutboundMessage::create([
+                'teacher_id' => $teacherId,
+                'student_id' => $student->id,
+                'contact_number' => $student->contact_person_contact,
+                'message' => $message,
+                'status' => 'pending',
+                'recipient_type' => 'individual',
+                'recipient_count' => 1
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to queue attendance notification', [
+                'student_id' => $student->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function generateNotificationMessage(Student $student, string $attendanceType, Attendance $attendance): string
+    {
+        $timeField = match($attendanceType) {
+            'time_in_am' => $attendance->time_in_am,
+            'time_out_am' => $attendance->time_out_am,
+            'time_in_pm' => $attendance->time_in_pm,
+            'time_out_pm' => $attendance->time_out_pm,
+            default => now()
+        };
+
+        $time = Carbon::parse($timeField)->format('g:i A');
+        
+        $action = match($attendanceType) {
+            'time_in_am' => 'Morning Time In',
+            'time_out_am' => 'Morning Time Out',
+            'time_in_pm' => 'Afternoon Time In',
+            'time_out_pm' => 'Afternoon Time Out',
+            default => 'Attendance'
+        };
+
+        return "Your child {$student->name} - {$action} recorded at {$time}";
+    }
+
+    private function validateAttendanceTimeWindow(): array
+    {
+        $now = now();
+        $currentHour = $now->hour;
+        
+        if ($currentHour < 6 || $currentHour >= 18) {
+            return [
+                'valid' => false,
+                'error' => 'Outside attendance hours (6:00 AM - 6:00 PM)'
+            ];
+        }
+
+        return ['valid' => true];
+    }
+
+    private function processBulkAttendanceRecord(
+        int $sectionId,
+        int $schoolYearId,
+        ?int $sessionId,
+        string $attendanceType,
+        array $students,
+        int $teacherId
+    ): array {
+        $results = [
+            'success' => true,
+            'total' => count($students),
+            'recorded' => 0,
+            'failed' => 0,
+            'errors' => [],
+        ];
+
+        DB::transaction(function () use ($sectionId, $schoolYearId, $sessionId, $attendanceType, $students, $teacherId, &$results) {
+            foreach ($students as $studentData) {
+                try {
+                    $studentId = $studentData['student_id'];
+                    $status = $studentData['status'] ?? 'On Time';
+                    $remarks = $studentData['remarks'] ?? null;
+                    $overrideTime = isset($studentData['time']) ? Carbon::parse($studentData['time']) : null;
+
+                    $columnMap = [
+                        'time_in_am' => ['column' => 'time_in_am', 'status_column' => 'am_status'],
+                        'time_out_am' => ['column' => 'time_out_am', 'status_column' => 'am_status'],
+                        'time_in_pm' => ['column' => 'time_in_pm', 'status_column' => 'pm_status'],
+                        'time_out_pm' => ['column' => 'time_out_pm', 'status_column' => 'pm_status'],
+                    ];
+
+                    if (!isset($columnMap[$attendanceType])) {
+                        throw new \Exception('Invalid attendance type');
+                    }
+
+                    $column = $columnMap[$attendanceType]['column'];
+                    $statusColumn = $columnMap[$attendanceType]['status_column'];
+
+                    $this->saveAttendanceRecord(
+                        $studentId,
+                        $schoolYearId,
+                        $sectionId,
+                        $sessionId,
+                        $column,
+                        $statusColumn,
+                        $status,
+                        $teacherId,
+                        $remarks ? "Bulk recorded | {$remarks}" : 'Bulk recorded by teacher',
+                        $overrideTime
+                    );
+
+                    $results['recorded']++;
+
+                } catch (\Exception $e) {
+                    $results['errors'][] = [
+                        'student_id' => $studentData['student_id'] ?? 'unknown',
+                        'error' => $e->getMessage()
+                    ];
+                    $results['failed']++;
+                }
+            }
+
+            if ($results['failed'] > 0) {
+                $results['success'] = false;
+            }
+        });
+
+        return $results;
     }
 }

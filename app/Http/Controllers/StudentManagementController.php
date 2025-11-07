@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Student;
 use App\Models\Section;
-use App\Models\Semester;
+use App\Models\SchoolYear;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Concerns\ValidatesForResponse;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -18,11 +18,11 @@ use Maatwebsite\Excel\Facades\Excel;
 class StudentManagementController extends Controller
 {
     use ValidatesForResponse;
-     
-    private function getCurrentSemesterId()
+      
+    private function getCurrentSchoolYearId()
     {
-        $semesters = Semester::orderBy('start_date')->get();
-        return $semesters->last()?->id;
+        $schoolYears = SchoolYear::orderBy('start_date')->get();
+        return $schoolYears->last()?->id;
     }
 
     public function index(Request $request)
@@ -31,23 +31,15 @@ class StudentManagementController extends Controller
         
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('id_no', 'like', "%{$search}%")
-                  ->orWhereHas('section', function($sectionQuery) use ($search) {
-                      $sectionQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('gradelevel', 'like', "%{$search}%");
-                  });
-             
-            });
+            $query->where('name', 'like', "%{$search}%");
         }
         
-        if ($request->filled('semester_id')) {
-            $query->where('semester_id', $request->semester_id);
+        if ($request->filled('school_year_id')) {
+            $query->where('school_year_id', $request->school_year_id);
         } else {
-            $selectedSemester = $this->getCurrentSemesterId();
+            $selectedSemester = $this->getCurrentSchoolYearId();
             if ($selectedSemester) {
-                $query->where('semester_id', $selectedSemester);
+                $query->where('school_year_id', $selectedSemester);
             }
         }
         
@@ -101,14 +93,13 @@ class StudentManagementController extends Controller
             ->values();
         
         // Get semesters for the dropdown
-        $semesters = Semester::all();
+        $schoolYears = SchoolYear::all();
         
-        // Get sections assigned to the authenticated teacher
         $teacherSections = \App\Models\Section::where('teacher_id', Auth::id())
             ->with('students')
             ->get();
         
-        return view('teacher.students', compact('students', 'gradeSectionOptions', 'semesters', 'teacherSections'));
+        return view('teacher.students', compact('students', 'gradeSectionOptions', 'schoolYears', 'teacherSections'));
     }
 
     public function addStudent(Request $request)
@@ -117,7 +108,7 @@ class StudentManagementController extends Controller
             'teacher_id' => Auth::id(),
             'student_id_no' => $request->id_no,
             'student_name' => $request->name,
-            'semester_id' => $request->semester_id,
+            'school_year_id' => $request->school_year_id,
             'has_picture_file' => $request->hasFile('picture'),
             'has_captured_image' => !empty($request->captured_image),
         ]);
@@ -147,7 +138,7 @@ class StudentManagementController extends Controller
                 'contact_person_name' => 'nullable|string|max:255',
                 'contact_person_relationship' => 'nullable|string|max:255',
                 'contact_person_contact' => 'nullable|string|max:15',
-                'semester_id' => 'required|integer',
+                'school_year_id' => 'required|integer',
             ]);
 
             if (is_object($validated)) {
@@ -210,7 +201,7 @@ class StudentManagementController extends Controller
                 'student_id' => $student->id,
                 'student_id_no' => $student->id_no,
                 'student_name' => $student->name,
-                'semester_id' => $student->semester_id,
+                'school_year_id' => $student->school_year_id,
             ]);
 
             return redirect()->route('teacher.students')->with('success', 'Student added successfully.');
@@ -234,10 +225,9 @@ class StudentManagementController extends Controller
         // Get available sections from all students
         $availableSections = $this->getAvailableSections();
         
-        // Get semesters for dropdown
-        $semesters = Semester::all();
+        $schoolYears = SchoolYear::all();
         
-        return view('teacher.edit_student', compact('student', 'availableSections', 'semesters'));
+        return view('teacher.edit_student', compact('student', 'availableSections', 'schoolYears'));
     }
 
     /**
@@ -288,7 +278,7 @@ class StudentManagementController extends Controller
             'contact_person_name' => 'nullable|string|max:255',
             'contact_person_relationship' => 'nullable|string|max:255',
             'contact_person_contact' => 'nullable|string|max:15',
-            'semester_id' => 'required|integer',
+            'school_year_id' => 'required|integer',
         ]);
 
         if (is_object($validated)) {
@@ -644,7 +634,7 @@ public function bulkDelete(Request $request)
                 $data = [
                     'student_id' => $student->id,
                     'name' => $student->name,
-                    'semester_id' => $student->semester_id,
+                    'school_year_id' => $student->school_year_id,
                     'qr_data' => $qrCodeData, // Add the new QR data format
                 ];
                 
@@ -736,7 +726,7 @@ public function bulkDelete(Request $request)
     public function export()
     {
         $students = Student::where('user_id', Auth::id())
-            ->with('semester')
+            ->with('schoolYear')
             ->orderBy('id_no')
             ->get();
 
@@ -904,9 +894,9 @@ public function bulkDelete(Request $request)
     {
         $query = Student::where('user_id', Auth::id());
         
-         $selectedSemester = $this->getCurrentSemesterId();
+         $selectedSemester = $this->getCurrentSchoolYearId();
         if ($selectedSemester) {
-            $query->where('semester_id', $selectedSemester);
+            $query->where('school_year_id', $selectedSemester);
         }
         
          $students = $query->with('section')

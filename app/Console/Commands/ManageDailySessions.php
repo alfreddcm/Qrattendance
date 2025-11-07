@@ -145,7 +145,7 @@ class ManageDailySessions extends Command
                 $tableData[] = [
                     $session->id,
                     $session->teacher->name ?? 'Unknown',
-                    $session->semester->name ?? 'Unknown',
+                    $session->schoolYear->name ?? 'Unknown',
                     $session->expires_at->format('M j, Y g:i A'),
                     $session->access_count
                 ];

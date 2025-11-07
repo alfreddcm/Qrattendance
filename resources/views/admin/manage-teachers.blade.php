@@ -2,18 +2,7 @@
 @section('title', 'Manage Teachers')
 @section('content')
 
-<div class="sticky-header" >
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
-        <div>
-            <h4 class="fs-5 mb-1">
-                <i class="fas fa-chalkboard-teacher me-2"></i>
-                Manage Teachers
-            </h4>
-            <p class="subtitle fs-6 mb-0">Add, edit, and manage teacher accounts</p>
-        </div>
-        
-    </div>
-</div>
+
 
     <div class="container-fluid py-2">
         @include('partials.alerts')
@@ -65,7 +54,7 @@
         </div>
     </div>
 
-    <!-- Sections Management Section -->
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -112,8 +101,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($section->semester)
-                                            <span class="badge bg-info">{{ $section->semester->name }}</span>
+                                        @if($section->schoolYear)
+                                            <span class="badge bg-info">{{ $section->schoolYear->name }}</span>
                                         @else
                                             <span class="badge bg-secondary">N/A</span>
                                         @endif
@@ -135,14 +124,14 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" 
-                                                    class="btn btn-outline-primary btn-sm" 
+                                            <button type="button"
+                                                    class="btn btn-outline-primary btn-sm"
                                                     onclick="editSection({{ $section->id }})"
                                                     title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button type="button" 
-                                                    class="btn btn-outline-danger btn-sm" 
+                                            <button type="button"
+                                                    class="btn btn-outline-danger btn-sm"
                                                     onclick="deleteSection({{ $section->id }}, '{{ $section->name }}')"
                                                     title="Delete">
                                                 <i class="fas fa-trash"></i>
@@ -169,7 +158,7 @@
     </div>
 </div>
 
-    <!-- Teachers List -->
+
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -257,7 +246,7 @@
                                                 $allSections = $allSections->merge($teacher->sections);
                                                 $allSections = $allSections->unique('id');
                                             @endphp
-                                            
+
                                             @if($allSections->count() > 0)
                                                 <div class="d-flex flex-column">
                                                     @foreach($allSections as $section)
@@ -280,17 +269,17 @@
                                         <td>{{ $teacher->phone_number ?? 'N/A' }}</td>
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <button type="button" 
-                                                        class="btn btn-outline-primary btn-sm" 
-                                                        data-bs-toggle="modal" 
+                                                <button type="button"
+                                                        class="btn btn-outline-primary btn-sm"
+                                                        data-bs-toggle="modal"
                                                         data-bs-target="#editTeacherModal"
                                                         onclick="editTeacher({{ $teacher->id }})"
                                                         title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                 
-                                                <button type="button" 
-                                                        class="btn btn-outline-danger btn-sm" 
+
+                                                <button type="button"
+                                                        class="btn btn-outline-danger btn-sm"
                                                         onclick="if(confirm('Are you sure you want to delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }"
                                                         title="Delete">
                                                     <i class="fas fa-trash"></i>
@@ -306,8 +295,8 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <!-- Pagination -->
+
+
                         <div class="card-footer">
                             {{ $teachers->links() }}
                         </div>
@@ -327,9 +316,6 @@
     </div>
 </div>
 
-
-
-<!-- Add Teacher Modal -->
 <div class="modal fade" id="addTeacherModal" tabindex="-1" aria-labelledby="addTeacherModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -343,61 +329,61 @@
                 @csrf
                 <div class="modal-body">
                     <div class="row">
-                        <!-- Name -->
+
                         <div class="col-md-6 mb-3">
                             <label for="add_name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="add_name" name="name" required 
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="add_name" name="name" required
                                    value="{{ old('name') }}"
-                                   minlength="2" maxlength="255" 
+                                   minlength="2" maxlength="255"
                                     placeholder="Enter full name">
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
-                        <!-- Username -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_username" class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('username') is-invalid @enderror" id="add_username" name="username" required 
+                            <input type="text" class="form-control @error('username') is-invalid @enderror" id="add_username" name="username" required
                                    value="{{ old('username') }}"
-                                   minlength="3" maxlength="50" 
-                                    
+                                   minlength="3" maxlength="50"
+
                                    title="Username should contain only letters, numbers, underscores, and hyphens"
                                    placeholder="Enter username">
                             @error('username')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
-                        <!-- Email -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_email" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="add_email" name="email" required 
+                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="add_email" name="email" required
                                    value="{{ old('email') }}"
-                                   maxlength="255" 
+                                   maxlength="255"
                                    title="Enter a valid email address"
                                    placeholder="user@example.com">
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
-                        <!-- Password -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_password" class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="add_password" name="password" required 
-                                   minlength="6" maxlength="100" 
+                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="add_password" name="password" required
+                                   minlength="6" maxlength="100"
                                    title="Password must be at least 6 characters long"
                                    placeholder="Enter password">
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
-                        <!-- School -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_school_id" class="form-label">School <span class="text-danger">*</span></label>
-                            <select class="form-select @error('school_id') is-invalid @enderror" id="add_school_id" name="school_id" required 
+                            <select class="form-select @error('school_id') is-invalid @enderror" id="add_school_id" name="school_id" required
                                     title="Select the school this teacher will be assigned to">
                                 <option value="">Select School</option>
                                 @foreach($schools as $school)
@@ -410,8 +396,8 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
-                        <!-- Position -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_position" class="form-label">Position</label>
                             <select class="form-select" id="add_position" name="position" title="Select position">
@@ -420,8 +406,8 @@
                                 <option value="Adviser" {{ old('position') == 'Adviser' ? 'selected' : '' }}>Adviser</option>
                             </select>
                         </div>
-                        
-                        <!-- Section Selection -->
+
+
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Section Assignment</label>
                             @if($sections->count() > 0)
@@ -432,10 +418,10 @@
                                             $assignedTeacher = $isAssigned ? \App\Models\User::find($section->teacher_id) : null;
                                         @endphp
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="checkbox" 
-                                                   name="section_ids[]" 
-                                                   id="add_section_{{ $section->id }}" 
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="section_ids[]"
+                                                   id="add_section_{{ $section->id }}"
                                                    value="{{ $section->id }}"
                                                    @if($isAssigned) disabled @endif
                                                    {{ in_array($section->id, old('section_ids', [])) ? 'checked' : '' }}>
@@ -479,13 +465,13 @@
                                 </div>
                             @endif
                         </div>
-                        
-                        <!-- Phone Number -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_phone_number" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="add_phone_number" name="phone_number" 
+                            <input type="tel" class="form-control" id="add_phone_number" name="phone_number"
                                    value="{{ old('phone_number') }}"
-                                   placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+" 
+                                   placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+"
                                    title="Enter a valid phone number (digits, spaces, dashes, parentheses, and + allowed)">
                         </div>
                     </div>
@@ -501,7 +487,6 @@
     </div>
 </div>
 
-<!-- Add Section Modal -->
 <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -515,39 +500,45 @@
                 @csrf
                 <div class="modal-body">
                     <div class="row">
-                        <!-- Section Name -->
+
                         <div class="col-md-6 mb-3">
                             <label for="add_section_name" class="form-label">Section Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="add_section_name" name="name" required 
-                                   minlength="1" maxlength="100" 
-                                   pattern="[A-Za-z0-9\s\-]+" 
+                            <input type="text" class="form-control" id="add_section_name" name="name" required
+                                   minlength="1" maxlength="100"
+                                   pattern="[A-Za-z0-9\s\-]+"
                                    title="Section name should contain only letters, numbers, spaces, and hyphens"
                                    placeholder="e.g., Einstein, Grade 7-A">
                         </div>
-                        
-                        <!-- Grade Level -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_gradelevel" class="form-label">Grade Level <span class="text-danger">*</span></label>
-                            <select class="form-select" id="add_gradelevel" name="gradelevel" required 
+                            <select class="form-select" id="add_gradelevel" name="gradelevel" required
                                     title="Select a grade level">
                                 <option value="">Select Grade Level</option>
                                 <option value="11">Grade 11</option>
                                 <option value="12">Grade 12</option>
                             </select>
                         </div>
-                        
-                        <!-- Semester -->
+
+
                         <div class="col-md-6 mb-3">
-                            <label for="add_semester_id" class="form-label">Semester <span class="text-danger">*</span></label>
-                            <select class="form-select" id="add_semester_id" name="semester_id" required>
-                                <option value="">Select Semester</option>
-                                @foreach($semesters as $semester)
-                                    <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                            <label for="add_school_year_id" class="form-label">Semester <span class="text-danger">*</span></label>
+                            <select class="form-select" id="add_school_year_id" name="school_year_id" required>
+                                <option value="">Select School Year</option>
+                                @foreach($schoolYears as $schoolYear)
+                                    <option value="{{ $schoolYear->id }}">
+                                        @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                            {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                        @else
+                                            {{ $schoolYear->name }}
+                                        @endif
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <!-- Teacher -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="add_teacher_id" class="form-label">Assign Teacher</label>
                             <select class="form-select" id="add_teacher_id" name="teacher_id">
@@ -557,8 +548,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <!-- AM Time Range -->
+
+
                         <div class="col-12 mb-3">
                             <h6 class="text-muted">Morning Schedule</h6>
                             <div class="row">
@@ -580,8 +571,8 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- PM Time Range -->
+
+
                         <div class="col-12 mb-3">
                             <h6 class="text-muted">Afternoon Schedule</h6>
                             <div class="row">
@@ -618,7 +609,6 @@
     </div>
 </div>
 
-<!-- Edit Section Modal -->
 <div class="modal fade" id="editSectionModal" tabindex="-1" aria-labelledby="editSectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -633,20 +623,20 @@
                 @method('PUT')
                 <div class="modal-body">
                     <div class="row">
-                        <!-- Section Name -->
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_section_name" class="form-label">Section Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_section_name" name="name" required 
-                                   minlength="1" maxlength="100" 
-                                   pattern="[A-Za-z0-9\s\-]+" 
+                            <input type="text" class="form-control" id="edit_section_name" name="name" required
+                                   minlength="1" maxlength="100"
+                                   pattern="[A-Za-z0-9\s\-]+"
                                    title="Section name should contain only letters, numbers, spaces, and hyphens"
                                    placeholder="e.g., Einstein, Grade 7-A">
                         </div>
-                        
-                        <!-- Grade Level -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_gradelevel" class="form-label">Grade Level <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_gradelevel" name="gradelevel" required 
+                            <select class="form-select" id="edit_gradelevel" name="gradelevel" required
                                     title="Select a grade level from 1 to 12">
                                 <option value="">Select Grade Level</option>
                                 @for($i = 1; $i <= 12; $i++)
@@ -654,19 +644,25 @@
                                 @endfor
                             </select>
                         </div>
-                        
-                        <!-- Semester -->
+
+
                         <div class="col-md-6 mb-3">
-                            <label for="edit_semester_id" class="form-label">Semester <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_semester_id" name="semester_id" required>
-                                <option value="">Select Semester</option>
-                                @foreach($semesters as $semester)
-                                    <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                            <label for="edit_school_year_id" class="form-label">School Year <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_school_year_id" name="school_year_id" required>
+                                <option value="">Select School Year</option>
+                                @foreach($schoolYears as $schoolYear)
+                                    <option value="{{ $schoolYear->id }}">
+                                        @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                            {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                        @else
+                                            {{ $schoolYear->name }}
+                                        @endif
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <!-- Teacher -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_teacher_id" class="form-label">Assign Teacher</label>
                             <select class="form-select" id="edit_teacher_id" name="teacher_id">
@@ -676,8 +672,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <!-- AM Time Range -->
+
+
                         <div class="col-12 mb-3">
                             <h6 class="text-muted">Morning Schedule</h6>
                             <div class="row">
@@ -699,8 +695,8 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- PM Time Range -->
+
+
                         <div class="col-12 mb-3">
                             <h6 class="text-muted">Afternoon Schedule</h6>
                             <div class="row">
@@ -737,7 +733,6 @@
     </div>
 </div>
 
-<!-- Delete Section Modal -->
 <div class="modal fade" id="deleteSectionModal" tabindex="-1" aria-labelledby="deleteSectionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -771,7 +766,6 @@
     </div>
 </div>
 
-<!-- Edit Teacher Modal -->
 <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -786,48 +780,48 @@
                 @method('PUT')
                 <div class="modal-body">
                     <div class="row">
-                        <!-- Name -->
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_name" name="name" required 
-                                   minlength="2" maxlength="255" 
-                                 
+                            <input type="text" class="form-control" id="edit_name" name="name" required
+                                   minlength="2" maxlength="255"
+
                                    title="Name should contain only letters, spaces, and periods"
                                    placeholder="Enter full name">
                         </div>
-                        
-                        <!-- Username -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_username" class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_username" name="username" required 
-                                   minlength="3" maxlength="50" 
-                                    
+                            <input type="text" class="form-control" id="edit_username" name="username" required
+                                   minlength="3" maxlength="50"
+
                                    title="Username should contain only letters, numbers, underscores, and hyphens"
                                    placeholder="Enter username">
                         </div>
-                        
-                        <!-- Email -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_email" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="edit_email" name="email" required 
-                                   maxlength="255" 
+                            <input type="email" class="form-control" id="edit_email" name="email" required
+                                   maxlength="255"
                                    title="Enter a valid email address"
                                    placeholder="user@example.com">
                         </div>
-                        
-                        <!-- Password -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="edit_password" name="password" 
-                                   minlength="6" maxlength="100" 
+                            <input type="password" class="form-control" id="edit_password" name="password"
+                                   minlength="6" maxlength="100"
                                    title="Password must be at least 6 characters long (leave blank to keep current)"
                                    placeholder="Leave blank to keep current password">
                         </div>
-                        
-                        <!-- School -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_school_id" class="form-label">School <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_school_id" name="school_id" required 
+                            <select class="form-select" id="edit_school_id" name="school_id" required
                                     title="Select the school this teacher will be assigned to">
                                 <option value="">Select School</option>
                                 @foreach($schools as $school)
@@ -835,8 +829,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <!-- Position -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_position" class="form-label">Position</label>
                             <select class="form-select" id="edit_position" name="position" title="Select position">
@@ -845,8 +839,8 @@
                                 <option value="Adviser">Adviser</option>
                             </select>
                         </div>
-                        
-                        <!-- Section Selection -->
+
+
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Section Assignment</label>
                             @if($sections->count() > 0)
@@ -857,10 +851,10 @@
                                             $assignedTeacher = $isAssigned ? \App\Models\User::find($section->teacher_id) : null;
                                         @endphp
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="checkbox" 
-                                                   name="section_ids[]" 
-                                                   id="edit_section_{{ $section->id }}" 
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="section_ids[]"
+                                                   id="edit_section_{{ $section->id }}"
                                                    value="{{ $section->id }}"
                                                    data-assigned="{{ $isAssigned ? 'true' : 'false' }}"
                                                    data-teacher-id="{{ $section->teacher_id }}"
@@ -895,12 +889,12 @@
                                 </div>
                             @endif
                         </div>
-     
-                        <!-- Phone Number -->
+
+
                         <div class="col-md-6 mb-3">
                             <label for="edit_phone_number" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="edit_phone_number" name="phone_number" 
-                                   placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+" 
+                            <input type="tel" class="form-control" id="edit_phone_number" name="phone_number"
+                                   placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+"
                                    title="Enter a valid phone number (digits, spaces, dashes, parentheses, and + allowed)">
                         </div>
                     </div>
@@ -916,7 +910,6 @@
     </div>
 </div>
 
-<!-- Reassign Section Modal -->
 <div class="modal fade" id="reassignSectionModal" tabindex="-1" aria-labelledby="reassignSectionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -933,9 +926,9 @@
                         <i class="fas fa-info-circle me-1"></i>
                         <strong>Note:</strong> Reassigning a section will transfer all students to the new teacher.
                     </div>
-                    
+
                     <input type="hidden" id="reassign_section_id" name="section_id">
-                    
+
                     <div class="mb-3">
                         <label class="form-label"><strong>Current Assignment:</strong></label>
                         <div class="card bg-light">
@@ -954,7 +947,7 @@
                                 $allTeachers = \App\Models\User::where('role', 'teacher')->get();
                             @endphp
                             @foreach($allTeachers as $teacher)
-                                <option value="{{ $teacher->id }}" 
+                                <option value="{{ $teacher->id }}"
                                         @if($teacher->section_id) data-has-section="true" data-section-name="{{ $teacher->section->name ?? 'Unknown' }}" @endif>
                                     {{ $teacher->name }} ({{ $teacher->username }})
                                     @if($teacher->section_id) - Currently assigned to: {{ $teacher->section->name ?? 'Unknown Section' }} @endif
@@ -982,7 +975,6 @@
     </div>
 </div>
 
-<!-- Create Section Modal -->
 <div class="modal fade" id="createSectionModal" tabindex="-1" aria-labelledby="createSectionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -996,7 +988,7 @@
                 @csrf
                 <div class="modal-body">
                     <input type="hidden" id="create_teacher_id" name="teacher_id">
-                    
+
                     <div class="mb-3">
                         <label class="form-label"><strong>Teacher:</strong></label>
                         <div class="card bg-light">
@@ -1026,15 +1018,15 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="create_semester_id" class="form-label"><strong>Semester:</strong></label>
-                        <select class="form-select" id="create_semester_id" name="semester_id" required>
-                            <option value="">Select Semester</option>
+                        <label for="create_school_year_id" class="form-label"><strong>Semester:</strong></label>
+                        <select class="form-select" id="create_school_year_id" name="school_year_id" required>
+                            <option value="">Select School Year</option>
                             @php
-                                $semesters = \App\Models\Semester::all();
+                                $schoolYears = \App\Models\SchoolYear::all();
                             @endphp
-                            @foreach($semesters as $semester)
-                                <option value="{{ $semester->id }}" @if($semester->is_active) selected @endif>
-                                    {{ $semester->semester_name }} ({{ $semester->start_date }} - {{ $semester->end_date }})
+                            @foreach($schoolYears as $schoolYear)
+                                <option value="{{ $schoolYear->id }}" @if($schoolYear->is_active) selected @endif>
+                                    {{ $schoolYear->name }} ({{ $schoolYear->start_date }} - {{ $schoolYear->end_date }})
                                 </option>
                             @endforeach
                         </select>
@@ -1057,18 +1049,18 @@
         text-decoration: none;
         transition: all 0.2s ease;
     }
-    
+
     .sortable a:hover {
         color: #007bff;
         text-decoration: none;
     }
-    
+
     .sortable {
         cursor: pointer;
         user-select: none;
         position: relative;
     }
-    
+
     .sortable:hover {
         background-color: rgba(0, 123, 255, 0.1);
     }
@@ -1080,7 +1072,7 @@ const teachers = @json($teachers->items());
 function editTeacher(teacherId) {
     const teacher = teachers.find(t => t.id === teacherId);
     if (!teacher) return;
-    
+
      document.getElementById('editTeacherForm').action = `/admin/teachers/${teacherId}`;
     document.getElementById('edit_name').value = teacher.name || '';
     document.getElementById('edit_username').value = teacher.username || '';
@@ -1089,14 +1081,14 @@ function editTeacher(teacherId) {
     document.getElementById('edit_school_id').value = teacher.school_id || '';
     document.getElementById('edit_position').value = teacher.position || '';
     document.getElementById('edit_phone_number').value = teacher.phone_number || '';
-    
+
      const currentTeacherId = teacher.id;
-    const teacherSections = teacher.sections || [];  
-     
+    const teacherSections = teacher.sections || [];
+
     document.querySelectorAll('input[name="section_ids[]"]').forEach(checkbox => {
         checkbox.checked = false;
         checkbox.disabled = false;
-        
+
          if (checkbox.dataset.teacherId == currentTeacherId) {
             checkbox.disabled = false;
             checkbox.parentElement.querySelector('label').classList.remove('text-muted');
@@ -1105,13 +1097,13 @@ function editTeacher(teacherId) {
                 badge.className = 'badge bg-success';
                 badge.textContent = 'Available';
             }
-        } 
+        }
          else if (checkbox.dataset.assigned === 'true' && checkbox.dataset.teacherId != currentTeacherId) {
             checkbox.disabled = true;
             checkbox.parentElement.querySelector('label').classList.add('text-muted');
         }
     });
-    
+
       if (Array.isArray(teacherSections)) {
         teacherSections.forEach(section => {
             const sectionCheckbox = document.getElementById(`edit_section_${section.id}`);
@@ -1131,7 +1123,7 @@ function openReassignModal(sectionId, sectionName, currentTeacherId, currentTeac
     document.getElementById('reassign_section_id').value = sectionId;
     document.getElementById('current_section_name').textContent = sectionName;
     document.getElementById('current_teacher_name').textContent = currentTeacherName;
-    
+
      const newTeacherSelect = document.getElementById('reassign_new_teacher_id');
     Array.from(newTeacherSelect.options).forEach(option => {
         if (option.value == currentTeacherId) {
@@ -1145,7 +1137,7 @@ function openReassignModal(sectionId, sectionName, currentTeacherId, currentTeac
 function openCreateSectionModal(teacherId, teacherName) {
     document.getElementById('create_teacher_id').value = teacherId;
     document.getElementById('create_teacher_name').textContent = teacherName;
-    
+
      document.getElementById('create_section_name').value = '';
     document.getElementById('create_grade_level').value = '';
 }
@@ -1153,13 +1145,13 @@ function openCreateSectionModal(teacherId, teacherName) {
 function showUnassignedTeachers() {
      const tableRows = document.querySelectorAll('table tbody tr');
     tableRows.forEach(row => {
-        const sectionCell = row.cells[4];  
+        const sectionCell = row.cells[4];
         if (sectionCell && sectionCell.textContent.includes('Not Assigned')) {
             row.style.backgroundColor = '#fff3cd';
             row.scrollIntoView({behavior: 'smooth', block: 'center'});
         }
     });
-    
+
     setTimeout(() => {
         tableRows.forEach(row => {
             row.style.backgroundColor = '';
@@ -1174,16 +1166,16 @@ function showUnassignedSections() {
  document.addEventListener('DOMContentLoaded', function() {
      const addSchoolSelect = document.getElementById('school_id');
     const addSectionContainer = document.getElementById('section_selection_container');
-    
+
     if (addSchoolSelect && addSectionContainer) {
         addSchoolSelect.addEventListener('change', function() {
             loadSectionsForModal(this.value, addSectionContainer, 'add');
         });
     }
-    
+
      const editSchoolSelect = document.getElementById('edit_school_id');
     const editSectionContainer = document.getElementById('edit_section_selection_container');
-    
+
     if (editSchoolSelect && editSectionContainer) {
         editSchoolSelect.addEventListener('change', function() {
             loadSectionsForModal(this.value, editSectionContainer, 'edit');
@@ -1219,16 +1211,16 @@ function loadSectionsForModal(schoolId, container, modalType) {
             sections.forEach(section => {
                 const isAssigned = section.teacher_id && section.teacher_id !== null;
                 const teacherName = section.teacher ? section.teacher.name : '';
-                
+
                 html += `
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="section_id" 
-                               value="${section.id}" 
+                        <input class="form-check-input" type="radio" name="section_id"
+                               value="${section.id}"
                                id="${modalType}_section_${section.id}"
                                data-assigned="${isAssigned}"
                                data-teacher-id="${section.teacher_id || ''}"
                                ${isAssigned ? 'disabled' : ''}>
-                        <label class="form-check-label ${isAssigned ? 'text-muted' : ''}" 
+                        <label class="form-check-label ${isAssigned ? 'text-muted' : ''}"
                                for="${modalType}_section_${section.id}">
                             ${section.name} - Grade ${section.gradelevel}
                             ${teacherName ? `<small class="text-muted d-block">Teacher: ${teacherName}</small>` : ''}
@@ -1261,15 +1253,15 @@ function loadSectionsForModal(schoolId, container, modalType) {
 function editSection(sectionId) {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return;
-    
+
      document.getElementById('editSectionForm').action = `/admin/sections/${sectionId}`;
-    
+
      document.getElementById('edit_section_name').value = section.name || '';
     document.getElementById('edit_gradelevel').value = section.gradelevel || '';
-    document.getElementById('edit_semester_id').value = section.semester_id || '';
+    document.getElementById('edit_school_year_id').value = section.school_year_id || '';
     document.getElementById('edit_teacher_id').value = section.teacher_id || '';
-    
-     document.getElementById('edit_am_time_in_start').value = section.am_time_in_start || '07:00';
+
+    document.getElementById('edit_am_time_in_start').value = section.am_time_in_start || '07:00';
     document.getElementById('edit_am_time_in_end').value = section.am_time_in_end || '08:00';
     document.getElementById('edit_am_time_out_start').value = section.am_time_out_start || '11:00';
     document.getElementById('edit_am_time_out_end').value = section.am_time_out_end || '12:00';
@@ -1277,15 +1269,15 @@ function editSection(sectionId) {
     document.getElementById('edit_pm_time_in_end').value = section.pm_time_in_end || '14:00';
     document.getElementById('edit_pm_time_out_start').value = section.pm_time_out_start || '16:00';
     document.getElementById('edit_pm_time_out_end').value = section.pm_time_out_end || '17:00';
-    
+
      new bootstrap.Modal(document.getElementById('editSectionModal')).show();
 }
 
 function deleteSection(sectionId, sectionName) {
      document.getElementById('deleteSectionForm').action = `/admin/sections/${sectionId}`;
-    
+
      document.getElementById('deleteSectionName').textContent = sectionName;
-    
+
      new bootstrap.Modal(document.getElementById('deleteSectionModal')).show();
 }
 
@@ -1298,13 +1290,13 @@ function validateSectionTimes() {
     const pmTimeInEnd = document.getElementById('add_pm_time_in_end').value;
     const pmTimeOutStart = document.getElementById('add_pm_time_out_start').value;
     const pmTimeOutEnd = document.getElementById('add_pm_time_out_end').value;
-    
+
      if (!amTimeInStart || !amTimeInEnd || !amTimeOutStart || !amTimeOutEnd ||
         !pmTimeInStart || !pmTimeInEnd || !pmTimeOutStart || !pmTimeOutEnd) {
         alert('All time fields are required.');
         return false;
     }
-    
+
      if (amTimeInStart >= amTimeInEnd) {
         alert('AM Time In Start must be before AM Time In End.');
         return false;
@@ -1317,7 +1309,7 @@ function validateSectionTimes() {
         alert('AM Time Out Start must be before AM Time Out End.');
         return false;
     }
-    
+
      if (pmTimeInStart >= pmTimeInEnd) {
         alert('PM Time In Start must be before PM Time In End.');
         return false;
@@ -1330,12 +1322,12 @@ function validateSectionTimes() {
         alert('PM Time Out Start must be before PM Time Out End.');
         return false;
     }
-    
+
      if (amTimeOutEnd >= pmTimeInStart) {
         alert('AM Time Out End must be before PM Time In Start.');
         return false;
     }
-    
+
     return true;
 }
 
@@ -1344,7 +1336,7 @@ function validateSectionTimes() {
         e.preventDefault();
         return;
     }
-    
+
  });
 
 document.getElementById('editSectionForm').addEventListener('submit', function(e) {
@@ -1356,14 +1348,14 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
     const pmTimeInEnd = document.getElementById('edit_pm_time_in_end').value;
     const pmTimeOutStart = document.getElementById('edit_pm_time_out_start').value;
     const pmTimeOutEnd = document.getElementById('edit_pm_time_out_end').value;
-    
+
      if (!amTimeInStart || !amTimeInEnd || !amTimeOutStart || !amTimeOutEnd ||
         !pmTimeInStart || !pmTimeInEnd || !pmTimeOutStart || !pmTimeOutEnd) {
         alert('All time fields are required.');
         e.preventDefault();
         return;
     }
-    
+
      if (amTimeInStart >= amTimeInEnd) {
         alert('AM Time In Start must be before AM Time In End.');
         e.preventDefault();
@@ -1379,7 +1371,7 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
         e.preventDefault();
         return;
     }
-    
+
      if (pmTimeInStart >= pmTimeInEnd) {
         alert('PM Time In Start must be before PM Time In End.');
         e.preventDefault();
@@ -1395,13 +1387,13 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
         e.preventDefault();
         return;
     }
-    
+
      if (amTimeOutEnd >= pmTimeInStart) {
         alert('AM Time Out End must be before PM Time In Start.');
         e.preventDefault();
         return;
     }
-    
+
  });
 
  document.addEventListener('DOMContentLoaded', function() {
@@ -1418,32 +1410,32 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
             const email = document.getElementById('add_email').value.trim();
             const password = document.getElementById('add_password').value;
             const schoolId = document.getElementById('add_school_id').value;
-            
+
             if (!name || !username || !email || !password || !schoolId) {
                 e.preventDefault();
                 alert('Please fill in all required fields (Name, Username, Email, Password, and School).');
                 return false;
             }
-            
+
             if (password.length < 6) {
                 e.preventDefault();
                 alert('Password must be at least 6 characters long.');
                 return false;
             }
-            
+
              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 e.preventDefault();
                 alert('Please enter a valid email address.');
                 return false;
             }
-            
+
              if (username.length < 3) {
                 e.preventDefault();
                 alert('Username must be at least 3 characters long.');
                 return false;
             }
-            
+
              console.log('Submitting teacher form with data:', {
                 name: name,
                 username: username,
@@ -1453,7 +1445,7 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
                 phone_number: document.getElementById('add_phone_number').value,
                 section_id: document.querySelector('input[name="section_id"]:checked')?.value || ''
             });
-            
+
              return true;
         });
     }
