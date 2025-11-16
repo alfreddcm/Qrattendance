@@ -32,13 +32,31 @@ class PublicAttendanceController extends Controller
         $school = $attendanceCode->teacher->school;
         $section = $attendanceCode->section;
         
-        $recentAttendance = Attendance::with(['student'])
+        // Get the most recent student who scanned (if any)
+        $latestAttendance = Attendance::with(['student.section'])
+            ->whereDate('date', today())
+            ->where('teacher_id', $attendanceCode->teacher_id)
+            ->latest('updated_at')
+            ->first();
+
+        // Get student data or use placeholder
+        $currentStudent = null;
+        $currentAttendanceRecord = null;
+        
+        if ($latestAttendance && $latestAttendance->student) {
+            $currentStudent = $latestAttendance->student;
+            $currentAttendanceRecord = $latestAttendance;
+        }
+        
+        // Get recent attendance for the gallery
+        $recentAttendance = Attendance::with(['student.section'])
             ->whereDate('date', today())
             ->where('teacher_id', $attendanceCode->teacher_id)
             ->latest('updated_at')
             ->take(5)
             ->get();
 
+        // Get today's summary
         $todaySummary = $this->getTodayAttendanceSummary($attendanceCode->teacher_id);
 
         return view('public.attendance-display', compact(
@@ -47,7 +65,9 @@ class PublicAttendanceController extends Controller
             'section',
             'recentAttendance',
             'todaySummary',
-            'attendanceCode'
+            'attendanceCode',
+            'currentStudent',
+            'currentAttendanceRecord'
         ));
     }
 

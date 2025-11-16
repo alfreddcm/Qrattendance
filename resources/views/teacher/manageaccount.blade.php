@@ -75,12 +75,23 @@
                     @enderror
                 </div>
                 <div class="mb-2">
-                    <label for="section_name" class="form-label fs-6">Section Name</label>
-                    <input type="text" class="form-control form-control-sm @error('section_name') is-invalid @enderror"
-                        id="section_name" name="section_name" value="{{ old('section_name', auth()->user()->section_name) }}">
-                    @error('section_name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <label class="form-label fs-6">Assigned Sections</label>
+                    <div class="form-control form-control-sm bg-light" style="min-height: 38px; padding: 8px;">
+                        @if(auth()->user()->sections && auth()->user()->sections->count() > 0)
+                            @foreach(auth()->user()->sections as $section)
+                                <span class=" me-1 mb-1">
+                                    {{ $section->name }} (Grade {{ $section->gradelevel }})
+                                </span>
+                            @endforeach
+                        @elseif(auth()->user()->section)
+                            <span class=" me-1 mb-1">
+                                {{ auth()->user()->section->name }} (Grade {{ auth()->user()->section->gradelevel }})
+                            </span>
+                        @else
+                            <span class="text-muted">No sections assigned</span>
+                        @endif
+                    </div>
+                    <small class="text-muted">Section assignments are managed by administrators</small>
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Update Profile</button>
                 <button type="button" class="btn btn-secondary btn-sm px-2 py-1 float-end" data-bs-toggle="modal" data-bs-target="#passwordModal">

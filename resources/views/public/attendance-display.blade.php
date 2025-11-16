@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $school->name ?? 'School' }} - Attendance System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
@@ -13,826 +14,624 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
         }
 
         html, body {
             height: 100vh;
             overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: #e8eef3;
-            padding: 4px;
+            background: #f0f2f5;
+            padding: 8px;
             display: flex;
             flex-direction: column;
         }
 
         .header {
+            background: white;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            border-top: 4px solid #4169E1;
+            padding: 10px 20px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #fff;
-            border-bottom: 3px solid #2196F3;
-            padding: 6px 15px;
-            margin-bottom: 4px;
-            flex-shrink: 0;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
         .school-logo {
-            width: 45px;
-            height: 45px;
-            background: #2196F3;
+            width: 50px;
+            height: 50px;
+            background: #4169E1;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
+            text-transform: uppercase;
+            overflow: hidden;
+        }
+        
+        .school-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
-        .school-info strong {
-            display: block;
-            font-size: 13px;
+        .school-info h1 {
+            font-size: 16px;
             color: #000;
+            margin: 0;
             font-weight: 600;
-            line-height: 1.2;
         }
 
-        .school-info small {
-            font-size: 10px;
-            color: #666;
-            line-height: 1.2;
+        .school-info p {
+            font-size: 12px;
+            color: #555;
+            margin: 0;
         }
 
         .header-title {
-            text-align: center;
+            text-align: right;
             flex: 1;
         }
 
-        .header-title h1 {
+        .header-title h2 {
             font-size: 18px;
-            color: #2196F3;
+            color: #4169E1;
+            margin: 0;
             font-weight: 600;
         }
 
-        .main-grid {
-            display: grid;
-            grid-template-columns: 340px 280px 280px;
-            gap: 0;
-            margin-bottom: 4px;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .photo-section {
-            background: #fff;
-            border: 2px solid #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            aspect-ratio: 1 / 1;
-            width: 100%;
-        }
-
-        .photo-section img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .placeholder-photo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-        }
-
-        .placeholder-icon {
-            font-size: 80px;
-            color: #666;
-        }
-
-        .middle-section {
-            background: #fff;
-            border: 2px solid #ddd;
-            padding: 6px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .student-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #000;
-            text-align: center;
-            margin-bottom: 1px;
-            line-height: 1.1;
-        }
-
-        .student-section {
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-            margin-bottom: 4px;
-            padding-bottom: 4px;
-            border-bottom: 2px solid #ddd;
-            line-height: 1.1;
-        }
-
-        .attendance-alert {
-            background: #E3F2FD;
-            border: 2px solid #2196F3;
-            border-radius: 4px;
-            padding: 6px;
-            text-align: center;
-            margin-bottom: 4px;
+        .header-right {
             display: none;
         }
 
-        .attendance-alert.show {
-            display: block;
-        }
-
-        .attendance-alert h2 {
-            font-size: 13px;
-            color: #000;
-            margin-bottom: 4px;
-        }
-
-        .attendance-alert .time {
-            font-size: 18px;
-            font-weight: bold;
-            color: #4CAF50;
-            margin: 3px 0;
-        }
-
-        .attendance-alert .date {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .record-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .record-table th {
-            background: #2196F3;
-            color: white;
-            padding: 4px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .record-table td {
-            border: 1px solid #ddd;
-            padding: 4px;
-            text-align: center;
-            font-size: 11px;
-        }
-
-        .record-table td:first-child {
-            background: #f5f5f5;
-            font-weight: 600;
-            text-align: left;
-            padding-left: 8px;
-        }
-
-        .right-section {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .date-display {
-            background: #fff;
-            border: 2px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #000;
-            line-height: 1.2;
-        }
-
-        .time-display {
-            background: #2196F3;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 26px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-
-        .scan-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .scan-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .scan-btn:hover {
-            background: #45a049;
-        }
-
-        .scan-btn.camera {
-            background: #FF9800;
-        }
-
-        .scan-btn.camera:hover {
-            background: #F57C00;
-        }
-
-        .scan-status {
-            background: #fff;
-            border: 2px solid #2196F3;
-            padding: 10px;
-            text-align: center;
-            font-size: 15px;
-            font-weight: 600;
-            color: #2196F3;
-            border-radius: 4px;
-            width: 100%;
-            outline: none;
-        }
-
-        .scan-status:focus {
-            border-color: #1976D2;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
-        }
-
-        .summary-box {
-            background: #fff;
-            border: 2px solid #ddd;
-            padding: 0;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .summary-box h3 {
-            background: #2196F3;
-            color: white;
-            padding: 6px;
-            text-align: center;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .summary-grid {
+        .main-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            grid-template-rows: 1fr auto;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            background: #fff;
             padding: 8px;
         }
 
-        .summary-item {
-            text-align: center;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .top-section {
+            display: grid;
+            grid-template-columns: 280px 1fr 1fr;
+            gap: 8px;
+            min-height: 400px;
+            max-height: 450px;
         }
 
-        .summary-item .label {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .summary-item .value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #2196F3;
-        }
-
-        .recent-logs {
-            background: #fff;
-            border: 2px solid #ddd;
-            padding: 0;
-            flex-shrink: 0;
-        }
-
-        .recent-logs h3 {
-            background: #2196F3;
-            color: white;
-            padding: 6px;
-            text-align: center;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .logs-grid {
-            display: flex;
-            gap: 6px;
-            padding: 8px;
-            justify-content: flex-start;
-        }
-
-        .log-card {
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #fff;
-            width: calc(20% - 5px);
-            flex-shrink: 0;
-        }
-
-        .log-card .time-badge {
-            background: #2196F3;
-            color: white;
-            padding: 4px;
-            text-align: center;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .log-card .photo {
-            width: 100%;
-            height: 100px;
+        .student-photo-column {
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f5f5f5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0;
+            overflow: hidden;
+            min-height: 280px;
+            max-height: 350px;
+            width: 100%;
         }
-            background: #f5f5f5;
+        
+        .student-photo-placeholder {
+            font-size: 60px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .log-card .photo img {
+        .student-photo-column img {
             width: 100%;
             height: 100%;
+            border-radius: 0;
             object-fit: cover;
         }
 
-        .log-card .placeholder-small {
-            font-size: 50px;
-            color: #666;
-        }
-
-        .log-card .info {
-            background: #2196F3;
-            color: white;
-            padding: 5px;
+        .student-info-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 15px;
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             text-align: center;
         }
 
-        .log-card .info .name {
+        .student-info-column > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .text-label {
             font-size: 12px;
             font-weight: 600;
+            color: #333;
+            margin-top: 4px;
             margin-bottom: 2px;
         }
 
-        .log-card .info .section {
-            font-size: 10px;
-        }
-
-        #reader {
-            display: none;
+        .line-placeholder {
+            height: 2px;
+            background: #000;
             width: 100%;
-            max-width: 500px;
-            margin: 20px auto;
+            margin-bottom: 12px;
         }
 
-        #usbInput {
-            position: absolute;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
+        .attendance-record-card {
+            border: 2px solid #000;
+            border-radius: 6px;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            background: #4169E1;
+            color: white;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .card-body {
+            background: white;
+            padding: 10px 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .attendance-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #000;
+        }
+        
+        .attendance-line span:first-child {
+            font-weight: 600;
+        }
+
+        .attendance-record-card .attendance-line span:last-child {
+            font-weight: 600;
+            color: #000;
+        }
+
+
+        .attendance-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .right-info-column {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            gap: 8px;
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .date-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.3;
+        }
+
+        .time-label {
+            font-size: 28px;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.3;
+        }
+
+        .status-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.3;
+        }
+
+        .todays-attendance-card {
+            border: 2px solid #000;
+            border-radius: 6px;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-self: stretch;
+        }
+        
+        .todays-attendance-card .attendance-line span:last-child {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .recent-scans-gallery {
+            height: 140px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .scan-card {
+            border: 2px solid #4169E1;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            height: 100%;
+        }
+
+        .scan-card::before {
+            content: attr(data-time-info);
+            background: #4169E1;
+            color: white;
+            padding: 3px 2px;
+            font-size: 10px;
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .scan-card-body {
+            background: white;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            min-height: 60px;
+        }
+
+        .scan-card-body img {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            object-fit: cover;
+        }
+
+        .scan-photo-placeholder {
+            font-size: 25px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scan-card-footer {
+            background: #4169E1;
+            padding: 4px 2px;
+            text-align: center;
+            min-height: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .scan-card-name {
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .scan-card-section {
+            color: white;
+            font-size: 9px;
+            font-weight: 600;
+            margin: 1px 0 0 0;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .placeholder-text {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        @media (max-width: 1400px) {
+            .top-section {
+                grid-template-columns: 260px 1fr 1fr;
+            }
+        }
+        @media (max-width: 1200px) {
+            .top-section {
+                grid-template-columns: 220px 1fr 1fr;
+            }
+        }
+        @media (max-width: 1000px) {
+            .top-section {
+                grid-template-columns: 200px 1fr 1fr;
+            }
+            .recent-scans-gallery {
+                height: 120px;
+            }
+            .scan-card-footer {
+                min-height: 30px;
+                padding: 3px 2px;
+            }
         }
     </style>
 </head>
 <body>
-
-    <input type="text" id="usbInput" autocomplete="off">
-
-
-    <div class="header">
+     <div class="header">
         <div class="header-left">
-            <div class="school-logo">{{ strtoupper(substr($school->name ?? 'S', 0, 1)) }}</div>
+            <div class="school-logo">
+                @if($school->logo)
+                    <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name ?? 'School' }} Logo">
+                @else
+                    {{ substr($school->name ?? 'S', 0, 1) }}
+                @endif
+            </div>
             <div class="school-info">
-                <strong>{{ $school->name ?? 'School Name' }}</strong>
-                <small>{{ $school->address ?? 'School Address' }}</small>
+                <h1>{{ $school->name ?? 'San Guillermo Vocational and Industrial High School' }}</h1>
+                <p>{{ $school->address ?? 'San Guillermo, Isabela' }}</p>
             </div>
         </div>
+        
         <div class="header-title">
-            <h1>Scan-to-Notify: A QR-Based Student Attendance and Parent Notification System</h1>
+            <h2>Scan-to-Notify: A QR-Based Student Attendance and Parent Notification System</h2>
+        </div>
+        
+        <div class="header-right">
+            <div class="date-time">
+                <div class="date-display" id="currentDate">{{ now()->format('D M d, Y') }}</div>
+                <div class="time-display" id="currentTime">{{ now()->format('g:i:s A') }}</div>
+            </div>
+            <div class="status-message">
+                @if(isset($student))
+                    <span style="color: #28a745;">Student Detected</span>
+                @else
+                    &lt;WAITING TO SCAN..&gt;
+                @endif
+            </div>
         </div>
     </div>
 
+     <div class="main-container">
+         <div class="top-section">
+             <div class="student-photo-column">
+                @if($currentStudent && $currentStudent->picture)
+                    <img src="{{ asset('storage/' . $currentStudent->picture) }}" alt="Student Photo">
+                @else
+                    <div class="student-photo-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                @endif
+             </div>
 
-    <div class="main-grid">
+             <div class="student-info-column">
+                 <div>
+                     <div style="font-size: 24px; font-weight: 700; color: #000; margin-bottom: 4px;">
+                         {{ $currentStudent->name ?? '---' }}
+                     </div>
+                     <div class="text-label">Student Name</div>
+                     <div class="line-placeholder"></div>
+                 </div>
 
-        <div class="photo-section" id="photoSection">
-            <div class="placeholder-photo">
-                <i class="fas fa-user placeholder-icon"></i>
-            </div>
-        </div>
+                 <div>
+                     <div style="font-size: 22px; font-weight: 700; color: #000; margin-bottom: 4px;">
+                         {{ $currentStudent->section->name ?? '---' }}
+                     </div>
+                     <div class="text-label">Grade and Section</div>
+                     <div class="line-placeholder"></div>
+                 </div>
 
-
-        <div class="middle-section">
-            <div class="student-name" id="studentName">Student Name</div>
-            <div class="student-section" id="studentSection">Grade and Section</div>
-
-
-            <div class="attendance-alert" id="attendanceAlert">
-                <h2>ATTENDANCE RECORDED!</h2>
-                <div class="time" id="alertTime">TIME IN 7:30 AM</div>
-                <div class="date" id="alertDate">September 10, 2025</div>
-            </div>
-
-
-            <table class="record-table">
-                <tr>
-                    <th colspan="2">Attendance Record</th>
-                </tr>
-                <tr>
-                    <td>Morning In</td>
-                    <td id="morningIn">--:--</td>
-                </tr>
-                <tr>
-                    <td>Morning  Out</td>
-                    <td id="morningOut">--:--</td>
-                </tr>
-                <tr>
-                    <td>Afternoon In</td>
-                    <td id="afternoonIn">--:--</td>
-                </tr>
-                <tr>
-                    <td>Afternoon Out</td>
-                    <td id="afternoonOut">--:--</td>
-                </tr>
-            </table>
-        </div>
-
-
-        <div class="right-section">
-            <div class="date-display" id="dateDisplay">TODAY IS: MON, OCT 20, 2025</div>
-            <div class="time-display" id="timeDisplay">9:56:28 AM</div>
-
-            <div class="scan-buttons">
-                <button class="scan-btn" id="usbScanBtn">
-                    <i class="fas fa-barcode"></i> SCAN USING USB SCANNER
-                </button>
-
+                <div class="attendance-record-card">
+                    <div class="card-header">Attendance Record</div>
+                    <div class="card-body">
+                        <div class="attendance-line">
+                            <span>Morning In:</span>
+                            <span>{{ $currentAttendanceRecord && $currentAttendanceRecord->time_in_am ? \Carbon\Carbon::parse($currentAttendanceRecord->time_in_am)->format('g:i A') : '---' }}</span>
+                        </div>
+                        <div class="attendance-line">
+                            <span>Morning Out:</span>
+                            <span>{{ $currentAttendanceRecord && $currentAttendanceRecord->time_out_am ? \Carbon\Carbon::parse($currentAttendanceRecord->time_out_am)->format('g:i A') : '---' }}</span>
+                        </div>
+                        <div class="attendance-line">
+                            <span>Afternoon In:</span>
+                            <span>{{ $currentAttendanceRecord && $currentAttendanceRecord->time_in_pm ? \Carbon\Carbon::parse($currentAttendanceRecord->time_in_pm)->format('g:i A') : '---' }}</span>
+                        </div>
+                        <div class="attendance-line">
+                            <span>Afternoon Out:</span>
+                            <span>{{ $currentAttendanceRecord && $currentAttendanceRecord->time_out_pm ? \Carbon\Carbon::parse($currentAttendanceRecord->time_out_pm)->format('g:i A') : '---' }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <input type="text" class="scan-status" id="scanStatus" value="WAITING TO SCAN.." readonly>
+             <div class="right-info-column">
+                 <div class="date-label" id="currentDate">TODAY IS: {{ now()->format('D M d, Y') }}</div>
+                
+                 <div class="time-label" id="currentTime">{{ now()->format('g:i:s A') }}</div>
+                
+                 <div class="status-label">
+                     @if($currentStudent)
+                         STUDENT DETECTED
+                     @else
+                         WAITING TO SCAN..
+                     @endif
+                 </div>
 
-
-            <div class="summary-box">
-                <h3>Todays Attendance</h3>
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="label">Morning In</div>
-                        <div class="value" id="summaryMorningIn">{{ $todaySummary['morning_in'] ?? 0 }}</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">Morning  Out</div>
-                        <div class="value" id="summaryMorningOut">{{ $todaySummary['morning_out'] ?? 0 }}</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">Afternoon In</div>
-                        <div class="value" id="summaryAfternoonIn">{{ $todaySummary['afternoon_in'] ?? 0 }}</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">Afternoon Out</div>
-                        <div class="value" id="summaryAfternoonOut">{{ $todaySummary['afternoon_out'] ?? 0 }}</div>
+                <div class="todays-attendance-card">
+                    <div class="card-header">Todays Attendance</div>
+                    <div class="card-body">
+                        <div class="attendance-line">
+                            <span>Morning In:</span>
+                            <span>{{ $todaySummary['morning_in'] ?? 0 }}</span>
+                        </div>
+                        <div class="attendance-line">
+                            <span>Morning Out:</span>
+                            <span>{{ $todaySummary['morning_out'] ?? 0 }}</span>
+                        </div>
+                        <div class="attendance-line">
+                            <span>Afternoon In:</span>
+                            <span>{{ $todaySummary['afternoon_in'] ?? 0 }}</span>
+                        </div>
+                        <div class="attendance-line">
+                            <span>Afternoon Out:</span>
+                            <span>{{ $todaySummary['afternoon_out'] ?? 0 }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-
-    <div id="reader"></div>
-
-
-    <div class="recent-logs">
-        <h3>Recent Attendance Logs</h3>
-        <div class="logs-grid" id="logsGrid">
-            @php
-                $logCount = $recentAttendance->count();
-                $placeholdersNeeded = 5 - $logCount;
-            @endphp
-
-            @foreach($recentAttendance as $log)
-                <div class="log-card">
-                    <div class="time-badge">
-                        @php
-                            $lastTime = $log->time_in_pm ?? $log->time_out_am ?? $log->time_in_am ?? $log->time_out_pm;
+        <div class="recent-scans-gallery">
+            @if(isset($recentAttendance) && $recentAttendance->count() > 0)
+                @foreach($recentAttendance as $log)
+                    @php
+                        // Determine the most recent time and its type
+                        $timeType = 'TIME IN';
+                        $lastTime = null;
+                        
+                        if ($log->time_out_pm) {
+                            $lastTime = \Carbon\Carbon::parse($log->time_out_pm)->format('g:i A');
+                            $timeType = 'TIME OUT';
+                        } elseif ($log->time_in_pm) {
+                            $lastTime = \Carbon\Carbon::parse($log->time_in_pm)->format('g:i A');
                             $timeType = 'TIME IN';
-                            if ($log->time_out_pm) $timeType = 'TIME OUT';
-                            elseif ($log->time_in_pm) $timeType = 'TIME IN';
-                            elseif ($log->time_out_am) $timeType = 'TIME OUT';
-                        @endphp
-                        {{ $timeType }}: {{ $lastTime ? \Carbon\Carbon::parse($lastTime)->format('g:i A') : '--:--' }}
+                        } elseif ($log->time_out_am) {
+                            $lastTime = \Carbon\Carbon::parse($log->time_out_am)->format('g:i A');
+                            $timeType = 'TIME OUT';
+                        } elseif ($log->time_in_am) {
+                            $lastTime = \Carbon\Carbon::parse($log->time_in_am)->format('g:i A');
+                            $timeType = 'TIME IN';
+                        }
+                        
+                        $timeInfo = $lastTime ? "{$timeType}: {$lastTime}" : "TIME IN: ---";
+                    @endphp
+                    <div class="scan-card" data-time-info="{{ $timeInfo }}">
+                        <div class="scan-card-body">
+                            @if($log->student && $log->student->picture)
+                                <img src="{{ asset('storage/' . $log->student->picture) }}" alt="Student">
+                            @else
+                                <div class="scan-photo-placeholder">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="scan-card-footer">
+                            <div class="scan-card-name">{{ $log->student->name ?? '---' }}</div>
+                            <div class="scan-card-section">{{ $log->student->section->name ?? '---' }}</div>
+                        </div>
                     </div>
-                    <div class="photo">
-                        @if($log->student->picture)
-                            <img src="{{ asset('storage/' . $log->student->picture) }}" alt="{{ $log->student->name }}">
-                        @else
-                            <i class="fas fa-user placeholder-small"></i>
-                        @endif
-                    </div>
-                    <div class="info">
-                        <div class="name">{{ $log->student->name }}</div>
-                        <div class="section">{{ $log->student->section->name ?? 'N/A' }}</div>
-                    </div>
-                </div>
-            @endforeach
+                @endforeach
 
-            @for($i = 0; $i < $placeholdersNeeded; $i++)
-                <div class="log-card">
-                    <div class="time-badge">--:--</div>
-                    <div class="photo">
-                        <i class="fas fa-user placeholder-small"></i>
+                @for($i = $recentAttendance->count(); $i < 5; $i++)
+                    <div class="scan-card" data-time-info="TIME IN: ---">
+                        <div class="scan-card-body">
+                            <div class="scan-photo-placeholder">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="scan-card-footer">
+                            <div class="scan-card-name">---</div>
+                            <div class="scan-card-section">---</div>
+                        </div>
                     </div>
-                    <div class="info">
-                        <div class="name">Name</div>
-                        <div class="section">Grade Section</div>
+                @endfor
+            @else
+                @for($i = 0; $i < 5; $i++)
+                    <div class="scan-card" data-time-info="TIME IN: ---">
+                        <div class="scan-card-body">
+                            <div class="scan-photo-placeholder">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="scan-card-footer">
+                            <div class="scan-card-name">---</div>
+                            <div class="scan-card-section">---</div>
+                        </div>
                     </div>
-                </div>
-            @endfor
+                @endfor
+            @endif
         </div>
     </div>
 
     <script>
-        const code = '{{ $code }}';
-        let html5QrCode = null;
-        let isScanning = false;
-
-        // Auto-focus USB input
-        document.getElementById('usbInput').focus();
-
-        // Update Date and Time
-        function updateDateTime() {
+        function updateClock() {
             const now = new Date();
-
-            // Format: TODAY IS: MON, OCT 20, 2025
-            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-            const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-            const dateStr = `TODAY IS: ${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
-            document.getElementById('dateDisplay').textContent = dateStr;
-
-            // Format: 9:56:28 AM
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            const timeStr = `${hours}:${minutes}:${seconds} ${ampm}`;
-            document.getElementById('timeDisplay').textContent = timeStr;
-        }
-
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
-
-        // USB Scanner Handler
-        document.getElementById('usbInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const studentId = this.value.trim();
-                if (studentId) {
-                    processQRScan(studentId);
-                    this.value = '';
-                }
-            }
-        });
-
-        // USB Scan Button
-        document.getElementById('usbScanBtn').addEventListener('click', function() {
-            document.getElementById('usbInput').focus();
-            document.getElementById('scanStatus').value = 'READY FOR USB SCAN...';
-        });
-
-        // Camera Scan Button
-        document.getElementById('cameraScanBtn').addEventListener('click', function() {
-            toggleCamera();
-        });
-
-        function toggleCamera() {
-            const readerDiv = document.getElementById('reader');
-
-            if (isScanning) {
-                html5QrCode.stop().then(() => {
-                    readerDiv.style.display = 'none';
-                    isScanning = false;
-                    document.getElementById('scanStatus').value = 'WAITING TO SCAN..';
-                }).catch(err => {
-                    console.error('Error stopping camera:', err);
-                });
-            } else {
-                readerDiv.style.display = 'block';
-                html5QrCode = new Html5Qrcode("reader");
-
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: 250 },
-                    (decodedText) => {
-                        processQRScan(decodedText);
-                        html5QrCode.stop();
-                        readerDiv.style.display = 'none';
-                        isScanning = false;
-                    }
-                ).then(() => {
-                    isScanning = true;
-                    document.getElementById('scanStatus').value = 'SCANNING...';
-                }).catch(err => {
-                    alert('Unable to access camera: ' + err);
-                    readerDiv.style.display = 'none';
-                });
-            }
-        }
-
-        // Process QR Scan
-        function processQRScan(studentId) {
-            document.getElementById('scanStatus').value = studentId;
-
-            fetch(`/public/attendance/scan-qr`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    code: code,
-                    student_id: studentId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    displayAttendanceRecord(data);
-                    updateRecentLogs();
-                    updateSummary();
-                    document.getElementById('scanStatus').value = 'SCAN SUCCESSFUL! - ' + data.student.name;
-
-                    setTimeout(() => {
-                        document.getElementById('scanStatus').value = 'WAITING TO SCAN..';
-                        document.getElementById('usbInput').focus();
-                    }, 3000);
-                } else {
-                    document.getElementById('scanStatus').value = data.message || 'SCAN FAILED';
-                    setTimeout(() => {
-                        document.getElementById('scanStatus').value = 'WAITING TO SCAN..';
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('scanStatus').value = 'ERROR OCCURRED';
-                setTimeout(() => {
-                    document.getElementById('scanStatus').value = 'WAITING TO SCAN..';
-                }, 3000);
-            });
-        }
-
-        // Display Attendance Record
-        function displayAttendanceRecord(data) {
-            const student = data.student;
-            const attendance = data.attendance;
-
-            // Update photo
-            const photoSection = document.getElementById('photoSection');
-            if (student.picture) {
-                photoSection.innerHTML = `<img src="${student.picture}" alt="${student.name}">`;
-            } else {
-                photoSection.innerHTML = `
-                    <div class="placeholder-photo">
-                        <i class="fas fa-user placeholder-icon"></i>
-                    </div>
-                `;
-            }
-
-            // Update student info
-            document.getElementById('studentName').textContent = student.name;
-            document.getElementById('studentSection').textContent = student.section;
-
-            // Show attendance alert
-            const alert = document.getElementById('attendanceAlert');
-            const typeLabels = {
-                'time_in_am': 'TIME IN',
-                'time_out_am': 'TIME OUT',
-                'time_in_pm': 'TIME IN',
-                'time_out_pm': 'TIME OUT'
+            
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
             };
-            document.getElementById('alertTime').textContent = `${typeLabels[attendance.type] || 'TIME IN'} ${attendance.recorded_time}`;
-            document.getElementById('alertDate').textContent = attendance.recorded_date;
-            alert.classList.add('show');
+            const dateStr = now.toLocaleDateString('en-US', options).toUpperCase();
+            
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
 
-            // Update attendance record table
-            document.getElementById('morningIn').textContent = attendance.am_in || '--:--';
-            document.getElementById('morningOut').textContent = attendance.am_out || '--:--';
-            document.getElementById('afternoonIn').textContent = attendance.pm_in || '--:--';
-            document.getElementById('afternoonOut').textContent = attendance.pm_out || '--:--';
+            const mainDateEl = document.querySelector('.right-info-column #currentDate');
+            if (mainDateEl) mainDateEl.textContent = `TODAY IS: ${dateStr}`;
+            
+            const mainTimeEl = document.querySelector('.right-info-column #currentTime');
+            if (mainTimeEl) mainTimeEl.textContent = timeStr;
 
-            // Hide alert after 5 seconds
-            setTimeout(() => {
-                alert.classList.remove('show');
-            }, 5000);
+            const headerDateEl = document.querySelector('.header #currentDate');
+            if (headerDateEl) headerDateEl.textContent = dateStr;
+            
+            const headerTimeEl = document.querySelector('.header #currentTime');
+            if (headerTimeEl) headerTimeEl.textContent = timeStr;
         }
 
-        // Update Recent Logs
-        function updateRecentLogs() {
-            fetch(`/public/attendance/${code}/recent-logs`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const logsGrid = document.getElementById('logsGrid');
-                        const logs = data.data;
-                        const placeholdersNeeded = 5 - logs.length;
+        updateClock();
+        setInterval(updateClock, 1000);
 
-                        let html = '';
-
-                        logs.forEach(log => {
-                            const photoHtml = log.photo.includes('default-avatar')
-                                ? '<i class="fas fa-user placeholder-small"></i>'
-                                : `<img src="${log.photo}" alt="${log.student_name}">`;
-
-                            html += `
-                                <div class="log-card">
-                                    <div class="time-badge">${log.time_type}: ${log.time_in}</div>
-                                    <div class="photo">${photoHtml}</div>
-                                    <div class="info">
-                                        <div class="name">${log.student_name}</div>
-                                        <div class="section">${log.section}</div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-
-                        for (let i = 0; i < placeholdersNeeded; i++) {
-                            html += `
-                                <div class="log-card">
-                                    <div class="time-badge">--:--</div>
-                                    <div class="photo">
-                                        <i class="fas fa-user placeholder-small"></i>
-                                    </div>
-                                    <div class="info">
-                                        <div class="name">Name</div>
-                                        <div class="section">Grade Section</div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-
-                        logsGrid.innerHTML = html;
-                    }
-                })
-                .catch(error => console.error('Error updating logs:', error));
-        }
-
-        // Update Summary
-        function updateSummary() {
-            fetch(`/public/attendance/${code}/summary`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('summaryMorningIn').textContent = data.data.morning_in || 0;
-                        document.getElementById('summaryMorningOut').textContent = data.data.morning_out || 0;
-                        document.getElementById('summaryAfternoonIn').textContent = data.data.afternoon_in || 0;
-                        document.getElementById('summaryAfternoonOut').textContent = data.data.afternoon_out || 0;
-                    }
-                })
-                .catch(error => console.error('Error updating summary:', error));
-        }
-
-        // Auto-refresh logs and summary
-        setInterval(updateRecentLogs, 10000); // Every 10 seconds
-        setInterval(updateSummary, 15000); // Every 15 seconds
-
-        // Keep USB input focused
-        setInterval(() => {
-            if (document.activeElement !== document.getElementById('usbInput') && !isScanning) {
-                document.getElementById('usbInput').focus();
-            }
-        }, 1000);
+        setInterval(function() {
+            window.location.reload();
+        }, 30000);
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

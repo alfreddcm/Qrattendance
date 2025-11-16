@@ -271,7 +271,15 @@
                             <small class="text-muted">Signature preview:</small>
                             <div class="p-1 bg-light rounded small" id="signatureText">
                                 <div class="fw-bold">{{ Auth::user()->name ?? 'Teacher Name' }}</div>
-                                <div>{{ Auth::user()->section_name ?? 'Section Name' }}</div>
+                                <div>
+                                    @if(Auth::user()->section)
+                                        {{ Auth::user()->section->name }}
+                                    @elseif(Auth::user()->sections && Auth::user()->sections->count() > 0)
+                                        {{ Auth::user()->sections->pluck('name')->join(', ') }}
+                                    @else
+                                        Section Name
+                                    @endif
+                                </div>
                                 <div>{{ Auth::user()->school->name ?? 'School Name' }}</div>
                             </div>
                         </div>
@@ -531,7 +539,7 @@ const messageTemplates = {
 
  const teacherInfo = {
     name: '{{ Auth::user()->name ?? "Teacher Name" }}',
-    section: '{{ Auth::user()->section_name ?? "Section Name" }}',
+    section: '@if(Auth::user()->section){{ Auth::user()->section->name }}@elseif(Auth::user()->sections && Auth::user()->sections->count() > 0){{ Auth::user()->sections->pluck("name")->join(", ") }}@else{{ "Section Name" }}@endif',
     school: '{{ Auth::user()->school->name ?? "School Name" }}'
 };
 

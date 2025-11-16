@@ -2,7 +2,18 @@
 @section('title', 'Manage Teachers')
 @section('content')
 
+<div class="sticky-header" >
+    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
+        <div>
+            <h4 class="fs-5 mb-1">
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                Manage Teachers
+            </h4>
+            <p class="subtitle fs-6 mb-0">Add, edit, and manage schools</p>
+        </div>
 
+    </div>
+</div>
 
     <div class="container-fluid py-2">
         @include('partials.alerts')
@@ -1092,10 +1103,11 @@ function editTeacher(teacherId) {
          if (checkbox.dataset.teacherId == currentTeacherId) {
             checkbox.disabled = false;
             checkbox.parentElement.querySelector('label').classList.remove('text-muted');
+             checkbox.checked = true;
             const badge = checkbox.parentElement.querySelector('.badge');
             if (badge) {
-                badge.className = 'badge bg-success';
-                badge.textContent = 'Available';
+                 badge.className = 'badge bg-info';
+                badge.textContent = 'Assigned';
             }
         }
          else if (checkbox.dataset.assigned === 'true' && checkbox.dataset.teacherId != currentTeacherId) {

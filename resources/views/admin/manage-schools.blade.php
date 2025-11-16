@@ -73,7 +73,7 @@
                             <th class="py-1 fs-6">School ID</th>
                             <th class="py-1 fs-6">Name</th>
                             <th class="py-1 fs-6">Address</th>
-                            <th class="py-1 fs-6">Created</th>
+                            <th class="py-1 fs-6">Addd</th>
                             <th class="py-1 fs-6">Actions</th>
                         </tr>
                     </thead>
@@ -120,7 +120,7 @@
                             <td colspan="6" class="text-center py-3">
                                 <div class="text-muted">
                                     <i class="fas fa-school fa-2x mb-2"></i>
-                                    <p class="fs-6">No schools found. Create your first school!</p>
+                                    <p class="fs-6">No schools found. Add your first school!</p>
                                 </div>
                             </td>
                         </tr>
@@ -179,7 +179,7 @@
                 </div>
                 <div class="modal-footer p-2">
                     <button type="button" class="btn btn-secondary btn-sm px-2 py-1" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Create School</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Add School</button>
                 </div>
             </form>
         </div>

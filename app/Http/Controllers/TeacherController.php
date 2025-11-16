@@ -408,7 +408,7 @@ class TeacherController extends Controller
 
     public function account()
     {
-        $teacher = Auth::user();
+        $teacher = Auth::user()->load(['section', 'sections']);
         return view('teacher.manageaccount', compact('teacher'));
     }
 
@@ -421,7 +421,6 @@ class TeacherController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->id,
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:100',
-            'section_name' => 'nullable|string|max:100',
         ]);
 
         if (is_object($validated)) {
@@ -433,7 +432,6 @@ class TeacherController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'position' => $request->position,
-            'section_name' => $request->section_name,
         ]);
 
         return redirect()->route('teacher.account')->with('success', 'Account updated successfully!');
