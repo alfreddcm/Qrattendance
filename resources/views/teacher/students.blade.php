@@ -21,7 +21,8 @@
         }
     }
     $schoolYears = \App\Models\SchoolYear::all();
-    $selectedSchoolYear = request('school_year_id');
+    $activeSchoolYear = \App\Models\SchoolYear::getCurrentSchoolYear(auth()->user()->school_id);
+    $selectedSchoolYear = request('school_year_id') ?: ($activeSchoolYear ? $activeSchoolYear->id : null);
 
     $sectionCounts = $students->groupBy(function($student) {
                     return $student->section ? $student->section->name : 'Unknown';
@@ -165,7 +166,7 @@
 
                 @if(count($students) > 0)
                     <div class="btn-group">
-                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-qrcode me-1"></i>QR Actions
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="qrActionsDropdown">
@@ -189,7 +190,7 @@
                         </ul>
                     </div>
 
-                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="idActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="idActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-id-card me-1"></i>Student IDs
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="idActionsDropdown">
@@ -200,7 +201,7 @@
                         </li>
                     </ul>
 
-                    <a href="{{ route('teacher.students.export') }}" class="btn btn-outline-light btn-sm">
+                    <a href="{{ route('teacher.students.export') }}" class="btn btn-light btn-sm">
                         <i class="fas fa-download me-1"></i>Export
                     </a>
                 @endif
@@ -754,7 +755,7 @@
                                         </div>
                                         <div class="col-md-9">
                                              <div id="photo-controls" class="d-flex gap-2 mb-2">
-                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openCameraModal()">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" id="take-photo-btn" onclick="showCamera()">
                                                     <i class="fa fa-camera me-1"></i>Take Photo
                                                 </button>
                                                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('picture').click()">
@@ -762,7 +763,155 @@
                                                 </button>
                                             </div>
 
-                                             <input type="file" class="form-control d-none" id="picture" name="picture" accept="image
+                                            <!-- Camera View (hidden by default) -->
+                                            <div id="camera-view-inline" style="display: none;" class="mb-2">
+                                                <video id="camera-video-inline" autoplay playsinline style="width: 100%; max-width: 320px; border-radius: 10px; border: 3px solid #007bff;"></video>
+                                                <canvas id="camera-canvas-inline" style="display: none;"></canvas>
+                                                <div class="d-flex gap-2 mt-2">
+                                                    <button type="button" class="btn btn-success btn-sm" onclick="capturePhotoInline()">
+                                                        <i class="fas fa-camera"></i> Capture
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary btn-sm" onclick="cancelCamera()">
+                                                        <i class="fas fa-times"></i> Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <input type="file" class="form-control d-none" id="picture" name="picture" accept="image/*">
+                                            <input type="hidden" id="captured_image" name="captured_image">
+                                            <div id="image-preview" class="mt-2" style="display: none;">
+                                                <img id="preview-img" src="" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; border: 3px solid #28a745;">
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-danger btn-sm" onclick="removePhoto()">
+                                                        <i class="fa fa-trash"></i> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">Upload a student photo or take a photo with camera</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Basic Information -->
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-primary fw-bold">Basic Information</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 2024-001">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M.">
+                                </div>
+
+                                <!-- Academic Information -->
+                                <div class="col-12 mt-3">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-graduation-cap"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-success fw-bold">Academic Information</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="teacher_section_id" class="form-label">Grade & Section <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="teacher_section_id" name="section_id" required>
+                                        <option value="">Select Grade & Section</option>
+                                        @foreach($teacherSections ?? [] as $section)
+                                            <option value="{{ $section->id }}">Grade {{ $section->gradelevel }} - {{ $section->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="teacher_semester_id" class="form-label">School Year</label>
+                                    <select class="form-select" id="teacher_semester_id" name="school_year_id">
+                                        <option value="">Select School Year</option>
+                                        @foreach($schoolYears ?? [] as $sy)
+                                            <option value="{{ $sy->id }}">{{ $sy->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Personal Information -->
+                                <div class="col-12 mt-3">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-info text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-id-card"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-info fw-bold">Personal Information</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="gender" name="gender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="age" name="age" min="13" max="25" required placeholder="Age">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="cp_no" class="form-label">Contact Number</label>
+                                    <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX">
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="address" class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="address" name="address" placeholder="Complete address">
+                                </div>
+
+                                <!-- Emergency Contact -->
+                                <div class="col-12 mt-3">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-danger text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-phone"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-danger fw-bold">Emergency Contact <span class="text-danger">*</span></h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contact_person_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" required placeholder="Parent/Guardian name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX">
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="contact_person_relationship" name="contact_person_relationship" required>
+                                        <option value="">Select Relationship</option>
+                                        <option value="Parent">Parent</option>
+                                        <option value="Guardian">Guardian</option>
+                                        <option value="Sibling">Sibling</option>
+                                        <option value="Relative">Relative</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Student
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+<style>
     .sort-notification {
         border-radius: 8px;
         border: none;
@@ -773,7 +922,6 @@
      .sticky-card-header {
         position: sticky;
         top: 0;
-        z-index: 100;
         border-bottom: 1px solid rgba(255,255,255,0.2);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
@@ -801,8 +949,58 @@
         padding: 0 !important;
     }
 
+    /* Ensure dropdowns are not clipped by table container */
+    .table-responsive {
+        overflow-x: auto;
+        overflow-y: visible !important;
+    }
+
+    .table {
+        position: relative;
+    }
+
     .table {
         margin-bottom: 0 !important;
+    }
+
+     .table tbody tr {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.04);
+    }
+
+    /* Ensure table cells with dropdowns have proper stacking context */
+    .table td {
+        position: relative;
+    }
+
+    .table .btn-group {
+        position: static;
+    }
+
+     .table-responsive::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #6366f1;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #4f46e5;
+    }
+
+     .card-body {
+        padding: 0;
     }
 
      .table tbody tr {
@@ -896,20 +1094,39 @@
         border-radius: 4px;
     }
 
-    .btn-outline-light {
-        border-color: rgba(255,255,255,0.3);
+    .btn-outline-primary {
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
         color: white;
     }
 
-    .btn-outline-light:hover {
-        background-color: rgba(255,255,255,0.2);
-        border-color: rgba(255,255,255,0.5);
-        color: white;
+    /* Light buttons on blue background */
+    .bg-primary .btn-light {
+        background-color: white;
+        border-color: white;
+        color: #0d6efd;
+        font-weight: 500;
+    }
+
+    .bg-primary .btn-light:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-color: white;
+        color: #0d6efd;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .dropdown-menu {
         font-size: 0.85rem;
         min-width: 140px;
+        position: absolute !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 1px solid rgba(0,0,0,0.1);
     }
 
     .dropdown-item {
@@ -918,6 +1135,40 @@
 
     .dropdown-item:hover {
         background-color: #f8f9fa;
+    }
+
+    .sticky-top {
+        background-color: #f8f9fa !important;
+    }
+
+    thead.sticky-top {
+        background-color: #f8f9fa !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    thead.sticky-top th {
+        background-color: #f8f9fa !important;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        padding: 12px 8px;
+    }
+
+     .btn-group,
+    .dropdown {
+        position: relative;
+    }
+
+    .btn-group.show,
+    .dropdown.show {
+        position: relative;
+    }
+
+    .sticky-card-header {
+        position: sticky;
+        top: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .card-body-custom {
@@ -1121,21 +1372,100 @@
         }
     }
 
-     #cameraModal {
-        z-index: 1070 !important;
-    }
-
-    #cameraModal .modal-backdrop {
-        z-index: 1065 !important;
-    }
-
-     #addStudentModal {
-        z-index: 1055 !important;
-    }
 </style>
 
 <script>
- document.addEventListener('DOMContentLoaded', function() {
+var videoStream = null;
+
+function showCamera() {
+    const cameraView = document.getElementById('camera-view-inline');
+    const takePhotoBtn = document.getElementById('take-photo-btn');
+    const video = document.getElementById('camera-video-inline');
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Camera not supported on this device/browser');
+        return;
+    }
+
+    takePhotoBtn.style.display = 'none';
+    cameraView.style.display = 'block';
+
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: 'user'
+        }
+    })
+    .then(function(stream) {
+        videoStream = stream;
+        video.srcObject = stream;
+    })
+    .catch(function(err) {
+        console.error('Error accessing camera:', err);
+        alert('Error accessing camera: ' + err.message);
+        cancelCamera();
+    });
+}
+
+function capturePhotoInline() {
+    const video = document.getElementById('camera-video-inline');
+    const canvas = document.getElementById('camera-canvas-inline');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+
+     document.getElementById('captured_image').value = dataURL;
+
+     showImagePreview(dataURL);
+
+     cancelCamera();
+}
+
+function cancelCamera() {
+    const cameraView = document.getElementById('camera-view-inline');
+    const takePhotoBtn = document.getElementById('take-photo-btn');
+    const video = document.getElementById('camera-video-inline');
+
+     if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+
+     video.srcObject = null;
+
+     cameraView.style.display = 'none';
+    takePhotoBtn.style.display = 'inline-block';
+}
+
+function showImagePreview(src) {
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+
+    if (preview && previewImg) {
+        previewImg.src = src;
+        preview.style.display = 'block';
+    }
+}
+
+function removePhoto() {
+    const pictureInput = document.getElementById('picture');
+    const capturedInput = document.getElementById('captured_image');
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+
+    if (pictureInput) pictureInput.value = '';
+    if (capturedInput) capturedInput.value = '';
+    if (preview) preview.style.display = 'none';
+    if (previewImg) previewImg.src = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
      loadAvailableSections();
 
       const emergencyToggle = document.querySelector('[data-bs-target="#emergencyContact"]');
@@ -1438,339 +1768,7 @@ function showAlert(type, message) {
          var loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
         loadingModal.show();
     });
-
-
-    let videoStream = null;
-
-    console.log('Camera script loaded - functions being defined');
-
-
-
-     window.toggleCamera = function() {
-        console.log('=== TOGGLE CAMERA FUNCTION CALLED ===');
-
-        try {
-            const cameraView = document.getElementById('camera-view');
-            const photoControls = document.getElementById('photo-controls');
-
-            console.log('cameraView element:', cameraView);
-            console.log('photoControls element:', photoControls);
-            console.log('current cameraView display style:', cameraView ? cameraView.style.display : 'element not found');
-
-            if (!cameraView) {
-                console.error('ERROR: camera-view element not found in DOM');
-                alert('Camera view element not found. Please refresh the page.');
-                return;
-            }
-
-            if (cameraView.style.display === 'none' || cameraView.style.display === '') {
-                console.log('Showing camera view...');
-                cameraView.style.display = 'block';
-                console.log('Camera view display set to block, calling startCamera()');
-                window.startCamera();
-            } else {
-                console.log('Hiding camera view...');
-                window.closeCamera();
-            }
-        } catch (error) {
-            console.error('ERROR in toggleCamera function:', error);
-            alert('Error in toggleCamera: ' + error.message);
-        }
-    }
-
-    window.startCamera = function() {
-        console.log('=== START CAMERA FUNCTION CALLED ===');
-
-        try {
-            const video = document.getElementById('camera-video');
-            console.log('camera-video element:', video);
-
-            if (!video) {
-                console.error('ERROR: camera-video element not found');
-                alert('Camera video element not found');
-                return;
-            }
-
-             console.log('Checking camera support...');
-            console.log('navigator.mediaDevices:', navigator.mediaDevices);
-            console.log('getUserMedia:', navigator.mediaDevices ? navigator.mediaDevices.getUserMedia : 'not available');
-
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                console.error('ERROR: Camera not supported on this device/browser');
-                alert('Camera not supported on this device/browser');
-                window.closeCamera();
-                return;
-            }
-
-            console.log('Camera supported, requesting camera access...');
-
-            navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    facingMode: 'user'
-                }
-            })
-            .then(function(stream) {
-                console.log('Camera access granted, stream received:', stream);
-                videoStream = stream;
-                video.srcObject = stream;
-                console.log('Video source set successfully');
-            })
-            .catch(function(err) {
-                console.error('ERROR accessing camera:', err);
-                console.error('Error name:', err.name);
-                console.error('Error message:', err.message);
-                alert('Error accessing camera: ' + err.message);
-                window.closeCamera();
-            });
-        } catch (error) {
-            console.error('ERROR in startCamera function:', error);
-            alert('Error in startCamera: ' + error.message);
-        }
-    }
-
-    window.closeCamera = function() {
-        console.log('=== CLOSE CAMERA FUNCTION CALLED ===');
-
-        try {
-            const cameraView = document.getElementById('camera-view');
-            const video = document.getElementById('camera-video');
-
-            console.log('cameraView element:', cameraView);
-            console.log('video element:', video);
-            console.log('videoStream:', videoStream);
-
-             if (videoStream) {
-                console.log('Stopping video stream tracks...');
-                videoStream.getTracks().forEach(track => {
-                    console.log('Stopping track:', track);
-                    track.stop();
-                });
-                videoStream = null;
-                console.log('Video stream stopped and cleared');
-            } else {
-                console.log('No video stream to stop');
-            }
-
-             if (cameraView) {
-                cameraView.style.display = 'none';
-                console.log('Camera view hidden');
-            }
-
-            if (video) {
-                video.srcObject = null;
-                console.log('Video source cleared');
-            }
-        } catch (error) {
-            console.error('ERROR in closeCamera function:', error);
-        }
-    }
-
-    window.capturePhoto = function() {
-        console.log('=== CAPTURE PHOTO FUNCTION CALLED ===');
-
-        try {
-            const video = document.getElementById('camera-video');
-            const canvas = document.getElementById('camera-canvas');
-
-            if (!video || !canvas) {
-                console.error('ERROR: video or canvas element not found');
-                alert('Required elements not found');
-                return;
-            }
-
-            const ctx = canvas.getContext('2d');
-
-             canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            console.log('Canvas dimensions set:', canvas.width, 'x', canvas.height);
-
-             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-             const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-            console.log('Photo captured, data URL length:', dataURL.length);
-
-             document.getElementById('captured_image').value = dataURL;
-            window.showImagePreview(dataURL);
-
-             window.closeCamera();
-            console.log('Photo capture completed');
-        } catch (error) {
-            console.error('ERROR in capturePhoto function:', error);
-            alert('Error capturing photo: ' + error.message);
-        }
-    }
-
-    window.showImagePreview = function(src) {
-        console.log('showImagePreview called with src length:', src ? src.length : 'null');
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-
-        if (preview && previewImg) {
-            previewImg.src = src;
-            preview.style.display = 'block';
-            console.log('Image preview shown');
-        } else {
-            console.error('Preview elements not found');
-        }
-    }
-
-    window.removePhoto = function() {
-        console.log('removePhoto called');
-         const pictureInput = document.getElementById('picture');
-        const capturedInput = document.getElementById('captured_image');
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-
-        if (pictureInput) pictureInput.value = '';
-        if (capturedInput) capturedInput.value = '';
-        if (preview) preview.style.display = 'none';
-        if (previewImg) previewImg.src = '';
-
-        console.log('Photo removed and preview hidden');
-    }
-
-     const pictureInput = document.getElementById('picture');
-    if (pictureInput) {
-        pictureInput.addEventListener('change', function(e) {
-            console.log('File input changed');
-            const file = e.target.files[0];
-            if (file) {
-                console.log('File selected:', file.name, file.size);
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    window.showImagePreview(e.target.result);
-                     const capturedInput = document.getElementById('captured_image');
-                    if (capturedInput) capturedInput.value = '';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-     let videoStream = null;
-    let cameraModal = null;
-
-     window.openCameraModal = function() {
-        cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
-        cameraModal.show();
-
-         document.getElementById('camera-preview').style.display = 'none';
-        document.getElementById('retake-btn').style.display = 'none';
-        document.getElementById('use-photo-btn').style.display = 'none';
-        document.getElementById('camera-error').style.display = 'none';
-        document.getElementById('camera-video').style.display = 'block';
-
-        startCamera();
-    }
-
-     function startCamera() {
-        const video = document.getElementById('camera-video');
-
-         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            showCameraError();
-            return;
-        }
-
-        navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                facingMode: 'user'
-            }
-        })
-        .then(function(stream) {
-            videoStream = stream;
-            video.srcObject = stream;
-        })
-        .catch(function(err) {
-            console.error('Error accessing camera:', err);
-            showCameraError();
-        });
-    }
-
-     window.capturePhoto = function() {
-        const video = document.getElementById('camera-video');
-        const canvas = document.getElementById('camera-canvas');
-        const ctx = canvas.getContext('2d');
-
-         canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-         const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-
-         const capturedPhoto = document.getElementById('captured-photo');
-        capturedPhoto.src = dataURL;
-
-         document.getElementById('camera-video').style.display = 'none';
-        document.getElementById('camera-preview').style.display = 'block';
-        document.getElementById('retake-btn').style.display = 'inline-block';
-        document.getElementById('use-photo-btn').style.display = 'inline-block';
-    }
-
-     window.retakePhoto = function() {
-        document.getElementById('camera-preview').style.display = 'none';
-        document.getElementById('retake-btn').style.display = 'none';
-        document.getElementById('use-photo-btn').style.display = 'none';
-        document.getElementById('camera-video').style.display = 'block';
-    }
-
-     window.usePhoto = function() {
-        const capturedPhoto = document.getElementById('captured-photo');
-        const dataURL = capturedPhoto.src;
-
-         document.getElementById('captured_image').value = dataURL;
-
-         showImagePreview(dataURL);
-
-         stopCamera();
-        cameraModal.hide();
-    }
-
-     function showCameraError() {
-        document.getElementById('camera-video').style.display = 'none';
-        document.getElementById('camera-error').style.display = 'block';
-    }
-
-     function stopCamera() {
-        if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-            videoStream = null;
-        }
-    }
-
-     window.showImagePreview = function(src) {
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-
-        if (preview && previewImg) {
-            previewImg.src = src;
-            preview.style.display = 'block';
-        }
-    }
-
-     window.removePhoto = function() {
-         const pictureInput = document.getElementById('picture');
-        const capturedInput = document.getElementById('captured_image');
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-
-        if (pictureInput) pictureInput.value = '';
-        if (capturedInput) capturedInput.value = '';
-        if (preview) preview.style.display = 'none';
-        if (previewImg) previewImg.src = '';
-    }
-
-     const cameraModalElement = document.getElementById('cameraModal');
-    if (cameraModalElement) {
-        cameraModalElement.addEventListener('hidden.bs.modal', function () {
-            stopCamera();
-        });
-    }
+});
 });
 </script>
 

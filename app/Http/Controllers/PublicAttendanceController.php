@@ -32,32 +32,73 @@ class PublicAttendanceController extends Controller
         $school = $attendanceCode->teacher->school;
         $section = $attendanceCode->section;
         
-        // Get the most recent student who scanned (if any)
-        $latestAttendance = Attendance::with(['student.section'])
-            ->whereDate('date', today())
-            ->where('teacher_id', $attendanceCode->teacher_id)
-            ->latest('updated_at')
-            ->first();
-
-        // Get student data or use placeholder
+        // Initialize with null/empty values for placeholders (waiting to scan state)
         $currentStudent = null;
         $currentAttendanceRecord = null;
         
-        if ($latestAttendance && $latestAttendance->student) {
-            $currentStudent = $latestAttendance->student;
-            $currentAttendanceRecord = $latestAttendance;
+        // Check if there's a recently scanned student in session
+        $sessionKey = 'scanned_student_' . $code;
+        $scannedData = session($sessionKey);
+        
+        if ($scannedData && isset($scannedData['scan_time'])) {
+            // Check if the scan was within last 5 seconds
+            $scanTime = \Carbon\Carbon::parse($scannedData['scan_time']);
+            $now = now();
+            $secondsElapsed = abs($now->diffInRealSeconds($scanTime));
+            
+            \Log::info('Session check', [
+                'scan_time' => $scannedData['scan_time'],
+                'current_time' => $now->toDateTimeString(),
+                'seconds_elapsed' => $secondsElapsed,
+                'will_show' => $secondsElapsed <= 5
+            ]);
+            
+            if ($secondsElapsed <= 5) {
+                // Show the student data
+                $currentStudent = Student::with('section')->find($scannedData['student_id']);
+                $currentAttendanceRecord = Attendance::find($scannedData['attendance_id']);
+            } else {
+                // Clear the session data if expired
+                session()->forget($sessionKey);
+                \Log::info('Session expired and cleared', [
+                    'seconds_elapsed' => $secondsElapsed
+                ]);
+            }
         }
         
-        // Get recent attendance for the gallery
+        // Get recent attendance for the gallery (last 7 scans)
         $recentAttendance = Attendance::with(['student.section'])
             ->whereDate('date', today())
             ->where('teacher_id', $attendanceCode->teacher_id)
             ->latest('updated_at')
-            ->take(5)
+            ->take(7)
             ->get();
 
-        // Get today's summary
+        // Get today's summary counts
         $todaySummary = $this->getTodayAttendanceSummary($attendanceCode->teacher_id);
+
+        // Return JSON if requested via AJAX
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'currentStudent' => $currentStudent ? [
+                    'id' => $currentStudent->id,
+                    'name' => $currentStudent->name,
+                    'stud_fname' => $currentStudent->stud_fname,
+                    'stud_mname' => $currentStudent->stud_mname,
+                    'stud_lname' => $currentStudent->stud_lname,
+                    'stud_code' => $currentStudent->stud_code,
+                    'qr_code' => $currentStudent->qr_code,
+                    'section' => $currentStudent->section ? ['name' => $currentStudent->section->name] : null,
+                ] : null,
+                'currentAttendanceRecord' => $currentAttendanceRecord ? [
+                    'time_in_am' => $currentAttendanceRecord->time_in_am,
+                    'time_out_am' => $currentAttendanceRecord->time_out_am,
+                    'time_in_pm' => $currentAttendanceRecord->time_in_pm,
+                    'time_out_pm' => $currentAttendanceRecord->time_out_pm,
+                ] : null,
+                'recentAttendance' => $recentAttendance,
+            ]);
+        }
 
         return view('public.attendance-display', compact(
             'code',
@@ -69,6 +110,17 @@ class PublicAttendanceController extends Controller
             'currentStudent',
             'currentAttendanceRecord'
         ));
+    }
+
+    public function clearStudent($code)
+    {
+        $sessionKey = 'scanned_student_' . $code;
+        session()->forget($sessionKey);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Student data cleared'
+        ]);
     }
 
     public function getRecentLogs($code)
@@ -83,7 +135,7 @@ class PublicAttendanceController extends Controller
             ->whereDate('date', today())
             ->where('teacher_id', $attendanceCode->teacher_id)
             ->latest('updated_at')
-            ->take(5)
+            ->take(7)
             ->get()
             ->map(function($attendance) {
                 // Determine the most recent time and its type
@@ -132,6 +184,11 @@ class PublicAttendanceController extends Controller
     {
         $today = today();
         
+        \Log::info('Getting today attendance summary', [
+            'teacher_id' => $teacherId,
+            'date' => $today->toDateString()
+        ]);
+        
         $morningIn = Attendance::whereDate('date', $today)
             ->where('teacher_id', $teacherId)
             ->whereNotNull('time_in_am')
@@ -151,6 +208,13 @@ class PublicAttendanceController extends Controller
             ->where('teacher_id', $teacherId)
             ->whereNotNull('time_out_pm')
             ->count();
+            
+        \Log::info('Today attendance summary calculated', [
+            'morning_in' => $morningIn,
+            'morning_out' => $morningOut,
+            'afternoon_in' => $afternoonIn,
+            'afternoon_out' => $afternoonOut
+        ]);
 
         return [
             'morning_in' => $morningIn,
@@ -179,9 +243,17 @@ class PublicAttendanceController extends Controller
                 'student_id' => 'required|string',
             ]);
 
+            // Find student by stud_code (QR code data)
             $student = Student::with('section', 'schoolYear')
-                ->where('id_no', $request->student_id)
-                ->firstOrFail();
+                ->where('stud_code', $request->student_id)
+                ->first();
+
+            if (!$student) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student QR code not found. Please check and try again.'
+                ], 404);
+            }
 
             if (!$student->section) {
                 return response()->json([
@@ -193,7 +265,7 @@ class PublicAttendanceController extends Controller
             if (!$student->schoolYear) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Student is not assigned to any semester.'
+                    'message' => 'Student is not assigned to any school year.'
                 ], 400);
             }
 
@@ -244,6 +316,26 @@ class PublicAttendanceController extends Controller
                 $timeDetection['type'],
                 $student->user_id ?? 0
             );
+
+            // Store in session for display page - find the active attendance code
+            $attendanceCode = AttendanceCode::where('is_active', true)->first();
+                
+            if ($attendanceCode) {
+                $sessionKey = 'scanned_student_' . $attendanceCode->code;
+                session([
+                    $sessionKey => [
+                        'student_id' => $student->id,
+                        'attendance_id' => $attendance->id,
+                        'scan_time' => now()->toDateTimeString()
+                    ]
+                ]);
+                
+                \Log::info('Session stored for student', [
+                    'session_key' => $sessionKey,
+                    'student_id' => $student->id,
+                    'attendance_id' => $attendance->id
+                ]);
+            }
 
             Log::info('Public QR attendance recorded', [
                 'student_id' => $student->id,

@@ -138,4 +138,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(Student::class, 'user_id');
     }
+
+    // Relationship: User (teacher) has many Attendance Codes
+    public function attendanceCodes()
+    {
+        return $this->hasMany(AttendanceCode::class, 'teacher_id');
+    }
+
+    // Relationship: User (teacher) has many Attendance Sessions
+    public function attendanceSessions()
+    {
+        return $this->hasMany(AttendanceSession::class, 'teacher_id');
+    }
 }

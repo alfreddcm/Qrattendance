@@ -192,7 +192,7 @@
                             <div class="alert alert-info mb-0">
                                 <small>
                                     <i class="fas fa-info-circle me-2"></i>
-                                    Students can access attendance at:
+                                    Access attendance at:
                                     <strong><span id="accessUrl"></span></strong>
                                     <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyAccessUrl()">
                                         <i class="fas fa-copy"></i>

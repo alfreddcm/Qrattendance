@@ -656,6 +656,14 @@ public function bulkDelete(Request $request)
                 
                 Storage::disk('public')->put($qrPath, $qrImage);
                 
+                // Also copy to public directory for web access
+                $publicPath = public_path('storage/' . $qrPath);
+                $publicDir = dirname($publicPath);
+                if (!file_exists($publicDir)) {
+                    mkdir($publicDir, 0755, true);
+                }
+                file_put_contents($publicPath, $qrImage);
+                
                  // Save both qr_code (file path) and stud_code (the data)
                 $student->update([
                     'qr_code' => $qrPath,

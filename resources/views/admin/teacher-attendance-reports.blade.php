@@ -81,7 +81,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="h4 mb-1 text-dark fw-bold">
-                        <i class="fas fa-chart-bar text-primary me-2"></i>
+                        <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
                         Teacher Attendance Reports
                     </h2>
                     <p class="text-muted mb-0 small">Generate comprehensive attendance reports across schools, teachers, and sections</p>
@@ -788,7 +788,7 @@ function updateMonthsForSemester() {
         return;
     }
 
-    $.get(`/admin/semesters/${semesterId}/months`)
+    $.get(`/admin/school-years/${semesterId}/months`)
         .done(function(data) {
             var $monthSelect = $('#report_month');
             var currentMonth = $monthSelect.val();
@@ -825,7 +825,7 @@ function updateSF2MonthsForSemester() {
 
     if (!semesterId) return;
 
-    $.get(`/admin/semesters/${semesterId}/months`)
+    $.get(`/admin/school-years/${semesterId}/months`)
         .done(function(data) {
             var $monthSelect = $('#sf2_month');
             var currentMonth = $monthSelect.val();

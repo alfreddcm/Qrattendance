@@ -35,7 +35,7 @@ class SectionController extends Controller
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
-            'school_year_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:school_years,id',
             'teacher_id' => 'nullable|exists:users,id',
             'am_time_in_start' => 'required|date_format:H:i',
             'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',
@@ -233,7 +233,7 @@ class SectionController extends Controller
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
-            'school_year_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:school_years,id',
             'teacher_id' => 'required|exists:users,id',
             'am_time_in_start' => 'required|date_format:H:i',
             'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',

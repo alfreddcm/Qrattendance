@@ -7,12 +7,10 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="fs-5 mb-1">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Reports
+                    <i class="fas fa-chart-bar me-2"></i>Reports
                 </h4>
                 <p class="subtitle fs-6 mb-0">Generate and export attendance reports</p>
             </div>
-
         </div>
     </div>
 
@@ -33,13 +31,13 @@
                             </label>
                             <select name="type" id="type" class="form-select form-select-sm">
                                 <option value="daily" {{ request('type', 'daily') == 'daily' ? 'selected' : '' }}>
-                                    <i class="fas fa-calendar-day me-1"></i>Daily Report
+                                    Daily
                                 </option>
                                 <option value="monthly" {{ request('type') == 'monthly' ? 'selected' : '' }}>
-                                    <i class="fas fa-chart-line me-1"></i>Monthly Summary
+                                    Monthly
                                 </option>
-                                <option value="quarterly" {{ request('type') == 'quarterly' ? 'selected' : '' }}>
-                                    📈 Quarterly 
+                                <option value="school_year" {{ request('type') == 'school_year' ? 'selected' : '' }}>
+                                    S.Y. Report
                                 </option>
                             </select>
                         </div>
@@ -161,9 +159,9 @@
                         </div>
                         <div class="col-md-12">
                             <label for="sf2_grade_section" class="form-label fw-bold">
-                                <i class="fas fa-layer-group me-1"></i>Grade & Section
+                                <i class="fas fa-layer-group me-1"></i>Grade & Section <span class="text-danger">*</span>
                             </label>
-                            <select name="grade_section" id="sf2_grade_section" class="form-select">
+                            <select name="grade_section" id="sf2_grade_section" class="form-select" required>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -300,7 +298,7 @@ function loadSF2Options() {
             });
 
              const $gradeSection = $('#sf2_grade_section');
-            $gradeSection.empty().append('<option value="">All Students</option>');
+            $gradeSection.empty().append('<option value="">Select Grade & Section</option>');
             response.grade_section_options.forEach(function(option) {
                 $gradeSection.append(`<option value="${option.value}">${option.label}</option>`);
             });
@@ -347,12 +345,18 @@ function updateMonthOptions() {
     let currentYear = startYear;
     let currentMonth = startMonth;
     let optionCount = 0;
+    
+     const now = new Date();
+    const currentRealMonth = now.getMonth() + 1;
+    const currentRealYear = now.getFullYear();
 
     while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
         const monthName = months[currentMonth];
         if (monthName) {
             const value = `${currentMonth}-${currentYear}`;
-            $monthYear.append(`<option value="${value}">${monthName} ${currentYear}</option>`);
+             const isCurrentMonth = (currentMonth === currentRealMonth && currentYear === currentRealYear);
+            const selected = isCurrentMonth ? ' selected' : '';
+            $monthYear.append(`<option value="${value}"${selected}>${monthName} ${currentYear}</option>`);
             optionCount++;
         }
 

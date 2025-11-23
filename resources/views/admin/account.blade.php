@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center " style="margin-left: 1rem;" >
         <div>
             <h4 class="fs-5 mb-1">
-                <span class="me-2">⚙️</span>
+                <i class="fas fa-cog me-2"></i>
                 Account Settings
             </h4>
             <p class="subtitle fs-6 mb-0">Manage your admin profile and security settings</p>

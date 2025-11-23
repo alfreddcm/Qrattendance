@@ -292,13 +292,13 @@
         </div>
     </div>
 </div>
-@elseif(request('type') == 'quarterly')
+@elseif(request('type') == 'school_year')
 
 <div class="card shadow-sm">
     <div class="card-header bg-warning text-dark">
         <h5 class="mb-0">
             <i class="fas fa-calendar-check me-2"></i>
-            Quarterly Attendance Summary
+            S.Y. Attendance Report
         </h5>
     </div>
     <div class="card-body p-0">

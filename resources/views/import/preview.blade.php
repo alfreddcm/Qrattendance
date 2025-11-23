@@ -397,8 +397,8 @@
                             <th style="min-width: 150px; background: #212529; color: #fff;">Address</th>
                             <th style="width: 120px; background: #212529; color: #fff;">CP No</th>
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Name</th>
-                            <th style="width: 100px; background: #212529; color: #fff;">Relationship</th>
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Phone</th>
+                            <th style="width: 100px; background: #212529; color: #fff;">Relationship</th>
                             <th style="width: 100px; background: #212529; color: #fff;">Grade Level</th>
                             <th style="width: 120px; background: #212529; color: #fff;">Section Name</th>
                             <th style="width: 60px; background: #212529; color: #fff;">Action</th>

@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;">
         <div>
             <h4 class="fs-5 mb-1">
-                <i class="fas fa-chalkboard-teacher me-2"></i>
+                <i class="fas fa-user-graduate me-2"></i>
                 Manage Students
             </h4>
             <p class="subtitle fs-6 mb-0">Add, edit, and manage Student informations</p>
@@ -787,11 +787,11 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label for="admin_semester_id" class="form-label">Semester</label>
-                            <select class="form-select" id="admin_semester_id" name="semester_id">
-                                <option value="">Select Semester</option>
-                                @foreach($semesters ?? [] as $semester)
-                                    <option value="{{ $semester->id }}">{{ $semester->name }}</option>
+                            <label for="admin_school_year_id" class="form-label">School Year</label>
+                            <select class="form-select" id="admin_school_year_id" name="school_year_id">
+                                <option value="">Select School Year</option>
+                                @foreach($schoolYears ?? [] as $schoolYear)
+                                    <option value="{{ $schoolYear->id }}">{{ $schoolYear->name }}</option>
                                 @endforeach
                             </select>
                         </div>

@@ -18,7 +18,7 @@ class ReportController extends Controller
         $schoolYearId = $request->input('school_year_id');
         $gradeSection = $request->input('grade_section');
         $schoolYears = SchoolYear::all();
-        $records = [];
+        $records = collect();
  
         // Get students through teacher's sections
         $teacherId = Auth::id();
@@ -219,7 +219,7 @@ class ReportController extends Controller
                     ];
                 });
             }
-        } elseif ($type === 'quarterly') {
+        } elseif ($type === 'school_year') {
             if ($schoolYear) {
             $start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
             $end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
@@ -351,17 +351,17 @@ class ReportController extends Controller
                 $schoolName = $students->first()->school->name;
             }
 
-            // Get school year from semester
-            $schoolYear = '';
+            // Get school year text for display
+            $schoolYearText = '';
             if ($schoolYear) {
-                $schoolYear = $this->extractSchoolYearFromSemester($schoolYear->name);
+                $schoolYearText = $this->extractSchoolYearFromSemester($schoolYear->name);
             } else {
                 $currentYear = \Carbon\Carbon::now()->year;
                 $currentMonth = \Carbon\Carbon::now()->month;
                 if ($currentMonth <= 6) {
-                    $schoolYear = ($currentYear - 1) . '-' . $currentYear;
+                    $schoolYearText = ($currentYear - 1) . '-' . $currentYear;
                 } else {
-                    $schoolYear = $currentYear . '-' . ($currentYear + 1);
+                    $schoolYearText = $currentYear . '-' . ($currentYear + 1);
                 }
             }
 
@@ -370,12 +370,12 @@ class ReportController extends Controller
                 $gradeSectionText = 'Grade ' . $gradeLevel . ' - ' . $sectionName;
                 // Write header information
                 fputcsv($handle, ['School Name:', $schoolName]);
-                fputcsv($handle, ['School Year:', $schoolYear]);
+                fputcsv($handle, ['School Year:', $schoolYearText]);
                 fputcsv($handle, ['Grade/Section:', $gradeSectionText]);
             } else {
                 // No grade/section header if not filtered
                 fputcsv($handle, ['School Name:', $schoolName]);
-                fputcsv($handle, ['School Year:', $schoolYear]);
+                fputcsv($handle, ['School Year:', $schoolYearText]);
             }
 
             if ($type === 'daily') {
@@ -532,7 +532,7 @@ class ReportController extends Controller
                     fputcsv($handle, ['Total Half Day', $totalHalf]);
                     fputcsv($handle, ['Total Absent', $totalAbsent]);
                 }
-                } elseif ($type === 'quarterly') {
+                } elseif ($type === 'school_year') {
                 if ($schoolYear) {
                     $start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
                     $end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
@@ -543,7 +543,7 @@ class ReportController extends Controller
                 
                 $formattedStartDate = $start->format('d F Y');
                 $formattedEndDate = $end->format('d F Y');
-                fputcsv($handle, ['Report Type:', 'Quarterly']);
+                fputcsv($handle, ['Report Type:', 'S.Y. Report']);
                 fputcsv($handle, ['Date Range:', $formattedStartDate . ' - ' . $formattedEndDate]);
                 fputcsv($handle, []); // Empty row
                 
@@ -637,7 +637,7 @@ class ReportController extends Controller
     public function generateSF2(Request $request)
     {
         $request->validate([
-            'school_year_id' => 'required|exists:semesters,id',
+            'school_year_id' => 'required|exists:school_years,id',
             'grade_section' => 'nullable|string',
             'month' => 'required|integer|min:1|max:12',
             'year' => 'required|integer|min:2020|max:2030',
@@ -814,7 +814,7 @@ class ReportController extends Controller
         ];
 
         return response()->json([
-            'semesters' => $schoolYearsWithDates,
+            'schoolYears' => $schoolYearsWithDates,
             'grade_section_options' => $gradeSection,
             'months' => $months
         ]);

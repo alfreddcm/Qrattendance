@@ -171,8 +171,8 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::post('/students/import', [ImportController::class, 'import'])->name('admin.students.import');
     Route::get('/students/import-guide', [AdminController::class, 'importGuide'])->name('admin.students.importGuide');
     
-    Route::get('/semesters/{semester}/schools', [AdminController::class, 'getSchoolsBySemester'])->name('admin.semesters.schools');
-    Route::get('/semesters/{semester}/months', [AdminController::class, 'getSemesterMonths'])->name('admin.semesters.months');
+    Route::get('/school-years/{schoolYear}/schools', [AdminController::class, 'getSchoolsBySemester'])->name('admin.school-years.schools');
+    Route::get('/school-years/{schoolYear}/months', [AdminController::class, 'getSemesterMonths'])->name('admin.school-years.months');
     Route::get('/schools/with-counts', [AdminController::class, 'getSchoolsWithCounts'])->name('admin.schools.with-counts');
     Route::get('/schools/{school}/teachers', [AdminController::class, 'getTeachersBySchool'])->name('admin.schools.teachers');
     Route::get('/teachers/{teacher}/sections', [AdminController::class, 'getSectionsByTeacher'])->name('admin.teachers.sections');
@@ -236,6 +236,7 @@ Route::get('/public/attendance', [App\Http\Controllers\PublicAttendanceControlle
 Route::get('/public/attendance/{code}', [App\Http\Controllers\PublicAttendanceController::class, 'show'])->name('public.attendance.show');
 
 Route::post('/public/attendance/scan-qr', [App\Http\Controllers\PublicAttendanceController::class, 'scanQR'])->name('public.attendance.scan');
+Route::post('/public/attendance/{code}/clear', [App\Http\Controllers\PublicAttendanceController::class, 'clearStudent'])->name('public.attendance.clear');
 Route::get('/public/attendance/{code}/recent', [App\Http\Controllers\PublicAttendanceController::class, 'getRecentLogs'])->name('public.attendance.recent');
 Route::get('/public/attendance/{code}/summary', [App\Http\Controllers\PublicAttendanceController::class, 'getTodaySummary'])->name('public.attendance.summary');
  

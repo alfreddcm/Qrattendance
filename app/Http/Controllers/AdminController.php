@@ -33,6 +33,9 @@ class AdminController extends Controller
         
         $totalSections = Section::count();
         
+        // Count active attendance codes
+        $activeAttendanceCodes = \App\Models\AttendanceCode::where('is_active', true)->count();
+        
         // Count active sessions created by teachers today
         $todaySessionCount = AttendanceSession::whereDate('created_at', today())
             ->where('status', 'active')
@@ -43,10 +46,60 @@ class AdminController extends Controller
         
         $totalAttendanceRecords = Attendance::count();
         
-        $recentAttendance = Attendance::with(['student.user.school', 'student.section'])
-            ->whereDate('date', today())
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
+        // Today's attendance stats
+        $todayAttendanceCount = Attendance::whereDate('date', today())->count();
+        $todayStudentsPresent = Attendance::whereDate('date', today())
+            ->distinct('student_id')
+            ->count('student_id');
+        
+        // Get attendance summary grouped by school, then by attendance code for today
+        $recentAttendance = [];
+        $teachers = User::where('role', 'teacher')
+            ->with(['school', 'attendanceCodes' => function($query) {
+                $query->where('is_active', true);
+            }])
+            ->get();
+        
+        foreach ($teachers as $teacher) {
+            foreach ($teacher->attendanceCodes as $code) {
+                // Get today's attendance for this teacher
+                $todayAttendance = Attendance::where('teacher_id', $teacher->id)
+                    ->whereDate('date', today())
+                    ->get();
+                
+                // Get total students assigned to this teacher (via user_id)
+                $totalStudents = Student::where('user_id', $teacher->id)->count();
+                
+                $presentCount = $todayAttendance->unique('student_id')->count();
+                $absentCount = $totalStudents - $presentCount;
+                
+                // Show all active codes, even with 0 attendance
+                $recentAttendance[] = [
+                    'school_id' => $teacher->school_id,
+                    'school_name' => $teacher->school->name ?? 'N/A',
+                    'attendance_code' => $code->code,
+                    'am_time_in_count' => $todayAttendance->where('time_in_am', '!=', null)->count(),
+                    'am_time_out_count' => $todayAttendance->where('time_out_am', '!=', null)->count(),
+                    'pm_time_in_count' => $todayAttendance->where('time_in_pm', '!=', null)->count(),
+                    'pm_time_out_count' => $todayAttendance->where('time_out_pm', '!=', null)->count(),
+                    'total_present' => $presentCount,
+                    'total_absent' => $absentCount,
+                    'total_students' => $totalStudents,
+                    'teacher_name' => $teacher->name,
+                ];
+            }
+        }
+        
+        // Sort by school_id to group schools together
+        usort($recentAttendance, function($a, $b) {
+            return $a['school_id'] <=> $b['school_id'];
+        });
+        
+        // Get schools with teacher and student counts
+        $schoolStats = School::withCount(['users as teacher_count' => function($query) {
+                $query->where('role', 'teacher');
+            }, 'students as student_count'])
+            ->orderBy('name')
             ->get();
         
         $schools = School::orderBy('name')->get();
@@ -56,9 +109,13 @@ class AdminController extends Controller
             'totalStudents', 
             'totalSchools',
             'totalSections',
+            'activeAttendanceCodes',
             'todaySessionCount',
             'totalAttendanceRecords',
+            'todayAttendanceCount',
+            'todayStudentsPresent',
             'recentAttendance',
+            'schoolStats',
             'schools'
         ));
     }
@@ -1323,7 +1380,7 @@ class AdminController extends Controller
         ];
 
         return response()->json([
-            'semesters' => $schoolYearsWithDates,
+            'schoolYears' => $schoolYearsWithDates,
             'grade_sections' => $gradeSection,
             'months' => $months
         ]);
@@ -1337,74 +1394,306 @@ class AdminController extends Controller
         // Get filtered students
         $students = $this->getFilteredStudents($request);
         $type = $request->input('type', 'daily');
+        $schoolYearId = $request->input('school_year_id');
+        $gradeSection = $request->input('grade_section');
         
-        $filename = 'teacher_attendance_' . $type . '_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        $filename = 'attendance_report_' . now()->format('Ymd_His') . '.csv';
         
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($students, $request, $type) {
+        $callback = function() use ($students, $request, $type, $schoolYearId, $gradeSection) {
             $handle = fopen('php://output', 'w');
+            
+            // Get school info from first student
+            $schoolName = 'School Name Not Set';
+            if ($students->isNotEmpty() && $students->first()->school) {
+                $schoolName = $students->first()->school->name;
+            }
+            
+            // Get school year
+            $schoolYear = null;
+            $schoolYearText = '';
+            if ($schoolYearId) {
+                $schoolYear = \App\Models\SchoolYear::find($schoolYearId);
+                if ($schoolYear) {
+                    $schoolYearText = $this->extractSchoolYearFromSemester($schoolYear->name);
+                }
+            }
+            if (!$schoolYearText) {
+                $currentYear = \Carbon\Carbon::now()->year;
+                $currentMonth = \Carbon\Carbon::now()->month;
+                if ($currentMonth <= 6) {
+                    $schoolYearText = ($currentYear - 1) . '-' . $currentYear;
+                } else {
+                    $schoolYearText = $currentYear . '-' . ($currentYear + 1);
+                }
+            }
+            
+            // Get grade/section info
+            $gradeLevel = null;
+            $sectionName = null;
+            if ($gradeSection) {
+                $parts = explode('|', $gradeSection);
+                if (count($parts) == 2) {
+                    $gradeLevel = $parts[0];
+                    $sectionName = $parts[1];
+                }
+            }
+            
+            // Write header information
+            if ($gradeLevel && $sectionName) {
+                $gradeSectionText = 'Grade ' . $gradeLevel . ' - ' . $sectionName;
+                fputcsv($handle, ['School Name:', $schoolName]);
+                fputcsv($handle, ['School Year:', $schoolYearText]);
+                fputcsv($handle, ['Grade/Section:', $gradeSectionText]);
+            } else {
+                fputcsv($handle, ['School Name:', $schoolName]);
+                fputcsv($handle, ['School Year:', $schoolYearText]);
+            }
             
             if ($type === 'daily') {
                 $date = $request->input('start_date', now()->toDateString());
-                fputcsv($handle, ['Date', 'ID No', 'Name', 'School', 'Teacher', 'Grade', 'Section', 'AM In', 'AM Out', 'PM In', 'PM Out', 'Status']);
+                $formattedDate = \Carbon\Carbon::parse($date)->format('F d, Y');
+                fputcsv($handle, ['Report Type:', 'Daily - ' . $formattedDate]);
+                fputcsv($handle, []); // Empty row
+                fputcsv($handle, ['Date', 'ID No', 'Name', 'AM In', 'AM Out', 'PM In', 'PM Out', 'Status']);
                 
-                $records = $this->generateDailyReport($students, $request);
-                foreach ($records as $record) {
+                $attendances = \App\Models\Attendance::whereDate('date', $date)
+                    ->whereIn('student_id', $students->pluck('id'))
+                    ->get()
+                    ->keyBy('student_id');
+                    
+                foreach ($students as $student) {
+                    $att = $attendances->get($student->id);
+                    
+                    // Determine status
+                    $status = '--';
+                    if ($att) {
+                        if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
+                            $status = 'Present';
+                        } elseif ($att->time_in_am || $att->time_in_pm) {
+                            $status = 'Partial';
+                        } else {
+                            $status = 'Absent';
+                        }
+                    } else {
+                        $status = 'Absent';
+                    }
+                    
                     fputcsv($handle, [
-                        $record->date,
-                        $record->id_no,
-                        $record->name,
-                        $record->school,
-                        $record->teacher,
-                        $record->grade_level,
-                        $record->section,
-                        $record->am_in ?: '--',
-                        $record->am_out ?: '--',
-                        $record->pm_in ?: '--',
-                        $record->pm_out ?: '--',
-                        $record->status,
+                        $date,
+                        $student->id_no,
+                        $student->name,
+                        $att && $att->time_in_am ? \Carbon\Carbon::parse($att->time_in_am)->setTimezone('Asia/Manila')->format('h:i A') : '--',
+                        $att && $att->time_out_am ? \Carbon\Carbon::parse($att->time_out_am)->setTimezone('Asia/Manila')->format('h:i A') : '--',
+                        $att && $att->time_in_pm ? \Carbon\Carbon::parse($att->time_in_pm)->setTimezone('Asia/Manila')->format('h:i A') : '--',
+                        $att && $att->time_out_pm ? \Carbon\Carbon::parse($att->time_out_pm)->setTimezone('Asia/Manila')->format('h:i A') : '--',
+                        $status,
                     ]);
                 }
             } elseif ($type === 'monthly') {
-                fputcsv($handle, ['ID No', 'Name', 'School', 'Teacher', 'Grade', 'Section', 'Total Days', 'Present', 'Absent', 'Partial', 'Remarks']);
-                
-                $records = $this->generateMonthlyReport($students, $request);
-                foreach ($records as $record) {
-                    fputcsv($handle, [
-                        $record->id_no,
-                        $record->name,
-                        $record->school,
-                        $record->teacher,
-                        $record->grade_level,
-                        $record->section,
-                        $record->total_day,
-                        $record->present,
-                        $record->absent,
-                        $record->partial,
-                        $record->remarks,
-                    ]);
+                if ($schoolYear) {
+                    $schoolYear_start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
+                    $schoolYear_end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
+                } else {
+                    $schoolYear_start = null;
+                    $schoolYear_end = null;
                 }
-            } elseif ($type === 'quarterly') {
-                // Similar to monthly but with different date range
-                fputcsv($handle, ['ID No', 'Name', 'School', 'Teacher', 'Grade', 'Section', 'Attendance Pattern']);
-                
-                $records = $this->generateQuarterlyReport($students, $request);
-                foreach ($records as $record) {
-                    $pattern = implode(' ', array_values($record->checks));
-                    fputcsv($handle, [
-                        $record->id_no,
-                        $record->name,
-                        $record->school,
-                        $record->teacher,
-                        $record->grade_level,
-                        $record->section,
-                        $pattern,
-                    ]);
+
+                $month = $request->input('month');
+                if ($month) {
+                    $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+                    $end = \Carbon\Carbon::parse($month . '-01')->endOfMonth();
+                } else {
+                    $start = \Carbon\Carbon::now()->startOfMonth();
+                    $end = \Carbon\Carbon::now()->endOfMonth();
                 }
+
+                if ($schoolYear_start && $start < $schoolYear_start) $start = $schoolYear_start;
+                if ($schoolYear_end && $end > $schoolYear_end) $end = $schoolYear_end;
+
+                $formattedStartDate = $start->format('d F Y');
+                $formattedEndDate = $end->format('d F Y');
+                fputcsv($handle, ['Report Type:', 'Monthly']);
+                fputcsv($handle, ['Date Range:', $formattedStartDate . ' - ' . $formattedEndDate]);
+                fputcsv($handle, []); // Empty row
+
+                if ($schoolYear_start && $schoolYear_end && $start > $schoolYear_end) {
+                    $classDays = [];
+                } else {
+                    $classDays = $this->getClassDays($start, $end);
+                }
+
+                // Build header with No., ID No, Name, dates, and totals
+                $header = ['No.', 'ID No', 'Name'];
+                foreach ($classDays as $date) {
+                    $header[] = $date;
+                }
+                $header[] = 'Total P';
+                $header[] = 'Total H';
+                $header[] = 'Total A';
+                fputcsv($handle, $header);
+
+                $rowNumber = 1;
+                $totalPresent = 0;
+                $totalHalf = 0;
+                $totalAbsent = 0;
+
+                if (empty($classDays)) {
+                    foreach ($students as $student) {
+                        fputcsv($handle, [
+                            $rowNumber,
+                            $student->id_no,
+                            $student->name,
+                            'No class days in range',
+                        ]);
+                        $rowNumber++;
+                    }
+                } else {
+                    foreach ($students as $student) {
+                        $atts = \App\Models\Attendance::where('student_id', $student->id)
+                            ->whereIn('date', $classDays)
+                            ->get()
+                            ->keyBy('date');
+
+                        $row = [$rowNumber, $student->id_no, $student->name];
+                        $studentPresent = 0;
+                        $studentHalf = 0;
+                        $studentAbsent = 0;
+
+                        $startCol = 4; // Column D in Excel (A=1, B=2, C=3, D=4)
+
+                        foreach ($classDays as $day) {
+                            $dayAtt = $atts->get($day);
+                            if ($dayAtt) {
+                                if ($dayAtt->time_in_am && $dayAtt->time_out_am && $dayAtt->time_in_pm && $dayAtt->time_out_pm) {
+                                    $row[] = 'P';
+                                    $studentPresent++;
+                                } elseif ($dayAtt->time_in_am || $dayAtt->time_in_pm) {
+                                    $row[] = 'H';
+                                    $studentHalf++;
+                                } else {
+                                    $row[] = 'A';
+                                    $studentAbsent++;
+                                }
+                            } else {
+                                $row[] = 'A';
+                                $studentAbsent++;
+                            }
+                        }
+
+                        $totalPresent += $studentPresent;
+                        $totalHalf += $studentHalf;
+                        $totalAbsent += $studentAbsent;
+
+                        // Add Excel formulas for counting P, H, A in this row
+                        $lastDateCol = $this->numberToExcelColumn($startCol + count($classDays) - 1);
+                        $currentRow = $rowNumber + 1; // +1 because row 1 is header
+                        
+                        $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"P")';
+                        $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"H")';
+                        $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"A")';
+                        
+                        fputcsv($handle, $row);
+                        $rowNumber++;
+                    }
+
+                    // Add summary section at the bottom
+                    fputcsv($handle, []); // Empty row
+                    fputcsv($handle, ['Summary']);
+                    fputcsv($handle, ['Total Present', $totalPresent]);
+                    fputcsv($handle, ['Total Half Day', $totalHalf]);
+                    fputcsv($handle, ['Total Absent', $totalAbsent]);
+                }
+            } elseif ($type === 'school_year') {
+                if ($schoolYear) {
+                    $start = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
+                    $end = \Carbon\Carbon::parse($schoolYear->end_date)->endOfDay();
+                } else {
+                    $start = \Carbon\Carbon::now()->startOfYear();
+                    $end = \Carbon\Carbon::now()->endOfYear();
+                }
+                
+                $formattedStartDate = $start->format('d F Y');
+                $formattedEndDate = $end->format('d F Y');
+                fputcsv($handle, ['Report Type:', 'S.Y. Report']);
+                fputcsv($handle, ['Date Range:', $formattedStartDate . ' - ' . $formattedEndDate]);
+                fputcsv($handle, []); // Empty row
+                
+                $classDays = $this->getClassDays($start, $end);
+
+                // Build header with No., ID No, Name, dates, and totals
+                $header = ['No.', 'ID No', 'Name'];
+                foreach ($classDays as $date) {
+                    $header[] = $date;
+                }
+                $header[] = 'Total P';
+                $header[] = 'Total H';
+                $header[] = 'Total A';
+                fputcsv($handle, $header);
+
+                $rowNumber = 1;
+                $totalPresent = 0;
+                $totalHalf = 0;
+                $totalAbsent = 0;
+
+                foreach ($students as $student) {
+                    $attendances = \App\Models\Attendance::where('student_id', $student->id)
+                        ->whereIn('date', $classDays)
+                        ->get()
+                        ->keyBy('date');
+                    
+                    $row = [$rowNumber, $student->id_no, $student->name];
+                    $studentPresent = 0;
+                    $studentHalf = 0;
+                    $studentAbsent = 0;
+
+                    $startCol = 4; // Column D in Excel (A=1, B=2, C=3, D=4)
+                    
+                    foreach ($classDays as $date) {
+                        $att = $attendances->get($date);
+                        if ($att) {
+                            if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
+                                $row[] = 'P';
+                                $studentPresent++;
+                            } elseif ($att->time_in_am || $att->time_in_pm) {
+                                $row[] = 'H';
+                                $studentHalf++;
+                            } else {
+                                $row[] = 'A';
+                                $studentAbsent++;
+                            }
+                        } else {
+                            $row[] = 'A';
+                            $studentAbsent++;
+                        }
+                    }
+
+                    $totalPresent += $studentPresent;
+                    $totalHalf += $studentHalf;
+                    $totalAbsent += $studentAbsent;
+
+                    // Add Excel formulas for counting P, H, A in this row
+                    $lastDateCol = $this->numberToExcelColumn($startCol + count($classDays) - 1);
+                    $currentRow = $rowNumber + 1; // +1 because row 1 is header
+                    
+                    $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"P")';
+                    $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"H")';
+                    $row[] = '=COUNTIF(D' . $currentRow . ':' . $lastDateCol . $currentRow . ',"A")';
+                    
+                    fputcsv($handle, $row);
+                    $rowNumber++;
+                }
+
+                // Add summary section at the bottom
+                fputcsv($handle, []); // Empty row
+                fputcsv($handle, ['Summary']);
+                fputcsv($handle, ['Total Present', $totalPresent]);
+                fputcsv($handle, ['Total Half Day', $totalHalf]);
+                fputcsv($handle, ['Total Absent', $totalAbsent]);
             }
             
             fclose($handle);
@@ -1828,6 +2117,19 @@ class AdminController extends Controller
     }
 
     /**
+     * Convert number to Excel column letter
+     */
+    private function numberToExcelColumn($num) {
+        $col = '';
+        while ($num > 0) {
+            $num--;
+            $col = chr(65 + ($num % 26)) . $col;
+            $num = intval($num / 26);
+        }
+        return $col;
+    }
+
+    /**
      * Generate summary data for teacher attendance reports
      */
     private function generateTeacherAttendanceReportData(Request $request)
@@ -2053,9 +2355,31 @@ class AdminController extends Controller
             'contact_person_contact' => 'nullable|string|max:15',
             'school_id' => 'nullable|exists:schools,school_id',
             'user_id' => 'nullable|exists:users,id',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'captured_image' => 'nullable|string',
         ]);
 
-        Student::create($request->all());
+        $studentData = $request->except(['picture', 'captured_image']);
+        
+        // Handle picture upload
+        if ($request->hasFile('picture')) {
+            $picture = $request->file('picture');
+            $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
+            $picture->storeAs('student_pictures', $pictureName, 'public');
+            $studentData['picture'] = $pictureName;
+        } elseif ($request->filled('captured_image')) {
+            // Handle captured image from camera
+            $imageData = $request->captured_image;
+            $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
+            $imageData = str_replace(' ', '+', $imageData);
+            $imageData = base64_decode($imageData);
+            
+            $pictureName = time() . '_' . $request->id_no . '.jpg';
+            Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
+            $studentData['picture'] = $pictureName;
+        }
+
+        Student::create($studentData);
 
         return redirect()->route('admin.manage-students')->with('success', 'Student added successfully.');
     }
@@ -2205,6 +2529,14 @@ class AdminController extends Controller
                 ->generate($qrCodeData); // Use the new format instead of JSON
             
             Storage::disk('public')->put($qrPath, $qrImage);
+            
+            // Also copy to public directory for web access
+            $publicPath = public_path('storage/' . $qrPath);
+            $publicDir = dirname($publicPath);
+            if (!file_exists($publicDir)) {
+                mkdir($publicDir, 0755, true);
+            }
+            file_put_contents($publicPath, $qrImage);
             
             // Save both qr_code (file path) and stud_code (the data)
             $student->update([
@@ -2672,19 +3004,19 @@ class AdminController extends Controller
          $updateData = $request->except(['picture', 'captured_image']);
         
         if ($request->hasFile('picture')) {
-             if ($student->picture && file_exists(storage_path('app/public/student_pictures/' . $student->picture))) {
-                unlink(storage_path('app/public/student_pictures/' . $student->picture));
+             if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+                Storage::disk('public')->delete('student_pictures/' . $student->picture);
             }
             
             $picture = $request->file('picture');
             $pictureName = time() . '_' . $student->id . '.' . $picture->getClientOriginalExtension();
-            $picture->storeAs('public/student_pictures', $pictureName);
+            $picture->storeAs('student_pictures', $pictureName, 'public');
             $updateData['picture'] = $pictureName;
         } elseif ($request->filled('captured_image')) {
              $imageData = $request->captured_image;
             if (strpos($imageData, 'data:image/') === 0) {
-                 if ($student->picture && file_exists(storage_path('app/public/student_pictures/' . $student->picture))) {
-                    unlink(storage_path('app/public/student_pictures/' . $student->picture));
+                 if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
+                    Storage::disk('public')->delete('student_pictures/' . $student->picture);
                 }
                 
                 $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
@@ -2692,7 +3024,7 @@ class AdminController extends Controller
                 $imageData = base64_decode($imageData);
                 
                 $pictureName = time() . '_' . $student->id . '.jpg';
-                file_put_contents(storage_path('app/public/student_pictures/' . $pictureName), $imageData);
+                Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
                 $updateData['picture'] = $pictureName;
             }
         }

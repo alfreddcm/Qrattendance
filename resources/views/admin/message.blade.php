@@ -6,14 +6,12 @@
     <div class="d-flex justify-content-between align-items-center" style="margin-left: 2rem;" >
         <div>
             <h4 class="fs-5 mb-1">
-                SMS Messages
+                <i class="fas fa-comments me-2"></i>SMS Messages
             </h4>
             <p class="subtitle fs-6 mb-0">Send SMS notifications and announcements</p>
         </div>
-
     </div>
 </div>
-                <i class="fas fa-sms me-2"></i>
 
 <div class="container-fluid">
 

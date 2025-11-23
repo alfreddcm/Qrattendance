@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
         <div>
             <h4 class="fs-5 mb-1">
-                <i class="fas fa-tachometer-alt me-2"></i>
+                <i class="fas fa-home me-2"></i>
                 Admin Dashboard
             </h4>
             <p class="subtitle fs-6 mb-0">System Overview</p>
@@ -17,106 +17,114 @@
 
 <div class="container-fluid">
 
-     <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
-            <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.manage-students') }}" class="text-decoration-none">
-                    <div class="card stat-card text-white bg-primary h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="h4 mb-0" id="totalStudents">{{ $totalStudents ?? 0 }}</div>
-                                    <small>Total Students</small>
-                                </div>
-                                <i class="fas fa-user-graduate fa-2x opacity-75"></i>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar bg-white" style="width: 100%"></div>
-                            </div>
+    {{-- Row 1: Attendance Overview (4 cards) --}}
+    <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card text-white bg-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h4 mb-0" id="totalStudents">{{ $totalStudents ?? 0 }}</div>
+                            <small>Total Students</small>
                         </div>
+                        <i class="fas fa-user-graduate fa-2x opacity-75"></i>
                     </div>
-                </a>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.manage-sections') }}" class="text-decoration-none">
-                    <div class="card stat-card text-white bg-success h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="h4 mb-0" id="totalSections">{{ $totalSections ?? 0 }}</div>
-                                    <small>Total Grade Sections</small>
-                                </div>
-                                <i class="fas fa-users fa-2x opacity-75"></i>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar bg-white" style="width: {{ $totalSections > 0 ? min(($totalSections / 20) * 100, 100) : 0 }}%"></div>
-                            </div>
-                        </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: 100%"></div>
                     </div>
-                </a>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.manage-teachers') }}" class="text-decoration-none">
-                    <div class="card stat-card text-white bg-info h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="h4 mb-0" id="totalTeachers">{{ $totalTeachers ?? 0 }}</div>
-                                    <small>Total Teachers</small>
-                                </div>
-                                <i class="fas fa-chalkboard-teacher fa-2x opacity-75"></i>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar bg-white" style="width: {{ $totalTeachers > 0 ? min(($totalTeachers / 50) * 100, 100) : 0 }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="##" class="text-decoration-none">
-                    <div class="card stat-card text-white bg-warning h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="h4 mb-0" id="todaySessionCount">{{ $todaySessionCount ?? 0 }}</div>
-                                    <small>Active Sessions Today</small>
-                                </div>
-                                <i class="fas fa-calendar-check fa-2x opacity-75"></i>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar bg-white" style="width: {{ $todaySessionCount > 0 ? min(($todaySessionCount / 4) * 100, 100) : 0 }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.teacher-attendance-reports') }}" class="text-decoration-none">
-                    <div class="card stat-card text-white bg-secondary h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="h4 mb-0" id="totalAttendanceRecords">{{ $totalAttendanceRecords ?? 0 }}</div>
-                                    <small>Total Attendance Records</small>
-                                </div>
-                                <i class="fas fa-clipboard-list fa-2x opacity-75"></i>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar bg-white" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+                </div>
             </div>
         </div>
 
-         <div class="row g-3">
-            <div class="col-lg-4">
-                 <div class="card mb-3">
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card text-white bg-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h4 mb-0" id="activeAttendanceCodes">{{ $activeAttendanceCodes ?? 0 }}</div>
+                            <small>Active Attendance Codes</small>
+                        </div>
+                        <i class="fas fa-qrcode fa-2x opacity-75"></i>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: {{ $activeAttendanceCodes > 0 ? min(($activeAttendanceCodes / 10) * 100, 100) : 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card text-white bg-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h4 mb-0" id="todayAttendanceCount">{{ $todayAttendanceCount ?? 0 }}</div>
+                            <small>Total Attendance Today</small>
+                        </div>
+                        <i class="fas fa-calendar-day fa-2x opacity-75"></i>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: {{ ($totalStudents > 0 && $todayAttendanceCount > 0) ? min(($todayAttendanceCount / $totalStudents) * 100, 100) : 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card text-white bg-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h4 mb-0" id="totalAttendanceRecords">{{ $totalAttendanceRecords ?? 0 }}</div>
+                            <small>Attendance Total Records</small>
+                        </div>
+                        <i class="fas fa-clipboard-list fa-2x opacity-75"></i>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Row 2: Schools & System Status --}}
+    <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-school me-1"></i>Schools Overview</span>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    @if(isset($schoolStats) && count($schoolStats) > 0)
+                        <div class="row g-3">
+                            @foreach($schoolStats as $school)
+                                <div class="col-md-6">
+                                    <div class="card border-start border-primary border-4">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-3">{{ $school->name }}</h6>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span><i class="fas fa-chalkboard-teacher text-info me-2"></i>Teachers:</span>
+                                                <strong>{{ $school->teacher_count }}</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span><i class="fas fa-user-graduate text-primary me-2"></i>Students:</span>
+                                                <strong>{{ $school->student_count }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted text-center">No schools found</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+             <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="fas fa-heartbeat me-1"></i>System Status</span>
                         <button class="btn btn-sm btn-outline-primary" onclick="checkSystemStatus()">
@@ -144,128 +152,66 @@
                         </div>
                     </div>
                 </div>
-            </div>
+        </div>
+    </div>
 
-            <div class="col-lg-8">
+    {{-- Row 3: Recent Attendance List --}}
+    <div class="row g-3" style="margin-left: 1rem; margin-right: 1rem;">
+           
+
+            <div class="col">
 
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-list me-1"></i>Recent Attendance List</span>
+                        <span><i class="fas fa-list me-1"></i>Attendance Record</span>
                         <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm" style="width: auto;" onchange="filterBySchool(this.value)" id="schoolFilter">
-                                <option value="">All Schools</option>
-                                @if(isset($schools))
-                                    @foreach($schools as $school)
-                                        <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                            <button class="btn btn-sm btn-outline-primary" onclick="refreshAttendanceList()">
-                                <i class="fas fa-refresh"></i>
+                            <button class="btn btn-sm btn-outline-light" onclick="refreshAttendanceList()">
+                                <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
                     </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0" id="recentAttendanceTable">
-                                <thead class="table-light">
+                        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered table-hover mb-0" id="recentAttendanceTable">
+                                <thead class="table-light sticky-top">
                                     <tr>
-                                        <th onclick="sortTable('school')" style="cursor: pointer;">
-                                            School Name <i class="fas fa-sort"></i>
-                                        </th>
-                                        <th>Student Name</th>
-                                        <th>Grade - Section</th>
-                                        <th>Time Recorded</th>
-                                        <th>Status</th>
+                                        <th class="text-center" style="vertical-align: middle;">NO</th>
+                                        <th class="text-center" style="vertical-align: middle;">Attendance Code</th>
+                                        <th class="text-center" style="vertical-align: middle;">AM Attendance</th>
+                                        <th class="text-center" style="vertical-align: middle;">PM Attendance</th>
+                                        <th class="text-center" style="vertical-align: middle;">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody">
                                     @if(isset($recentAttendance) && count($recentAttendance) > 0)
-                                        @foreach($recentAttendance as $attendance)
-                                        <tr>
-                                            <td><strong>{{ $attendance->student->user->school->name ?? 'N/A' }}</strong></td>
-                                            <td>{{ $attendance->student->name ?? 'N/A' }}</td>
-                                            <td>
-                                                <span class="badge bg-light text-dark">
-                                                    Grade {{ $attendance->student->section->gradelevel ?? 'N/A' }} - {{ $attendance->student->section->name ?? 'N/A' }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="time-records">
-                                                    @if($attendance->time_in_am)
-                                                        <div class="time-entry mb-1">
-                                                            <span class="badge bg-success text-white">
-                                                                <i class="fas fa-sun me-1"></i>AM In: {{ \Carbon\Carbon::parse($attendance->time_in_am)->format('h:i A') }}
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                    @if($attendance->time_out_am)
-                                                        <div class="time-entry mb-1">
-                                                            <span class="badge bg-info text-white">
-                                                                <i class="fas fa-sign-out-alt me-1"></i>AM Out: {{ \Carbon\Carbon::parse($attendance->time_out_am)->format('h:i A') }}
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                    @if($attendance->time_in_pm)
-                                                        <div class="time-entry mb-1">
-                                                            <span class="badge bg-warning text-white">
-                                                                <i class="fas fa-moon me-1"></i>PM In: {{ \Carbon\Carbon::parse($attendance->time_in_pm)->format('h:i A') }}
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                    @if($attendance->time_out_pm)
-                                                        <div class="time-entry mb-1">
-                                                            <span class="badge bg-danger text-white">
-                                                                <i class="fas fa-sign-out-alt me-1"></i>PM Out: {{ \Carbon\Carbon::parse($attendance->time_out_pm)->format('h:i A') }}
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                    @if(!$attendance->time_in_am && !$attendance->time_out_am && !$attendance->time_in_pm && !$attendance->time_out_pm)
-                                                        <span class="badge bg-secondary text-white">
-                                                            <i class="fas fa-question me-1"></i>No Records
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @php
-                                                    $hasAMIn = $attendance->time_in_am;
-                                                    $hasAMOut = $attendance->time_out_am;
-                                                    $hasPMIn = $attendance->time_in_pm;
-                                                    $hasPMOut = $attendance->time_out_pm;
-                                                    $totalEntries = ($hasAMIn ? 1 : 0) + ($hasAMOut ? 1 : 0) + ($hasPMIn ? 1 : 0) + ($hasPMOut ? 1 : 0);
-
-                                                    if ($totalEntries === 4) {
-                                                        $statusClass = 'bg-success';
-                                                        $statusText = 'Complete';
-                                                        $statusIcon = 'fas fa-check-circle';
-                                                    } elseif ($totalEntries >= 2) {
-                                                        $statusClass = 'bg-warning';
-                                                        $statusText = 'Partial';
-                                                        $statusIcon = 'fas fa-clock';
-                                                    } elseif ($totalEntries === 1) {
-                                                        $statusClass = 'bg-info';
-                                                        $statusText = 'Started';
-                                                        $statusIcon = 'fas fa-play';
-                                                    } else {
-                                                        $statusClass = 'bg-secondary';
-                                                        $statusText = 'No Records';
-                                                        $statusIcon = 'fas fa-question';
-                                                    }
-                                                @endphp
-                                                <span class="badge {{ $statusClass }} text-white">
-                                                    <i class="{{ $statusIcon }} me-1"></i>{{ $statusText }}
-                                                </span>
-                                                <br>
-                                                <small class="text-muted">{{ $totalEntries }}/4 entries</small>
-                                            </td>
-                                        </tr>
+                                        @php $no = 1; @endphp
+                                        
+                                        @foreach($recentAttendance as $index => $record)
+                                            <tr>
+                                                <td class="text-center">{{ $no++ }}</td>
+                                                
+                                                <td class="text-start">
+                                                    <strong>{{ $record['attendance_code'] ?? 'N/A' }}</strong><br>
+                                                    {{ $record['teacher_name'] ?? 'N/A' }}<br>
+                                                    <small class="text-muted">{{ $record['school_name'] ?? 'N/A' }}</small>
+                                                </td>
+                                                <td class="text-start">
+                                                    Time in: {{ $record['am_time_in_count'] ?? 0 }}<br>
+                                                    Time out: {{ $record['am_time_out_count'] ?? 0 }}
+                                                </td>
+                                                <td class="text-start">
+                                                    Time in: {{ $record['pm_time_in_count'] ?? 0 }}<br>
+                                                    Time out: {{ $record['pm_time_out_count'] ?? 0 }}
+                                                </td>
+                                                <td class="text-start">
+                                                    Scanned: {{ $record['total_present'] ?? 0 }}/{{ $record['total_students'] ?? 0 }}
+                                                </td>
+                                            </tr>
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="5" class="text-center py-3">
-                                                <i class="fas fa-inbox fa-2x text-muted mb-2 d-block"></i>
-                                                <span class="text-muted">No recent attendance records</span>
+                                            <td colspan="5" class="text-center py-4">
+                                                undefined
                                             </td>
                                         </tr>
                                     @endif

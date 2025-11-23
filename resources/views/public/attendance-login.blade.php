@@ -13,7 +13,7 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -35,7 +35,7 @@
         }
 
         .card-header-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -74,15 +74,15 @@
         }
 
         .code-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
             outline: none;
         }
 
         .scanning-indicator {
             display: none;
             text-align: center;
-            color: #667eea;
+            color: #007bff;
             font-size: 14px;
             margin-top: 10px;
             animation: pulse 1.5s ease-in-out infinite;
@@ -98,7 +98,7 @@
         }
 
         .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             border: none;
             padding: 15px;
             font-size: 16px;
@@ -110,7 +110,7 @@
 
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.4);
         }
 
         .divider {
@@ -138,8 +138,8 @@
         }
 
         .qr-scanner-btn {
-            border: 2px dashed #667eea;
-            color: #667eea;
+            border: 2px dashed #007bff;
+            color: #007bff;
             padding: 15px;
             border-radius: 10px;
             width: 100%;
@@ -148,7 +148,7 @@
         }
 
         .qr-scanner-btn:hover {
-            background: #667eea;
+            background: #007bff;
             color: white;
         }
 
