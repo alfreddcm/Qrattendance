@@ -7,14 +7,14 @@ A comprehensive Laravel-based QR code attendance tracking system designed for ed
 
 ### Technology Stack Used
 - **Backend**: Laravel 12.x Framework (PHP 8.2+)
-- **Frontend**: Blade Templates, TailwindCSS, Bootstrap, JavaScript
-- **Database**: MySQL/MariaDB with Eloquent ORM
+- **Frontend**: Blade Templates, Bootstrap, JavaScript
+- **Database**: MySQL with Eloquent ORM
 - **QR Code**: Simple QR Code Library for generation and scanning
 - **SMS**: Android SMS Gateway Service
 - **PDF Generation**: mPDF, DomPDF
 - **Excel**: Maatwebsite Excel package
-- **Charts**: Console TV's Charts package
-- **Build Tools**: Vite, TailwindCSS, Axios
+- **Charts**: 
+- **Build Tools**: Vite
 
 ### System Architecture Summary
 ```
@@ -22,9 +22,9 @@ A comprehensive Laravel-based QR code attendance tracking system designed for ed
 │   Frontend      │    │   Backend       │    │   Database      │
 │                 │    │                 │    │                 │
 │ • Blade Views   │◄──►│ • Laravel App   │◄──►│ • MySQL DB      │
-│ • TailwindCSS   │    │ • Controllers   │    │ • Migrations    │
+│ • AJAX Calls    │    │ • Controllers   │    │ • Migrations    │
 │ • JavaScript    │    │ • Models        │    │ • Seeders       │
-│ • AJAX Calls    │    │ • Routes        │    │ • Indexes       │
+│                 │    │ • Routes        │    │ • Indexes       │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
