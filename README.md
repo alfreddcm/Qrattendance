@@ -853,7 +853,567 @@ User [Teacher] (1) ──── (Many) AttendanceSessions
 
 ---
 
-## DEEP BACKEND PROCESSES & AJAX ANALYSIS
+## DASHBOARD CHARTS & ANALYTICS DEEP ANALYSIS
+
+### Chart System Architecture
+
+#### Chart Technology Stack
+- **Frontend**: Chart.js 3.x library for interactive visualizations
+- **Backend**: ConsoleTVs\Charts Laravel package for data processing
+- **Data Source**: MySQL database with Eloquent ORM
+- **Real-time Updates**: AJAX endpoints for dynamic data refresh
+
+### Chart Components Analysis
+
+#### 1. **Attendance Trends Chart** (`AttendanceTrendsChart.php`)
+```php
+// Chart Configuration
+Type: Line Chart
+Data Collection:
+- Labels: Date range (daily intervals)
+- Dataset 1: Present students (green line with fill)
+- Dataset 2: Absent students (red line with fill)
+
+// Data Processing Formula
+Controller: AttendanceAnalyticsController@getAttendanceTrend
+SQL Query:
+```sql
+SELECT 
+    DATE(date) as attendance_date,
+    COUNT(*) as total_records,
+    COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present_count
+FROM attendances 
+WHERE student_id IN (teacher's students)
+    AND date BETWEEN start_date AND end_date
+GROUP BY DATE(date)
+ORDER BY attendance_date
+```
+
+// Chart Data Transformation:
+$trends = $rawData->map(function($item) {
+    return [
+        'date' => Carbon::parse($item->attendance_date)->format('M d'),
+        'present' => (int) $item->present_count,
+        'absent' => (int) ($item->total_records - $item->present_count)
+    ];
+});
+
+// JavaScript Integration:
+AJAX Call: GET /teacher/analytics/attendance-trend
+Response Structure:
+{
+    "labels": ["Nov 01", "Nov 02", "Nov 03"],
+    "present": [25, 23, 27],
+    "absent": [3, 5, 1]
+}
+```
+
+#### 2. **Absenteeism Rates Chart** (`AbsenteeismRatesChart.php`)
+```php
+// Chart Configuration
+Type: Bar Chart (Color-coded by severity)
+Data Collection: Top 15 students with highest absenteeism rates
+
+// Complex Data Processing Formula
+Controller: AttendanceAnalyticsController@getAbsenteeismRates
+
+// Step 1: Calculate per-student absenteeism
+$absenteeismData = $studentIds->map(function($studentId) use ($filters) {
+    // Total attendance records for date range
+    $totalDays = Attendance::where('student_id', $studentId)
+        ->whereBetween('date', [$filters['start_date'], $filters['end_date']])
+        ->count();
+    
+    // Days marked as absent (no time_in_am AND no time_in_pm)
+    $absentDays = Attendance::where('student_id', $studentId)
+        ->whereBetween('date', [$filters['start_date'], $filters['end_date']])
+        ->whereNull('time_in_am')
+        ->whereNull('time_in_pm')
+        ->count();
+    
+    // Absenteeism Rate Formula
+    $absenteeismRate = $totalDays > 0 ? round(($absentDays / $totalDays) * 100, 1) : 0;
+    
+    return [
+        'student_name' => $this->formatStudentName($student->name),
+        'absenteeism_rate' => $absenteeismRate,
+        'total_days' => $totalDays,
+        'absent_days' => $absentDays
+    ];
+});
+
+// Color Coding Logic
+$backgroundColors = $absenteeismData->map(function($item) {
+    $rate = $item['absenteeism_rate'];
+    if ($rate >= 50) return 'rgba(255, 99, 132, 0.8)';  // Critical (Red)
+    if ($rate >= 30) return 'rgba(255, 159, 64, 0.8)';  // Warning (Orange)  
+    if ($rate >= 15) return 'rgba(255, 206, 86, 0.8)';  // Caution (Yellow)
+    return 'rgba(75, 192, 192, 0.8)';                   // Good (Green)
+});
+```
+
+#### 3. **Weekly Attendance Pattern Chart**
+```php
+// Chart Configuration  
+Type: Bar Chart
+Data Collection: Attendance rates by day of week
+
+// Data Processing Formula
+Controller: AttendanceAnalyticsController@getWeeklyTrend
+
+foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $index => $day) {
+    $dayNumber = $index + 1; // MySQL DAYOFWEEK adjustment
+    
+    $dayAttendance = Attendance::selectRaw('
+            COUNT(*) as total,
+            COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present
+        ')
+        ->whereIn('student_id', $teacherStudentIds)
+        ->whereBetween('date', [$start_date, $end_date])
+        ->whereRaw('DAYOFWEEK(date) = ?', [$dayNumber + 1]) // MySQL Sunday=1
+        ->first();
+
+    // Attendance Rate Formula for Each Day
+    $attendanceRate = $dayAttendance && $dayAttendance->total > 0 ? 
+        round(($dayAttendance->present / $dayAttendance->total) * 100, 1) : 0;
+}
+
+// Insight: Identifies which days have lowest attendance (typically Monday/Friday)
+```
+
+#### 4. **Monthly Attendance Trend Chart**
+```php
+// Chart Configuration
+Type: Line Chart
+Data Collection: Monthly attendance rates over academic year
+
+// Data Processing Formula
+$monthlyData = Attendance::selectRaw('
+        DATE_FORMAT(date, "%Y-%m") as month,
+        COUNT(*) as total_records,
+        COUNT(CASE WHEN time_in_am IS NOT NULL OR time_in_pm IS NOT NULL THEN 1 END) as present_count
+    ')
+    ->whereIn('student_id', $teacherStudentIds)
+    ->whereBetween('date', [$filters['start_date'], $filters['end_date']])
+    ->groupBy('month')
+    ->orderBy('month')
+    ->get();
+
+// Transform to percentage rates
+$chartData = $monthlyData->map(function($item) {
+    return [
+        'month' => Carbon::parse($item->month . '-01')->format('M Y'),
+        'attendance_rate' => $item->total_records > 0 ? 
+            round(($item->present_count / $item->total_records) * 100, 1) : 0
+    ];
+});
+```
+
+#### 5. **Time Patterns Chart** 
+```php
+// Chart Configuration
+Type: Multi-line Chart
+Data Collection: Average attendance times by hour
+
+// Complex Time Analysis Formula
+$timePatterns = Attendance::selectRaw('
+        HOUR(time_in_am) as am_hour,
+        HOUR(time_in_pm) as pm_hour,
+        COUNT(*) as frequency
+    ')
+    ->whereNotNull('time_in_am')
+    ->orWhereNotNull('time_in_pm')
+    ->groupBy('am_hour', 'pm_hour')
+    ->get();
+
+// Creates hourly distribution showing:
+// - Peak morning arrival times
+// - Peak afternoon arrival times  
+// - Tardiness patterns
+```
+
+### Chart Data Flow Process
+
+#### Frontend Chart Initialization
+```javascript
+// 1. Chart.js Setup
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();  // Create empty chart instances
+    loadAllData();       // Populate with real data
+});
+
+// 2. Chart Instance Creation
+const ctx1 = document.getElementById('attendanceTrendChart').getContext('2d');
+attendanceTrendChart = new Chart(ctx1, {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// 3. AJAX Data Loading
+function loadAllData() {
+    Promise.all([
+        fetchSummaryStats(),      // Summary cards
+        fetchAttendanceTrend(),   // Line chart
+        fetchAbsenteeismRates(),  // Bar chart
+        fetchWeeklyTrend(),       // Weekly pattern
+        fetchMonthlyTrend(),      // Monthly trend
+        fetchTimePatterns()       // Time distribution
+    ]).then(updateAllCharts);
+}
+```
+
+#### AJAX Endpoint Integration
+```javascript
+// Summary Statistics
+async function fetchSummaryStats() {
+    const response = await fetch('/teacher/analytics/summary-stats');
+    const data = await response.json();
+    
+    // Update dashboard cards
+    document.getElementById('totalStudents').textContent = data.total_students;
+    document.getElementById('attendanceRate').textContent = data.attendance_rate + '%';
+    document.getElementById('presentRecords').textContent = data.present_records;
+    document.getElementById('totalRecords').textContent = data.total_records;
+}
+
+// Chart Data Updates
+async function fetchAttendanceTrend() {
+    const response = await fetch('/teacher/analytics/attendance-trend');
+    const data = await response.json();
+    
+    // Update Chart.js instance
+    attendanceTrendChart.data.labels = data.labels;
+    attendanceTrendChart.data.datasets = [
+        {
+            label: 'Present',
+            data: data.present,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            fill: true
+        },
+        {
+            label: 'Absent', 
+            data: data.absent,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            fill: true
+        }
+    ];
+    attendanceTrendChart.update();
+}
+```
+
+## REPORT GENERATION SYSTEM ANALYSIS
+
+### Report Types and Data Processing
+
+#### 1. **Daily Attendance Report**
+```php
+Controller: ReportController@index (type='daily')
+
+// Data Collection Process
+$date = $request->input('date', now()->toDateString());
+$attendances = Attendance::whereDate('date', $date)->get()->keyBy('student_id');
+
+// Student Record Processing
+$records = $students->map(function ($student) use ($attendances, $date) {
+    $att = $attendances->get($student->id);
+    
+    // Status Determination Logic
+    $status = 'Absent'; // Default
+    if ($att) {
+        if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
+            $status = 'Present';        // Full day attendance
+        } elseif ($att->time_in_am || $att->time_in_pm) {
+            $status = 'Partial';        // Half day attendance  
+        }
+        // If only time_out recorded, still considered absent
+    }
+    
+    return (object)[
+        'date' => $date,
+        'id_no' => $student->id_no,
+        'name' => $student->name,
+        'grade_level' => $student->grade_level,
+        'section' => $student->section_name,
+        'am_in' => $att && $att->time_in_am ? 
+            Carbon::parse($att->time_in_am)->setTimezone('Asia/Manila')->format('h:i A') : null,
+        'am_out' => $att && $att->time_out_am ? 
+            Carbon::parse($att->time_out_am)->setTimezone('Asia/Manila')->format('h:i A') : null,
+        'pm_in' => $att && $att->time_in_pm ? 
+            Carbon::parse($att->time_in_pm)->setTimezone('Asia/Manila')->format('h:i A') : null,
+        'pm_out' => $att && $att->time_out_pm ? 
+            Carbon::parse($att->time_out_pm)->setTimezone('Asia/Manila')->format('h:i A') : null,
+        'status' => $status,
+    ];
+});
+```
+
+#### 2. **Monthly Attendance Summary Report**
+```php
+Controller: ReportController@index (type='monthly')
+
+// Date Range Calculation
+$month = $request->input('month'); // Format: YYYY-MM
+$start = Carbon::parse($month . '-01')->startOfMonth();
+$end = Carbon::parse($month . '-01')->endOfMonth();
+
+// School Year Boundary Validation
+if ($schoolYear_start && $start < $schoolYear_start) $start = $schoolYear_start;
+if ($schoolYear_end && $end > $schoolYear_end) $end = $schoolYear_end;
+
+// Class Days Calculation (excludes weekends)
+$classDays = self::getClassDays($start, $end);
+$totalDays = count($classDays);
+
+// Student Monthly Statistics
+$records = $students->map(function ($student) use ($classDays, $totalDays) {
+    if (empty($classDays)) {
+        return $this->createEmptyStudentRecord($student);
+    }
+    
+    // Get all attendance records for the month
+    $attendances = Attendance::where('student_id', $student->id)
+        ->whereIn('date', $classDays)
+        ->get()
+        ->keyBy('date');
+    
+    // Calculate statistics
+    $presentDays = 0;
+    $partialDays = 0;
+    $absentDays = 0;
+    
+    foreach ($classDays as $day) {
+        $att = $attendances->get($day);
+        
+        if ($att) {
+            if (($att->time_in_am && $att->time_out_am) && ($att->time_in_pm && $att->time_out_pm)) {
+                $presentDays++;     // Full day
+            } elseif ($att->time_in_am || $att->time_in_pm) {
+                $partialDays++;     // Half day
+            } else {
+                $absentDays++;      // No time in
+            }
+        } else {
+            $absentDays++;          // No record = absent
+        }
+    }
+    
+    // Percentage Calculations
+    $attendanceRate = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0;
+    
+    return (object)[
+        'id_no' => $student->id_no,
+        'name' => $student->name,
+        'present_days' => $presentDays,
+        'partial_days' => $partialDays,
+        'absent_days' => $absentDays,
+        'total_days' => $totalDays,
+        'attendance_rate' => $attendanceRate . '%',
+        'status' => $this->determineMonthlyStatus($attendanceRate)
+    ];
+});
+```
+
+### CSV Export System Deep Analysis
+
+#### CSV Generation Process
+```php
+Controller: ReportController@exportCsv
+
+// File Stream Setup
+$filename = 'attendance_report_' . now()->format('Ymd_His') . '.csv';
+$callback = function () use ($type, $students, $schoolYear, $gradeLevel, $sectionName) {
+    $handle = fopen('php://output', 'w');
+    
+    // Header Information Block
+    fputcsv($handle, ['School Name:', $schoolName]);
+    fputcsv($handle, ['School Year:', $schoolYearText]);
+    
+    if ($gradeLevel && $sectionName) {
+        $gradeSectionText = 'Grade ' . $gradeLevel . ' - ' . $sectionName;
+        fputcsv($handle, ['Grade/Section:', $gradeSectionText]);
+    }
+    
+    if ($type === 'daily') {
+        // Daily CSV Structure
+        $formattedDate = Carbon::parse($date)->format('F d, Y');
+        fputcsv($handle, ['Report Type:', 'Daily - ' . $formattedDate]);
+        fputcsv($handle, []); // Empty separator row
+        
+        // Column Headers
+        fputcsv($handle, ['Date', 'ID No', 'Name', 'AM In', 'AM Out', 'PM In', 'PM Out', 'Status']);
+        
+        // Data Rows with Time Formatting
+        foreach ($students as $student) {
+            $att = $attendances->get($student->id);
+            
+            fputcsv($handle, [
+                $formattedDate,
+                $student->id_no,
+                $student->name,
+                $att && $att->time_in_am ? Carbon::parse($att->time_in_am)->format('h:i A') : '',
+                $att && $att->time_out_am ? Carbon::parse($att->time_out_am)->format('h:i A') : '',
+                $att && $att->time_in_pm ? Carbon::parse($att->time_in_pm)->format('h:i A') : '',
+                $att && $att->time_out_pm ? Carbon::parse($att->time_out_pm)->format('h:i A') : '',
+                $status
+            ]);
+        }
+    } else if ($type === 'monthly') {
+        // Monthly CSV Structure
+        fputcsv($handle, ['Report Type:', 'Monthly - ' . $monthText]);
+        fputcsv($handle, []); 
+        
+        // Statistical Headers
+        fputcsv($handle, ['ID No', 'Name', 'Present Days', 'Partial Days', 'Absent Days', 
+                         'Total Days', 'Attendance Rate', 'Status']);
+        
+        // Monthly Statistics Data
+        foreach ($students as $student) {
+            $stats = $this->calculateMonthlyStats($student, $classDays);
+            
+            fputcsv($handle, [
+                $student->id_no,
+                $student->name,
+                $stats['present_days'],
+                $stats['partial_days'], 
+                $stats['absent_days'],
+                $stats['total_days'],
+                $stats['attendance_rate'] . '%',
+                $stats['status']
+            ]);
+        }
+    }
+    
+    fclose($handle);
+};
+
+// Response with Download Headers
+return response()->stream($callback, 200, [
+    'Content-Type' => 'text/csv',
+    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+]);
+```
+
+#### SF2 Form Generation (Official DepEd Form)
+```php
+Service: SF2TemplateService
+
+// Government Form Requirements
+- Student attendance tracking per DepEd standards
+- Monthly summary format
+- Official signature blocks
+- School information headers
+
+// Data Processing for SF2
+public function generateSF2Data($students, $month, $year) {
+    $classDays = $this->getSchoolDays($month, $year);
+    $attendanceMatrix = [];
+    
+    foreach ($students as $student) {
+        $dailyAttendance = [];
+        
+        foreach ($classDays as $day) {
+            $attendance = Attendance::where('student_id', $student->id)
+                ->whereDate('date', $day)
+                ->first();
+                
+            // SF2 Status Codes
+            if ($attendance && ($attendance->time_in_am || $attendance->time_in_pm)) {
+                $dailyAttendance[$day] = '✓';    // Present
+            } else {
+                $dailyAttendance[$day] = '✗';    // Absent
+            }
+        }
+        
+        $attendanceMatrix[$student->id] = $dailyAttendance;
+    }
+    
+    return $attendanceMatrix;
+}
+```
+
+### Data Fetching Optimization Strategies
+
+#### 1. **Efficient Query Patterns**
+```php
+// Teacher-Scoped Data Loading
+private function getFilteredStudentIds($teacherId, $filters) {
+    return Student::whereHas('section', function($query) use ($teacherId) {
+        $query->where('teacher_id', $teacherId);
+    })
+    ->when($filters['school_year_id'], function($query, $schoolYearId) {
+        return $query->where('school_year_id', $schoolYearId);
+    })
+    ->when($filters['section_id'], function($query, $sectionId) {
+        return $query->where('section_id', $sectionId);
+    })
+    ->pluck('id');
+}
+
+// Batch Processing for Large Datasets
+$attendances = Attendance::whereIn('student_id', $studentIds)
+    ->whereBetween('date', [$startDate, $endDate])
+    ->with('student:id,name,id_no')  // Eager load with specific columns
+    ->get()
+    ->groupBy('student_id');         // Group for efficient access
+```
+
+#### 2. **Memory-Efficient Processing**
+```php
+// Stream Processing for Large CSV Exports
+public function exportLargeDataset($students) {
+    return response()->stream(function() use ($students) {
+        $handle = fopen('php://output', 'w');
+        
+        // Process in chunks to avoid memory issues
+        $students->chunk(100, function($chunk) use ($handle) {
+            foreach ($chunk as $student) {
+                // Process and write immediately
+                fputcsv($handle, $this->formatStudentData($student));
+            }
+        });
+        
+        fclose($handle);
+    });
+}
+```
+
+### Critical Insights and Formulas
+
+#### Attendance Rate Calculation
+```php
+// Standard Attendance Rate Formula
+$attendanceRate = ($presentDays / $totalDays) * 100;
+
+// Weighted Attendance (considers partial attendance)
+$weightedRate = (($presentDays * 1.0) + ($partialDays * 0.5)) / $totalDays * 100;
+
+// Absenteeism Rate (inverse metric)
+$absenteeismRate = ($absentDays / $totalDays) * 100;
+```
+
+#### Time Pattern Analysis
+```php
+// Peak Hours Detection
+$morningPeaks = Attendance::selectRaw('HOUR(time_in_am) as hour, COUNT(*) as frequency')
+    ->whereNotNull('time_in_am')
+    ->groupBy('hour')
+    ->orderByDesc('frequency')
+    ->first();
+
+// Tardiness Calculation  
+$tardyThreshold = '08:00:00';
+$tardyCount = Attendance::where('time_in_am', '>', $tardyThreshold)->count();
+$tardinessRate = ($tardyCount / $totalAttendance) * 100;
+```
+
+This comprehensive analysis reveals how the system transforms raw attendance data into meaningful visualizations and actionable reports through sophisticated Chart.js integration, optimized database queries, and efficient data processing algorithms.
 
 ### Sidebar Navigation Routes Analysis
 
