@@ -265,7 +265,7 @@
 
                         <div class="col-md-4">
                             <label for="cp_no" class="form-label small">CP No</label>
-                            <input type="text" class="form-control form-control-sm" id="cp_no" name="cp_no" value="{{ $student->cp_no }}" required>
+                            <input type="tel" class="form-control form-control-sm" id="cp_no" name="cp_no" value="{{ $student->cp_no }}" required pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                         </div>
                     </div>
                 </div>
@@ -327,9 +327,9 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="contact_person_contact" class="form-label small">Contact Number</label>
-                    <input type="text" class="form-control form-control-sm" id="contact_person_contact" name="contact_person_contact" value="{{ $student->contact_person_contact ?? $student->phone_number }}">
+                    <input type="tel" class="form-control form-control-sm" id="contact_person_contact" name="contact_person_contact" value="{{ $student->contact_person_contact ?? $student->phone_number }}" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                 </div>
             </div>
 

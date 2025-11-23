@@ -2361,6 +2361,11 @@ class AdminController extends Controller
 
         $studentData = $request->except(['picture', 'captured_image']);
         
+        // Set school_id from the authenticated admin's school if not provided
+        if (!isset($studentData['school_id']) && Auth::user()->school_id) {
+            $studentData['school_id'] = Auth::user()->school_id;
+        }
+        
         // Handle picture upload
         if ($request->hasFile('picture')) {
             $picture = $request->file('picture');

@@ -532,3 +532,40 @@
 #19 C:\\Users\\Ped\\Qrattendance\\artisan(16): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
 #20 {main}
 "} 
+[2025-11-23 18:32:38] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2025-11-23"} 
+[2025-11-23 18:32:38] local.INFO: Today attendance summary calculated {"morning_in":12,"morning_out":0,"afternoon_in":2,"afternoon_out":0} 
+[2025-11-23 18:35:44] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2025-11-23 18:38:53] local.INFO: User logged in successfully {"user_id":4,"username":"teacher3","ip":"127.0.0.1"} 
+[2025-11-23 18:38:54] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:38:54] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:38:57] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:38:57] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:38:58] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:38:58] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:38:58] local.INFO: Absenteeism Debug: {"teacher_id":4,"student_count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:38:59] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:38:59] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:39:00] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:39:00] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:39:02] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:39:02] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:39:02] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:39:02] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:13] local.INFO: Teacher Sections Debug: {"teacher_id":4,"direct_sections_found":1,"direct_section_details":[{"id":2,"name":"HUMMS","gradelevel":12,"teacher_id":4,"school_year_id":1,"am_time_in_start":"07:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-21T13:37:26.000000Z","updated_at":"2025-11-23T04:57:02.000000Z","students_count":50,"school_year":{"id":1,"school_id":1,"school_year_start":2025,"school_year_end":2026,"name":"2025–2026","start_date":"2025-01-19T16:00:00.000000Z","end_date":"2025-12-30T16:00:00.000000Z","status":"active","description":"Sample school year for seeds","created_at":"2025-11-21T13:37:25.000000Z","updated_at":"2025-11-22T08:32:09.000000Z"}}]} 
+[2025-11-23 18:44:40] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:40] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:45] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:45] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:49] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:49] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:49] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:49] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:50] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:50] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:50] local.INFO: Absenteeism Debug: {"teacher_id":4,"student_count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:52] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:52] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:53] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:53] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
+[2025-11-23 18:44:56] local.INFO: Student Filter Debug: {"teacher_id":4,"teacher_section_ids":[2],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-23 18:44:56] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 

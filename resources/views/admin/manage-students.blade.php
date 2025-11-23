@@ -819,7 +819,7 @@
                         </div>
                         <div class="col-md-4">
                             <label for="cp_no" class="form-label">Contact Number</label>
-                            <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX">
+                            <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                         </div>
                         <div class="col-md-12">
                             <label for="address" class="form-label">Address</label>
@@ -841,7 +841,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX">
+                            <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                         </div>
                         <div class="col-md-12">
                             <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>

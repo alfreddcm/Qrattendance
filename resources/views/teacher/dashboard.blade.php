@@ -211,7 +211,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="h4 mb-0" id="attendanceRate">{{ $attendanceRate ?? '0%' }}</div>
-                                    <small>Attendance Rate</small>
+                                    <small>Today's Attendance Rate</small>
                                 </div>
                                 <i class="fas fa-chart-line fa-2x opacity-75"></i>
                             </div>

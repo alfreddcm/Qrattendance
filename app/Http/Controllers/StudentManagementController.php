@@ -163,7 +163,12 @@ class StudentManagementController extends Controller
         }
 
         $studentData = $request->except(['_token']);
-        $studentData['user_id'] = Auth::id(); 
+        $studentData['user_id'] = Auth::id();
+        
+        // Set school_id from the authenticated teacher's school
+        if (Auth::user()->school_id) {
+            $studentData['school_id'] = Auth::user()->school_id;
+        }
 
         try {
             if ($request->hasFile('picture')) {

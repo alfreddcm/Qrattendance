@@ -1,10 +1,35 @@
 @php
-// Build time range display for the section
+// Build time range display for all teacher sections
 $timeRangeDisplay = '';
-if ($section) {
+if (isset($teacherSections) && $teacherSections->count() > 0) {
+    $sectionDisplays = [];
+    
+    foreach ($teacherSections as $teacherSection) {
+        $ranges = [];
+        
+        // Collect all time ranges for this section
+        if ($teacherSection->am_time_in_start && $teacherSection->am_time_in_end) {
+            $start = \Carbon\Carbon::parse($teacherSection->am_time_in_start);
+            $end = \Carbon\Carbon::parse($teacherSection->am_time_in_end);
+            $ranges[] = 'AM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
+        }
+        
+        if ($teacherSection->pm_time_in_start && $teacherSection->pm_time_in_end) {
+            $start = \Carbon\Carbon::parse($teacherSection->pm_time_in_start);
+            $end = \Carbon\Carbon::parse($teacherSection->pm_time_in_end);
+            $ranges[] = 'PM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
+        }
+        
+        if (count($ranges) > 0) {
+            $sectionDisplays[] = $teacherSection->name . ' – ' . implode(' | ', $ranges);
+        }
+    }
+    
+    $timeRangeDisplay = implode(' • ', $sectionDisplays);
+} elseif ($section) {
+    // Fallback to single section if no teacher sections found
     $ranges = [];
     
-    // Collect all time ranges
     if ($section->am_time_in_start && $section->am_time_in_end) {
         $start = \Carbon\Carbon::parse($section->am_time_in_start);
         $end = \Carbon\Carbon::parse($section->am_time_in_end);
@@ -19,25 +44,6 @@ if ($section) {
     
     if (count($ranges) > 0) {
         $timeRangeDisplay = $section->name . ' – ' . implode(' | ', $ranges);
-    }
-} elseif (isset($attendanceCode) && $attendanceCode->teacher_id) {
-    // If no section, get teacher's first section as fallback
-    $teacherSection = \App\Models\Section::where('teacher_id', $attendanceCode->teacher_id)->first();
-    if ($teacherSection) {
-        $ranges = [];
-        if ($teacherSection->am_time_in_start && $teacherSection->am_time_in_end) {
-            $start = \Carbon\Carbon::parse($teacherSection->am_time_in_start);
-            $end = \Carbon\Carbon::parse($teacherSection->am_time_in_end);
-            $ranges[] = 'AM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
-        }
-        if ($teacherSection->pm_time_in_start && $teacherSection->pm_time_in_end) {
-            $start = \Carbon\Carbon::parse($teacherSection->pm_time_in_start);
-            $end = \Carbon\Carbon::parse($teacherSection->pm_time_in_end);
-            $ranges[] = 'PM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
-        }
-        if (count($ranges) > 0) {
-            $timeRangeDisplay = $teacherSection->name . ' – ' . implode(' | ', $ranges);
-        }
     }
 }
 @endphp

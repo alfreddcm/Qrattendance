@@ -32,6 +32,15 @@ class PublicAttendanceController extends Controller
         $school = $attendanceCode->teacher->school;
         $section = $attendanceCode->section;
         
+        // Get all sections for students assigned to this teacher (user_id)
+        $teacherSections = Student::where('user_id', $attendanceCode->teacher_id)
+            ->with('section')
+            ->get()
+            ->pluck('section')
+            ->filter()
+            ->unique('id')
+            ->values();
+        
         // Initialize with null/empty values for placeholders (waiting to scan state)
         $currentStudent = null;
         $currentAttendanceRecord = null;
@@ -104,6 +113,7 @@ class PublicAttendanceController extends Controller
             'code',
             'school',
             'section',
+            'teacherSections',
             'recentAttendance',
             'todaySummary',
             'attendanceCode',

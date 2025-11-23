@@ -229,7 +229,9 @@ class TeacherController extends Controller
         $myStudents = $studentCount;
         $mySections = $teacherSections->count();
         $todayPresent = $presentCount;
-        $attendanceRate = $studentCount > 0 ? round(($presentCount / $studentCount) * 100, 1) . '%' : '0%';
+        // Today's attendance rate: present today / total students * 100
+        $todayAttendanceRate = $studentCount > 0 ? round(($presentCount / $studentCount) * 100, 1) . '%' : '0%';
+        $attendanceRate = $todayAttendanceRate; // Renamed for clarity
         
         // Add student counts to teacher sections
         $teacherSections = $teacherSections->map(function($section) use ($selectedSchoolYear) {
