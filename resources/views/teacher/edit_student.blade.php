@@ -1,6 +1,9 @@
 @extends('teacher/sidebar')
 @section('title', 'Edit Student')
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
 .student-current-picture {
     width: 96px;
@@ -158,10 +161,14 @@
     </div>
     <div class="card-body p-3">
 
-        <form method="POST" action="{{ route('teacher.students.update', $student->id) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('teacher.students.update', $student->id) }}" enctype="multipart/form-data" id="editStudentForm">
             @csrf
             @method('PUT')
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+            <input type="hidden" id="original_id_no" value="{{ $student->id_no }}">
+            <input type="hidden" id="original_name" value="{{ $student->name }}">
+            <input type="hidden" id="student_id" value="{{ $student->id }}">
+            <input type="hidden" id="has_qr_code" value="{{ $student->qr_code ? '1' : '0' }}">
 
             <div class="row g-2">
                 <div class="col-md-3">
@@ -529,6 +536,124 @@ document.getElementById('picture').addEventListener('change', function() {
         reader.readAsDataURL(file);
     }
 });
+
+// ============================================
+// QR CODE REGENERATION DETECTION SYSTEM
+// ============================================
+
+/**
+ * QR CODE DATA STRUCTURE:
+ * 
+ * 1. QR Code Data Format: {id_no}_{10-char-random}
+ *    Example: "2123123_AB12CD34EF"
+ * 
+ * 2. QR Code File Name: qr_codes/{id_no}_{sanitized_name}.svg
+ *    Example: "qr_codes/2123123_John_Doe.svg"
+ * 
+ * 3. Database Fields:
+ *    - qr_code: File path (e.g., "qr_codes/2123123_John_Doe.svg")
+ *    - stud_code: QR data (e.g., "2123123_AB12CD34EF")
+ * 
+ * CRITICAL VARIABLES that affect QR code:
+ *    - id_no: Used in both QR data AND filename
+ *    - name: Used in filename (sanitized)
+ * 
+ * When these change:
+ *    1. Old QR file becomes invalid (wrong filename)
+ *    2. QR data becomes invalid (wrong id_no)
+ *    3. Must delete old QR and regenerate new one
+ */
+
+const editForm = document.getElementById('editStudentForm');
+const originalIdNo = document.getElementById('original_id_no').value;
+const originalName = document.getElementById('original_name').value;
+const studentId = document.getElementById('student_id').value;
+const hasQrCode = document.getElementById('has_qr_code').value === '1';
+
+editForm.addEventListener('submit', function(e) {
+    const currentIdNo = document.getElementById('id_no').value.trim();
+    const currentName = document.getElementById('name').value.trim();
+    
+    // Check if QR-critical fields have changed
+    const idNoChanged = currentIdNo !== originalIdNo;
+    const nameChanged = currentName !== originalName;
+    const qrCriticalFieldsChanged = idNoChanged || nameChanged;
+    
+    // If student has QR code AND critical fields changed
+    if (hasQrCode && qrCriticalFieldsChanged) {
+        e.preventDefault();
+        
+        let changedFields = [];
+        if (idNoChanged) changedFields.push(`ID No: "${originalIdNo}" → "${currentIdNo}"`);
+        if (nameChanged) changedFields.push(`Name: "${originalName}" → "${currentName}"`);
+        
+        Swal.fire({
+            title: 'QR Code Will Be Deleted',
+            html: `
+                <div style="text-align: left; padding: 10px;">
+                    <p><strong>You changed critical student information:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${changedFields.map(field => `<li>${field}</li>`).join('')}
+                    </ul>
+                    <p style="margin-top: 15px; color: #dc3545;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        The existing QR code will be <strong>deleted</strong> because:
+                    </p>
+                    <ul style="margin: 10px 0; padding-left: 20px; color: #6c757d; font-size: 0.9em;">
+                        ${idNoChanged ? '<li>ID No is used in QR code data</li>' : ''}
+                        ${nameChanged || idNoChanged ? '<li>File name must match student info</li>' : ''}
+                    </ul>
+                    <p style="margin-top: 15px; color: #28a745;">
+                        <i class="fas fa-sync-alt"></i> 
+                        You can regenerate a new QR code after updating.
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Update & Delete QR',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'swal-wide'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show the regeneration prompt
+                Swal.fire({
+                    title: 'Regenerate QR Code Now?',
+                    text: 'Would you like to generate a new QR code immediately after updating?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Generate QR',
+                    cancelButtonText: 'No, I\'ll do it later'
+                }).then((regenerateResult) => {
+                    // Store the user's choice
+                    const shouldRegenerate = regenerateResult.isConfirmed;
+                    
+                    // Add hidden field to track regeneration preference
+                    const regenerateInput = document.createElement('input');
+                    regenerateInput.type = 'hidden';
+                    regenerateInput.name = 'regenerate_qr';
+                    regenerateInput.value = shouldRegenerate ? '1' : '0';
+                    editForm.appendChild(regenerateInput);
+                    
+                    // Submit the form
+                    editForm.submit();
+                });
+            }
+        });
+    }
+});
 </script>
+
+<style>
+.swal-wide {
+    width: 600px !important;
+}
+</style>
 
 @endsection

@@ -3,6 +3,8 @@
 @section('content')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @php
     use Illuminate\Support\Facades\Storage;
@@ -150,8 +152,8 @@
 
 <div class="card shadow-sm sticky-card">
     <div class="card-header bg-primary text-white p-2 sticky-card-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-             <div class="d-flex align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="z-index: 9999;">
+            <div class="d-flex align-items-center" >
                 <h6 class="mb-0 fs-6 me-3">
                     <i class="fas fa-user-graduate me-1"></i>
                     Student Records
@@ -165,41 +167,22 @@
                 </button>
 
                 @if(count($students) > 0)
-                    <div class="btn-group">
-                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="qrActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-qrcode me-1"></i>QR Actions
+                    @if($missingQr)
+                        <form method="POST" action="{{ route('teacher.students.generateQrs') }}" id="generateAllQrForm" style="display: inline;">
+                            @csrf
+                            <button type="button" class="btn btn-light btn-sm" id="generateQrBtn">
+                                <i class="fas fa-magic me-1"></i>Generate All QR
+                            </button>
+                        </form>
+                    @else
+                        <button class="btn btn-success btn-sm" disabled title="All students have QR codes">
+                            <i class="fas fa-check-circle me-1"></i>All QR Generated
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="qrActionsDropdown">
-                            @if($missingQr)
-                            <li>
-                                <form method="POST" action="{{ route('teacher.students.generateQrs') }}" class="generate-qr-form" id="generateAllQrForm" style="margin: 0;">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="fas fa-magic me-2"></i>Generate All QR Codes
-                                    </button>
-                                </form>
-                            </li>
-                            @else
-                            <li>
-                                <span class="dropdown-item text-success d-flex align-items-center">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    Every student has a QR code
-                                </span>
-                            </li>
-                            @endif
-                        </ul>
-                    </div>
+                    @endif
 
-                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="idActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-id-card me-1"></i>Student IDs
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="idActionsDropdown">
-                        <li>
-                            <a href="{{ route('student.ids.print.my.students') }}" class="dropdown-item" target="_blank">
-                                <i class="fas fa-print me-2"></i>Print My Students' IDs (Ctrl+P)
-                            </a>
-                        </li>
-                    </ul>
+                    <a href="{{ route('student.ids.print.my.students') }}" class="btn btn-light btn-sm" target="_blank">
+                        <i class="fas fa-print me-1"></i>Print Student IDs
+                    </a>
 
                     <a href="{{ route('teacher.students.export') }}" class="btn btn-light btn-sm">
                         <i class="fas fa-download me-1"></i>Export
@@ -238,7 +221,7 @@
         @if(count($students) > 0)
             <div class="table-responsive" style="max-height: 73vh; overflow-y: auto;">
                 <table class="table table-hover table-striped mb-0">
-                    <thead class="table-light sticky-top">
+                    <thead class="table-light sticky-top"">
                         <tr>
                             <th class="text-center" style="width: 60px;">#</th>
                             <th class="text-center" style="width: 80px;">Photo</th>
@@ -379,41 +362,34 @@
                             </td>
 
                              <td>
-                                <div class="btn-group">
+                                <div class="btn-group" role="group">
                                     <button class="btn btn-outline-primary btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#infoModal{{ $student->id }}"
                                             title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                        <span class="visually-hidden">Toggle Dropdown</span>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <a href="{{ route('teacher.students.edit', $student->id) }}" class="dropdown-item">
-                                                <i class="fas fa-edit me-2"></i>Edit
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('student.id.print', $student->id) }}" class="dropdown-item" target="_blank">
-                                                <i class="fas fa-print me-2"></i>Print ID
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to remove this student?')">
-                                                    <i class="fas fa-trash me-2"></i>Remove
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
+                                    <a href="{{ route('teacher.students.edit', $student->id) }}" 
+                                       class="btn btn-outline-secondary btn-sm"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ route('student.id.print', $student->id) }}" 
+                                       class="btn btn-outline-info btn-sm" 
+                                       target="_blank"
+                                       title="Print ID">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="btn btn-outline-danger btn-sm" 
+                                                onclick="return confirm('Are you sure you want to remove this student?')"
+                                                title="Remove">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -1144,6 +1120,7 @@
     thead.sticky-top {
         background-color: #f8f9fa !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1;
     }
 
     thead.sticky-top th {
@@ -1152,6 +1129,10 @@
         color: #495057;
         border-bottom: 2px solid #dee2e6;
         padding: 12px 8px;
+    }
+
+    .dropdown-menu {
+        z-index: 1050 !important;
     }
 
      .btn-group,
@@ -1769,6 +1750,40 @@ function showAlert(type, message) {
         loadingModal.show();
     });
 });
+
+// SweetAlert for Generate All QR Codes
+const generateQrBtn = document.getElementById('generateQrBtn');
+if (generateQrBtn) {
+    generateQrBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Generate All QR Codes?',
+            text: 'This will generate QR codes for all students who don\'t have one yet.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, generate!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('generateAllQrForm');
+                
+                Swal.fire({
+                    title: 'Generating QR Codes...',
+                    text: 'Please wait while we generate the QR codes.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                form.submit();
+            }
+        });
+    });
+}
 });
 </script>
 

@@ -15,6 +15,76 @@ use Illuminate\Support\Facades\Log;
 use ZipArchive;
 use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * ============================================
+ * QR CODE SYSTEM DOCUMENTATION
+ * ============================================
+ * 
+ * QR CODE DATA STRUCTURE:
+ * -----------------------
+ * 1. QR Code Data Format: {id_no}_{10-char-random-string}
+ *    - Example: "2123123_AB12CD34EF"
+ *    - Generated using: substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10)
+ *    - This data is embedded in the QR code image
+ * 
+ * 2. QR Code File Name: qr_codes/{id_no}_{sanitized_name}.svg
+ *    - Example: "qr_codes/2123123_John_Doe.svg"
+ *    - Name sanitization: preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name)
+ *    - Removes special characters and replaces with underscores
+ * 
+ * 3. Database Fields (students table):
+ *    - qr_code: VARCHAR - Stores file path (e.g., "qr_codes/2123123_John_Doe.svg")
+ *    - stud_code: VARCHAR - Stores QR data (e.g., "2123123_AB12CD34EF")
+ *    - Both fields are set to NULL when QR is deleted
+ * 
+ * CRITICAL VARIABLES:
+ * ------------------
+ * These variables are used in QR code generation and MUST trigger regeneration if changed:
+ * 
+ * 1. id_no (CRITICAL):
+ *    - Used in: QR code data AND filename
+ *    - Impact: Changing this invalidates both the QR data and file path
+ *    - Action: Delete old QR, prompt for regeneration
+ * 
+ * 2. name (CRITICAL):
+ *    - Used in: Filename only (sanitized)
+ *    - Impact: Changing this makes the filename invalid
+ *    - Action: Delete old QR, prompt for regeneration
+ * 
+ * NON-CRITICAL VARIABLES:
+ * ----------------------
+ * These can be changed without affecting QR code:
+ * - age, gender, address, cp_no, picture
+ * - section_id, school_year_id
+ * - contact_person_* fields
+ * 
+ * QR CODE LIFECYCLE:
+ * -----------------
+ * 1. Generation: generateQrForStudent()
+ *    - Creates random string
+ *    - Generates QR image (SVG format, 200x200px)
+ *    - Saves to storage/app/public/qr_codes/
+ *    - Updates qr_code and stud_code in database
+ * 
+ * 2. Update (when critical fields change):
+ *    - Detects changes in id_no or name
+ *    - Calls clearStudentQrCode()
+ *    - Deletes physical file from storage
+ *    - Sets qr_code and stud_code to NULL
+ *    - Prompts user to regenerate (via SweetAlert in view)
+ * 
+ * 3. Deletion:
+ *    - clearStudentQrCode() deletes file and clears DB fields
+ *    - Also removes legacy files with old naming patterns
+ * 
+ * RELATED METHODS:
+ * ---------------
+ * - generateQrForStudent($student): Generate new QR for one student
+ * - generateQrs(Request): Bulk generate QR for multiple students
+ * - clearStudentQrCode($student): Delete QR file and clear DB fields
+ * - update(Request, $id): Update student with QR regeneration logic
+ */
+
 class StudentManagementController extends Controller
 {
     use ValidatesForResponse;
@@ -301,11 +371,19 @@ class StudentManagementController extends Controller
             return redirect()->back()->withErrors(['section_id' => 'The selected section is not valid or does not belong to you.'])->withInput();
         }
 
-        $studentData = $request->except(['_token', '_method']);
+        $studentData = $request->except(['_token', '_method', 'regenerate_qr']);
         $studentData['user_id'] = Auth::id(); 
 
-         $this->clearStudentQrCode($student);
-        $studentData['qr_code'] = null;
+        // Check if QR-critical fields changed (id_no or name)
+        $qrCriticalFieldsChanged = ($student->id_no !== $request->id_no) || ($student->name !== $request->name);
+        
+        // If critical fields changed, clear the QR code
+        if ($qrCriticalFieldsChanged && $student->qr_code) {
+            $this->clearStudentQrCode($student);
+            $studentData['qr_code'] = null;
+            $studentData['stud_code'] = null;
+        }
+        
         if ($request->hasFile('picture')) {
              if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                 Storage::disk('public')->delete('student_pictures/' . $student->picture);
@@ -331,6 +409,17 @@ class StudentManagementController extends Controller
         }
 
         $student->update($studentData);
+        
+        // If user chose to regenerate QR immediately
+        if ($request->regenerate_qr == '1' && $qrCriticalFieldsChanged) {
+            $this->generateQrForStudent($student);
+            return redirect()->route('teacher.students')->with('success', 'Student updated successfully and new QR code generated!');
+        }
+        
+        // If QR was deleted but user chose not to regenerate
+        if ($qrCriticalFieldsChanged && $student->qr_code === null) {
+            return redirect()->route('teacher.students')->with('info', 'Student updated successfully. QR code was deleted due to data changes. Please regenerate a new QR code.');
+        }
 
         return redirect()->route('teacher.students')->with('success', 'Student updated successfully.');
     }

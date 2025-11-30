@@ -571,3 +571,25 @@
 [2025-11-23 18:44:56] local.INFO: Final student IDs: {"count":50,"student_ids":[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70]} 
 [2025-11-23 20:29:51] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2025-11-23"} 
 [2025-11-23 20:29:52] local.INFO: Today attendance summary calculated {"morning_in":12,"morning_out":0,"afternoon_in":2,"afternoon_out":0} 
+[2025-11-30 23:23:53] local.INFO: User logged in successfully {"user_id":2,"username":"mark","ip":"127.0.0.1"} 
+[2025-11-30 23:23:54] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:23:54] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:24:00] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:00] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:24:00] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:00] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:24:01] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:01] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:24:01] local.INFO: Absenteeism Debug: {"teacher_id":2,"student_count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,101],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:02] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:02] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:24:05] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:05] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:24:05] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-11-30 23:24:05] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-11-30 23:50:33] local.INFO: Generating QR for student {"student_id":101,"student_name":"13","student_id_no":"21231232","existing_qr_code":null,"existing_stud_code":null,"teacher_id":2} 
+[2025-11-30 23:50:33] local.INFO: Generated QR data {"student_id":101,"qr_code_data":"21231232_SZC9J72PQA","random_string":"SZC9J72PQA","id_no":"21231232"} 
+[2025-11-30 23:50:33] local.INFO: QR file path prepared {"student_id":101,"qr_path":"qr_codes/21231232_13.svg","sanitized_name":"13","file_exists":false} 
+[2025-11-30 23:50:33] local.INFO: Creating QR image {"student_id":101,"qr_data":"21231232_SZC9J72PQA"} 
+[2025-11-30 23:50:34] local.INFO: QR image generated, saving to storage {"student_id":101,"qr_path":"qr_codes/21231232_13.svg","qr_image_size":2663} 
+[2025-11-30 23:50:34] local.INFO: QR generation completed successfully {"student_id":101,"student_name":"13","qr_path":"qr_codes/21231232_13.svg","stud_code":"21231232_SZC9J72PQA","file_saved":true} 
