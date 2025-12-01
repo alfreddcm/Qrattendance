@@ -1,40 +1,30 @@
 ---
 deployment:
   tasks:
-    # Set deployment path (CHANGE YOUR_CPANEL_USERNAME to your actual username)
-    - export DEPLOYPATH=/home/YOUR_CPANEL_USERNAME/public_html
+    - export DEPLOYPATH=/home/Ysgvihssc/public_html
     
-    # Copy all files to deployment directory
     - /bin/cp -R * $DEPLOYPATH
     
-    # Copy .env.example if .env doesn't exist
     - if [ ! -f $DEPLOYPATH/.env ]; then /bin/cp $DEPLOYPATH/.env.example $DEPLOYPATH/.env; fi
     
-    # Navigate to deployment directory
     - cd $DEPLOYPATH
     
-    # Install Composer dependencies (production mode, no dev packages)
     - composer install --no-dev --optimize-autoloader --no-interaction
     
-    # Clear all caches before caching
     - php artisan config:clear
     - php artisan route:clear
     - php artisan view:clear
     - php artisan cache:clear
     
-    # Cache configuration, routes, and views for better performance
     - php artisan config:cache
     - php artisan route:cache
     - php artisan view:cache
     
-    # Create storage symlink (creates link from public/storage to storage/app/public)
     - php artisan storage:link
     
-    # Set proper permissions for Laravel directories
     - chmod -R 755 storage
     - chmod -R 755 bootstrap/cache
     
-    # Ensure storage subdirectories have correct permissions
     - chmod -R 755 storage/app
     - chmod -R 755 storage/framework
     - chmod -R 755 storage/logs
