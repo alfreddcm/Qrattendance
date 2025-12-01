@@ -1146,6 +1146,7 @@ class AdminController extends Controller
     $schools = School::select('id', 'name')->orderBy('name')->get();
     $teachers = User::where('role', 'teacher')->with(['section', 'sections'])->orderBy('name')->get();
     $schoolYears = SchoolYear::orderBy('created_at', 'desc')->get();
+    $semesters = $schoolYears; // Alias for backward compatibility
         
         $gradeSectionOptions = Student::with('section')
             ->whereHas('section')
@@ -1159,7 +1160,7 @@ class AdminController extends Controller
             ->unique('value')
             ->values();
 
-    return view('admin.manage-students', compact('students', 'schools', 'teachers', 'gradeSectionOptions', 'schoolYears'));
+    return view('admin.manage-students', compact('students', 'schools', 'teachers', 'gradeSectionOptions', 'schoolYears', 'semesters'));
     }
 
     /**
@@ -3071,17 +3072,21 @@ class AdminController extends Controller
     /**
      * Get sections by teacher for cascading dropdown
      */
-    public function getSectionsByTeacher($teacherId)
+    public function getSectionsByTeacher($teacherId, Request $request)
     {
-        // Get sections where teacher is assigned (both legacy teacher_id and many-to-many)
-        $sections = Section::with(['schoolYear', 'students'])
-                          ->where(function($query) use ($teacherId) {
-                              $query->where('teacher_id', $teacherId)
-                                    ->orWhereHas('teachers', function($subQuery) use ($teacherId) {
-                                        $subQuery->where('users.id', $teacherId);
-                                    });
-                          })
-                          ->select('id', 'name', 'gradelevel', 'school_year_id', 'teacher_id')
+        $query = Section::with(['schoolYear', 'students'])
+                       ->where(function($q) use ($teacherId) {
+                           $q->where('teacher_id', $teacherId)
+                             ->orWhereHas('teachers', function($subQuery) use ($teacherId) {
+                                 $subQuery->where('users.id', $teacherId);
+                             });
+                       });
+        
+        if ($request->has('school_year_id') && $request->school_year_id) {
+            $query->where('school_year_id', $request->school_year_id);
+        }
+        
+        $sections = $query->select('id', 'name', 'gradelevel', 'school_year_id', 'teacher_id')
                           ->orderBy('gradelevel')
                           ->orderBy('name')
                           ->get()
@@ -3091,9 +3096,12 @@ class AdminController extends Controller
                                   'name' => $section->name,
                                   'gradelevel' => $section->gradelevel,
                                   'display_name' => "Grade {$section->gradelevel} - {$section->name}",
-                                  'semester_name' => $section->schoolYear ? $section->schoolYear->name : 'No Semester',
+                                  'school_year_name' => $section->schoolYear ? 
+                                      ($section->schoolYear->school_year_start && $section->schoolYear->school_year_end ? 
+                                          $section->schoolYear->school_year_start . '–' . $section->schoolYear->school_year_end :
+                                          $section->schoolYear->name) : 'No School Year',
                                   'students_count' => $section->students->count(),
-                                  'value' => $section->gradelevel . '|' . $section->name // For grade_section filter format
+                                  'value' => $section->gradelevel . '|' . $section->name
                               ];
                           });
         

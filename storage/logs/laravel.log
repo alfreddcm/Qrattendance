@@ -593,3 +593,19 @@
 [2025-11-30 23:50:33] local.INFO: Creating QR image {"student_id":101,"qr_data":"21231232_SZC9J72PQA"} 
 [2025-11-30 23:50:34] local.INFO: QR image generated, saving to storage {"student_id":101,"qr_path":"qr_codes/21231232_13.svg","qr_image_size":2663} 
 [2025-11-30 23:50:34] local.INFO: QR generation completed successfully {"student_id":101,"student_name":"13","qr_path":"qr_codes/21231232_13.svg","stud_code":"21231232_SZC9J72PQA","file_saved":true} 
+[2025-12-01 23:57:20] local.INFO: User logged in successfully {"user_id":2,"username":"mark","ip":"127.0.0.1"} 
+[2025-12-01 23:57:20] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:20] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-12-01 23:57:22] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:22] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-12-01 23:57:23] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:23] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-12-01 23:57:23] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:23] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-12-01 23:57:23] local.INFO: Absenteeism Debug: {"teacher_id":2,"student_count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,101],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:24] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:24] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-12-01 23:57:25] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:25] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 
+[2025-12-01 23:57:26] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[1],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-20","end_date":"2025-12-31"}} 
+[2025-12-01 23:57:26] local.INFO: Final student IDs: {"count":51,"student_ids":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} 

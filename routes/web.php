@@ -170,6 +170,9 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/students/import', [ImportController::class, 'showUploadForm'])->name('admin.students.import.form');
     Route::post('/students/import', [ImportController::class, 'import'])->name('admin.students.import');
     Route::get('/students/import-guide', [AdminController::class, 'importGuide'])->name('admin.students.importGuide');
+    Route::get('/import/upload', [ImportController::class, 'showUploadForm'])->name('import.upload.form');
+    Route::post('/import/upload', [ImportController::class, 'preview'])->name('import.upload');
+    Route::post('/import/import', [ImportController::class, 'import'])->name('import.import');
     
     Route::get('/school-years/{schoolYear}/schools', [AdminController::class, 'getSchoolsBySemester'])->name('admin.school-years.schools');
     Route::get('/school-years/{schoolYear}/months', [AdminController::class, 'getSemesterMonths'])->name('admin.school-years.months');
@@ -211,9 +214,6 @@ Route::middleware(['role:teacher,admin'])->group(function () {
     Route::get('/student-ids/print-all', [StudentIdController::class, 'printAll'])->name('student.ids.print.all');
     Route::get('/student-ids/print-by-teacher/{teacherId}', [StudentIdController::class, 'printByTeacher'])->name('student.ids.print.by.teacher');
     Route::get('/student-ids/print-my-students', [StudentIdController::class, 'printMyStudents'])->name('student.ids.print.my.students');
-    
-     Route::post('/import/upload', [ImportController::class, 'preview'])->name('import.upload');
-    Route::post('/import/import', [ImportController::class, 'import'])->name('import.import');
 });
 
  Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');

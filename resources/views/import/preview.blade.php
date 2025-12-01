@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
 
         body {
@@ -187,6 +188,7 @@
     </style>
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="container">
@@ -255,8 +257,8 @@
                                 <label for="admin_school_year_id" class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">
                                     <i class="bi bi-calendar3 me-1"></i>School Year
                                 </label>
-                                <select id="admin_school_year_id" name="school_year_id" class="form-select" onchange="loadTeachersBySchool()" style="font-size: 0.9rem;">
-                                    <option value="">Choose School Year...</option>
+                                <select id="admin_school_year_id" name="school_year_id" class="form-select" onchange="loadTeachersBySchool()" disabled style="font-size: 0.9rem;">
+                                    <option value="">Choose school year...</option>
                                     @foreach($schoolYears as $schoolYear)
                                         <option value="{{ $schoolYear->id }}">
                                             @if($schoolYear->school_year_start && $schoolYear->school_year_end)
@@ -339,7 +341,7 @@
                                     <option value="">Choose section...</option>
                                     @if($userSections->count() > 0)
                                         @foreach($userSections as $section)
-                                            <option value="{{ $section->id }}" data-teacher="{{ $section->teacher_id }}" data-School Year="{{ $section->school_year_id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">
+                                            <option value="{{ $section->id }}" data-teacher="{{ $section->teacher_id }}" data-schoolyear="{{ $section->school_year_id }}" data-gradelevel="{{ $section->gradelevel }}" data-name="{{ $section->name }}">
                                                 Grade {{ $section->gradelevel }} - {{ $section->name }}
                                             </option>
                                         @endforeach
@@ -376,15 +378,16 @@
         <form id="studentsForm" action="{{ route('import.import') }}" method="POST">
             @csrf
             @if(auth()->user()->role === 'admin')
-                <input type="hidden" name="user_id" id="selectedUserId" value="">
+                <input type="hidden" name="selectedUserId" id="selectedUserId" value="">
                 <input type="hidden" name="school_year_id" id="selectedSchoolYearId" value="">
-                <input type="hidden" name="section_id" id="selectedSectionId" value="">
+                <input type="hidden" name="selectedSectionId" id="selectedSectionId" value="">
                 <input type="hidden" name="school_id" id="selectedSchoolId" value="">
             @else
                 <input type="hidden" name="user_id" id="selecteduser_id" value="{{ $user->id }}">
                 <input type="hidden" name="school_year_id" id="selectedSchoolYear" value="">
                 <input type="hidden" name="section_id" id="selectedSection" value="">
             @endif
+            <input type="hidden" name="confirm_conflicts" id="confirm_conflicts" value="">
             <div class="table-responsive" style="height: 600px; overflow-y: auto;">
                 <table class="table table-bordered table-striped align-middle mb-0" id="studentsTable" style="border-radius: 1px; overflow: hidden;">
                     <thead style="position: sticky; top: 0; z-index: 2;">
@@ -458,7 +461,7 @@
                 </table>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-                <a href="{{ route('teacher.students') }}" class="btn btn-info d-flex align-items-center" style="min-width: 110px;">
+                <a href="{{ route('admin.manage-students') }}" class="btn btn-info d-flex align-items-center" style="min-width: 110px;">
                     <i class="bi bi-arrow-left me-2"></i>Return
                 </a>
                 <button type="submit" class="btn btn-success d-flex align-items-center" id="addToListBtn" disabled style="min-width: 130px;">
@@ -471,7 +474,7 @@
         // Global validation state
         let validationState = {
             school: false,
-            School Year: false,
+            schoolYear: false,
             teacher: false,
             section: false
         };
@@ -484,9 +487,9 @@
             const submitBtn = document.getElementById('addToListBtn');
 
             @if($user->role === 'admin')
-                const allSelected = validationState.school && validationState.School Year && validationState.teacher && validationState.section;
+                const allSelected = validationState.school && validationState.schoolYear && validationState.teacher && validationState.section;
             @else
-                const allSelected = validationState.School Year && validationState.section;
+                const allSelected = validationState.schoolYear && validationState.section;
             @endif
 
             if (allSelected) {
@@ -518,7 +521,7 @@
         @if($user->role === 'teacher')
         document.getElementById('teacher_school_year').addEventListener('change', function() {
             document.getElementById('selectedSchoolYear').value = this.value;
-            validationState.School Year = this.value !== '';
+            validationState.schoolYear = this.value !== '';
             updateTeacherSections();
             updateSelectionStatus();
         });
@@ -597,7 +600,7 @@
             validationState.section = false;
 
             if (!schoolSelect.value) {
-                resetDropdown(teacherSelect, 'Choose school first...');
+                resetDropdown(teacherSelect, 'Choose school year...');
                 resetDropdown(sectionSelect, 'Choose teacher first...');
                 schoolYearSelect.disabled = true;
                 updateSelectionStatus();
@@ -616,7 +619,7 @@
             const sectionSelect = document.getElementById('admin_section_id');
 
             document.getElementById('selectedSchoolYearId').value = schoolYearSelect.value;
-            validationState.School Year = schoolYearSelect.value !== '';
+            validationState.schoolYear = schoolYearSelect.value !== '';
 
             // Reset dependent validations
             validationState.teacher = false;
@@ -650,8 +653,6 @@
                     teacherSelect.innerHTML = '<option value="">Error loading teachers</option>';
                     teacherSelect.disabled = false;
                     updateSelectionStatus();
-                });
-        }
                 });
         }
 
@@ -734,9 +735,9 @@
         // Form submission validation
         document.getElementById('studentsForm').addEventListener('submit', function(e) {
             @if($user->role === 'admin')
-                const allSelected = validationState.school && validationState.School Year && validationState.teacher && validationState.section;
+                const allSelected = validationState.school && validationState.schoolYear && validationState.teacher && validationState.section;
             @else
-                const allSelected = validationState.School Year && validationState.section;
+                const allSelected = validationState.schoolYear && validationState.section;
             @endif
 
             if (!allSelected) {
@@ -842,6 +843,98 @@
             document.getElementById('totalStudents').textContent = total;
             document.getElementById('totalStudentsHeader').textContent = total;
         }
+
+        // Auto-select school if only one exists
+        @if($user->role === 'admin')
+        window.addEventListener('load', function() {
+            const schoolSelect = document.getElementById('admin_school_id');
+            if (schoolSelect && schoolSelect.options.length === 2) {
+                // Only one school (plus the default "Choose school..." option)
+                schoolSelect.selectedIndex = 1;
+                // Manually call loadSchoolData to properly initialize
+                loadSchoolData();
+            }
+        });
+        @endif
+
+        // Handle conflicts with SweetAlert
+        @if(session('conflicts'))
+        window.addEventListener('load', function() {
+            const conflicts = @json(session('conflicts'));
+            
+            let conflictHtml = `
+                <div class="text-start">
+                    <div class="alert alert-warning mb-3">
+                        <strong>⚠️ Warning!</strong> ${conflicts.length} student(s) with matching ID numbers already exist.
+                    </div>
+                    <p class="mb-3">The following students will be <strong>updated</strong> if you confirm:</p>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID No</th>
+                                    <th>Existing Name</th>
+                                    <th>New Name</th>
+                                    <th>Section</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            conflicts.forEach(conflict => {
+                const nameMismatch = conflict.existing_name !== conflict.new_name;
+                const rowClass = nameMismatch ? 'table-warning' : '';
+                const badge = nameMismatch ? '<span class="badge bg-danger ms-1">Name Mismatch</span>' : '';
+                
+                conflictHtml += `
+                    <tr class="${rowClass}">
+                        <td><strong>${conflict.id_no}</strong></td>
+                        <td>${conflict.existing_name}</td>
+                        <td>${conflict.new_name} ${badge}</td>
+                        <td>Grade ${conflict.grade_level} - ${conflict.section}</td>
+                    </tr>
+                `;
+            });
+            
+            conflictHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <small><i class="bi bi-info-circle-fill me-1"></i>Highlighted rows indicate name mismatches. Please verify before updating.</small>
+                    </div>
+                </div>
+            `;
+            
+            Swal.fire({
+                title: 'Student Conflicts Detected',
+                html: conflictHtml,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-check-circle me-1"></i> Confirm & Update',
+                cancelButtonText: '<i class="bi bi-x-circle me-1"></i> Cancel & Review',
+                width: '800px',
+                customClass: {
+                    popup: 'text-start',
+                    confirmButton: 'btn btn-warning',
+                    cancelButton: 'btn btn-secondary'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('confirm_conflicts').value = '1';
+                    document.getElementById('studentsForm').submit();
+                }
+            });
+        });
+        @endif
+
+        // Handle conflict confirmation
+        document.getElementById('confirmUpdateBtn')?.addEventListener('click', function() {
+            document.getElementById('confirm_conflicts').value = '1';
+            document.getElementById('studentsForm').submit();
+        });
     </script>
 </body>
 </html>

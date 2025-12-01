@@ -20,7 +20,8 @@ class ImportController extends Controller
     use ValidatesForResponse;
     public function showUploadForm()
     {
-        return view('import.upload');
+        // Redirect to the manage students page where the import modal exists
+        return redirect()->route('admin.manage-students');
     }
 
     public function preview(Request $request)
@@ -77,6 +78,7 @@ class ImportController extends Controller
             $user = Auth::user();
             $teachers = [];
             $schools = [];
+            $sections = collect();
             $userSections = collect();
             $currentSchoolId = null;
             
@@ -89,14 +91,19 @@ class ImportController extends Controller
                 $userSections = \App\Models\Section::whereHas('teachers', function($query) use ($user) {
                     $query->where('users.id', $user->id);
                 })->orWhere('teacher_id', $user->id)->get();
+                
+                // Also get all sections for the teacher's school
+                $sections = \App\Models\Section::where('teacher_id', $user->id)->get();
             }
 
             return view('import.preview', [
                 'data' => $data[0],
                 'file' => $path,
+                'schoolYears' => $schoolYears,
                 'semesters' => $schoolYears,
                 'teachers' => $teachers,
                 'schools' => $schools,
+                'sections' => $sections,
                 'userSections' => $userSections,
                 'currentSchoolId' => $currentSchoolId
             ]);
@@ -131,12 +138,29 @@ class ImportController extends Controller
             $schoolYear_id = $request->input('school_year_id'); 
             $user_id = $request->input('user_id');
             
+            \Log::info('Import data received', [
+                'students_count' => is_array($students) ? count($students) : 0,
+                'school_year_id' => $schoolYear_id,
+                'user_id' => $user_id,
+                'section_id_from_request' => $request->input('section_id'),
+                'selectedSectionId' => $request->input('selectedSectionId'),
+                'auth_user_role' => Auth::user()->role
+            ]);
+            
              $section_id = null;
             if (Auth::user()->role === 'admin') {
                  $section_id = $request->input('selectedSectionId');
                 $user_id = $request->input('selectedUserId') ?? $user_id;
+                \Log::info('Admin import - section assignment', [
+                    'section_id' => $section_id,
+                    'user_id' => $user_id,
+                    'selectedUserId' => $request->input('selectedUserId')
+                ]);
             } else {
                  $section_id = $request->input('section_id');
+                \Log::info('Teacher import - section assignment', [
+                    'section_id' => $section_id
+                ]);
             }
 
             $school_id = User::where('id', $user_id)->value('school_id');
@@ -153,9 +177,13 @@ class ImportController extends Controller
             if (!$section_id) {
                 \Log::warning('Import failed: No section selected', [
                     'user_id' => $user_id,
-                    'school_year_id' => $schoolYear_id
+                    'school_year_id' => $schoolYear_id,
+                    'request_section_id' => $request->input('section_id'),
+                    'selectedSectionId' => $request->input('selectedSectionId'),
+                    'all_request_data' => $request->except(['_token', 'students'])
                 ]);
-                return redirect()->back()->with('error', 'Please select a section for the students.');
+                $route = Auth::user()->role === 'admin' ? 'admin.manage-students' : 'teacher.students';
+                return redirect()->route($route)->with('error', 'Please select a section for the students.');
             }
 
              $schoolYear = SchoolYear::find($schoolYear_id);
@@ -171,6 +199,49 @@ class ImportController extends Controller
                     'user_id' => $user_id
                 ]);
                 return redirect()->route('login')->with('error', 'You must be logged in to import students.');
+            }
+
+            // Check for conflicts if not confirmed
+            if (!$request->has('confirm_conflicts')) {
+                $conflicts = [];
+                foreach ($students as $index => $row) {
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+                    $idNo = trim($row[0] ?? '');
+                    $name = trim($row[1] ?? '');
+                    
+                    if (empty($idNo) || empty($name)) {
+                        continue;
+                    }
+
+                    $existingStudent = Student::where('id_no', $idNo)
+                        ->where('school_year_id', $schoolYear_id)
+                        ->where('user_id', $user_id)
+                        ->first();
+
+                    if ($existingStudent) {
+                        $conflicts[] = [
+                            'id_no' => $idNo,
+                            'existing_name' => $existingStudent->name,
+                            'new_name' => $name,
+                            'section' => $existingStudent->section->name ?? 'N/A',
+                            'grade_level' => $existingStudent->section->gradelevel ?? 'N/A'
+                        ];
+                    }
+                }
+
+                // If conflicts found, return to preview with conflict data
+                if (!empty($conflicts)) {
+                    \Log::warning('Import conflicts detected', [
+                        'conflicts_count' => count($conflicts),
+                        'user_id' => $user_id
+                    ]);
+                    return redirect()->back()
+                        ->with('conflicts', $conflicts)
+                        ->with('warning', count($conflicts) . ' student(s) already exist. Please review conflicts and confirm to update.')
+                        ->withInput();
+                }
             }
 
             $added = 0;
@@ -349,9 +420,11 @@ class ImportController extends Controller
                 ]);
 
                 if ($added == 0) {
-                    return redirect()->route('teacher.students')->with('error', 'Import failed. ' . $errorMessage);
+                    $route = Auth::user()->role === 'admin' ? 'admin.manage-students' : 'teacher.students';
+                    return redirect()->route($route)->with('error', 'Import failed. ' . $errorMessage);
                 } else {
-                    return redirect()->route('teacher.students')->with('warning', $message . $errorMessage);
+                    $route = Auth::user()->role === 'admin' ? 'admin.manage-students' : 'teacher.students';
+                    return redirect()->route($route)->with('warning', $message . $errorMessage);
                 }
             }
 
@@ -360,7 +433,8 @@ class ImportController extends Controller
                     'user_id' => $user_id,
                     'school_year_id' => $schoolYear_id
                 ]);
-                return redirect()->route('teacher.students')->with('error', 'No students were imported. Please check your file format and data.');
+                $route = Auth::user()->role === 'admin' ? 'admin.manage-students' : 'teacher.students';
+                return redirect()->route($route)->with('error', 'No students were imported. Please check your file format and data.');
             }
 
             \Log::info('Import completed successfully', [

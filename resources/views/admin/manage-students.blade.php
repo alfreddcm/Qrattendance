@@ -33,8 +33,8 @@
 
 
     <div class="card mb-3">
-        <div class="card-body">
-            <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterFormTop" class="row g-2 align-items-center">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ route('admin.manage-students') }}" id="studentFilterFormTop" class="row g-3 align-items-center">
                 <div class="col-md-2">
                     <label class="form-label small mb-1">School</label>
                     <select name="school_id" class="form-select form-select-sm">
@@ -45,23 +45,26 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small mb-1">Semester</label>
-                    <select name="semester_id" class="form-select form-select-sm">
-                        <option value="">All Semesters</option>
-                        @foreach($semesters ?? [] as $sem)
-                            <option value="{{ $sem->id }}" {{ request('semester_id') == $sem->id ? 'selected' : '' }}>{{ $sem->name ?? $sem->term ?? 'Semester' }}</option>
+                    <label class="form-label small mb-1">School Year</label>
+                    <select name="school_year_id" class="form-select form-select-sm">
+                        <option value="">All School Years</option>
+                        @foreach($schoolYears ?? [] as $schoolYear)
+                            <option value="{{ $schoolYear->id }}" {{ request('school_year_id') == $schoolYear->id ? 'selected' : '' }}>
+                                @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                    {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                @else
+                                    {{ $schoolYear->name ?? 'School Year' }}
+                                @endif
+                            </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small mb-1">Teacher</label>
-                    <select name="teacher_id" id="filterTeacher" class="form-select form-select-sm">
+                    <select name="teacher_id" id="filterTeacher" class="form-select form-select-sm" onchange="loadSectionsForFilter()">
                         <option value="">All Teachers</option>
                         @foreach($teachers ?? [] as $t)
-                            @php
-                                $label = $t->name;
-                            @endphp
-                            <option value="{{ $t->id }}" data-sections='@json($t->sections ?? [])' {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $label }}</option>
+                            <option value="{{ $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -70,14 +73,7 @@
                     <select name="section_id" id="filterSection" class="form-select form-select-sm">
                         <option value="">All Sections</option>
                         @if(request('teacher_id'))
-                            @php
-                                $selectedTeacher = $teachers->firstWhere('id', request('teacher_id'));
-                            @endphp
-                            @if($selectedTeacher && $selectedTeacher->sections)
-                                @foreach($selectedTeacher->sections as $sec)
-                                    <option value="{{ $sec->id }}" {{ request('section_id') == $sec->id ? 'selected' : '' }}>{{ $sec->section_name ?? $sec->name }} (Grade {{ $sec->gradelevel ?? $sec->grade_level }})</option>
-                                @endforeach
-                            @endif
+                            {{-- Sections will be loaded via AJAX --}}
                         @endif
                     </select>
                 </div>
@@ -175,15 +171,15 @@
         <div class="card-body p-0">
             @if($students->count() > 0)
                 <div class="table-responsive" style="max-height: 73vh; overflow-y: auto;">
-                    <table class="table table-hover table-striped mb-0">
+                    <table class="table table-hover table-striped mb-0" id="studentsTable">
                         <thead class="table-light sticky-top">
                             <tr>
                                 <th class="text-center" style="width: 60px;">#</th>
                                 <th class="text-center" style="width: 80px;">Photo</th>
-                                <th>Name & ID</th>
-                                <th>Section</th>
-                                <th class="text-center" style="width: 100px;">Gender</th>
-                                <th class="text-center" style="width: 80px;">Age</th>
+                                <th class="sortable" data-sort="name" style="cursor: pointer;">Name & ID <i class="fas fa-sort text-muted"></i></th>
+                                <th class="sortable" data-sort="section" style="cursor: pointer;">Section <i class="fas fa-sort text-muted"></i></th>
+                                <th class="text-center sortable" data-sort="gender" style="width: 100px; cursor: pointer;">Gender <i class="fas fa-sort text-muted"></i></th>
+                                <th class="text-center sortable" data-sort="age" style="width: 80px; cursor: pointer;">Age <i class="fas fa-sort text-muted"></i></th>
                                 <th>Contact Details</th>
                                 <th>School & Teacher</th>
                                 <th class="text-center" style="width: 100px;">QR Code</th>
@@ -537,8 +533,14 @@
                                             @if($student->schoolYear)
                                                 <div class="col-12">
                                                     <div class="d-flex align-items-start py-1">
-                                                        <small class="text-muted me-3" style="min-width: 60px;">Semester:</small>
-                                                        <span class="fw-semibold">{{ $student->schoolYear->name ?? 'N/A' }}</span>
+                                                        <small class="text-muted me-3" style="min-width: 80px;">School Year:</small>
+                                                        <span class="fw-semibold">
+                                                            @if($student->schoolYear->school_year_start && $student->schoolYear->school_year_end)
+                                                                {{ $student->schoolYear->school_year_start }}–{{ $student->schoolYear->school_year_end }}
+                                                            @else
+                                                                {{ $student->schoolYear->name ?? 'N/A' }}
+                                                            @endif
+                                                        </span>
                                                     </div>
                                                 </div>
                                             @endif
@@ -1145,6 +1147,7 @@ function removePhoto() {
     const schoolSelect = document.getElementById('admin_school_id');
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
+    const schoolYearSelect = document.getElementById('admin_school_year_id');
 
     const schoolId = schoolSelect.value;
 
@@ -1171,25 +1174,41 @@ function removePhoto() {
                 teacherSelect.disabled = false;
             });
     }
+
+    // Add event listener for school year changes to reload sections
+    if (schoolYearSelect) {
+        schoolYearSelect.addEventListener('change', function() {
+            if (teacherSelect.value) {
+                loadSectionsByTeacher(); // Reload sections when school year changes
+            }
+        });
+    }
 }
 
 function loadSectionsByTeacher() {
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
+    const schoolYearSelect = document.getElementById('admin_school_year_id');
 
     const teacherId = teacherSelect.value;
+    const schoolYearId = schoolYearSelect ? schoolYearSelect.value : '';
 
      sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
     sectionSelect.disabled = !teacherId;
 
     if (teacherId) {
-         fetch(`/admin/teachers/${teacherId}/sections`)
+        const url = `/admin/teachers/${teacherId}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
+         
+        fetch(url)
             .then(response => response.json())
             .then(sections => {
                 sections.forEach(section => {
                     const option = document.createElement('option');
                     option.value = section.id;
                     option.textContent = `Grade ${section.gradelevel} - ${section.name}`;
+                    if (section.school_year_name && section.school_year_name !== 'No School Year') {
+                        option.textContent += ` (${section.school_year_name})`;
+                    }
                     sectionSelect.appendChild(option);
                 });
                 sectionSelect.disabled = false;
@@ -1250,51 +1269,80 @@ function generateAllQrs() {
 </script>
 
 <script>
+// Filter functionality for manage students page
+function loadSectionsForFilter() {
+    const teacherSelect = document.getElementById('filterTeacher');
+    const sectionSelect = document.getElementById('filterSection');
+    const schoolYearSelect = document.querySelector('select[name="school_year_id"]');
+    
+    const teacherId = teacherSelect.value;
+    const schoolYearId = schoolYearSelect ? schoolYearSelect.value : '';
+    const currentSectionId = '{{ request("section_id") }}';
+    
+    // Reset sections
+    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+    
+    if (teacherId) {
+        // Show loading
+        sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+        sectionSelect.disabled = true;
+        
+        const url = `/admin/teachers/${teacherId}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(sections => {
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                sections.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = `${section.display_name}`;
+                    if (section.school_year_name && section.school_year_name !== 'No School Year') {
+                        option.textContent += ` (${section.school_year_name})`;
+                    }
+                    // Preserve selection if returning from a filtered view
+                    if (currentSectionId && section.id == currentSectionId) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+                sectionSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error loading sections:', error);
+                sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+                sectionSelect.disabled = false;
+            });
+    }
+}
+
+// Load sections on page load if teacher is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    const teacherSelect = document.getElementById('filterTeacher');
+    if (teacherSelect && teacherSelect.value) {
+        loadSectionsForFilter();
+    }
+    
+    // Also reload sections when school year changes
+    const schoolYearSelect = document.querySelector('select[name="school_year_id"]');
+    if (schoolYearSelect) {
+        schoolYearSelect.addEventListener('change', function() {
+            if (teacherSelect.value) {
+                loadSectionsForFilter();
+            }
+        });
+    }
+});
+</script>
+
+<script>
  document.addEventListener('DOMContentLoaded', function() {
+    // Legacy section population (keeping as fallback)
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
 
-     const initialSectionValue = sectionSelect ? sectionSelect.value : '';
-
-    function populateSections(preserveSelection = true) {
-        if(!teacherSelect || !sectionSelect) return;
-        const selected = teacherSelect.selectedOptions[0];
-        const sectionsData = selected ? selected.getAttribute('data-sections') : null;
-
-         let sectionToSelect = '';
-        if (preserveSelection) {
-             sectionToSelect = sectionSelect.value || initialSectionValue;
-        }
-
-         sectionSelect.innerHTML = '<option value="">All Sections</option>';
-
-        if(sectionsData) {
-            try {
-                const sections = JSON.parse(sectionsData);
-                sections.forEach(sec => {
-                    const opt = document.createElement('option');
-                    opt.value = sec.id;
-                    opt.text = (sec.section_name || sec.name) + ' (Grade ' + (sec.gradelevel || sec.grade_level || '') + ')';
-
-                     if (sectionToSelect && sec.id == sectionToSelect) {
-                        opt.selected = true;
-                    }
-
-                    sectionSelect.appendChild(opt);
-                });
-            } catch(e) {
-                console.error('Error parsing sections data:', e);
-            }
-        }
-    }
-
-    if(teacherSelect) {
-        teacherSelect.addEventListener('change', function() {
-             populateSections(false);
-        });
-
-         populateSections(true);
-    }
+    // Remove old event listeners that used data-sections
+    // The new loadSectionsForFilter() function handles this via AJAX
 });
 </script>
 
@@ -1347,9 +1395,6 @@ function generateAllQrs() {
         background: #4f46e5;
     }
 
-    .card-body {
-        padding: 0 !important;
-    }
 
     .table {
         margin-bottom: 0 !important;
@@ -1398,6 +1443,97 @@ function generateAllQrs() {
         font-weight: 700;
         line-height: 1;
     }
+
+    .sortable:hover {
+        background-color: #e9ecef;
+    }
+
+    .sortable i.fa-sort-up,
+    .sortable i.fa-sort-down {
+        color: #0d6efd;
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Table sorting functionality
+    const table = document.getElementById('studentsTable');
+    if (table) {
+        const headers = table.querySelectorAll('th.sortable');
+        let sortDirection = {};
+        
+        headers.forEach(header => {
+            const sortKey = header.getAttribute('data-sort');
+            sortDirection[sortKey] = 'asc';
+            
+            header.addEventListener('click', function() {
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                // Toggle sort direction
+                sortDirection[sortKey] = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
+                const direction = sortDirection[sortKey];
+                
+                // Update all sort icons to default
+                headers.forEach(h => {
+                    const icon = h.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas fa-sort text-muted';
+                    }
+                });
+                
+                // Update clicked header icon
+                const icon = header.querySelector('i');
+                if (icon) {
+                    icon.className = direction === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+                }
+                
+                // Sort rows
+                rows.sort((a, b) => {
+                    let aValue, bValue;
+                    
+                    switch(sortKey) {
+                        case 'name':
+                            aValue = a.querySelector('td:nth-child(3) .fw-bold')?.textContent.trim().toLowerCase() || '';
+                            bValue = b.querySelector('td:nth-child(3) .fw-bold')?.textContent.trim().toLowerCase() || '';
+                            break;
+                        case 'section':
+                            aValue = a.querySelector('td:nth-child(4) .badge')?.textContent.trim().toLowerCase() || '';
+                            bValue = b.querySelector('td:nth-child(4) .badge')?.textContent.trim().toLowerCase() || '';
+                            break;
+                        case 'gender':
+                            aValue = a.querySelector('td:nth-child(5)')?.textContent.trim().toLowerCase() || '';
+                            bValue = b.querySelector('td:nth-child(5)')?.textContent.trim().toLowerCase() || '';
+                            break;
+                        case 'age':
+                            aValue = parseInt(a.querySelector('td:nth-child(6)')?.textContent.trim()) || 0;
+                            bValue = parseInt(b.querySelector('td:nth-child(6)')?.textContent.trim()) || 0;
+                            break;
+                    }
+                    
+                    if (sortKey === 'age') {
+                        return direction === 'asc' ? aValue - bValue : bValue - aValue;
+                    } else {
+                        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+                        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+                        return 0;
+                    }
+                });
+                
+                // Reappend sorted rows
+                rows.forEach(row => tbody.appendChild(row));
+                
+                // Update row numbers
+                rows.forEach((row, index) => {
+                    const numberCell = row.querySelector('td:first-child');
+                    if (numberCell) {
+                        numberCell.textContent = index + 1;
+                    }
+                });
+            });
+        });
+    }
+});
+</script>
 
 @endsection
