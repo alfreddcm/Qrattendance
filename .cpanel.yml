@@ -1,14 +1,9 @@
 ---
 deployment:
   tasks:
-    # Set deployment paths
     - export DEPLOYPATH=/home/Ysgvihssc/public_html/
     - export APPPATH=/home/Ysgvihssc/qrattendance/
-    
-    # Create application directory if it doesn't exist
     - /bin/mkdir -p $APPPATH
-    
-    # Copy all files except public directory to app directory
     - /bin/cp -R app $APPPATH
     - /bin/cp -R bootstrap $APPPATH
     - /bin/cp -R config $APPPATH
@@ -21,38 +16,23 @@ deployment:
     - /bin/cp composer.json $APPPATH
     - /bin/cp composer.lock $APPPATH
     - /bin/cp package.json $APPPATH
-    
-    # Copy .env file if not exists
     - if [ ! -f $APPPATH/.env ]; then /bin/cp .env.example $APPPATH/.env; fi
-    
-    # Copy public directory contents to public_html
     - /bin/cp -R public/* $DEPLOYPATH
     - /bin/cp public/.htaccess $DEPLOYPATH
-    
-    # Update index.php to point to correct application path
     - /bin/sed -i "s|__DIR__.'/../vendor/autoload.php'|'/home/Ysgvihssc/qrattendance/vendor/autoload.php'|g" $DEPLOYPATH/index.php
     - /bin/sed -i "s|__DIR__.'/../bootstrap/app.php'|'/home/Ysgvihssc/qrattendance/bootstrap/app.php'|g" $DEPLOYPATH/index.php
-    
-    # Run composer install in app directory
     - cd $APPPATH && composer install --no-dev --optimize-autoloader --no-interaction
-    
-    # Clear all caches
     - cd $APPPATH && php artisan config:clear
     - cd $APPPATH && php artisan route:clear
     - cd $APPPATH && php artisan view:clear
     - cd $APPPATH && php artisan cache:clear
-    
-    # Cache configuration for better performance
     - cd $APPPATH && php artisan config:cache
     - cd $APPPATH && php artisan route:cache
     - cd $APPPATH && php artisan view:cache
-    
-    # Create storage symbolic link
     - /bin/rm -rf $DEPLOYPATH/storage
     - /bin/ln -sf $APPPATH/storage/app/public $DEPLOYPATH/storage
-    
-    # Set proper permissions
     - /bin/chmod -R 755 $APPPATH/storage
     - /bin/chmod -R 755 $APPPATH/bootstrap/cache
     - /bin/chmod 644 $DEPLOYPATH/.htaccess
+
 
