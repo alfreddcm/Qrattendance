@@ -3,20 +3,17 @@
 @section('content')
 
 <div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
-               <i class="fas fa-comments me-2"></i>
-                Messages
+                <i class="fas fa-comments me-2"></i>Messages
             </h4>
             <p class="subtitle fs-6 mb-0">View and manage SMS message history</p>
         </div>
-
     </div>
 </div>
 
-
-<div class="container mt-4">
+<div class="px-3 mt-4">
      <div class="row mb-4">
         <div class="col-lg-6">
             <div class="card">
@@ -371,7 +368,6 @@
 
 .sticky-header {
     background: white;
-    padding: 1rem 0;
     border-bottom: 1px solid #dee2e6;
     margin-bottom: 1rem;
 }
@@ -1254,5 +1250,7 @@ function addSignature() {
      }, 120000); // 2 minutes = 120,000ms
 });
 </script>
+
+</div>
 
 @endsection

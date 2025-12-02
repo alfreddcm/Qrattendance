@@ -2,8 +2,8 @@
 @section('title', 'Manage Students')
 @section('content')
 
-<div class="sticky-header" >
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;">
+<div class="sticky-header">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-user-graduate me-2"></i>
@@ -85,8 +85,8 @@
         </div>
     </div>
 
-
-    <div class="card shadow-sm sticky-card" style="margin-left: 1rem; margin-right: 1rem;">
+<div class="px-3">
+    <div class="card shadow-sm sticky-card">
         <div class="card-header bg-primary text-white p-3 sticky-card-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center">
@@ -428,18 +428,20 @@
                                         $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
                                         $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
                                     @endphp
+                                    <div class="text-center">
                                     @if($qrSvgExists)
                                         <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code"
-                                             class="border rounded" style="width: 180px; height: 180px;">
+                                             class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @elseif($qrPngExists)
                                         <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code"
-                                             class="border rounded" style="width: 180px; height: 180px;">
+                                             class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @else
                                         <div class="text-muted">
                                             <i class="fas fa-qrcode fa-5x mb-1"></i>
                                             <div><small>No QR Code</small></div>
                                         </div>
                                     @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -649,7 +651,7 @@
                     }
                 @endphp
                 @if($modalHasQrCode)
-                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
+                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code" class="img-fluid d-block mx-auto" style="max-width: 300px;">
                     <div class="mt-3">
                         <h6>{{ $student->name }}</h6>
                         <p class="text-muted mb-0">ID: {{ $student->id_no ?? 'N/A' }}</p>
@@ -744,11 +746,11 @@
                         </div>
                         <div class="col-md-6">
                             <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 2024-001">
+                            <input type="number" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 202401" min="1" title="Enter student ID number">
                         </div>
                         <div class="col-md-6">
                             <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M.">
+                            <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M." minlength="2" maxlength="255">
                         </div>
 
 
@@ -813,15 +815,15 @@
                         </div>
                         <div class="col-md-4">
                             <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="age" name="age" min="13" max="25" required placeholder="Age">
+                            <input type="number" class="form-control" id="age" name="age" min="5" max="30" required placeholder="Age" title="Age must be between 5 and 30">
                         </div>
                         <div class="col-md-4">
                             <label for="cp_no" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="cp_no" name="cp_no" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                            <input type="number" class="form-control" id="cp_no" name="cp_no" required placeholder="09123456789" min="0" title="Enter 11-digit phone number">
                         </div>
                         <div class="col-md-12">
                             <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="address" name="address" required placeholder="Complete address">
+                            <input type="text" class="form-control" id="address" name="address" required placeholder="Complete address" minlength="5" maxlength="500">
                         </div>
 
 
@@ -835,11 +837,11 @@
                         </div>
                         <div class="col-md-6">
                             <label for="contact_person_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" required placeholder="Parent/Guardian name">
+                            <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" required placeholder="Parent/Guardian name" minlength="2" maxlength="255">
                         </div>
                         <div class="col-md-6">
                             <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                            <input type="number" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09123456789" min="0" title="Enter 11-digit phone number">
                         </div>
                         <div class="col-md-12">
                             <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
@@ -1742,5 +1744,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+</div>
 
 @endsection

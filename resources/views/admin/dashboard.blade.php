@@ -2,8 +2,8 @@
 @section('title', 'Dashboard')
 @section('content')
 
-<div class="sticky-header" >
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
+<div class="sticky-header">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-home me-2"></i>
@@ -15,10 +15,10 @@
     </div>
 </div>
 
-<div class="container-fluid">
+<div class="container-fluid px-3">
 
     {{-- Row 1: Attendance Overview (4 cards) --}}
-    <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
+    <div class="row g-3 mb-3">
         <div class="col-lg-3 col-md-6">
             <div class="card stat-card text-white bg-primary h-100">
                 <div class="card-body">
@@ -89,7 +89,7 @@
     </div>
 
     {{-- Row 2: Schools & System Status --}}
-    <div class="row g-3 mb-3" style="margin-left: 1rem; margin-right: 1rem;">
+    <div class="row g-3 mb-3">
         <div class="col-lg-8">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -156,7 +156,7 @@
     </div>
 
     {{-- Row 3: Recent Attendance List --}}
-    <div class="row g-3" style="margin-left: 1rem; margin-right: 1rem;">
+    <div class="row g-3">
            
 
             <div class="col">

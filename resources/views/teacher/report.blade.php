@@ -2,17 +2,18 @@
 @section('title', 'Attendance Reports')
 @section('content')
 
-<div class="container-fluid">
-    <div class="sticky-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="fs-5 mb-1">
-                    <i class="fas fa-chart-bar me-2"></i>Reports
-                </h4>
-                <p class="subtitle fs-6 mb-0">Generate and export attendance reports</p>
-            </div>
+<div class="sticky-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fs-5 mb-1">
+                <i class="fas fa-chart-bar me-2"></i>Reports
+            </h4>
+            <p class="subtitle fs-6 mb-0">Generate and export attendance reports</p>
         </div>
     </div>
+</div>
+
+<div class="px-3">
 
     <div class="row">
         <div class="col-12">
@@ -543,4 +544,7 @@ $(function() {
     });
 });
 </script>
+
+</div>
+
 @endsection

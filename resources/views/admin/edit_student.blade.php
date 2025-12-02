@@ -139,7 +139,7 @@
 @section('content')
 
 <div class="sticky-header" >
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-tachometer-alt me-2"></i>
@@ -241,12 +241,12 @@
                     <div class="row g-2">
                         <div class="col-md-6">
                             <label for="id_no" class="form-label small">ID No</label>
-                            <input type="text" class="form-control form-control-sm" id="id_no" name="id_no" value="{{ $student->id_no ?? $student->student_id ?? '' }}" required>
+                            <input type="number" class="form-control form-control-sm" id="id_no" name="id_no" value="{{ $student->id_no ?? $student->student_id ?? '' }}" required min="1" title="Enter student ID number">
                         </div>
 
                         <div class="col-md-6">
                             <label for="name" class="form-label small">Name</label>
-                            <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ $student->name }}" required>
+                            <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ $student->name }}" required minlength="2" maxlength="255">
                         </div>
 
                         <div class="col-md-4">
@@ -260,12 +260,12 @@
 
                         <div class="col-md-4">
                             <label for="age" class="form-label small">Age</label>
-                            <input type="number" class="form-control form-control-sm" id="age" name="age" value="{{ $student->age }}" required>
+                            <input type="number" class="form-control form-control-sm" id="age" name="age" value="{{ $student->age }}" required min="5" max="30" title="Age must be between 5 and 30">
                         </div>
 
                         <div class="col-md-4">
                             <label for="cp_no" class="form-label small">CP No</label>
-                            <input type="tel" class="form-control form-control-sm" id="cp_no" name="cp_no" value="{{ $student->cp_no }}" required pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                            <input type="number" class="form-control form-control-sm" id="cp_no" name="cp_no" value="{{ $student->cp_no }}" required min="0" title="Enter 11-digit phone number">
                         </div>
                     </div>
                 </div>
@@ -303,7 +303,7 @@
 
                 <div class="col-md-12">
                     <label for="address" class="form-label small">Address</label>
-                    <input type="text" class="form-control form-control-sm" id="address" name="address" value="{{ $student->address }}" required>
+                    <input type="text" class="form-control form-control-sm" id="address" name="address" value="{{ $student->address }}" required minlength="5" maxlength="500">
                 </div>
 
 
@@ -311,7 +311,7 @@
 
                 <div class="col-md-4">
                     <label for="contact_person_name" class="form-label small">Contact Person Name</label>
-                    <input type="text" class="form-control form-control-sm" id="contact_person_name" name="contact_person_name" value="{{ $student->contact_person_name ?? $student->contact_person }}">
+                    <input type="text" class="form-control form-control-sm" id="contact_person_name" name="contact_person_name" value="{{ $student->contact_person_name ?? $student->contact_person }}" minlength="2" maxlength="255">
                 </div>
 
                 <div class="col-md-4">
@@ -329,7 +329,7 @@
 
                 <div class="col-md-6">
                     <label for="contact_person_contact" class="form-label small">Contact Number</label>
-                    <input type="tel" class="form-control form-control-sm" id="contact_person_contact" name="contact_person_contact" value="{{ $student->contact_person_contact ?? $student->phone_number }}" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                    <input type="number" class="form-control form-control-sm" id="contact_person_contact" name="contact_person_contact" value="{{ $student->contact_person_contact ?? $student->phone_number }}" min="0" title="Enter 11-digit phone number">
                 </div>
             </div>
 

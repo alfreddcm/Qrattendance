@@ -470,18 +470,20 @@
                                         $qrSvgExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
                                         $qrPngExists = Storage::disk('public')->exists('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png');
                                     @endphp
+                                    <div class="text-center">
                                     @if($qrSvgExists)
                                         <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code"
-                                             class="border rounded" style="width: 180px; height: 180px;">
+                                             class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @elseif($qrPngExists)
                                         <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code"
-                                             class="border rounded" style="width: 180px; height: 180px;">
+                                             class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @else
                                         <div class="text-muted">
                                             <i class="fas fa-qrcode fa-5x mb-1"></i>
                                             <div><small>No QR Code</small></div>
                                         </div>
                                     @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

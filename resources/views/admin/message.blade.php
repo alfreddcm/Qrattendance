@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="sticky-header">
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 2rem;" >
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-comments me-2"></i>SMS Messages
@@ -13,9 +13,7 @@
     </div>
 </div>
 
-<div class="container-fluid">
-
-<div class="container mt-4">
+<div class="px-3 mt-4">
     <div class="row mb-3">
         <div class="col-lg-6">
             <div class="card">
@@ -1300,5 +1298,7 @@ $(document).ready(function() {
     }, 120000); // 2 minutes = 120,000ms
 });
 </script>
+
+</div>
 
 @endsection

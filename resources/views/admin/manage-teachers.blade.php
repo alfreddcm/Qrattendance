@@ -2,8 +2,8 @@
 @section('title', 'Manage Teachers')
 @section('content')
 
-<div class="sticky-header" >
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
+<div class="sticky-header">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-chalkboard-teacher me-2"></i>
@@ -483,10 +483,10 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="add_phone_number" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="add_phone_number" name="phone_number"
+                            <input type="number" class="form-control" id="add_phone_number" name="phone_number"
                                    value="{{ old('phone_number') }}"
-                                   placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+"
-                                   title="Enter a valid phone number (digits, spaces, dashes, parentheses, and + allowed)">
+                                   placeholder="09123456789" min="0"
+                                   title="Enter phone number">
                         </div>
                     </div>
                 </div>
@@ -907,9 +907,9 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="edit_phone_number" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="edit_phone_number" name="phone_number"
-                                   placeholder="e.g., +1234567890" pattern="[\+]?[0-9\s\-\(\)]+"
-                                   title="Enter a valid phone number (digits, spaces, dashes, parentheses, and + allowed)">
+                            <input type="number" class="form-control" id="edit_phone_number" name="phone_number"
+                                   placeholder="09123456789" min="0"
+                                   title="Enter phone number">
                         </div>
                     </div>
                 </div>

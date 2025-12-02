@@ -2,8 +2,8 @@
 @section('title', 'Manage School Years')
 @section('content')
 
-<div class="sticky-header" >
-    <div class="d-flex justify-content-between align-items-center" style="margin-left: 1rem;" >
+<div class="sticky-header">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fs-5 mb-1">
                 <i class="fas fa-calendar-alt me-2"></i>

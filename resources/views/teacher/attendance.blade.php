@@ -704,8 +704,7 @@
         const qrImage = document.getElementById('qrCodeImage');
         if (codeData.qr_code_url) {
             qrImage.src = codeData.qr_code_url;
-            qrImage.style.display = 'block';
-            qrImage.onerror = function() {
+                            qrImage.onerror = function() {
                 console.error('Failed to load QR image:', codeData.qr_code_url);
                 this.style.display = 'none';
                 this.parentElement.innerHTML += '<p class="text-danger small">QR code image failed to load</p>';
