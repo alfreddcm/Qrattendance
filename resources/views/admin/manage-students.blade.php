@@ -1403,21 +1403,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <small class="text-muted">Filter by section</small>
                         </div>
 
-                        <div class="col-12">
-                            <div class="card bg-light border-0">
-                                <div class="card-body p-3">
-                                    <h6 class="mb-2">
-                                        <i class="fas fa-layer-group me-2 text-info"></i>Print Organization
-                                    </h6>
-                                    <p class="mb-2 small text-muted">Student IDs will be organized and labeled as:</p>
-                                    <div class="ps-3">
-                                        <div class="mb-1"><i class="fas fa-angle-right me-2 text-primary"></i><strong>School Name</strong> - School Year</div>
-                                        <div class="ps-4 mb-1"><i class="fas fa-angle-right me-2 text-warning"></i><strong>Teacher Name</strong></div>
-                                        <div class="ps-5 mb-1"><i class="fas fa-angle-right me-2 text-success"></i>Student ID Cards</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </form>
             </div>
@@ -1435,23 +1421,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 function loadPrintSchoolYears() {
-    const schoolId = document.getElementById('print_school_id').value;
-    const teacherSelect = document.getElementById('print_teacher_id');
-    const sectionSelect = document.getElementById('print_section_id');
-    
-    // Reset dependent dropdowns
-    teacherSelect.innerHTML = '<option value="">All Teachers</option>';
-    sectionSelect.innerHTML = '<option value="">All Sections</option>';
-    
-    if (schoolId) {
-        loadPrintTeachers();
-    } else {
-        // Load all teachers when no school is selected
-        teacherSelect.innerHTML = '<option value="">All Teachers</option>';
-        @foreach($teachers ?? [] as $t)
-            teacherSelect.innerHTML += '<option value="{{ $t->id }}">{{ $t->name }}</option>';
-        @endforeach
-    }
+    loadPrintTeachers();
 }
 
 function loadPrintTeachers() {
@@ -1463,47 +1433,76 @@ function loadPrintTeachers() {
     // Reset dependent dropdown
     sectionSelect.innerHTML = '<option value="">All Sections</option>';
     
-    if (schoolId) {
-        teacherSelect.innerHTML = '<option value="">Loading teachers...</option>';
-        teacherSelect.disabled = true;
-        
-        let url = `/admin/schools/${schoolId}/teachers`;
-        if (schoolYearId) {
-            url += `?school_year_id=${schoolYearId}`;
-        }
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                teacherSelect.innerHTML = '<option value="">All Teachers</option>';
-                teacherSelect.disabled = false;
-                
-                if (data.success && data.teachers && data.teachers.length > 0) {
-                    data.teachers.forEach(teacher => {
-                        const option = document.createElement('option');
-                        option.value = teacher.id;
-                        option.textContent = teacher.name;
-                        teacherSelect.appendChild(option);
-                    });
-                } else {
-                    teacherSelect.innerHTML = '<option value="">No teachers available</option>';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading teachers:', error);
-                teacherSelect.innerHTML = '<option value="">Error loading teachers</option>';
-                teacherSelect.disabled = false;
-            });
-    } else {
-        // Load all teachers when no school is selected
+    // If both school and school year are empty, load all teachers
+    if (!schoolId && !schoolYearId) {
         teacherSelect.innerHTML = '<option value="">All Teachers</option>';
         @foreach($teachers ?? [] as $t)
-            const option{{ $t->id }} = document.createElement('option');
-            option{{ $t->id }}.value = '{{ $t->id }}';
-            option{{ $t->id }}.textContent = '{{ $t->name }}';
-            teacherSelect.appendChild(option{{ $t->id }});
+            const optionAll{{ $t->id }} = document.createElement('option');
+            optionAll{{ $t->id }}.value = '{{ $t->id }}';
+            optionAll{{ $t->id }}.textContent = '{{ $t->name }}';
+            teacherSelect.appendChild(optionAll{{ $t->id }});
         @endforeach
+        return;
     }
+    
+    // Build the fetch URL
+    teacherSelect.innerHTML = '<option value="">Loading teachers...</option>';
+    teacherSelect.disabled = true;
+    
+    let url = '';
+    let params = new URLSearchParams();
+    
+    if (schoolYearId) {
+        params.append('school_year_id', schoolYearId);
+    }
+    
+    if (schoolId) {
+        url = `/admin/schools/${schoolId}/teachers`;
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+    } else if (schoolYearId) {
+        // If only school year is selected, fetch all teachers and filter
+        teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+        @foreach($teachers ?? [] as $t)
+            const optionSY{{ $t->id }} = document.createElement('option');
+            optionSY{{ $t->id }}.value = '{{ $t->id }}';
+            optionSY{{ $t->id }}.textContent = '{{ $t->name }}';
+            teacherSelect.appendChild(optionSY{{ $t->id }});
+        @endforeach
+        teacherSelect.disabled = false;
+        return;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+            teacherSelect.disabled = false;
+            
+            // Check if data is an array (direct response) or has teachers property
+            const teachers = Array.isArray(data) ? data : (data.teachers || []);
+            
+            if (teachers.length > 0) {
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = teacher.name;
+                    teacherSelect.appendChild(option);
+                });
+            } else {
+                const noOption = document.createElement('option');
+                noOption.value = '';
+                noOption.textContent = 'No teachers found for this school';
+                teacherSelect.appendChild(noOption);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading teachers:', error);
+            teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+            teacherSelect.disabled = false;
+            alert('Error loading teachers. Please try again.');
+        });
 }
 
 function loadPrintSections() {
@@ -1525,21 +1524,29 @@ function loadPrintSections() {
                 sectionSelect.innerHTML = '<option value="">All Sections</option>';
                 sectionSelect.disabled = false;
                 
-                if (data.success && data.sections && data.sections.length > 0) {
-                    data.sections.forEach(section => {
+                // Check if data is an array (direct response) or has sections property
+                const sections = Array.isArray(data) ? data : (data.sections || []);
+                
+                if (sections.length > 0) {
+                    sections.forEach(section => {
                         const option = document.createElement('option');
                         option.value = section.id;
-                        option.textContent = `Grade ${section.gradelevel} - ${section.name}`;
+                        // Use display_name if available, otherwise construct it
+                        option.textContent = section.display_name || `Grade ${section.gradelevel} - ${section.name}`;
                         sectionSelect.appendChild(option);
                     });
                 } else {
-                    sectionSelect.innerHTML = '<option value="">No sections available</option>';
+                    const noOption = document.createElement('option');
+                    noOption.value = '';
+                    noOption.textContent = 'No sections found for this teacher';
+                    sectionSelect.appendChild(noOption);
                 }
             })
             .catch(error => {
                 console.error('Error loading sections:', error);
-                sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
                 sectionSelect.disabled = false;
+                alert('Error loading sections. Please try again.');
             });
     } else {
         sectionSelect.disabled = false;

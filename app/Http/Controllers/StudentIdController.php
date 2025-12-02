@@ -228,23 +228,99 @@ class StudentIdController extends Controller
             abort(403, 'Unauthorized access. Only administrators can print all student IDs.');
         }
 
+        // Get filter parameters
         $schoolId = $request->input('school_id');
+        $schoolYearId = $request->input('school_year_id');
+        $teacherId = $request->input('teacher_id');
+        $sectionId = $request->input('section_id');
 
-        if (!$schoolId && auth()->check()) {
-            $schoolId = auth()->user()->school_id;
-        }
-
-        $students = Student::with(['school', 'user']);
+        // Build the query
+        $query = Student::with(['school', 'schoolYear', 'section.teacher', 'section.teachers']);
         
+        // Apply filters
         if ($schoolId) {
-            $students = $students->where('school_id', $schoolId);
+            $query->where('school_id', $schoolId);
         }
         
-        $students = $students->orderBy('user_id')
-            ->orderBy('id')
+        if ($schoolYearId) {
+            $query->where('school_year_id', $schoolYearId);
+        }
+        
+        if ($teacherId) {
+            $query->whereHas('section', function($q) use ($teacherId) {
+                $q->where('teacher_id', $teacherId)
+                  ->orWhereHas('teachers', function($subQ) use ($teacherId) {
+                      $subQ->where('users.id', $teacherId);
+                  });
+            });
+        }
+        
+        if ($sectionId) {
+            $query->where('section_id', $sectionId);
+        }
+        
+        // Get students and organize them
+        $students = $query->orderBy('school_id')
+            ->orderBy('school_year_id')
+            ->orderBy('section_id')
+            ->orderBy('name')
             ->get();
 
-        return view('student-id.grid', compact('students'));
+        // Organize students by School → School Year → Teacher
+        $organized = [];
+        
+        foreach ($students as $student) {
+            $schoolKey = $student->school_id ?? 'no_school';
+            $schoolName = $student->school->name ?? 'No School';
+            
+            $schoolYearKey = $student->school_year_id ?? 'no_year';
+            $schoolYearName = 'No School Year';
+            if ($student->schoolYear) {
+                if ($student->schoolYear->school_year_start && $student->schoolYear->school_year_end) {
+                    $schoolYearName = $student->schoolYear->school_year_start . '–' . $student->schoolYear->school_year_end;
+                } else {
+                    $schoolYearName = $student->schoolYear->name ?? 'No School Year';
+                }
+            }
+            
+            $teacherKey = 'no_teacher';
+            $teacherName = 'No Teacher';
+            if ($student->section) {
+                if ($student->section->teacher) {
+                    $teacherKey = $student->section->teacher->id;
+                    $teacherName = $student->section->teacher->name;
+                } elseif ($student->section->teachers->count() > 0) {
+                    $firstTeacher = $student->section->teachers->first();
+                    $teacherKey = $firstTeacher->id;
+                    $teacherName = $firstTeacher->name;
+                }
+            }
+            
+            if (!isset($organized[$schoolKey])) {
+                $organized[$schoolKey] = [
+                    'name' => $schoolName,
+                    'school_years' => []
+                ];
+            }
+            
+            if (!isset($organized[$schoolKey]['school_years'][$schoolYearKey])) {
+                $organized[$schoolKey]['school_years'][$schoolYearKey] = [
+                    'name' => $schoolYearName,
+                    'teachers' => []
+                ];
+            }
+            
+            if (!isset($organized[$schoolKey]['school_years'][$schoolYearKey]['teachers'][$teacherKey])) {
+                $organized[$schoolKey]['school_years'][$schoolYearKey]['teachers'][$teacherKey] = [
+                    'name' => $teacherName,
+                    'students' => []
+                ];
+            }
+            
+            $organized[$schoolKey]['school_years'][$schoolYearKey]['teachers'][$teacherKey]['students'][] = $student;
+        }
+
+        return view('student-id.grid-organized', compact('organized', 'students'));
     }
 
     public function printByTeacher($teacherId = null)
