@@ -844,7 +844,6 @@ class AdminController extends Controller
         try {
             $teacher = User::findOrFail($request->teacher_id);
             
-            // Check if teacher already has a section
             if ($teacher->section_id) {
                 \DB::rollBack();
                 return back()->with('error', 'Teacher already has an assigned section.');
@@ -2274,19 +2273,6 @@ class AdminController extends Controller
     }
 
     /**
-     * Show manage sections page
-     */
-    public function manageSections()
-    {
-        $sections = Section::with(['schoolYear', 'teachers', 'students'])->paginate(10);
-        $schools = School::all();
-        $teachers = User::where('role', 'teacher')->get();
-        $schoolYears = SchoolYear::where('status', 'active')->get();
-        
-        return view('admin.manage-sections', compact('sections', 'schools', 'teachers', 'schoolYears'));
-    }
-
-    /**
      * Show attendance overview page
      */
     public function attendance()
@@ -2344,50 +2330,95 @@ class AdminController extends Controller
      */
     public function storeStudent(Request $request)
     {
-        $validated = $request->validate([
-            'id_no' => 'required|string|max:255|unique:students,id_no',
-            'name' => 'required|string|max:255',
-            'gender' => 'required|string|max:1',
-            'age' => 'required|integer',
-            'address' => 'nullable|string|max:255',
-            'cp_no' => 'nullable|string|max:15',
-            'contact_person_name' => 'nullable|string|max:255',
-            'contact_person_relationship' => 'nullable|string|max:255',
-            'contact_person_contact' => 'nullable|string|max:15',
-            'school_id' => 'nullable|exists:schools,school_id',
-            'user_id' => 'nullable|exists:users,id',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'captured_image' => 'nullable|string',
+        Log::info('Admin attempting to create student', [
+            'user_id' => Auth::id(),
+            'user_role' => Auth::user()->role,
+            'request_data' => $request->except(['picture', 'captured_image', '_token']),
+            'has_picture' => $request->hasFile('picture'),
+            'has_captured_image' => $request->filled('captured_image')
         ]);
 
-        $studentData = $request->except(['picture', 'captured_image']);
-        
-        // Set school_id from the authenticated admin's school if not provided
-        if (!isset($studentData['school_id']) && Auth::user()->school_id) {
-            $studentData['school_id'] = Auth::user()->school_id;
-        }
-        
-        // Handle picture upload
-        if ($request->hasFile('picture')) {
-            $picture = $request->file('picture');
-            $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
-            $picture->storeAs('student_pictures', $pictureName, 'public');
-            $studentData['picture'] = $pictureName;
-        } elseif ($request->filled('captured_image')) {
-            // Handle captured image from camera
-            $imageData = $request->captured_image;
-            $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
-            $imageData = str_replace(' ', '+', $imageData);
-            $imageData = base64_decode($imageData);
+        try {
+            $validated = $request->validate([
+                'id_no' => 'required|string|max:255|unique:students,id_no',
+                'name' => 'required|string|max:255',
+                'gender' => 'required|string|max:1',
+                'age' => 'required|integer',
+                'address' => 'required|string|max:65535', // NOT NULL in database
+                'cp_no' => 'required|string|max:20', // NOT NULL in database
+                'contact_person_name' => 'nullable|string|max:255',
+                'contact_person_relationship' => 'nullable|string|max:255',
+                'contact_person_contact' => 'nullable|string|max:15',
+                'school_id' => 'nullable|exists:schools,id',
+                'user_id' => 'nullable|exists:users,id',
+                'section_id' => 'nullable|exists:sections,id',
+                'school_year_id' => 'nullable|exists:school_years,id',
+                'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'captured_image' => 'nullable|string',
+            ]);
+
+            Log::info('Student validation passed', ['validated_data' => $validated]);
+
+            $studentData = $request->except(['picture', 'captured_image']);
             
-            $pictureName = time() . '_' . $request->id_no . '.jpg';
-            Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
-            $studentData['picture'] = $pictureName;
+            // Set school_id from the authenticated admin's school if not provided
+            if (!isset($studentData['school_id']) && Auth::user()->school_id) {
+                $studentData['school_id'] = Auth::user()->school_id;
+                Log::info('Set school_id from admin user', ['school_id' => $studentData['school_id']]);
+            }
+            
+            // Handle picture upload
+            if ($request->hasFile('picture')) {
+                Log::info('Processing uploaded picture file');
+                $picture = $request->file('picture');
+                $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
+                $picture->storeAs('student_pictures', $pictureName, 'public');
+                $studentData['picture'] = $pictureName;
+                Log::info('Picture uploaded successfully', ['picture_name' => $pictureName]);
+            } elseif ($request->filled('captured_image')) {
+                Log::info('Processing captured image from camera');
+                // Handle captured image from camera
+                $imageData = $request->captured_image;
+                $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
+                $imageData = str_replace(' ', '+', $imageData);
+                $imageData = base64_decode($imageData);
+                
+                $pictureName = time() . '_' . $request->id_no . '.jpg';
+                Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
+                $studentData['picture'] = $pictureName;
+                Log::info('Captured image processed successfully', ['picture_name' => $pictureName]);
+            }
+
+            Log::info('Creating student with data', ['student_data' => $studentData]);
+
+            $student = Student::create($studentData);
+
+            Log::info('Student created successfully', [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'student_id_no' => $student->id_no,
+                'admin_user_id' => Auth::id()
+            ]);
+
+            return redirect()->route('admin.manage-students')->with('success', 'Student added successfully.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Student validation failed', [
+                'user_id' => Auth::id(),
+                'validation_errors' => $e->errors(),
+                'request_data' => $request->except(['picture', 'captured_image', '_token'])
+            ]);
+            return redirect()->back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            Log::error('Error creating student', [
+                'user_id' => Auth::id(),
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['picture', 'captured_image', '_token'])
+            ]);
+            return redirect()->back()->with('error', 'Error creating student: ' . $e->getMessage())->withInput();
         }
-
-        Student::create($studentData);
-
-        return redirect()->route('admin.manage-students')->with('success', 'Student added successfully.');
     }
 
     /**
@@ -2406,7 +2437,7 @@ class AdminController extends Controller
             'contact_person_name' => 'nullable|string|max:255',
             'contact_person_relationship' => 'nullable|string|max:255',
             'contact_person_contact' => 'nullable|string|max:15',
-            'school_id' => 'nullable|exists:schools,school_id',
+            'school_id' => 'nullable|exists:schools,id',
         ]);
 
         $student->update($request->all());

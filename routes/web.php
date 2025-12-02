@@ -143,7 +143,6 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::post('/school-years/{schoolYear}/toggle-status', [SchoolYearController::class, 'toggleStatus'])->name('admin.school-year.toggle-status');
     Route::get('/school-year/active', [SchoolYearController::class, 'getActiveSchoolYear'])->name('admin.school-year.active');
     
-    Route::get('/manage-sections', [AdminController::class, 'manageSections'])->name('admin.manage-sections');
     Route::get('/sections/form-data', [SectionController::class, 'getFormData'])->name('admin.section.form-data');
     Route::post('/sections/store', [SectionController::class, 'store'])->name('admin.section.store');
     Route::get('/sections/{section}/edit', [SectionController::class, 'edit'])->name('admin.section.edit');

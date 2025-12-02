@@ -66,108 +66,7 @@
     </div>
 
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                    <i class="fas fa-layer-group me-2"></i>
-                    Sections Management
-                </h6>
-                <div>
-                    <span class="badge bg-light text-dark me-2">{{ isset($sections) ? $sections->count() : 0 }} sections</span>
-                    <button type="button" class="btn btn-light btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                        <i class="fas fa-plus me-1"></i>Add Section
-                    </button>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                @if(isset($sections) && $sections->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover table-compact mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Section</th>
-                                    <th>Teacher</th>
-                                    <th>Semester</th>
-                                    <th>Students</th>
-                                    <th>Time Ranges</th>
-                                    <th style="width: 120px;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($sections as $section)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex flex-column">
-                                            <strong>{{ $section->name }}</strong>
-                                            <small class="text-muted">Grade {{ $section->gradelevel }}</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if($section->teacher)
-                                            <span class="badge bg-primary">{{ $section->teacher->name }}</span>
-                                        @else
-                                            <span class="badge bg-warning">Unassigned</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($section->schoolYear)
-                                            <span class="badge bg-info">{{ $section->schoolYear->name }}</span>
-                                        @else
-                                            <span class="badge bg-secondary">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">{{ $section->students->count() }} students</span>
-                                    </td>
-                                    <td>
-                                        @if($section->am_time_in_start && $section->am_time_out_end)
-                                            <div class="small">
-                                                <strong>AM:</strong> {{ \Carbon\Carbon::parse($section->am_time_in_start)->format('g:i A') }} - {{ \Carbon\Carbon::parse($section->am_time_out_end)->format('g:i A') }}<br>
-                                                @if($section->pm_time_in_start && $section->pm_time_out_end)
-                                                    <strong>PM:</strong> {{ \Carbon\Carbon::parse($section->pm_time_in_start)->format('g:i A') }} - {{ \Carbon\Carbon::parse($section->pm_time_out_end)->format('g:i A') }}
-                                                @endif
-                                            </div>
-                                        @else
-                                            <small class="text-muted">Not set</small>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button"
-                                                    class="btn btn-outline-primary btn-sm"
-                                                    onclick="editSection({{ $section->id }})"
-                                                    title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button"
-                                                    class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteSection({{ $section->id }}, '{{ $section->name }}')"
-                                                    title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No Sections Found</h5>
-                        <p class="text-muted">Add sections to organize your students and manage attendance schedules.</p>
-                        <button type="button" class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                            <i class="fas fa-plus me-2"></i>Add First Section
-                        </button>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
+
 
 
     <div class="row">
@@ -325,6 +224,110 @@
             </div>
         </div>
     </div>
+
+    <div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-layer-group me-2"></i>
+                    Sections Management
+                </h6>
+                <div>
+                    <span class="badge bg-light text-dark me-2">{{ isset($sections) ? $sections->count() : 0 }} sections</span>
+                    <button type="button" class="btn btn-light btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                        <i class="fas fa-plus me-1"></i>Add Section
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if(isset($sections) && $sections->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover table-compact mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Section</th>
+                                    <th>Teacher</th>
+                                    <th>School Year</th>
+                                    <th>Students</th>
+                                    <th>Time Ranges</th>
+                                    <th style="width: 120px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($sections as $section)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <strong>{{ $section->name }}</strong>
+                                            <small class="text-muted">Grade {{ $section->gradelevel }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if($section->teacher)
+                                            <span class="badge bg-primary">{{ $section->teacher->name }}</span>
+                                        @else
+                                            <span class="badge bg-warning">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($section->schoolYear)
+                                            <span class="badge bg-info">{{ $section->schoolYear->name }}</span>
+                                        @else
+                                            <span class="badge bg-secondary">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ $section->students->count() }} students</span>
+                                    </td>
+                                    <td>
+                                        @if($section->am_time_in_start && $section->am_time_out_end)
+                                            <div class="small">
+                                                <strong>AM:</strong> {{ \Carbon\Carbon::parse($section->am_time_in_start)->format('g:i A') }} - {{ \Carbon\Carbon::parse($section->am_time_out_end)->format('g:i A') }}<br>
+                                                @if($section->pm_time_in_start && $section->pm_time_out_end)
+                                                    <strong>PM:</strong> {{ \Carbon\Carbon::parse($section->pm_time_in_start)->format('g:i A') }} - {{ \Carbon\Carbon::parse($section->pm_time_out_end)->format('g:i A') }}
+                                                @endif
+                                            </div>
+                                        @else
+                                            <small class="text-muted">Not set</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button"
+                                                    class="btn btn-outline-primary btn-sm"
+                                                    onclick="editSection({{ $section->id }})"
+                                                    title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    onclick="deleteSection({{ $section->id }}, '{{ $section->name }}')"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Sections Found</h5>
+                        <p class="text-muted">Add sections to organize your students and manage attendance schedules.</p>
+                        <button type="button" class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                            <i class="fas fa-plus me-2"></i>Add First Section
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 </div>
 
 <div class="modal fade" id="addTeacherModal" tabindex="-1" aria-labelledby="addTeacherModalLabel" aria-hidden="true">
@@ -534,7 +537,7 @@
 
 
                         <div class="col-md-6 mb-3">
-                            <label for="add_school_year_id" class="form-label">Semester <span class="text-danger">*</span></label>
+                            <label for="add_school_year_id" class="form-label">School Year <span class="text-danger">*</span></label>
                             <select class="form-select" id="add_school_year_id" name="school_year_id" required>
                                 <option value="">Select School Year</option>
                                 @foreach($schoolYears as $schoolYear)
@@ -1029,7 +1032,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="create_school_year_id" class="form-label"><strong>Semester:</strong></label>
+                        <label for="create_school_year_id" class="form-label"><strong>School Year:</strong></label>
                         <select class="form-select" id="create_school_year_id" name="school_year_id" required>
                             <option value="">Select School Year</option>
                             @php

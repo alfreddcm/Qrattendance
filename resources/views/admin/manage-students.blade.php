@@ -333,27 +333,20 @@
 
 
                                 <td class="text-center">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-cog"></i>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}" title="View Details">
+                                            <i class="fas fa-eye"></i>
                                         </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}">
-                                                    <i class="fas fa-eye me-2"></i>View Details
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">
-                                                    <i class="fas fa-edit me-2"></i>Edit Student
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="{{ route('student.id.print', $student->id) }}" target="_blank">
-                                                    <i class="fas fa-print me-2"></i>Print ID
-                                                </a>
-                                            </li>
-                                        </ul>
+                                        <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-warning btn-sm" title="Edit Student">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this student?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete Student">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -767,6 +760,17 @@
                                 <h6 class="mb-0 text-success fw-bold">Academic Information</h6>
                             </div>
                         </div>
+
+                          <div class="col-md-12">
+                            <label for="admin_school_year_id" class="form-label">School Year</label>
+                            <select class="form-select" id="admin_school_year_id" name="school_year_id">
+                                <option value="">Select School Year</option>
+                                @foreach($schoolYears ?? [] as $schoolYear)
+                                    <option value="{{ $schoolYear->id }}">{{ $schoolYear->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="col-md-4">
                             <label for="admin_school_id" class="form-label">School <span class="text-danger">*</span></label>
                             <select class="form-select" id="admin_school_id" name="school_id" required onchange="loadTeachersBySchool()">
@@ -788,15 +792,7 @@
                                 <option value="">Select Grade & Section</option>
                             </select>
                         </div>
-                        <div class="col-md-12">
-                            <label for="admin_school_year_id" class="form-label">School Year</label>
-                            <select class="form-select" id="admin_school_year_id" name="school_year_id">
-                                <option value="">Select School Year</option>
-                                @foreach($schoolYears ?? [] as $schoolYear)
-                                    <option value="{{ $schoolYear->id }}">{{ $schoolYear->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                      
 
 
                         <div class="col-12 mt-3">
@@ -820,12 +816,12 @@
                             <input type="number" class="form-control" id="age" name="age" min="13" max="25" required placeholder="Age">
                         </div>
                         <div class="col-md-4">
-                            <label for="cp_no" class="form-label">Contact Number</label>
-                            <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                            <label for="cp_no" class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="cp_no" name="cp_no" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                         </div>
                         <div class="col-md-12">
-                            <label for="address" class="form-label">Address</label>
-                            <input type="text" class="form-control" id="address" name="address" placeholder="Complete address">
+                            <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="address" name="address" required placeholder="Complete address">
                         </div>
 
 
@@ -887,7 +883,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-light border-0 py-2">
+                            <div class="card-header bg-white border-0 py-2">
                                 <small class="text-success fw-bold">
                                     <i class="fas fa-list-ol me-1"></i>Quick Steps
                                 </small>
@@ -925,7 +921,7 @@
 
                     <div class="col-md-6">
                         <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-light border-0 py-2">
+                            <div class="card-header bg-white border-0 py-2">
                                 <small class="text-primary fw-bold">
                                     <i class="fas fa-upload me-1"></i>Upload Your File
                                 </small>
@@ -1157,7 +1153,6 @@ function removePhoto() {
     sectionSelect.disabled = true;
 
     if (schoolId) {
-        // Fetch teachers for this school
         fetch(`/admin/schools/${schoolId}/teachers`)
             .then(response => response.json())
             .then(teachers => {
@@ -1175,11 +1170,10 @@ function removePhoto() {
             });
     }
 
-    // Add event listener for school year changes to reload sections
     if (schoolYearSelect) {
         schoolYearSelect.addEventListener('change', function() {
             if (teacherSelect.value) {
-                loadSectionsByTeacher(); // Reload sections when school year changes
+                loadSectionsByTeacher(); 
             }
         });
     }
@@ -1230,7 +1224,6 @@ function debounceSubmit() {
 }
 
 function generateQr(studentId) {
-    // Create form and submit
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `/admin/students/${studentId}/generate-qr`;
@@ -1269,7 +1262,6 @@ function generateAllQrs() {
 </script>
 
 <script>
-// Filter functionality for manage students page
 function loadSectionsForFilter() {
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
@@ -1279,11 +1271,9 @@ function loadSectionsForFilter() {
     const schoolYearId = schoolYearSelect ? schoolYearSelect.value : '';
     const currentSectionId = '{{ request("section_id") }}';
     
-    // Reset sections
     sectionSelect.innerHTML = '<option value="">All Sections</option>';
     
     if (teacherId) {
-        // Show loading
         sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
         sectionSelect.disabled = true;
         
@@ -1300,7 +1290,7 @@ function loadSectionsForFilter() {
                     if (section.school_year_name && section.school_year_name !== 'No School Year') {
                         option.textContent += ` (${section.school_year_name})`;
                     }
-                    // Preserve selection if returning from a filtered view
+
                     if (currentSectionId && section.id == currentSectionId) {
                         option.selected = true;
                     }
@@ -1316,14 +1306,12 @@ function loadSectionsForFilter() {
     }
 }
 
-// Load sections on page load if teacher is already selected
 document.addEventListener('DOMContentLoaded', function() {
     const teacherSelect = document.getElementById('filterTeacher');
     if (teacherSelect && teacherSelect.value) {
         loadSectionsForFilter();
     }
     
-    // Also reload sections when school year changes
     const schoolYearSelect = document.querySelector('select[name="school_year_id"]');
     if (schoolYearSelect) {
         schoolYearSelect.addEventListener('change', function() {
@@ -1337,12 +1325,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
  document.addEventListener('DOMContentLoaded', function() {
-    // Legacy section population (keeping as fallback)
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
-
-    // Remove old event listeners that used data-sections
-    // The new loadSectionsForFilter() function handles this via AJAX
 });
 </script>
 
@@ -1456,7 +1440,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Table sorting functionality
     const table = document.getElementById('studentsTable');
     if (table) {
         const headers = table.querySelectorAll('th.sortable');
@@ -1470,11 +1453,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tbody = table.querySelector('tbody');
                 const rows = Array.from(tbody.querySelectorAll('tr'));
                 
-                // Toggle sort direction
                 sortDirection[sortKey] = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
                 const direction = sortDirection[sortKey];
                 
-                // Update all sort icons to default
                 headers.forEach(h => {
                     const icon = h.querySelector('i');
                     if (icon) {
@@ -1482,13 +1463,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                // Update clicked header icon
                 const icon = header.querySelector('i');
                 if (icon) {
                     icon.className = direction === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
                 }
                 
-                // Sort rows
                 rows.sort((a, b) => {
                     let aValue, bValue;
                     

@@ -67,7 +67,7 @@ class SectionController extends Controller
             if ($existingSection) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'A section with this name and grade level already exists for the selected semester.'
+                    'message' => 'A section with this name and grade level already exists for the selected school year.'
                 ], 409);
             }
 
@@ -126,9 +126,9 @@ class SectionController extends Controller
                 ]);
             }
 
-            $section->load(['teacher', 'semester', 'students']);
+            $section->load(['teacher', 'schoolYear', 'students']);
 
-            Log::info('Section created successfully', [
+            Log::info('Section added successfully', [
                 'section_id' => $section->id,
                 'section_name' => $section->name,
                 'grade_level' => $section->gradelevel,
@@ -139,11 +139,11 @@ class SectionController extends Controller
             if ($request->ajax() || $request->isJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Section created successfully!',
+                    'message' => 'Section added successfully!',
                     'section' => $section
                 ]);
             }
-            return redirect()->back()->with('success', 'Section created successfully!');
+            return redirect()->back()->with('success', 'Section added successfully!');
 
         } catch (\Exception $e) {
             Log::error('Error creating section', [
@@ -164,7 +164,7 @@ class SectionController extends Controller
     public function edit(Section $section)
     {
         try {
-            $section->load(['teacher', 'semester']);
+            $section->load(['teacher', 'schoolYear']);
             
             Log::info('Fetching section for edit', [
                 'section_id' => $section->id,
@@ -186,7 +186,7 @@ class SectionController extends Controller
                 'pm_time_in_end' => $section->pm_time_in_end,
                 'pm_time_out_start' => $section->pm_time_out_start,
                 'pm_time_out_end' => $section->pm_time_out_end,
-                 'semester_defaults' => [
+                 'school_year_defaults' => [
                     'morning_start' => $section->schoolYear->morning_period_start,
                     'morning_end' => $section->schoolYear->morning_period_end,
                     'afternoon_start' => $section->schoolYear->afternoon_period_start,
@@ -269,10 +269,10 @@ class SectionController extends Controller
                 if ($request->ajax() || $request->isJson()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'A section with this name and grade level already exists for the selected semester.'
+                        'message' => 'A section with this name and grade level already exists for the selected school year.'
                     ], 409);
                 }
-                return redirect()->back()->with('error', 'A section with this name and grade level already exists for the selected semester.');
+                return redirect()->back()->with('error', 'A section with this name and grade level already exists for the selected school year.');
             }
 
              $teacher = User::where('id', $validatedData['teacher_id'])
@@ -322,7 +322,7 @@ class SectionController extends Controller
                 $this->updateTeacherAssignments($section, $oldTeacherId, $newTeacherId);
             }
 
-            $section->load(['teacher', 'semester', 'students']);
+            $section->load(['teacher', 'schoolYear', 'students']);
 
             Log::info('Section updated successfully', [
                 'section_id' => $section->id,
@@ -361,7 +361,7 @@ class SectionController extends Controller
     /**
      * Remove the specified section from storage.
      */
-    public function destroy(Section $section)
+    public function destroy(Request $request, Section $section)
     {
         Log::info('Deleting section', [
             'section_id' => $section->id,
@@ -533,7 +533,7 @@ class SectionController extends Controller
     }
 
     /**
-     * Get available teachers and semesters for dropdowns
+     * Get available teachers and school years for dropdowns
      */
     public function getFormData()
     {
@@ -548,7 +548,7 @@ class SectionController extends Controller
                 ->orderBy('name')
                 ->get();
 
-             $formattedSemesters = $schoolYears->map(function ($schoolYear) {
+             $formattedSchoolYears = $schoolYears->map(function ($schoolYear) {
                 return [
                     'id' => $schoolYear->id,
                     'name' => $schoolYear->name,
@@ -565,7 +565,7 @@ class SectionController extends Controller
             return response()->json([
                 'success' => true,
                 'teachers' => $teachers,
-                'semesters' => $formattedSemesters,
+                'school_years' => $formattedSchoolYears,
                 'grade_levels' => range(11, 12)  
             ]);
 
