@@ -113,8 +113,8 @@
                         <i class="fas fa-magic me-1"></i>Generate All QR Codes
                     </button>
 
-                    <button class="btn btn-info btn-sm" onclick="window.open('{{ route('student.ids.print.all') }}', '_blank')">
-                        <i class="fas fa-print me-1"></i>Print All Student IDs
+                    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#printStudentIdsModal">
+                        <i class="fas fa-print me-1"></i>Print Student IDs
                     </button>
 
                 </div>
@@ -1328,6 +1328,227 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherSelect = document.getElementById('filterTeacher');
     const sectionSelect = document.getElementById('filterSection');
 });
+</script>
+
+{{-- Print Student IDs Modal --}}
+<div class="modal fade" id="printStudentIdsModal" tabindex="-1" aria-labelledby="printStudentIdsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="printStudentIdsModalLabel">
+                    <i class="fas fa-print me-2"></i>Print Student IDs
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select filters to organize student IDs by School → School Year → Teacher → Students
+                </div>
+
+                <form id="printIdsForm" action="{{ route('student.ids.print.all') }}" method="GET" target="_blank">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="print_school_id" class="form-label fw-bold">
+                                <i class="fas fa-school me-1 text-primary"></i>School
+                            </label>
+                            <select name="school_id" id="print_school_id" class="form-select" onchange="loadPrintSchoolYears()">
+                                <option value="">All Schools</option>
+                                @foreach($schools ?? [] as $school)
+                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Filter by specific school or select all</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="print_school_year_id" class="form-label fw-bold">
+                                <i class="fas fa-calendar-alt me-1 text-success"></i>School Year
+                            </label>
+                            <select name="school_year_id" id="print_school_year_id" class="form-select" onchange="loadPrintTeachers()">
+                                <option value="">All School Years</option>
+                                @foreach($schoolYears ?? [] as $schoolYear)
+                                    <option value="{{ $schoolYear->id }}">
+                                        @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                            {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                        @else
+                                            {{ $schoolYear->name ?? 'School Year' }}
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Filter by academic year</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="print_teacher_id" class="form-label fw-bold">
+                                <i class="fas fa-chalkboard-teacher me-1 text-warning"></i>Teacher
+                            </label>
+                            <select name="teacher_id" id="print_teacher_id" class="form-select" onchange="loadPrintSections()">
+                                <option value="">All Teachers</option>
+                                @foreach($teachers ?? [] as $t)
+                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Filter by teacher</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="print_section_id" class="form-label fw-bold">
+                                <i class="fas fa-users me-1 text-danger"></i>Section
+                            </label>
+                            <select name="section_id" id="print_section_id" class="form-select">
+                                <option value="">All Sections</option>
+                            </select>
+                            <small class="text-muted">Filter by section</small>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3">
+                                    <h6 class="mb-2">
+                                        <i class="fas fa-layer-group me-2 text-info"></i>Print Organization
+                                    </h6>
+                                    <p class="mb-2 small text-muted">Student IDs will be organized and labeled as:</p>
+                                    <div class="ps-3">
+                                        <div class="mb-1"><i class="fas fa-angle-right me-2 text-primary"></i><strong>School Name</strong> - School Year</div>
+                                        <div class="ps-4 mb-1"><i class="fas fa-angle-right me-2 text-warning"></i><strong>Teacher Name</strong></div>
+                                        <div class="ps-5 mb-1"><i class="fas fa-angle-right me-2 text-success"></i>Student ID Cards</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-info" onclick="submitPrintForm()">
+                    <i class="fas fa-print me-1"></i>Print Student IDs
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadPrintSchoolYears() {
+    const schoolId = document.getElementById('print_school_id').value;
+    const teacherSelect = document.getElementById('print_teacher_id');
+    const sectionSelect = document.getElementById('print_section_id');
+    
+    // Reset dependent dropdowns
+    teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+    
+    if (schoolId) {
+        loadPrintTeachers();
+    } else {
+        // Load all teachers when no school is selected
+        teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+        @foreach($teachers ?? [] as $t)
+            teacherSelect.innerHTML += '<option value="{{ $t->id }}">{{ $t->name }}</option>';
+        @endforeach
+    }
+}
+
+function loadPrintTeachers() {
+    const schoolId = document.getElementById('print_school_id').value;
+    const schoolYearId = document.getElementById('print_school_year_id').value;
+    const teacherSelect = document.getElementById('print_teacher_id');
+    const sectionSelect = document.getElementById('print_section_id');
+    
+    // Reset dependent dropdown
+    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+    
+    if (schoolId) {
+        teacherSelect.innerHTML = '<option value="">Loading teachers...</option>';
+        teacherSelect.disabled = true;
+        
+        let url = `/admin/schools/${schoolId}/teachers`;
+        if (schoolYearId) {
+            url += `?school_year_id=${schoolYearId}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+                teacherSelect.disabled = false;
+                
+                if (data.success && data.teachers && data.teachers.length > 0) {
+                    data.teachers.forEach(teacher => {
+                        const option = document.createElement('option');
+                        option.value = teacher.id;
+                        option.textContent = teacher.name;
+                        teacherSelect.appendChild(option);
+                    });
+                } else {
+                    teacherSelect.innerHTML = '<option value="">No teachers available</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading teachers:', error);
+                teacherSelect.innerHTML = '<option value="">Error loading teachers</option>';
+                teacherSelect.disabled = false;
+            });
+    } else {
+        // Load all teachers when no school is selected
+        teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+        @foreach($teachers ?? [] as $t)
+            const option{{ $t->id }} = document.createElement('option');
+            option{{ $t->id }}.value = '{{ $t->id }}';
+            option{{ $t->id }}.textContent = '{{ $t->name }}';
+            teacherSelect.appendChild(option{{ $t->id }});
+        @endforeach
+    }
+}
+
+function loadPrintSections() {
+    const teacherId = document.getElementById('print_teacher_id').value;
+    const schoolYearId = document.getElementById('print_school_year_id').value;
+    const sectionSelect = document.getElementById('print_section_id');
+    
+    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+    
+    if (teacherId) {
+        sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+        sectionSelect.disabled = true;
+        
+        const url = `/admin/teachers/${teacherId}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                sectionSelect.disabled = false;
+                
+                if (data.success && data.sections && data.sections.length > 0) {
+                    data.sections.forEach(section => {
+                        const option = document.createElement('option');
+                        option.value = section.id;
+                        option.textContent = `Grade ${section.gradelevel} - ${section.name}`;
+                        sectionSelect.appendChild(option);
+                    });
+                } else {
+                    sectionSelect.innerHTML = '<option value="">No sections available</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading sections:', error);
+                sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+                sectionSelect.disabled = false;
+            });
+    } else {
+        sectionSelect.disabled = false;
+    }
+}
+
+function submitPrintForm() {
+    document.getElementById('printIdsForm').submit();
+}
 </script>
 
 <style>

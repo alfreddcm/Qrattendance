@@ -2375,7 +2375,6 @@ class AdminController extends Controller
                 Log::info('Picture uploaded successfully', ['picture_name' => $pictureName]);
             } elseif ($request->filled('captured_image')) {
                 Log::info('Processing captured image from camera');
-                // Handle captured image from camera
                 $imageData = $request->captured_image;
                 $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
                 $imageData = str_replace(' ', '+', $imageData);
