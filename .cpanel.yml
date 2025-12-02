@@ -1,30 +1,58 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/Ysgvihssc/public_html
+    # Set deployment paths
+    - export DEPLOYPATH=/home/Ysgvihssc/public_html/
+    - export APPPATH=/home/Ysgvihssc/qrattendance/
     
-    - /bin/cp -R * $DEPLOYPATH
+    # Create application directory if it doesn't exist
+    - /bin/mkdir -p $APPPATH
     
-    - if [ ! -f $DEPLOYPATH/.env ]; then /bin/cp $DEPLOYPATH/.env.example $DEPLOYPATH/.env; fi
+    # Copy all files except public directory to app directory
+    - /bin/cp -R app $APPPATH
+    - /bin/cp -R bootstrap $APPPATH
+    - /bin/cp -R config $APPPATH
+    - /bin/cp -R database $APPPATH
+    - /bin/cp -R resources $APPPATH
+    - /bin/cp -R routes $APPPATH
+    - /bin/cp -R storage $APPPATH
+    - /bin/cp -R vendor $APPPATH
+    - /bin/cp artisan $APPPATH
+    - /bin/cp composer.json $APPPATH
+    - /bin/cp composer.lock $APPPATH
+    - /bin/cp package.json $APPPATH
     
-    - cd $DEPLOYPATH
+    # Copy .env file if not exists
+    - if [ ! -f $APPPATH/.env ]; then /bin/cp .env.example $APPPATH/.env; fi
     
-    - composer install --no-dev --optimize-autoloader --no-interaction
+    # Copy public directory contents to public_html
+    - /bin/cp -R public/* $DEPLOYPATH
+    - /bin/cp public/.htaccess $DEPLOYPATH
     
-    - php artisan config:clear
-    - php artisan route:clear
-    - php artisan view:clear
-    - php artisan cache:clear
+    # Update index.php to point to correct application path
+    - /bin/sed -i "s|__DIR__.'/../vendor/autoload.php'|'/home/Ysgvihssc/qrattendance/vendor/autoload.php'|g" $DEPLOYPATH/index.php
+    - /bin/sed -i "s|__DIR__.'/../bootstrap/app.php'|'/home/Ysgvihssc/qrattendance/bootstrap/app.php'|g" $DEPLOYPATH/index.php
     
-    - php artisan config:cache
-    - php artisan route:cache
-    - php artisan view:cache
+    # Run composer install in app directory
+    - cd $APPPATH && composer install --no-dev --optimize-autoloader --no-interaction
     
-    - php artisan storage:link
+    # Clear all caches
+    - cd $APPPATH && php artisan config:clear
+    - cd $APPPATH && php artisan route:clear
+    - cd $APPPATH && php artisan view:clear
+    - cd $APPPATH && php artisan cache:clear
     
-    - chmod -R 755 storage
-    - chmod -R 755 bootstrap/cache
+    # Cache configuration for better performance
+    - cd $APPPATH && php artisan config:cache
+    - cd $APPPATH && php artisan route:cache
+    - cd $APPPATH && php artisan view:cache
     
-    - chmod -R 755 storage/app
-    - chmod -R 755 storage/framework
-    - chmod -R 755 storage/logs
+    # Create storage symbolic link
+    - /bin/rm -rf $DEPLOYPATH/storage
+    - /bin/ln -sf $APPPATH/storage/app/public $DEPLOYPATH/storage
+    
+    # Set proper permissions
+    - /bin/chmod -R 755 $APPPATH/storage
+    - /bin/chmod -R 755 $APPPATH/bootstrap/cache
+    - /bin/chmod 644 $DEPLOYPATH/.htaccess
+
