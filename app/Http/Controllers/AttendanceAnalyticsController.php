@@ -60,7 +60,7 @@ class AttendanceAnalyticsController extends Controller
          $search = $request->get('search');
         $sectionFilter = $request->get('section_filter');
         
-         // Get students through teacher's sections
+         
         $studentsQuery = Student::whereHas('section', function($query) use ($teacherId) {
             $query->where('teacher_id', $teacherId);
         });
@@ -232,7 +232,7 @@ class AttendanceAnalyticsController extends Controller
           ->take(15)  
           ->values();
 
-        // Color code based on absenteeism rate
+        
         $backgroundColors = $absenteeismData->map(function($item) {
             $rate = $item['absenteeism_rate'];
             if ($rate >= 50) return 'rgba(255, 99, 132, 0.8)';  
@@ -462,7 +462,7 @@ class AttendanceAnalyticsController extends Controller
         $hours = floor($avgMinutes / 60);
         $minutes = $avgMinutes % 60;
         
-        return $hours + ($minutes / 60); // Return as decimal hours for chart
+        return $hours + ($minutes / 60); 
     }
 
     /**
@@ -526,7 +526,7 @@ class AttendanceAnalyticsController extends Controller
     private function getTeacherSections($teacherId)
     {
         try {
-            // First try direct teacher assignment
+            
             $sections = Section::where('teacher_id', $teacherId)
                 ->withCount('students')
                 ->with(['schoolYear'])
@@ -538,7 +538,7 @@ class AttendanceAnalyticsController extends Controller
                 'direct_section_details' => $sections->toArray()
             ]);
 
-            // If no direct sections found, try many-to-many relationship
+            
             if ($sections->isEmpty()) {
                 $sections = Section::whereHas('teachers', function($query) use ($teacherId) {
                     $query->where('teacher_id', $teacherId);
@@ -570,7 +570,7 @@ class AttendanceAnalyticsController extends Controller
      */
     private function getValidatedFilters(Request $request)
     {
-        // Always use current school year
+        
         $currentSchoolYear = SchoolYear::where('status', 'active')->first();
         if (!$currentSchoolYear) {
             $currentSchoolYear = SchoolYear::latest('created_at')->first();
@@ -598,10 +598,10 @@ class AttendanceAnalyticsController extends Controller
     private function getFilteredStudentIds($teacherId, $filters)
     {
         try {
-            // Get sections that belong to this teacher - try direct assignment first
+            
             $teacherSectionIds = Section::where('teacher_id', $teacherId)->pluck('id');
 
-            // If no direct sections, try many-to-many relationship
+            
             if ($teacherSectionIds->isEmpty()) {
                 $teacherSectionIds = Section::whereHas('teachers', function($query) use ($teacherId) {
                     $query->where('teacher_id', $teacherId);
@@ -619,7 +619,7 @@ class AttendanceAnalyticsController extends Controller
                 return collect([]);
             }
 
-            // Start with students in teacher's sections
+            
             $studentsQuery = Student::whereIn('section_id', $teacherSectionIds);
 
             if ($filters['school_year_id']) {
@@ -634,7 +634,7 @@ class AttendanceAnalyticsController extends Controller
             
             Log::info('Final student IDs:', [
                 'count' => $studentIds->count(),
-                'student_ids' => $studentIds->take(20)->toArray() // Only log first 20 for brevity
+                'student_ids' => $studentIds->take(20)->toArray() 
             ]);
 
             return $studentIds;

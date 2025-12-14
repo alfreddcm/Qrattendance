@@ -148,11 +148,11 @@
                                         <td>
                                             @php
                                                 $allSections = collect();
-                                                // Add legacy single section if exists
+                                                
                                                 if($teacher->section) {
                                                     $allSections->push($teacher->section);
                                                 }
-                                                // Add sections from pivot table
+                                                
                                                 $allSections = $allSections->merge($teacher->sections);
                                                 $allSections = $allSections->unique('id');
                                             @endphp
@@ -178,21 +178,30 @@
                                         </td>
                                         <td>{{ $teacher->phone_number ?? 'N/A' }}</td>
                                         <td>
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <button type="button"
-                                                        class="btn btn-outline-primary btn-sm"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#editTeacherModal"
-                                                        onclick="editTeacher({{ $teacher->id }})"
-                                                        title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
+                                            <div class="btn-group btn-group-sm d-flex flex-column gap-1" role="group">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button"
+                                                            class="btn btn-outline-primary btn-sm"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editTeacherModal"
+                                                            onclick="editTeacher({{ $teacher->id }})"
+                                                            title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
 
+                                                    <button type="button"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                            onclick="if(confirm('Are you sure you want to delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }"
+                                                            title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                                
                                                 <button type="button"
-                                                        class="btn btn-outline-danger btn-sm"
-                                                        onclick="if(confirm('Are you sure you want to delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }"
-                                                        title="Delete">
-                                                    <i class="fas fa-trash"></i>
+                                                        class="btn btn-outline-success btn-sm w-100"
+                                                        onclick="openAttendanceCodeModal({{ $teacher->id }}, {{ json_encode($teacher->name) }})"
+                                                        title="Manage Attendance Code">
+                                                    <i class="fas fa-qrcode"></i> Code
                                                 </button>
                                             </div>
                                             <form id="delete-form-{{ $teacher->id }}" method="POST" action="{{ route('admin.delete-teacher', $teacher->id) }}" style="display: none;">
@@ -1465,6 +1474,247 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
         });
     }
 });
+
+// Attendance Code Modal Functions
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (!metaTag) {
+        console.error('CSRF token meta tag not found!');
+        return '';
+    }
+    return metaTag.content;
+}
+
+async function openAttendanceCodeModal(teacherId, teacherName) {
+    console.log('openAttendanceCodeModal called:', teacherId, teacherName);
+    
+    const modalElement = document.getElementById('attendanceCodeModal');
+    if (!modalElement) {
+        console.error('Modal element not found!');
+        alert('Modal not found. Please refresh the page.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Set teacher info
+    document.getElementById('modalTeacherName').textContent = teacherName;
+    document.getElementById('modalTeacherId').value = teacherId;
+    
+    // Show loading
+    document.getElementById('codeStatusLoading').style.display = 'block';
+    document.getElementById('codeStatusContent').style.display = 'none';
+    
+    modal.show();
+    
+    try {
+        console.log('Fetching status for teacher:', teacherId);
+        const response = await fetch(`/admin/attendance-codes/status/${teacherId}`);
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        document.getElementById('codeStatusLoading').style.display = 'none';
+        document.getElementById('codeStatusContent').style.display = 'block';
+        
+        if (data.success) {
+            const statusBadge = document.getElementById('codeStatus');
+            const codeDisplay = document.getElementById('codeDisplay');
+            const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+            const generateBtn = document.getElementById('generateCodeBtn');
+            const regenerateBtn = document.getElementById('regenerateCodeBtn');
+            
+            if (data.has_code) {
+                statusBadge.className = 'badge bg-success fs-6';
+                statusBadge.textContent = 'Active';
+                codeDisplay.innerHTML = `<strong class="fs-4">${data.code}</strong>`;
+                
+                if (data.qr_code_url) {
+                    qrCodeDisplay.innerHTML = `<img src="${data.qr_code_url}" alt="QR Code" class="img-fluid" style="max-width: 200px;">`;
+                } else {
+                    qrCodeDisplay.innerHTML = '<p class="text-muted">QR Code not available</p>';
+                }
+                
+                generateBtn.style.display = 'none';
+                regenerateBtn.style.display = 'inline-block';
+                regenerateBtn.disabled = !data.has_section;
+            } else {
+                statusBadge.className = 'badge bg-warning text-dark fs-6';
+                statusBadge.textContent = 'Not Generated';
+                codeDisplay.innerHTML = '<p class="text-muted">No code generated yet</p>';
+                qrCodeDisplay.innerHTML = '';
+                
+                generateBtn.style.display = 'inline-block';
+                generateBtn.disabled = !data.has_section;
+                regenerateBtn.style.display = 'none';
+                
+                if (!data.has_section) {
+                    document.getElementById('noSectionWarning').style.display = 'block';
+                } else {
+                    document.getElementById('noSectionWarning').style.display = 'none';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching code status:', error);
+        document.getElementById('codeStatusLoading').style.display = 'none';
+        document.getElementById('codeStatusContent').innerHTML = '<p class="text-danger">Error loading code status</p>';
+    }
+}
+
+async function generateCodeFromModal() {
+    const teacherId = document.getElementById('modalTeacherId').value;
+    const teacherName = document.getElementById('modalTeacherName').textContent;
+    
+    console.log('generateCodeFromModal called:', teacherId, teacherName);
+    
+    if (!confirm(`Generate attendance code for ${teacherName}?`)) {
+        return;
+    }
+    
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        alert('Security token not found. Please refresh the page and try again.');
+        return;
+    }
+    
+    try {
+        console.log('Generating code for teacher:', teacherId);
+        const response = await fetch(`/admin/attendance-codes/generate/${teacherId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            alert(`✓ Attendance code generated successfully!\n\nCode: ${data.code}\nTeacher: ${teacherName}`);
+            // Reload modal content
+            openAttendanceCodeModal(teacherId, teacherName);
+        } else {
+            alert('Error: ' + (data.message || 'Failed to generate code'));
+        }
+    } catch (error) {
+        console.error('Error generating code:', error);
+        alert('Failed to generate attendance code. Error: ' + error.message);
+    }
+}
+
+async function regenerateCodeFromModal() {
+    const teacherId = document.getElementById('modalTeacherId').value;
+    const teacherName = document.getElementById('modalTeacherName').textContent;
+    
+    console.log('regenerateCodeFromModal called:', teacherId, teacherName);
+    
+    if (!confirm(`⚠️ This will invalidate the current code and generate a new one for ${teacherName}.\n\nStudents will need the new code to mark attendance.\n\nContinue?`)) {
+        return;
+    }
+    
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        alert('Security token not found. Please refresh the page and try again.');
+        return;
+    }
+    
+    try {
+        console.log('Regenerating code for teacher:', teacherId);
+        const response = await fetch(`/admin/attendance-codes/regenerate/${teacherId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            alert(`✓ Attendance code regenerated!\n\nNew Code: ${data.code}\n\nOld code has been deactivated.`);
+            // Reload modal content
+            openAttendanceCodeModal(teacherId, teacherName);
+        } else {
+            alert('Error: ' + (data.message || 'Failed to regenerate code'));
+        }
+    } catch (error) {
+        console.error('Error regenerating code:', error);
+        alert('Failed to regenerate attendance code. Error: ' + error.message);
+    }
+}
 </script>
+
+<!-- Attendance Code Modal -->
+<div class="modal fade" id="attendanceCodeModal" tabindex="-1" aria-labelledby="attendanceCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="attendanceCodeModalLabel">
+                    <i class="fas fa-qrcode me-2"></i>Attendance Code Management
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalTeacherId">
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">Teacher:</h6>
+                    <h5 id="modalTeacherName" class="mb-0"></h5>
+                </div>
+                
+                <hr>
+                
+                <div id="codeStatusLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading code status...</p>
+                </div>
+                
+                <div id="codeStatusContent" style="display: none;">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Status:</h6>
+                        <span id="codeStatus" class="badge bg-secondary fs-6">Unknown</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">Current Code:</h6>
+                        <div id="codeDisplay" class="p-3 bg-light rounded text-center">
+                            <p class="text-muted mb-0">No code</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">QR Code:</h6>
+                        <div id="qrCodeDisplay" class="text-center">
+                            <!-- QR code image will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div id="noSectionWarning" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Teacher must have at least one section assigned before generating an attendance code.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="generateCodeBtn" class="btn btn-primary" onclick="generateCodeFromModal()">
+                    <i class="fas fa-plus-circle me-1"></i>Generate Code
+                </button>
+                <button type="button" id="regenerateCodeBtn" class="btn btn-warning" onclick="regenerateCodeFromModal()" style="display: none;">
+                    <i class="fas fa-sync-alt me-1"></i>Regenerate Code
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection

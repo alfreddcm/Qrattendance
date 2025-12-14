@@ -27,16 +27,20 @@ class AdminController extends Controller
      
     public function dashboard()
     {
+        
         $totalTeachers = User::where('role', 'teacher')->count();
+        
+        
         $totalStudents = Student::count();
         $totalSchools = School::count();
-        
         $totalSections = Section::count();
         
-        // Count active attendance codes
-        $activeAttendanceCodes = \App\Models\AttendanceCode::where('is_active', true)->count();
         
-        // Count active sessions created by teachers today
+        $activeAttendanceCodes = \App\Models\AttendanceCode::where('is_active', true)
+            ->whereDate('created_at', today())
+            ->count();
+        
+        
         $todaySessionCount = AttendanceSession::whereDate('created_at', today())
             ->where('status', 'active')
             ->whereHas('teacher', function($query) {
@@ -44,58 +48,64 @@ class AdminController extends Controller
             })
             ->count();
         
+        
         $totalAttendanceRecords = Attendance::count();
         
-        // Today's attendance stats
+        
         $todayAttendanceCount = Attendance::whereDate('date', today())->count();
         $todayStudentsPresent = Attendance::whereDate('date', today())
             ->distinct('student_id')
             ->count('student_id');
         
-        // Get attendance summary grouped by school, then by attendance code for today
+        
         $recentAttendance = [];
         $teachers = User::where('role', 'teacher')
-            ->with(['school', 'attendanceCodes' => function($query) {
-                $query->where('is_active', true);
-            }])
+            ->with(['school', 'sections.students', 'students'])
             ->get();
         
         foreach ($teachers as $teacher) {
-            foreach ($teacher->attendanceCodes as $code) {
-                // Get today's attendance for this teacher
-                $todayAttendance = Attendance::where('teacher_id', $teacher->id)
-                    ->whereDate('date', today())
-                    ->get();
-                
-                // Get total students assigned to this teacher (via user_id)
-                $totalStudents = Student::where('user_id', $teacher->id)->count();
-                
-                $presentCount = $todayAttendance->unique('student_id')->count();
-                $absentCount = $totalStudents - $presentCount;
-                
-                // Show all active codes, even with 0 attendance
-                $recentAttendance[] = [
-                    'school_id' => $teacher->school_id,
-                    'school_name' => $teacher->school->name ?? 'N/A',
-                    'attendance_code' => $code->code,
-                    'am_time_in_count' => $todayAttendance->where('time_in_am', '!=', null)->count(),
-                    'am_time_out_count' => $todayAttendance->where('time_out_am', '!=', null)->count(),
-                    'pm_time_in_count' => $todayAttendance->where('time_in_pm', '!=', null)->count(),
-                    'pm_time_out_count' => $todayAttendance->where('time_out_pm', '!=', null)->count(),
-                    'total_present' => $presentCount,
-                    'total_absent' => $absentCount,
-                    'total_students' => $totalStudents,
-                    'teacher_name' => $teacher->name,
-                ];
-            }
+            
+            $todayAttendance = Attendance::where('teacher_id', $teacher->id)
+                ->whereDate('date', today())
+                ->get();
+            
+            
+            $totalStudentsForTeacher = Student::where('user_id', $teacher->id)->count();
+            
+            
+            $activeCode = \App\Models\AttendanceCode::where('teacher_id', $teacher->id)
+                ->where('is_active', true)
+                ->first();
+            
+            $presentCount = $todayAttendance->unique('student_id')->count();
+            $absentCount = $totalStudentsForTeacher - $presentCount;
+            
+            
+            $recentAttendance[] = [
+                'teacher_id' => $teacher->id,
+                'school_id' => $teacher->school_id,
+                'school_name' => $teacher->school->name ?? 'N/A',
+                'attendance_code' => $activeCode ? $activeCode->code : 'Not Generated',
+                'code_status' => $activeCode ? 'Active' : 'Not Generated',
+                'has_code' => $activeCode ? true : false,
+                'am_time_in_count' => $todayAttendance->whereNotNull('time_in_am')->count(),
+                'am_time_out_count' => $todayAttendance->whereNotNull('time_out_am')->count(),
+                'pm_time_in_count' => $todayAttendance->whereNotNull('time_in_pm')->count(),
+                'pm_time_out_count' => $todayAttendance->whereNotNull('time_out_pm')->count(),
+                'total_present' => $presentCount,
+                'total_absent' => $absentCount,
+                'total_students' => $totalStudentsForTeacher,
+                'teacher_name' => $teacher->name,
+                'has_section' => $teacher->sections->count() > 0 || $teacher->section_id != null,
+            ];
         }
         
-        // Sort by school_id to group schools together
+        
         usort($recentAttendance, function($a, $b) {
             return $a['school_id'] <=> $b['school_id'];
         });
         
-        // Get schools with teacher and student counts
+        
         $schoolStats = School::withCount(['users as teacher_count' => function($query) {
                 $query->where('role', 'teacher');
             }, 'students as student_count'])
@@ -158,7 +168,7 @@ class AdminController extends Controller
         try {
             $gatewayUrl = env('SMS_GATEWAY_URL');
             
-            // If no URL is configured, return offline
+            
             if (!$gatewayUrl) {
                 return response()->json([
                     'status' => 'offline', 
@@ -166,17 +176,17 @@ class AdminController extends Controller
                 ], 500);
             }
 
-            // Use cURL for faster and more reliable connection testing
-            $timeout = env('SMS_TIMEOUT', 3); // Default 3 seconds for faster response
+            
+            $timeout = env('SMS_TIMEOUT', 3); 
             
             $ch = curl_init();
             curl_setopt_array($ch, [
                 CURLOPT_URL => $gatewayUrl,
                 CURLOPT_TIMEOUT => $timeout,
-                CURLOPT_CONNECTTIMEOUT => 2, // 2 seconds connection timeout
+                CURLOPT_CONNECTTIMEOUT => 2, 
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HEADER => true,
-                CURLOPT_NOBODY => true, // HEAD request for faster response
+                CURLOPT_NOBODY => true, 
                 CURLOPT_FOLLOWLOCATION => false,
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_USERAGENT => 'QRAttendance-HealthCheck/1.0'
@@ -184,13 +194,13 @@ class AdminController extends Controller
 
             $startTime = microtime(true);
             $response = curl_exec($ch);
-            $responseTime = round((microtime(true) - $startTime) * 1000); // Convert to milliseconds
+            $responseTime = round((microtime(true) - $startTime) * 1000); 
             
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             curl_close($ch);
 
-            // Check if connection was successful (any HTTP response code means server is reachable)
+            
             if ($response !== false && $httpCode > 0) {
                 $statusMessage = $httpCode == 200 ? 'Online and responding' : 'Reachable (HTTP ' . $httpCode . ')';
                 
@@ -330,7 +340,7 @@ class AdminController extends Controller
 
         $logoPath = $school->logo;
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
+            
             if ($school->logo) {
                 Storage::disk('public')->delete($school->logo);
             }
@@ -919,6 +929,154 @@ class AdminController extends Controller
             \Log::error('Error deleting teacher: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'An error occurred while deleting the teacher. Please try again.');
+        }
+    }
+
+    /**
+     * Generate attendance code for a teacher
+     */
+    public function generateAttendanceCode($teacherId)
+    {
+        Log::info('generateAttendanceCode called', ['teacher_id' => $teacherId, 'user_id' => Auth::id()]);
+        
+        try {
+            $teacher = User::where('role', 'teacher')->findOrFail($teacherId);
+            Log::info('Teacher found', ['teacher_name' => $teacher->name]);
+            
+            // Check if teacher has sections assigned
+            $hasSection = $teacher->sections()->count() > 0 || $teacher->section_id != null;
+            
+            if (!$hasSection) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Teacher must have at least one section assigned before generating attendance code.'
+                ], 400);
+            }
+            
+            // Check if active code already exists
+            $existingCode = \App\Models\AttendanceCode::where('teacher_id', $teacherId)
+                ->where('is_active', true)
+                ->first();
+            
+            if ($existingCode) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An active attendance code already exists for this teacher. Use regenerate instead.'
+                ], 400);
+            }
+            
+            // Generate new code
+            $attendanceCode = \App\Models\AttendanceCode::createForTeacher($teacherId);
+            
+            Log::info("Attendance code generated for teacher {$teacher->name}", [
+                'teacher_id' => $teacherId,
+                'code' => $attendanceCode->code
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance code generated successfully',
+                'code' => $attendanceCode->code,
+                'qr_code_url' => $attendanceCode->qr_code_url
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error generating attendance code: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate attendance code: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Regenerate attendance code for a teacher (invalidates old code)
+     */
+    public function regenerateAttendanceCode($teacherId)
+    {
+        Log::info('regenerateAttendanceCode called', ['teacher_id' => $teacherId, 'user_id' => Auth::id()]);
+        
+        try {
+            $teacher = User::where('role', 'teacher')->findOrFail($teacherId);
+            Log::info('Teacher found for regeneration', ['teacher_name' => $teacher->name]);
+            
+            // Check if teacher has sections assigned
+            $hasSection = $teacher->sections()->count() > 0 || $teacher->section_id != null;
+            
+            if (!$hasSection) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Teacher must have at least one section assigned.'
+                ], 400);
+            }
+            
+            // Deactivate all existing codes for this teacher
+            $oldCodes = \App\Models\AttendanceCode::where('teacher_id', $teacherId)
+                ->where('is_active', true)
+                ->get();
+            
+            foreach ($oldCodes as $oldCode) {
+                $oldCode->deactivate();
+            }
+            
+            // Generate new code
+            $newCode = \App\Models\AttendanceCode::createForTeacher($teacherId);
+            
+            Log::info("Attendance code regenerated for teacher {$teacher->name}", [
+                'teacher_id' => $teacherId,
+                'old_codes' => $oldCodes->pluck('code')->toArray(),
+                'new_code' => $newCode->code
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance code regenerated successfully',
+                'code' => $newCode->code,
+                'qr_code_url' => $newCode->qr_code_url
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error regenerating attendance code: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to regenerate attendance code: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get attendance code status for a teacher
+     */
+    public function getAttendanceCodeStatus($teacherId)
+    {
+        Log::info('getAttendanceCodeStatus called', ['teacher_id' => $teacherId, 'user_id' => Auth::id()]);
+        
+        try {
+            $teacher = User::where('role', 'teacher')->findOrFail($teacherId);
+            Log::info('Teacher found for status check', ['teacher_name' => $teacher->name]);
+            
+            $activeCode = \App\Models\AttendanceCode::where('teacher_id', $teacherId)
+                ->where('is_active', true)
+                ->first();
+            
+            $hasSection = $teacher->sections()->count() > 0 || $teacher->section_id != null;
+            
+            return response()->json([
+                'success' => true,
+                'has_code' => $activeCode != null,
+                'has_section' => $hasSection,
+                'code' => $activeCode ? $activeCode->code : null,
+                'qr_code_url' => $activeCode ? $activeCode->qr_code_url : null,
+                'status' => $activeCode ? 'Active' : 'Not Generated',
+                'teacher_name' => $teacher->name
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting attendance code status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get code status'
+            ], 500);
         }
     }
 

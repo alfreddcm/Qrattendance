@@ -191,8 +191,23 @@
                                                 <td class="text-center">{{ $no++ }}</td>
                                                 
                                                 <td class="text-start">
-                                                    <strong>{{ $record['attendance_code'] ?? 'N/A' }}</strong><br>
-                                                    {{ $record['teacher_name'] ?? 'N/A' }}<br>
+                                                    @if($record['has_code'])
+                                                        <strong class="text-success">{{ $record['attendance_code'] }}</strong>
+                                                        <span class="badge bg-success ms-1">Active</span>
+                                                    @else
+                                                        <span class="text-muted">Not Generated</span>
+                                                        @if($record['has_section'])
+                                                            <button class="btn btn-sm btn-primary ms-2" 
+                                                                    onclick="generateAttendanceCode({{ $record['teacher_id'] }}, {{ json_encode($record['teacher_name']) }})"
+                                                                    title="Generate Code">
+                                                                <i class="fas fa-plus-circle"></i> Generate
+                                                            </button>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark ms-2">No Section</span>
+                                                        @endif
+                                                    @endif
+                                                    <br>
+                                                    <strong>{{ $record['teacher_name'] ?? 'N/A' }}</strong><br>
                                                     <small class="text-muted">{{ $record['school_name'] ?? 'N/A' }}</small>
                                                 </td>
                                                 <td class="text-start">
@@ -204,14 +219,18 @@
                                                     Time out: {{ $record['pm_time_out_count'] ?? 0 }}
                                                 </td>
                                                 <td class="text-start">
-                                                    Scanned: {{ $record['total_present'] ?? 0 }}/{{ $record['total_students'] ?? 0 }}
+                                                    @if($record['total_students'] > 0)
+                                                        Scanned: {{ $record['total_present'] ?? 0 }}/{{ $record['total_students'] ?? 0 }}
+                                                    @else
+                                                        <span class="text-muted">No students assigned</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach
                                     @else
                                         <tr>
                                             <td colspan="5" class="text-center py-4">
-                                                undefined
+                                                <i class="fas fa-info-circle me-2"></i>No teachers found in the system
                                             </td>
                                         </tr>
                                     @endif
@@ -339,6 +358,96 @@ async function checkFileStorageStatus() {
     }
 }
 
+// Attendance Code Generation Functions
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (!metaTag) {
+        console.error('CSRF token meta tag not found!');
+        return '';
+    }
+    return metaTag.content;
+}
+
+async function generateAttendanceCode(teacherId, teacherName) {
+    console.log('generateAttendanceCode called:', teacherId, teacherName);
+    
+    if (!confirm(`Generate attendance code for ${teacherName}?`)) {
+        return;
+    }
+    
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        alert('Security token not found. Please refresh the page and try again.');
+        return;
+    }
+    
+    try {
+        console.log('Fetching:', `/admin/attendance-codes/generate/${teacherId}`);
+        const response = await fetch(`/admin/attendance-codes/generate/${teacherId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            alert(`✓ Attendance code generated successfully!\n\nCode: ${data.code}\nTeacher: ${teacherName}`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to generate code'));
+        }
+    } catch (error) {
+        console.error('Error generating code:', error);
+        alert('Failed to generate attendance code. Error: ' + error.message);
+    }
+}
+
+async function regenerateAttendanceCode(teacherId, teacherName) {
+    console.log('regenerateAttendanceCode called:', teacherId, teacherName);
+    
+    if (!confirm(`This will invalidate the current code and generate a new one for ${teacherName}. Continue?`)) {
+        return;
+    }
+    
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        alert('Security token not found. Please refresh the page and try again.');
+        return;
+    }
+    
+    try {
+        console.log('Fetching:', `/admin/attendance-codes/regenerate/${teacherId}`);
+        const response = await fetch(`/admin/attendance-codes/regenerate/${teacherId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            alert(`✓ Attendance code regenerated!\n\nNew Code: ${data.code}\nOld code has been deactivated.`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to regenerate code'));
+        }
+    } catch (error) {
+        console.error('Error regenerating code:', error);
+        alert('Failed to regenerate attendance code. Error: ' + error.message);
+    }
+}
+
 // Recent Attendance Functions
 function filterBySchool(schoolId) {
     const tableBody = document.getElementById('attendanceTableBody');
@@ -376,7 +485,6 @@ function sortTable(column) {
         return aText.localeCompare(bText);
     });
 
-    // Clear and re-append sorted rows
     while (tbody.firstChild) {
         tbody.removeChild(tbody.firstChild);
     }
@@ -396,7 +504,6 @@ function refreshAttendanceList() {
         .catch(error => console.error('Error refreshing attendance list:', error));
 }
 
-// Auto-refresh functions
 setInterval(function() {
     fetch('{{ route("admin.dashboard.stats") }}')
         .then(response => response.json())

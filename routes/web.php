@@ -134,6 +134,11 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::post('/reassign-section', [AdminController::class, 'reassignSection'])->name('admin.reassign-section');
     Route::post('/create-section-for-teacher', [AdminController::class, 'createSectionForTeacher'])->name('admin.create-section-for-teacher');
     
+    // Attendance Code Management Routes
+    Route::post('/attendance-codes/generate/{teacherId}', [AdminController::class, 'generateAttendanceCode'])->name('admin.attendance-code.generate');
+    Route::post('/attendance-codes/regenerate/{teacherId}', [AdminController::class, 'regenerateAttendanceCode'])->name('admin.attendance-code.regenerate');
+    Route::get('/attendance-codes/status/{teacherId}', [AdminController::class, 'getAttendanceCodeStatus'])->name('admin.attendance-code.status');
+    
     Route::get('/manage-school-years', [SchoolYearController::class, 'index'])->name('admin.manage-school-years');
     Route::get('/school-years/create', [SchoolYearController::class, 'create'])->name('admin.school-year.create');
     Route::post('/school-years/store', [SchoolYearController::class, 'store'])->name('admin.school-year.store');
