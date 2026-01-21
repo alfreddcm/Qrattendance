@@ -62,7 +62,7 @@
 
     <div class="table-container">
         <div class="card-header bg-primary text-white p-2">
-            <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>All Schools</h6>
+            <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>Schools</h6>
         </div>
         <div class="card-body p-2">
             <div class="table-responsive">
@@ -73,7 +73,7 @@
                             <th class="py-1 fs-6">School ID</th>
                             <th class="py-1 fs-6">Name</th>
                             <th class="py-1 fs-6">Address</th>
-                            <th class="py-1 fs-6">Addd</th>
+                            <th class="py-1 fs-6">Date Added</th>
                             <th class="py-1 fs-6">Actions</th>
                         </tr>
                     </thead>

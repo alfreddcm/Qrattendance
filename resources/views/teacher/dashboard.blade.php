@@ -67,39 +67,122 @@
         @if($schoolYears->count() > 0)
          <div class="row g-3 mb-3">
             <div class="col-md-7">
-                <div class="card shadow-sm h-100" style="background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); position: relative; overflow: hidden; min-height: 200px;">
-                     <div class="school-logo-overlay">
-                        @if(auth()->user()->school && auth()->user()->school->logo)
-                            <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
-                                 alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
-                                 class="school-logo-positioned"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="logo-fallback-positioned" style="display: none;">
-                                <i class="fas fa-school"></i>
-                            </div>
-                        @else
-                            <div class="logo-fallback-positioned">
-                                <i class="fas fa-school"></i>
-                            </div>
-                        @endif
-                    </div>
+                @if(!$isActiveSchoolYear)
+                    {{-- Warning Card for No Active/Lapsed School Year --}}
+                    <div class="card shadow-sm h-100 border-0" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); position: relative; overflow: hidden; min-height: 200px;">
+                        <div class="school-logo-overlay">
+                            @if(auth()->user()->school && auth()->user()->school->logo)
+                                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                                     alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
+                                     class="school-logo-positioned"
+                                     style="opacity: 0.2;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback-positioned" style="display: none; opacity: 0.2;">
+                                    <i class="fas fa-school"></i>
+                                </div>
+                            @else
+                                <div class="logo-fallback-positioned" style="opacity: 0.2;">
+                                    <i class="fas fa-school"></i>
+                                </div>
+                            @endif
+                        </div>
 
-                    <div class="card-body text-white p-3 d-flex flex-column">
-                        <h5 class="card-title text-white mb-3 d-flex align-items-center">
-                            {{ $displayData['semester_name'] }}  &nbsp;
-                            <a href="{{ route('teacher.school-years') }}" class="">
-                                <i class="fas fa-eye me-1 text-dark"></i>
-                            </a>
-                       </h5>
-                        <div class="row flex-grow-1">
-                            <div class="col-md-12">
-                                <p class="mb-1"><strong>School:</strong> {{ $displayData['school_name'] }}</p>
-                                <p class="mb-1"><strong>Year:</strong> {{ $displayData['school_year'] }}</p>
-                                <p class="mb-0"><strong>Period:</strong> {{ $displayData['date_range'] }}</p>
+                        <div class="card-body text-white p-4 d-flex flex-column position-relative">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-white bg-opacity-25 rounded-circle p-3 me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-white"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title text-white mb-1 fw-bold">
+                                        @if(!$currentSchoolYear)
+                                            No Active School Year
+                                        @else
+                                            School Year Has Ended
+                                        @endif
+                                    </h5>
+                                    <a href="{{ route('teacher.school-years') }}" class="text-white text-decoration-underline opacity-75 small">
+                                        <i class="fas fa-cog me-1"></i>Manage School Years
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-grow-1">
+                                <div class="bg-white bg-opacity-10 rounded p-3 mb-2">
+                                    <p class="mb-2 small"><strong><i class="fas fa-school me-2"></i>School:</strong> {{ $displayData['school_name'] }}</p>
+                                    @if($currentSchoolYear)
+                                        <p class="mb-2 small"><strong><i class="fas fa-calendar me-2"></i>Year:</strong> {{ $displayData['school_year'] }}</p>
+                                        <p class="mb-0 small"><strong><i class="fas fa-clock me-2"></i>Period:</strong> {{ $displayData['date_range'] }}</p>
+                                    @else
+                                        <p class="mb-0 small"><i class="fas fa-info-circle me-2"></i>No school year has been configured yet.</p>
+                                    @endif
+                                </div>
+                                <div class="alert alert-light border-0 mb-0 py-2 px-3">
+                                    <small class="text-dark mb-0">
+                                        <i class="fas fa-lightbulb me-1"></i>
+                                        @if(!$currentSchoolYear)
+                                            Please contact your administrator to set up a school year.
+                                        @else
+                                                The current school year has ended. To continue using the system, please ask your administrator to set up a new school year.
+                                        @endif
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                @else
+                    {{-- Active School Year Card --}}
+                    <div class="card shadow-sm h-100 border-0" style="background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); position: relative; overflow: hidden; min-height: 200px;">
+                        <div class="school-logo-overlay">
+                            @if(auth()->user()->school && auth()->user()->school->logo)
+                                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                                     alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
+                                     class="school-logo-positioned"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback-positioned" style="display: none;">
+                                    <i class="fas fa-school"></i>
+                                </div>
+                            @else
+                                <div class="logo-fallback-positioned">
+                                    <i class="fas fa-school"></i>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="card-body text-white p-4 d-flex flex-column position-relative">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="card-title text-white mb-0 fw-bold d-flex align-items-center">
+                                    <span class="badge bg-success bg-opacity-75 me-2 pulse-badge">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                    {{ $displayData['semester_name'] }}
+                                </h5>
+                                <a href="{{ route('teacher.school-years') }}" class="btn btn-light btn-sm opacity-75">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                            </div>
+                            
+                            <div class="flex-grow-1">
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <div class="bg-white bg-opacity-10 rounded p-2 mb-2">
+                                            <p class="mb-1 small"><strong><i class="fas fa-school me-2"></i>School:</strong> {{ $displayData['school_name'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="bg-white bg-opacity-10 rounded p-2">
+                                            <p class="mb-0 small"><strong><i class="fas fa-calendar me-1"></i>Year:</strong><br>{{ $displayData['school_year'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="bg-white bg-opacity-10 rounded p-2">
+                                            <p class="mb-0 small"><strong><i class="fas fa-clock me-1"></i>Period:</strong><br>{{ $displayData['date_range'] }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
 
 

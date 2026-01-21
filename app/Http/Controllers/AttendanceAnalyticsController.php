@@ -203,7 +203,15 @@ class AttendanceAnalyticsController extends Controller
             ]);
         }
 
-        $absenteeismData = $studentIds->map(function($studentId) use ($filters) {
+
+        // Calculate expected school days in the range (weekdays only)
+        $period = Carbon::parse($filters['start_date'])->daysUntil(Carbon::parse($filters['end_date']));
+        $expectedDays = collect($period)->filter(function($date) {
+            // Only count Monday-Friday
+            return in_array($date->dayOfWeek, [1,2,3,4,5]);
+        })->count();
+
+        $absenteeismData = $studentIds->map(function($studentId) use ($filters, $expectedDays) {
             $totalDays = Attendance::where('student_id', $studentId)
                 ->whereBetween('date', [$filters['start_date'], $filters['end_date']])
                 ->count();
@@ -214,10 +222,21 @@ class AttendanceAnalyticsController extends Controller
                 ->whereNull('time_in_pm')
                 ->count();
 
-            $absenteeismRate = $totalDays > 0 ? round(($absentDays / $totalDays) * 100, 1) : 0;
-
             $student = Student::find($studentId);
             $studentName = $student ? $this->formatStudentName($student->name) : 'Unknown Student';
+
+            // If student has no attendance records, count all expected days as absent
+            if ($totalDays === 0) {
+                return [
+                    'student_id' => $studentId,
+                    'student_name' => $studentName,
+                    'absenteeism_rate' => 100,
+                    'total_days' => $expectedDays,
+                    'absent_days' => $expectedDays
+                ];
+            }
+
+            $absenteeismRate = $totalDays > 0 ? round(($absentDays / $totalDays) * 100, 1) : 0;
 
             return [
                 'student_id' => $studentId,
@@ -226,11 +245,11 @@ class AttendanceAnalyticsController extends Controller
                 'total_days' => $totalDays,
                 'absent_days' => $absentDays
             ];
-        })->filter(function($item) {
-            return $item['total_days'] > 0;  
-        })->sortByDesc('absenteeism_rate')
-          ->take(15)  
-          ->values();
+        })
+        // Remove filter so all students are shown
+        ->sortByDesc('absenteeism_rate')
+        ->take(15)
+        ->values();
 
         
         $backgroundColors = $absenteeismData->map(function($item) {

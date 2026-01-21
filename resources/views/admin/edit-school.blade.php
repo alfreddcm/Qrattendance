@@ -11,11 +11,7 @@
             </h2>
             <p class="subtitle">Update school information</p>
         </div>
-        <div class="page-actions">
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-            </a>
-        </div>
+       
     </div>
 </div>
 

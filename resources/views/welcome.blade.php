@@ -13,36 +13,87 @@
         .nav-blur { backdrop-filter: blur(10px); background:rgba(255,255,255,0.85); border-bottom:1px solid rgba(0,0,0,.05); }
         .logo-box { width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e3f2ff,#ffffff); display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,.05); }
         .logo-box span { font-size:26px; font-weight:700; background:linear-gradient(90deg,var(--brand),var(--brand-accent)); -webkit-background-clip:text; color:transparent; }
-        header.hero { position:relative; flex:1; display:flex; align-items:center; padding: calc(70px + 1rem) 0 1.25rem;  overflow:hidden; }
-        @media (max-width: 576px){ header.hero { padding: calc(60px + .75rem) 0 1rem; } }
+        .logo-box img { width:40px; height:40px; object-fit:contain; }
+        header.hero { position:relative; flex:1; display:flex; align-items:center; padding: calc(70px + 1rem) 0 4rem; overflow:hidden; }
         .gradient-circle { position:absolute; width:480px; height:480px; background:radial-gradient(circle at 30% 30%,rgba(13,110,253,.17),transparent 70%); top:-140px; left:-140px; pointer-events:none; }
         .gradient-circle.two { bottom:-160px; right:-160px; top:auto; left:auto; background:radial-gradient(circle at 70% 70%,rgba(77,171,247,.16),transparent 70%); }
-        .hero h1 { font-weight:700; letter-spacing:-1px; font-size:clamp(1.9rem,3.6vw,2.9rem); }
-        .tagline { font-size:clamp(.95rem,1.1vw,1.05rem); max-width:560px; }
+        .hero h1 { font-weight:700; letter-spacing:-1px; font-size:clamp(1.5rem,5vw,2.9rem); line-height:1.2; }
+        .tagline { font-size:clamp(.9rem,2.5vw,1.05rem); max-width:560px; line-height:1.5; }
         .cta-buttons .btn { padding:.75rem 1.3rem; border-radius:14px; font-weight:600; }
         .btn-glow { box-shadow:0 0 0 0 rgba(13,110,253,.5); animation:pulse 3.5s infinite; }
         @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(13,110,253,.45);} 70% { box-shadow:0 0 0 18px rgba(13,110,253,0);} 100% { box-shadow:0 0 0 0 rgba(13,110,253,0);} }
-        .badge-soft { background:rgba(13,110,253,.08); color:var(--brand); font-weight:600; border-radius:30px; padding:.4rem .75rem; font-size:.65rem; letter-spacing:.5px; }
-        .logo-placeholder { width:120px; height:120px; border:3px dashed #b6c6d8; border-radius:24px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#6c7a89; margin-bottom:.9rem; font-size:.7rem; background:#f8fbff; }
-        .glass-panel { background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.7); backdrop-filter:blur(14px); border-radius:20px; padding:1.15rem 1.15rem 1.2rem; box-shadow:0 8px 28px -12px rgba(31,70,122,.25); max-width:370px; }
-        .login-panel input { border-radius:10px; padding:.65rem .85rem; }
+        .badge-soft { background:rgba(13,110,253,.08); color:var(--brand); font-weight:600; border-radius:30px; padding:.4rem .75rem; font-size:.65rem; letter-spacing:.5px; white-space:nowrap; }
+        .glass-panel { background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.7); backdrop-filter:blur(14px); border-radius:20px; padding:1.5rem; box-shadow:0 8px 28px -12px rgba(31,70,122,.25); max-width:370px; width:100%; }
+        .login-panel input { border-radius:10px; padding:.65rem .85rem; font-size:.95rem; }
         .mini-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.55rem; margin-top:1rem; }
-        .mini-item { background:#fff; border:1px solid #e5e9f1; border-radius:12px; padding:.6rem .55rem; display:flex; align-items:flex-start; gap:.5rem; font-size:.65rem; line-height:1.05rem; }
-        .mini-item i { font-size:.9rem; color:var(--brand); }
+        .mini-item { background:#fff; border:1px solid #e5e9f1; border-radius:12px; padding:.7rem .6rem; display:flex; align-items:flex-start; gap:.5rem; font-size:.7rem; line-height:1.3; }
+        .mini-item i { font-size:1rem; color:var(--brand); flex-shrink:0; }
         .footer-inline { position:fixed; left:0; bottom:0; width:100%; text-align:center; font-size:.65rem; color:#6c7a89; background:rgba(255,255,255,0.9); padding:.5rem 0; border-top:1px solid rgba(0,0,0,.05); z-index:1000; }
-        @media (max-width: 992px){ .glass-panel { margin:2rem auto 0; } body { overflow:auto; } }
-        @media (max-height: 620px){ body { overflow:auto; } }
+        .hero-logo { width:120px; height:120px; object-fit:contain; }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 992px) { 
+            .glass-panel { margin:2rem auto 0; max-width:100%; }
+            body { overflow:auto; }
+            header.hero { padding: calc(70px + 1rem) 0 5rem; min-height:auto; }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-blur .container { padding:0 1rem; }
+            .logo-box { width:48px; height:48px; }
+            .logo-box img { width:34px; height:34px; }
+            header.hero { padding: calc(65px + 1rem) 0 4.5rem; }
+            .hero h1 { font-size:1.75rem; text-align:center; }
+            .tagline { text-align:center; font-size:1rem; }
+            .hero-logo { width:100px; height:100px; }
+            .glass-panel { padding:1.25rem; margin:1.5rem auto 0; }
+            .mini-grid { gap:.45rem; margin-top:.75rem; }
+            .mini-item { padding:.55rem .5rem; font-size:.68rem; }
+            .mini-item i { font-size:.9rem; }
+            .badge-soft { font-size:.6rem; padding:.35rem .65rem; }
+        }
+        
+        @media (max-width: 576px) {
+            header.hero { padding: calc(60px + .75rem) 0 4rem; }
+            .hero h1 { font-size:1.5rem; margin-bottom:.75rem !important; }
+            .tagline { font-size:.95rem; margin-bottom:.75rem !important; }
+            .hero-logo { width:80px; height:80px; margin-bottom:.5rem; }
+            .glass-panel { padding:1rem; border-radius:16px; }
+            .glass-panel h6 { font-size:.95rem; }
+            .login-panel input { padding:.6rem .75rem; font-size:.9rem; }
+            .login-panel .btn { padding:.65rem 1rem; font-size:.9rem; }
+            .mini-grid { grid-template-columns:1fr; gap:.4rem; }
+            .mini-item { padding:.6rem .55rem; }
+            .badge-soft { font-size:.58rem; padding:.3rem .6rem; }
+            .footer-inline { font-size:.6rem; padding:.4rem 0; }
+            .gradient-circle { width:300px; height:300px; top:-100px; left:-100px; }
+            .gradient-circle.two { width:300px; height:300px; bottom:-120px; right:-120px; }
+        }
+        
+        @media (max-width: 400px) {
+            .hero h1 { font-size:1.35rem; }
+            .tagline { font-size:.88rem; }
+            .hero-logo { width:70px; height:70px; }
+            .glass-panel { padding:.9rem; }
+            .mini-item { font-size:.65rem; }
+        }
+        
+        @media (max-height: 700px) {
+            body { overflow:auto; }
+            header.hero { padding: calc(65px + .5rem) 0 3.5rem; }
+        }
+        
+        @media (max-height: 620px) { 
+            body { overflow:auto; }
+            header.hero { padding: calc(60px + .5rem) 0 3rem; }
+            .hero-logo { width:70px; height:70px; }
+        }
     </style>
 </head>
 <body>
 <nav class="nav-blur py-1 fixed-top">
   <div class="container d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
-          <div class="logo-box"><span>
-
-          </span>
-        </div>
-
       </div>
       <div class="d-flex align-items-center gap-1">
       </div>
@@ -53,19 +104,18 @@
     <div class="gradient-circle"></div>
     <div class="gradient-circle two"></div>
     <div class="container position-relative">
-        <div class="row g-4 align-items-center flex-lg-row flex-column-reverse">
+        <div class="row g-4 align-items-center">
             <div class="col-lg-6 d-flex flex-column justify-content-center">
-                <div class="logo-placeholder flex-column text-center text-lg-start">
-
-
+                <div class="d-flex justify-content-center justify-content-lg-start mb-3 mt-4">
+                    <img src="{{ asset('img/icon.png') }}" alt="Scan-to-Notify Logo" class="hero-logo">
                 </div>
-                <h1 class="mb-3">
+                <h1 class="mb-3 text-center text-lg-start">
 
                 Scan-to-Notify <span class="text-primary">QR Attendance </span> with Parent Notification</h1>
-                <p class="tagline text-secondary mb-3">Streamline attendance capture, eliminate manual errors, and keep families informed in real time—all within a single secure platform.</p>
+                <p class="tagline text-secondary mb-3 text-center text-lg-start">Streamline attendance capture, eliminate manual errors, and keep families informed in real time—all within a single secure platform.</p>
                 <div class="cta-buttons d-flex flex-wrap gap-2 mb-3">
                 </div>
-                <div class="d-flex align-items-center gap-2 small text-secondary flex-wrap">
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-2 small text-secondary flex-wrap">
                     <div class="badge-soft"><i class="fa fa-bolt me-1"></i> Real-Time</div>
                     <div class="badge-soft"><i class="fa fa-bell me-1"></i> Notifications</div>
                     <div class="badge-soft"><i class="fa fa-lock me-1"></i> Secure</div>

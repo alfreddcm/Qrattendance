@@ -1,0 +1,9 @@
+/* Pulse animation for status badges */
+.pulse-badge {
+  animation: pulseBadge 1.8s infinite;
+}
+@keyframes pulseBadge {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}

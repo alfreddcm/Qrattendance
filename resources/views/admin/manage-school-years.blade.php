@@ -50,74 +50,77 @@
 
 
     <div class="table-container">
-        @if($schoolYears && $schoolYears->count() > 0)
-            <table class="table-compact">
-                <thead>
-                    <tr>
-                        <th>NAME</th>
-                        <th>SCHOOL</th>
-                        <th>DURATION</th>
-                        <th>STATUS</th>
-                        <th style="width: 120px;">ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($schoolYears as $schoolYear)
-                    <tr>
-                        <td>
-                            <div class="name">
-                                @if($schoolYear->school_year_start && $schoolYear->school_year_end)
-                                    {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+        <div class="card-header bg-primary text-white p-2">
+            <h6 class="mb-0 fs-6"><i class="fas fa-list me-1"></i>School Years</h6>
+        </div>
+        <div class="card-body p-2">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-1 fs-6">School</th>
+                            <th class="py-1 fs-6">School Year</th>
+                            <th class="py-1 fs-6">Duration</th>
+                            <th class="py-1 fs-6">Status</th>
+                            <th class="py-1 fs-6">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($schoolYears as $schoolYear)
+                        <tr>
+                            <td class="py-1">
+                                <strong class="fs-6">{{ $schoolYear->school->name ?? 'N/A' }}</strong>
+                            </td>
+                            <td class="py-1">
+                                <span class="badge bg-info fs-6">
+                                    @if($schoolYear->school_year_start && $schoolYear->school_year_end)
+                                        {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                    @else
+                                        {{ $schoolYear->name }}
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="py-1">
+                                <small class="text-muted fs-6">
+                                    {{ \Carbon\Carbon::parse($schoolYear->start_date)->format('M d, Y') }} -
+                                    {{ \Carbon\Carbon::parse($schoolYear->end_date)->format('M d, Y') }}
+                                </small>
+                            </td>
+                            <td class="py-1">
+                                @if($schoolYear->status === 'active')
+                                    <span class="badge bg-success fs-6">Active</span>
                                 @else
-                                    {{ $schoolYear->name }}
+                                    <span class="badge bg-secondary fs-6">Inactive</span>
                                 @endif
-                            </div>
-                            @if($schoolYear->description)
-                                <div class="details">{{ $schoolYear->description }}</div>
-                            @endif
-                        </td>
-                        <td>{{ $schoolYear->school->name ?? 'N/A' }}</td>
-                        <td>
-                            <div class="date-range">
-                                {{ \Carbon\Carbon::parse($schoolYear->start_date)->format('M d, Y') }} -
-                                {{ \Carbon\Carbon::parse($schoolYear->end_date)->format('M d, Y') }}
-                            </div>
-                        </td>
-                        <td>
-                            @if($schoolYear->status === 'active')
-                                <span class="badge-success">Active</span>
-                            @else
-                                <span class="badge-secondary">Inactive</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn-compact-primary" onclick="editSchoolYear({{ $schoolYear->id }})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-compact-danger" onclick="deleteSchoolYear({{ $schoolYear->id }}, '{{ $schoolYear->name }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-
-
-            @if($schoolYears instanceof \Illuminate\Pagination\LengthAwarePaginator && $schoolYears->hasPages())
-                <div class="pagination-wrapper">
-                    {{ $schoolYears->links() }}
-                </div>
-            @endif
-        @else
-            <div class="empty-state">
-                <i class="fas fa-calendar-times"></i>
-                <h5>No School Years Found</h5>
-                <p>Create your first School Year to get started with academic period management.</p>
+                            </td>
+                            <td class="py-1">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1" onclick="editSchoolYear({{ $schoolYear->id }})" title="Edit School Year">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteSchoolYear({{ $schoolYear->id }}, '{{ $schoolYear->name }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-3">
+                                <div class="text-muted">
+                                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                    <p class="fs-6">No school years found. Add your first school year!</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
+            <div class="d-flex justify-content-center mt-2">
+                {{ $schoolYears->links() }}
+            </div>
+        </div>
     </div>
 </div>
 
