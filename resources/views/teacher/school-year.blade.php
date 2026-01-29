@@ -90,9 +90,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
                                                 <strong>{{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}</strong>
-                                                @if($isActive)
-                                                    <span class="badge bg-success ms-2">Current</span>
-                                                @endif
+                                              
                                             </td>
                                             <td>
                                                 <i class="fas fa-calendar-check me-1 text-muted"></i>

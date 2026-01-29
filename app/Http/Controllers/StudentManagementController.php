@@ -146,7 +146,7 @@ class StudentManagementController extends Controller
             $query->orderBy('name', 'asc');
         }
         
-        $students = $query->with('section')->get();
+        $students = $query->with(['section', 'schoolYear'])->get();
         
         // Get grade-section options for the filter dropdown
         $gradeSectionOptions = Student::where('user_id', Auth::id())

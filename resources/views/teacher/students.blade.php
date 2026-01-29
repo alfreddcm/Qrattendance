@@ -572,7 +572,7 @@
                                                     <span class="fw-semibold">
                                                         @if($student->gender == 'M') Male
                                                         @elseif($student->gender == 'F') Female
-                                                        @else {{ $student->gender }}
+                                                        @else {{ $student->gender ?? 'N/A' }}
                                                         @endif
                                                     </span>
                                                 </div>
@@ -580,7 +580,7 @@
                                             <div class="col-md-6">
                                                 <div class="d-flex align-items-center py-1">
                                                     <small class="text-muted me-3" style="min-width: 50px;">Age:</small>
-                                                    <span class="fw-semibold">{{ $student->age }}</span>
+                                                    <span class="fw-semibold">{{ $student->age ?? 'N/A' }}</span>
                                                 </div>
                                             </div>
                                         </div>
