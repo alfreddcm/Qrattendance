@@ -293,3 +293,45 @@
 [2026-01-21 23:27:39] local.INFO: Final student IDs: {"count":1,"student_ids":[102]} 
 [2026-01-21 23:27:39] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-01-19","end_date":"2026-04-30"}} 
 [2026-01-21 23:27:39] local.INFO: Final student IDs: {"count":1,"student_ids":[102]} 
+[2026-01-30 00:51:09] local.ERROR: There are no commands defined in the "storagr" namespace.
+
+Did you mean this?
+    storage {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): There are no commands defined in the \"storagr\" namespace.
+
+Did you mean this?
+    storage at C:/Users/Mark Anthony/Desktop/Qrattendance/vendor/symfony/console/Application.php:694)
+[stacktrace]
+#0 C:/Users/Mark Anthony/Desktop/Qrattendance/vendor/symfony/console/Application.php(743): Symfony/Component/Console/Application->findNamespace('storagr')
+#1 C:/Users/Mark Anthony/Desktop/Qrattendance/vendor/symfony/console/Application.php(298): Symfony/Component/Console/Application->find('storagr:link')
+#2 C:/Users/Mark Anthony/Desktop/Qrattendance/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/Mark Anthony/Desktop/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 C:/Users/Mark Anthony/Desktop/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#5 C:/Users/Mark Anthony/Desktop/Qrattendance/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#6 {main}
+"} 
+[2026-01-30 00:51:45] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-01-30 00:58:01] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-01-30 00:58:08] local.INFO: User logged in successfully {"user_id":5,"username":"rejey","ip":"127.0.0.1"} 
+[2026-01-30 00:58:09] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:09] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:58:12] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:12] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:58:13] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:13] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:58:13] local.INFO: Absenteeism Debug: {"teacher_id":5,"student_count":0,"student_ids":[],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:14] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:14] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:58:15] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:15] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:58:16] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:16] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:58:17] local.INFO: Student Filter Debug: {"teacher_id":5,"teacher_section_ids":[3,7],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-01-30 00:58:17] local.INFO: Final student IDs: {"count":0,"student_ids":[]} 
+[2026-01-30 00:59:07] local.INFO: Student add request received {"teacher_id":5,"student_id_no":"0003","student_name":"Rodriguez, Ana","school_year_id":"2","has_picture_file":false,"has_captured_image":false} 
+[2026-01-30 00:59:07] local.WARNING: Student add validation failed {"teacher_id":5,"student_id_no":"0003","validation_errors":"The id no has already been taken."} 
+[2026-01-30 01:03:49] local.INFO: Student add request received {"teacher_id":5,"student_id_no":"0066","student_name":"Pagalan, Mark Anthony","school_year_id":"3","has_picture_file":false,"has_captured_image":false} 
+[2026-01-30 01:03:49] local.WARNING: Student add validation failed {"teacher_id":5,"student_id_no":"0066","validation_errors":"The id no has already been taken."} 
+[2026-01-30 01:07:43] local.INFO: Student add request received {"teacher_id":5,"student_id_no":"103288130001Aqw","student_name":"Pagalan, Mark Anthony","school_year_id":"2","has_picture_file":true,"has_captured_image":false} 
+[2026-01-30 01:07:43] local.WARNING: Student add validation failed {"teacher_id":5,"student_id_no":"103288130001Aqw","validation_errors":"The address field is required."} 
+[2026-01-30 01:07:54] local.INFO: Student add request received {"teacher_id":5,"student_id_no":"103288130001Aqw","student_name":"Pagalan, Mark Anthony","school_year_id":"2","has_picture_file":false,"has_captured_image":false} 
+[2026-01-30 01:07:54] local.INFO: Student created successfully {"teacher_id":5,"student_id":205,"student_id_no":"103288130001Aqw","student_name":"Pagalan, Mark Anthony","school_year_id":"2"} 

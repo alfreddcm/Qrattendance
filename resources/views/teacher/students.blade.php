@@ -57,20 +57,74 @@
 </div>
 
 @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@elseif(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@elseif(session('info'))
-    <div class="alert alert-info alert-dismissible fade show mt-2 mb-2" role="alert" style="max-width: 900px;">
-        {{ session('info') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#28a745',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#dc3545'
+            });
+        });
+    </script>
+@endif
+
+@if(session('info'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Information',
+                text: '{{ session('info') }}',
+                confirmButtonColor: '#17a2b8'
+            });
+        });
+    </script>
+@endif
+
+@if($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const errors = @json($errors->all());
+            const errorList = errors.map(err => `<i class="fas fa-exclamation-circle text-danger me-2"></i>${err}`).join('<br>');
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Failed',
+                html: '<div style="text-align: left;">' + errorList + '</div>',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'OK, I\'ll fix it',
+                width: '600px'
+            }).then(() => {
+                // Reopen the add student modal if there are validation errors
+                const addStudentModal = new bootstrap.Modal(document.getElementById('addStudentModal'));
+                addStudentModal.show();
+                
+                // Highlight the fields with errors
+                @foreach($errors->keys() as $field)
+                    const field_{{ str_replace(['.', '_'], '', $field) }} = document.querySelector('[name="{{ $field }}"]');
+                    if (field_{{ str_replace(['.', '_'], '', $field) }}) {
+                        field_{{ str_replace(['.', '_'], '', $field) }}.classList.add('is-invalid');
+                    }
+                @endforeach
+            });
+        });
+    </script>
 @endif
 
 <div class="row mb-4">
@@ -781,11 +835,11 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 2024-001">
+                                    <input type="text" class="form-control" id="id_no" name="id_no" value="{{ old('id_no') }}" required placeholder="e.g., 2024-001">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="name" name="name" required placeholder="Dela Cruz, Juan M.">
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required placeholder="Dela Cruz, Juan M.">
                                 </div>
 
                                 <!-- Academic Information -->
@@ -802,7 +856,7 @@
                                     <select class="form-select" id="teacher_section_id" name="section_id" required>
                                         <option value="">Select Grade & Section</option>
                                         @foreach($teacherSections ?? [] as $section)
-                                            <option value="{{ $section->id }}">Grade {{ $section->gradelevel }} - {{ $section->name }}</option>
+                                            <option value="{{ $section->id }}" {{ old('section_id') == $section->id ? 'selected' : '' }}>Grade {{ $section->gradelevel }} - {{ $section->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -811,7 +865,7 @@
                                     <select class="form-select" id="teacher_semester_id" name="school_year_id">
                                         <option value="">Select School Year</option>
                                         @foreach($schoolYears ?? [] as $sy)
-                                            <option value="{{ $sy->id }}">{{ $sy->name }}</option>
+                                            <option value="{{ $sy->id }}" {{ old('school_year_id') == $sy->id ? 'selected' : '' }}>{{ $sy->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -829,21 +883,21 @@
                                     <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
                                     <select class="form-select" id="gender" name="gender" required>
                                         <option value="">Select Gender</option>
-                                        <option value="M">Male</option>
-                                        <option value="F">Female</option>
+                                        <option value="M" {{ old('gender') == 'M' ? 'selected' : '' }}>Male</option>
+                                        <option value="F" {{ old('gender') == 'F' ? 'selected' : '' }}>Female</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="age" name="age" min="13" max="25" required placeholder="Age">
+                                    <input type="number" class="form-control" id="age" name="age" value="{{ old('age') }}" min="13" max="25" required placeholder="Age">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="cp_no" class="form-label">Contact Number</label>
-                                    <input type="tel" class="form-control" id="cp_no" name="cp_no" placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                                    <input type="tel" class="form-control" id="cp_no" name="cp_no" value="{{ old('cp_no') }}" placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                                 </div>
                                 <div class="col-md-12">
                                     <label for="address" class="form-label">Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" placeholder="Complete address">
+                                    <input type="text" class="form-control" id="address" name="address" value="{{ old('address') }}" placeholder="Complete address">
                                 </div>
 
                                 <!-- Emergency Contact -->
@@ -857,21 +911,21 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="contact_person_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" required placeholder="Parent/Guardian name">
+                                    <input type="text" class="form-control" id="contact_person_name" name="contact_person_name" value="{{ old('contact_person_name') }}" required placeholder="Parent/Guardian name">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                                    <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
+                                    <input type="tel" class="form-control" id="contact_person_contact" name="contact_person_contact" value="{{ old('contact_person_contact') }}" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11" title="Please enter 11 digits">
                                 </div>
                                 <div class="col-md-12">
                                     <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
                                     <select class="form-select" id="contact_person_relationship" name="contact_person_relationship" required>
                                         <option value="">Select Relationship</option>
-                                        <option value="Parent">Parent</option>
-                                        <option value="Guardian">Guardian</option>
-                                        <option value="Sibling">Sibling</option>
-                                        <option value="Relative">Relative</option>
-                                        <option value="Other">Other</option>
+                                        <option value="Parent" {{ old('contact_person_relationship') == 'Parent' ? 'selected' : '' }}>Parent</option>
+                                        <option value="Guardian" {{ old('contact_person_relationship') == 'Guardian' ? 'selected' : '' }}>Guardian</option>
+                                        <option value="Sibling" {{ old('contact_person_relationship') == 'Sibling' ? 'selected' : '' }}>Sibling</option>
+                                        <option value="Relative" {{ old('contact_person_relationship') == 'Relative' ? 'selected' : '' }}>Relative</option>
+                                        <option value="Other" {{ old('contact_person_relationship') == 'Other' ? 'selected' : '' }}>Other</option>
                                     </select>
                                 </div>
                             </div>
@@ -1497,27 +1551,116 @@ document.addEventListener('DOMContentLoaded', function() {
       const addStudentForm = document.querySelector('#addStudentModal form');
      if (addStudentForm) {
          addStudentForm.addEventListener('submit', function(e) {
-             const requiredFields = this.querySelectorAll('[required]');
-             let isValid = true;
-
-             requiredFields.forEach(field => {
-                 if (!field.value.trim()) {
-                     field.classList.add('is-invalid');
-                     isValid = false;
-                 } else {
-                     field.classList.remove('is-invalid');
-                     field.classList.add('is-valid');
-                 }
+             e.preventDefault();
+             
+             // Clear previous invalid states
+             this.querySelectorAll('.is-invalid').forEach(field => {
+                 field.classList.remove('is-invalid');
              });
 
-             if (!isValid) {
-                 e.preventDefault();
+             // Validate all required fields
+             const validationErrors = [];
+             
+             // Student ID
+             const idNo = this.querySelector('#id_no');
+             if (!idNo.value.trim()) {
+                 validationErrors.push('Student ID is required');
+                 idNo.classList.add('is-invalid');
+             }
+             
+             // Full Name
+             const name = this.querySelector('#name');
+             if (!name.value.trim()) {
+                 validationErrors.push('Full Name is required');
+                 name.classList.add('is-invalid');
+             }
+             
+             // Grade & Section
+             const sectionId = this.querySelector('#teacher_section_id');
+             if (!sectionId.value) {
+                 validationErrors.push('Grade & Section is required');
+                 sectionId.classList.add('is-invalid');
+             }
+             
+             // Gender
+             const gender = this.querySelector('#gender');
+             if (!gender.value) {
+                 validationErrors.push('Gender is required');
+                 gender.classList.add('is-invalid');
+             }
+             
+             // Age
+             const age = this.querySelector('#age');
+             if (!age.value.trim()) {
+                 validationErrors.push('Age is required');
+                 age.classList.add('is-invalid');
+             } else if (parseInt(age.value) < 13 || parseInt(age.value) > 25) {
+                 validationErrors.push('Age must be between 13 and 25');
+                 age.classList.add('is-invalid');
+             }
+             
+             // Contact Number (student) - Optional but validate format if provided
+             const cpNo = this.querySelector('#cp_no');
+             if (cpNo.value.trim() && cpNo.value.length !== 11) {
+                 validationErrors.push('Student contact number must be 11 digits');
+                 cpNo.classList.add('is-invalid');
+             }
+             
+             // Emergency Contact Name
+             const contactName = this.querySelector('#contact_person_name');
+             if (!contactName.value.trim()) {
+                 validationErrors.push('Emergency Contact Name is required');
+                 contactName.classList.add('is-invalid');
+             }
+             
+             // Emergency Contact Number
+             const contactNumber = this.querySelector('#contact_person_contact');
+             if (!contactNumber.value.trim()) {
+                 validationErrors.push('Emergency Contact Number is required');
+                 contactNumber.classList.add('is-invalid');
+             } else if (contactNumber.value.length !== 11) {
+                 validationErrors.push('Emergency Contact Number must be 11 digits');
+                 contactNumber.classList.add('is-invalid');
+             }
+             
+             // Emergency Contact Relationship
+             const relationship = this.querySelector('#contact_person_relationship');
+             if (!relationship.value) {
+                 validationErrors.push('Emergency Contact Relationship is required');
+                 relationship.classList.add('is-invalid');
+             }
+
+             // If there are validation errors, show SweetAlert
+             if (validationErrors.length > 0) {
                  const firstInvalid = this.querySelector('.is-invalid');
                  if (firstInvalid) {
-                     firstInvalid.focus();
                      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                  }
+                 
+                 Swal.fire({
+                     icon: 'error',
+                     title: 'Validation Error',
+                     html: '<div style="text-align: left;">' + 
+                           validationErrors.map(err => `<i class="fas fa-exclamation-circle text-danger me-2"></i>${err}`).join('<br>') + 
+                           '</div>',
+                     confirmButtonColor: '#dc3545',
+                     confirmButtonText: 'OK, I\'ll fix it'
+                 });
+                 
+                 return false;
              }
+             
+              this.submit();
+         });
+         
+          addStudentForm.querySelectorAll('input, select').forEach(field => {
+             field.addEventListener('input', function() {
+                 this.classList.remove('is-invalid');
+             });
+             
+             field.addEventListener('change', function() {
+                 this.classList.remove('is-invalid');
+             });
          });
      }
 

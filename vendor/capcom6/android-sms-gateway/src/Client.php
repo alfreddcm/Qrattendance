@@ -9,6 +9,8 @@ use AndroidSmsGateway\Domain\LogEntry;
 use AndroidSmsGateway\Domain\Webhook;
 use AndroidSmsGateway\Domain\MessagesExportRequest;
 use AndroidSmsGateway\Domain\Settings;
+use AndroidSmsGateway\Domain\TokenRequest;
+use AndroidSmsGateway\Domain\TokenResponse;
 use AndroidSmsGateway\Exceptions\HttpException;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
@@ -21,7 +23,7 @@ class Client {
     public const DEFAULT_URL = 'https://api.sms-gate.app/3rdparty/v1';
     public const USER_AGENT_TEMPLATE = 'android-sms-gateway/2.0 (client; php %s)';
 
-    protected string $basicAuth;
+    protected string $authHeader;
     protected string $baseUrl;
 
     protected ClientInterface $client;
@@ -31,13 +33,21 @@ class Client {
     protected StreamFactoryInterface $streamFactory;
 
     public function __construct(
-        string $login,
+        ?string $login,
         string $password,
         string $serverUrl = self::DEFAULT_URL,
         ?ClientInterface $client = null,
         ?Encryptor $encryptor = null
     ) {
-        $this->basicAuth = base64_encode($login . ':' . $password);
+        if (!empty($login)) {
+            $this->authHeader = 'Basic ' . base64_encode($login . ':' . $password);
+        } elseif (!empty($password)) {
+            $passwordOrToken = $password;
+            $this->authHeader = 'Bearer ' . $passwordOrToken;
+        } else {
+            throw new RuntimeException('Missing credentials');
+        }
+
         $this->baseUrl = $serverUrl;
         $this->client = $client ?? Psr18ClientDiscovery::find();
         $this->encryptor = $encryptor;
@@ -372,6 +382,42 @@ class Client {
     }
 
     /**
+     * Generate a new JWT token
+     *
+     * @param TokenRequest $request
+     * @return TokenResponse
+     */
+    public function GenerateToken(TokenRequest $request): TokenResponse {
+        $path = '/auth/token';
+
+        $response = $this->sendRequest(
+            'POST',
+            $path,
+            $request
+        );
+        if (!is_object($response)) {
+            throw new RuntimeException('Invalid response');
+        }
+
+        return TokenResponse::FromObject($response);
+    }
+
+    /**
+     * Revoke a JWT token
+     *
+     * @param string $jti
+     * @return void
+     */
+    public function RevokeToken(string $jti): void {
+        $path = '/auth/token/' . $jti;
+
+        $this->sendRequest(
+            'DELETE',
+            $path
+        );
+    }
+
+    /**
      * @param \AndroidSmsGateway\Interfaces\SerializableInterface|null $payload
      * @throws \Http\Client\Exception\HttpException
      * @throws \RuntimeException
@@ -390,8 +436,9 @@ class Client {
                 $method,
                 $this->baseUrl . $path
             )
-            ->withAddedHeader('Authorization', 'Basic ' . $this->basicAuth)
-            ->withAddedHeader('User-Agent', sprintf(self::USER_AGENT_TEMPLATE, PHP_VERSION));
+            ->withAddedHeader('User-Agent', sprintf(self::USER_AGENT_TEMPLATE, PHP_VERSION))
+            ->withAddedHeader('Authorization', $this->authHeader);
+
         if (isset($data)) {
             $request = $request
                 ->withAddedHeader('Content-Type', 'application/json')

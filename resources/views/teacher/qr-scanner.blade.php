@@ -1133,7 +1133,7 @@ foreach ($recentRecords as $record) {
         // Update student photo if available
         const photoElement = document.getElementById('student-photo');
         if (studentData.picture) {
-            photoElement.innerHTML = `<img src="/storage/student_pictures/${studentData.picture}" alt="${studentData.name}">`;
+            photoElement.innerHTML = `<img src="{{ asset('storage/student_pictures') }}/${studentData.picture}" alt="${studentData.name}">`;
         } else {
             photoElement.innerHTML = `<i class="fas fa-user-graduate"></i><div class="photo-text">PHOTO</div>`;
         }
