@@ -164,11 +164,7 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="fas fa-list me-1"></i>Attendance Record</span>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-light" onclick="refreshAttendanceList()">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </div>
+                        
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">

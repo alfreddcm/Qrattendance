@@ -161,6 +161,9 @@ class MessageApiController extends Controller
     {
         try {
              $students = Student::where('user_id', auth()->id())
+                ->whereHas('schoolYear', function($query) {
+                    $query->where('is_active', 1);
+                })
                 ->whereNotNull('contact_person_contact')
                 ->where('contact_person_contact', '!=', '')
                 ->get();
