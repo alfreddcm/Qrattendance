@@ -188,6 +188,7 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/teacher-attendance-reports', [AdminController::class, 'teacherAttendanceReports'])->name('admin.teacher-attendance-reports');
     
     Route::post('/teacher-attendance/export/csv', [AdminController::class, 'exportTeacherAttendanceCsv'])->name('admin.teacher-attendance.export.csv');
+    Route::post('/teacher-attendance/export/excel', [AdminController::class, 'exportTeacherAttendanceExcel'])->name('admin.teacher-attendance.export.excel');
     Route::get('/sf2/options', [AdminController::class, 'getAdminSF2Options'])->name('admin.sf2.options');
     Route::post('/sf2/generate', [ReportController::class, 'generateSF2'])->name('admin.sf2.generate');
     Route::post('/sf2/generate-pdf', [ReportController::class, 'generateSF2PDF'])->name('admin.sf2.generate.pdf');

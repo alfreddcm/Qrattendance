@@ -622,3 +622,550 @@
 [2026-01-30 01:30:36] local.INFO: Teacher Sections Debug: {"teacher_id":5,"direct_sections_found":2,"direct_section_details":[{"id":3,"name":"gas","gradelevel":12,"teacher_id":5,"school_year_id":3,"am_time_in_start":"07:00:00","am_time_in_end":"08:00:00","am_time_out_start":"11:00:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"14:00:00","pm_time_out_start":"16:00:00","pm_time_out_end":"17:00:00","created_at":"2025-12-02T01:52:27.000000Z","updated_at":"2026-01-29T17:23:09.000000Z","students_count":2,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}},{"id":7,"name":"SPENCER","gradelevel":12,"teacher_id":5,"school_year_id":3,"am_time_in_start":"07:00:00","am_time_in_end":"08:00:00","am_time_out_start":"11:00:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"14:00:00","pm_time_out_start":"16:00:00","pm_time_out_end":"17:00:00","created_at":"2025-12-02T13:28:46.000000Z","updated_at":"2026-01-29T17:21:16.000000Z","students_count":100,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}}]} 
 [2026-01-30 01:30:46] local.INFO: Getting today attendance summary {"teacher_id":5,"date":"2026-01-30"} 
 [2026-01-30 01:30:46] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 11:18:53] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-02-08 12:39:19] local.INFO: School Year index accessed {"user_id":1,"user_role":"admin"} 
+[2026-02-08 12:39:19] local.INFO: Admin viewing all school years {"user_id":1,"school_years_count":1,"sections_count":2} 
+[2026-02-08 12:39:36] local.INFO: School Year index accessed {"user_id":1,"user_role":"admin"} 
+[2026-02-08 12:39:37] local.INFO: Admin viewing all school years {"user_id":1,"school_years_count":1,"sections_count":2} 
+[2026-02-08 13:02:51] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-02-08 13:06:43] local.ERROR: Method Illuminate\Database\Eloquent\Collection::items does not exist. (View: C:\Users\Ped\Qrattendance\resources\views\admin\manage-teachers.blade.php) {"userId":1,"exception":"[object] (Illuminate\\View\\ViewException(code: 0): Method Illuminate\\Database\\Eloquent\\Collection::items does not exist. (View: C:\\Users\\Ped\\Qrattendance\\resources\\views\\admin\\manage-teachers.blade.php) at C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Macroable/Traits/Macroable.php:115)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(59): Illuminate/View/Engines/CompilerEngine->handleViewException(Object(BadMethodCallException), 1)
+#1 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//Ped//Qr...', Array)
+#2 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate/View/Engines/CompilerEngine->get('C://Users//Ped//Qr...', Array)
+#3 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate/View/View->getContents()
+#4 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate/View/View->renderContents()
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate/View/View->render()
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#11 C:/Users/Ped/Qrattendance/app/Http/Middleware/RoleMiddleware.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#12 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App/Http/Middleware/RoleMiddleware->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#14 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#15 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#21 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#22 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#23 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#24 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#25 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#26 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#27 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#28 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#29 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#30 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#31 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#32 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#34 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#35 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#36 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#37 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#38 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#39 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#44 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#45 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#46 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePathEncoding->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#53 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#54 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#55 C:/Users/Ped/Qrattendance/public/index.php(20): Illuminate/Foundation/Application->handleRequest(Object(Illuminate/Http/Request))
+#56 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Ped//Qr...')
+#57 {main}
+
+[previous exception] [object] (BadMethodCallException(code: 0): Method Illuminate\\Database\\Eloquent\\Collection::items does not exist. at C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Macroable/Traits/Macroable.php:115)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/storage/framework/views/dc22cd9aba8e6cd0a0fae507f6cf6ecf.php(1201): Illuminate/Support/Collection->__call('items', Array)
+#1 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//Ped//Qr...')
+#2 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#3 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(57): Illuminate/Filesystem/Filesystem->getRequire('C://Users//Ped//Qr...', Array)
+#4 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//Ped//Qr...', Array)
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate/View/Engines/CompilerEngine->get('C://Users//Ped//Qr...', Array)
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate/View/View->getContents()
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate/View/View->renderContents()
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate/View/View->render()
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#11 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#12 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#14 C:/Users/Ped/Qrattendance/app/Http/Middleware/RoleMiddleware.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App/Http/Middleware/RoleMiddleware->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#16 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#19 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#20 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#21 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#22 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#23 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#24 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#27 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#28 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#29 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#30 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#31 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#32 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#33 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#34 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#35 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#36 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#37 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#38 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#39 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#42 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#43 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#47 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#48 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#49 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#50 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#51 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks->handle(Object(Illuminate/Http/Request), Object(Closure))
+#52 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#53 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePathEncoding->handle(Object(Illuminate/Http/Request), Object(Closure))
+#54 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#55 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#56 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#57 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#58 C:/Users/Ped/Qrattendance/public/index.php(20): Illuminate/Foundation/Application->handleRequest(Object(Illuminate/Http/Request))
+#59 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Ped//Qr...')
+#60 {main}
+"} 
+[2026-02-08 13:08:21] local.INFO: getAttendanceCodeStatus called {"teacher_id":"5","user_id":1} 
+[2026-02-08 13:08:21] local.INFO: Teacher found for status check {"teacher_name":"regie"} 
+[2026-02-08 13:09:49] local.INFO: Updating section {"section_id":7,"user_id":1} 
+[2026-02-08 13:09:50] local.INFO: Teacher assignments updated {"section_id":7,"old_teacher_id":5,"new_teacher_id":"5","students_updated":100,"users_updated":0} 
+[2026-02-08 13:09:50] local.INFO: Section updated successfully {"section_id":7,"section_name":"SPENCER","grade_level":"12","old_teacher_id":5,"new_teacher_id":"5","school_year_id":"2"} 
+[2026-02-08 13:10:59] local.INFO: getAttendanceCodeStatus called {"teacher_id":"2","user_id":1} 
+[2026-02-08 13:10:59] local.INFO: Teacher found for status check {"teacher_name":"Pagalan, Mark Anthonyy"} 
+[2026-02-08 13:12:28] local.INFO: getAttendanceCodeStatus called {"teacher_id":"2","user_id":1} 
+[2026-02-08 13:12:28] local.INFO: Teacher found for status check {"teacher_name":"Pagalan, Mark Anthonyy"} 
+[2026-02-08 13:53:25] local.ERROR: PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR on line 1 {"exception":"[object] (Psy\\Exception\\ParseErrorException(code: 0): PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR on line 1 at C:/Users/Ped/Qrattendance/vendor/psy/psysh/src/Exception/ParseErrorException.php:44)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/vendor/psy/psysh/src/CodeCleaner.php(488): Psy/Exception/ParseErrorException::fromParseError(Object(PhpParser/Error))
+#1 C:/Users/Ped/Qrattendance/vendor/psy/psysh/src/CodeCleaner.php(269): Psy/CodeCleaner->parse('<?php echo 'Che...', false)
+#2 C:/Users/Ped/Qrattendance/vendor/psy/psysh/src/Shell.php(1057): Psy/CodeCleaner->clean(Array, false)
+#3 C:/Users/Ped/Qrattendance/vendor/psy/psysh/src/Shell.php(1090): Psy/Shell->addCode('echo 'Checking ...', true)
+#4 C:/Users/Ped/Qrattendance/vendor/psy/psysh/src/Shell.php(1638): Psy/Shell->setCode('echo 'Checking ...', true)
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/tinker/src/Console/TinkerCommand.php(76): Psy/Shell->execute('echo 'Checking ...')
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Laravel/Tinker/Console/TinkerCommand->handle()
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(96): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Container/Container.php(799): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#11 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#12 C:/Users/Ped/Qrattendance/vendor/symfony/console/Command/Command.php(341): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#14 C:/Users/Ped/Qrattendance/vendor/symfony/console/Application.php(1102): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#15 C:/Users/Ped/Qrattendance/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Laravel/Tinker/Console/TinkerCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#16 C:/Users/Ped/Qrattendance/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#19 C:/Users/Ped/Qrattendance/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#20 {main}
+"} 
+[2026-02-08 15:15:41] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-02-08 15:27:24] local.WARNING: Failed login attempt {"username":"mark","ip":"127.0.0.1"} 
+[2026-02-08 15:28:58] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-02-08 15:37:18] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-02-08 15:37:25] local.INFO: User logged in successfully {"user_id":2,"username":"mark","ip":"127.0.0.1"} 
+[2026-02-08 15:37:26] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:26] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:37:34] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:34] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:37:35] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:35] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:37:36] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:36] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:37:36] local.INFO: Absenteeism Debug: {"teacher_id":2,"student_count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:38] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:38] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:37:39] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:39] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:37:39] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 15:37:39] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 15:40:05] local.INFO: Teacher Sections Debug: {"teacher_id":2,"direct_sections_found":2,"direct_section_details":[{"id":2,"name":"HUMMS","gradelevel":11,"teacher_id":2,"school_year_id":3,"am_time_in_start":"07:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-01-29T17:20:42.000000Z","students_count":60,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}},{"id":1,"name":"STEM","gradelevel":12,"teacher_id":2,"school_year_id":3,"am_time_in_start":"06:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-02-07T10:06:41.000000Z","students_count":0,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}}]} 
+[2026-02-08 15:40:17] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 15:40:17] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 15:55:21] local.INFO: Teacher Sections Debug: {"teacher_id":2,"direct_sections_found":2,"direct_section_details":[{"id":2,"name":"HUMMS","gradelevel":11,"teacher_id":2,"school_year_id":3,"am_time_in_start":"07:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-01-29T17:20:42.000000Z","students_count":60,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}},{"id":1,"name":"STEM","gradelevel":12,"teacher_id":2,"school_year_id":3,"am_time_in_start":"06:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-02-07T10:06:41.000000Z","students_count":0,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}}]} 
+[2026-02-08 16:51:31] local.INFO: Teacher Sections Debug: {"teacher_id":2,"direct_sections_found":2,"direct_section_details":[{"id":2,"name":"HUMMS","gradelevel":11,"teacher_id":2,"school_year_id":3,"am_time_in_start":"07:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-01-29T17:20:42.000000Z","students_count":60,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}},{"id":1,"name":"STEM","gradelevel":12,"teacher_id":2,"school_year_id":3,"am_time_in_start":"06:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-02-07T10:06:41.000000Z","students_count":0,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}}]} 
+[2026-02-08 16:51:59] local.INFO: Teacher Sections Debug: {"teacher_id":2,"direct_sections_found":2,"direct_section_details":[{"id":2,"name":"HUMMS","gradelevel":11,"teacher_id":2,"school_year_id":3,"am_time_in_start":"07:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-01-29T17:20:42.000000Z","students_count":60,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}},{"id":1,"name":"STEM","gradelevel":12,"teacher_id":2,"school_year_id":3,"am_time_in_start":"06:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-02-07T10:06:41.000000Z","students_count":0,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}}]} 
+[2026-02-08 16:52:58] local.INFO: Attendance code generated {"teacher_id":2,"code":"844298","section_id":null} 
+[2026-02-08 17:01:30] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:01:30] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:04:06] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:04:06] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:05:08] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:05:08] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:15:02] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:15:02] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:15:19] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:15:19] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:51:39] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:40] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:42] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:42] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:42] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:42] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:43] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:43] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:43] local.INFO: Absenteeism Debug: {"teacher_id":2,"student_count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:44] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:44] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:45] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:45] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:45] local.INFO: Student Filter Debug: {"teacher_id":2,"teacher_section_ids":[2,1],"filters":{"school_year_id":3,"section_id":"all","start_date":"2026-01-06","end_date":"2027-03-10"}} 
+[2026-02-08 17:51:45] local.INFO: Final student IDs: {"count":60,"student_ids":[204,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225]} 
+[2026-02-08 17:51:51] local.INFO: Teacher Sections Debug: {"teacher_id":2,"direct_sections_found":2,"direct_section_details":[{"id":2,"name":"HUMMS","gradelevel":11,"teacher_id":2,"school_year_id":3,"am_time_in_start":"07:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-01-29T17:20:42.000000Z","students_count":60,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}},{"id":1,"name":"STEM","gradelevel":12,"teacher_id":2,"school_year_id":3,"am_time_in_start":"06:30:00","am_time_in_end":"08:00:00","am_time_out_start":"11:30:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"13:30:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2025-11-23T10:16:00.000000Z","updated_at":"2026-02-07T10:06:41.000000Z","students_count":0,"school_year":{"id":3,"school_id":1,"school_year_start":2026,"school_year_end":2027,"name":"2026–2027","start_date":"2026-01-05T16:00:00.000000Z","end_date":"2027-03-09T16:00:00.000000Z","status":"active","description":null,"created_at":"2025-12-11T04:44:43.000000Z","updated_at":"2025-12-11T04:44:43.000000Z"}}]} 
+[2026-02-08 17:52:00] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:52:00] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:52:00] local.ERROR: Undefined variable $timeRangeDisplay (View: C:\Users\Ped\Qrattendance\resources\views\public\attendance-display.blade.php) {"userId":2,"exception":"[object] (Illuminate\\View\\ViewException(code: 0): Undefined variable $timeRangeDisplay (View: C:\\Users\\Ped\\Qrattendance\\resources\\views\\public\\attendance-display.blade.php) at C:/Users/Ped/Qrattendance/storage/framework/views/2bdfde870640693fe10a8130ec1943ad.php:524)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(59): Illuminate/View/Engines/CompilerEngine->handleViewException(Object(ErrorException), 1)
+#1 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//Ped//Qr...', Array)
+#2 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate/View/Engines/CompilerEngine->get('C://Users//Ped//Qr...', Array)
+#3 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate/View/View->getContents()
+#4 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate/View/View->renderContents()
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate/View/View->render()
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#11 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#12 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#14 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#15 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#19 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#20 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#21 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#22 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#23 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#24 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#25 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#26 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#27 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#28 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#29 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#30 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#32 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#33 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#34 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#35 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#36 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#37 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#38 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#39 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#44 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#45 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#46 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePathEncoding->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#51 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#52 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#53 C:/Users/Ped/Qrattendance/public/index.php(20): Illuminate/Foundation/Application->handleRequest(Object(Illuminate/Http/Request))
+#54 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Ped//Qr...')
+#55 {main}
+
+[previous exception] [object] (ErrorException(code: 0): Undefined variable $timeRangeDisplay at C:/Users/Ped/Qrattendance/storage/framework/views/2bdfde870640693fe10a8130ec1943ad.php:524)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate/Foundation/Bootstrap/HandleExceptions->handleError(2, 'Undefined varia...', 'C://Users//Ped//Qr...', 524)
+#1 C:/Users/Ped/Qrattendance/storage/framework/views/2bdfde870640693fe10a8130ec1943ad.php(524): Illuminate/Foundation/Bootstrap/HandleExceptions->Illuminate/Foundation/Bootstrap/{closure}(2, 'Undefined varia...', 'C://Users//Ped//Qr...', 524)
+#2 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//Ped//Qr...')
+#3 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(57): Illuminate/Filesystem/Filesystem->getRequire('C://Users//Ped//Qr...', Array)
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//Ped//Qr...', Array)
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate/View/Engines/CompilerEngine->get('C://Users//Ped//Qr...', Array)
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate/View/View->getContents()
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate/View/View->renderContents()
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate/View/View->render()
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#21 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#23 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#24 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#25 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#26 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#27 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#30 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#31 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#32 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#33 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#34 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#35 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#36 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#37 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#38 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#40 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#44 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#45 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#46 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePathEncoding->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/Ped/Qrattendance/public/index.php(20): Illuminate/Foundation/Application->handleRequest(Object(Illuminate/Http/Request))
+#58 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Ped//Qr...')
+#59 {main}
+"} 
+[2026-02-08 17:55:44] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 17:55:44] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 17:55:44] local.ERROR: Undefined variable $timeRangeDisplay (View: C:\Users\Ped\Qrattendance\resources\views\public\attendance-display.blade.php) {"userId":2,"exception":"[object] (Illuminate\\View\\ViewException(code: 0): Undefined variable $timeRangeDisplay (View: C:\\Users\\Ped\\Qrattendance\\resources\\views\\public\\attendance-display.blade.php) at C:/Users/Ped/Qrattendance/storage/framework/views/2bdfde870640693fe10a8130ec1943ad.php:278)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(59): Illuminate/View/Engines/CompilerEngine->handleViewException(Object(ErrorException), 1)
+#1 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//Ped//Qr...', Array)
+#2 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate/View/Engines/CompilerEngine->get('C://Users//Ped//Qr...', Array)
+#3 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate/View/View->getContents()
+#4 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate/View/View->renderContents()
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate/View/View->render()
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#11 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#12 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#14 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#15 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#19 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#20 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#21 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#22 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#23 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#24 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#25 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#26 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#27 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#28 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#29 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#30 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#32 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#33 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#34 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#35 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#36 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#37 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#38 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#39 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#44 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#45 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#46 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePathEncoding->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#51 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#52 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#53 C:/Users/Ped/Qrattendance/public/index.php(20): Illuminate/Foundation/Application->handleRequest(Object(Illuminate/Http/Request))
+#54 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Ped//Qr...')
+#55 {main}
+
+[previous exception] [object] (ErrorException(code: 0): Undefined variable $timeRangeDisplay at C:/Users/Ped/Qrattendance/storage/framework/views/2bdfde870640693fe10a8130ec1943ad.php:278)
+[stacktrace]
+#0 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate/Foundation/Bootstrap/HandleExceptions->handleError(2, 'Undefined varia...', 'C://Users//Ped//Qr...', 278)
+#1 C:/Users/Ped/Qrattendance/storage/framework/views/2bdfde870640693fe10a8130ec1943ad.php(278): Illuminate/Foundation/Bootstrap/HandleExceptions->Illuminate/Foundation/Bootstrap/{closure}(2, 'Undefined varia...', 'C://Users//Ped//Qr...', 278)
+#2 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//Ped//Qr...')
+#3 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(57): Illuminate/Filesystem/Filesystem->getRequire('C://Users//Ped//Qr...', Array)
+#5 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//Ped//Qr...', Array)
+#6 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate/View/Engines/CompilerEngine->get('C://Users//Ped//Qr...', Array)
+#7 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate/View/View->getContents()
+#8 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate/View/View->renderContents()
+#9 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate/View/View->render()
+#10 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#17 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#21 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#23 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#24 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#25 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#26 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#27 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#30 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#31 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#32 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#33 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#34 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#35 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#36 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#37 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#38 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#40 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#44 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#45 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#46 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/Http/Middleware/ValidatePathEncoding->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/Ped/Qrattendance/public/index.php(20): Illuminate/Foundation/Application->handleRequest(Object(Illuminate/Http/Request))
+#58 C:/Users/Ped/Qrattendance/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Ped//Qr...')
+#59 {main}
+"} 
+[2026-02-08 18:03:01] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:03:01] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:04:47] local.INFO: Public scan received {"student_id":"4_R28ZE5WLMN","payload":{"student_id":"4_R28ZE5WLMN","qr_data":"4_R28ZE5WLMN"},"timestamp":"2026-02-08T18:04:47+08:00"} 
+[2026-02-08 18:13:19] local.INFO: User logged out successfully {"user_id":2,"username":"mark","ip":"127.0.0.1"} 
+[2026-02-08 18:13:25] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-02-08 18:13:40] local.INFO: School Year index accessed {"user_id":1,"user_role":"admin"} 
+[2026-02-08 18:13:40] local.INFO: Admin viewing all school years {"user_id":1,"school_years_count":2,"sections_count":5} 
+[2026-02-08 18:14:06] local.INFO: Updating section {"section_id":2,"user_id":1} 
+[2026-02-08 18:14:06] local.INFO: Teacher assignments updated {"section_id":2,"old_teacher_id":2,"new_teacher_id":"2","students_updated":60,"users_updated":0} 
+[2026-02-08 18:14:06] local.INFO: Section updated successfully {"section_id":2,"section_name":"HUMMS","grade_level":"11","old_teacher_id":2,"new_teacher_id":"2","school_year_id":"3"} 
+[2026-02-08 18:14:15] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:14:15] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:14:20] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:14:20] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:15:19] local.INFO: Updating section {"section_id":2,"user_id":1} 
+[2026-02-08 18:15:19] local.INFO: Teacher assignments updated {"section_id":2,"old_teacher_id":2,"new_teacher_id":"2","students_updated":60,"users_updated":0} 
+[2026-02-08 18:15:19] local.INFO: Section updated successfully {"section_id":2,"section_name":"HUMMS","grade_level":"11","old_teacher_id":2,"new_teacher_id":"2","school_year_id":"3"} 
+[2026-02-08 18:15:26] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:15:26] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:16:01] local.INFO: Public scan received {"student_id":"4_r28ze5wlmn","payload":{"student_id":"4_r28ze5wlmn","qr_data":"4_r28ze5wlmn"},"timestamp":"2026-02-08T18:16:01+08:00"} 
+[2026-02-08 18:24:38] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:24:38] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:36:03] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:36:03] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:36:35] local.INFO: Public scan received {"student_id":"4_r29ze5wlmn","payload":{"student_id":"4_r29ze5wlmn","qr_data":"4_r29ze5wlmn"},"timestamp":"2026-02-08T18:36:35+08:00"} 
+[2026-02-08 18:36:58] local.INFO: Public scan received {"student_id":"4_R28ZE5WLMN","payload":{"student_id":"4_R28ZE5WLMN","qr_data":"4_R28ZE5WLMN"},"timestamp":"2026-02-08T18:36:58+08:00"} 
+[2026-02-08 18:36:58] local.INFO: Public scan time detection {"student_id":210,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:36:58"} 
+[2026-02-08 18:36:58] local.INFO: Attendance saved {"attendance_id":21786,"student_id":210,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:36:58","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:36:58","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:36:58] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":210,"attendance_id":21786} 
+[2026-02-08 18:36:58] local.INFO: Public QR attendance recorded {"student_id":210,"student_name":"Angelica S. Gumaru","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:36:59] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:36:59] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":1,"afternoon_out":0} 
+[2026-02-08 18:40:16] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:40:16] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":1,"afternoon_out":0} 
+[2026-02-08 18:40:21] local.INFO: Public scan received {"student_id":"111_4N5S0C92PF","payload":{"student_id":"111_4N5S0C92PF","qr_data":"111_4N5S0C92PF"},"timestamp":"2026-02-08T18:40:21+08:00"} 
+[2026-02-08 18:40:21] local.INFO: Public scan time detection {"student_id":204,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:40:21"} 
+[2026-02-08 18:40:21] local.INFO: Attendance saved {"attendance_id":21787,"student_id":204,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:40:21","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:40:21","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:40:21] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":204,"attendance_id":21787} 
+[2026-02-08 18:40:21] local.INFO: Public QR attendance recorded {"student_id":204,"student_name":"Ana Rodriguez","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:40:22] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:40:23] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":2,"afternoon_out":0} 
+[2026-02-08 18:40:29] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:40:29] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":2,"afternoon_out":0} 
+[2026-02-08 18:40:32] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:40:32] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":2,"afternoon_out":0} 
+[2026-02-08 18:40:45] local.INFO: Public scan received {"student_id":"3_JN3STACR65","payload":{"student_id":"3_JN3STACR65","qr_data":"3_JN3STACR65"},"timestamp":"2026-02-08T18:40:45+08:00"} 
+[2026-02-08 18:40:45] local.INFO: Public scan time detection {"student_id":209,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:40:45"} 
+[2026-02-08 18:40:45] local.INFO: Attendance saved {"attendance_id":21788,"student_id":209,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:40:45","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:40:45","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:40:45] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":209,"attendance_id":21788} 
+[2026-02-08 18:40:45] local.INFO: Public QR attendance recorded {"student_id":209,"student_name":"John Lloyd M. Pua","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:40:46] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:40:46] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":3,"afternoon_out":0} 
+[2026-02-08 18:44:05] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:44:05] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":3,"afternoon_out":0} 
+[2026-02-08 18:44:33] local.INFO: Public scan received {"student_id":"6_HV5AK7P910","payload":{"student_id":"6_HV5AK7P910","qr_data":"6_HV5AK7P910"},"timestamp":"2026-02-08T18:44:33+08:00"} 
+[2026-02-08 18:44:33] local.INFO: Public scan time detection {"student_id":212,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:44:33"} 
+[2026-02-08 18:44:33] local.INFO: Attendance saved {"attendance_id":21789,"student_id":212,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:44:33","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:44:33","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:44:33] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":212,"attendance_id":21789} 
+[2026-02-08 18:44:33] local.INFO: Public QR attendance recorded {"student_id":212,"student_name":"Rachelle Ann G. Salvador","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:44:54] local.INFO: Public scan received {"student_id":"4_R28ZE5WLMN","payload":{"student_id":"4_R28ZE5WLMN","qr_data":"4_R28ZE5WLMN"},"timestamp":"2026-02-08T18:44:54+08:00"} 
+[2026-02-08 18:49:23] local.INFO: Getting today attendance summary {"teacher_id":2,"date":"2026-02-08"} 
+[2026-02-08 18:49:23] local.INFO: Today attendance summary calculated {"morning_in":0,"morning_out":0,"afternoon_in":0,"afternoon_out":0} 
+[2026-02-08 18:49:35] local.INFO: Public scan received {"student_id":"4_R28ZE5WLMN","payload":{"student_id":"4_R28ZE5WLMN","qr_data":"4_R28ZE5WLMN"},"timestamp":"2026-02-08T18:49:35+08:00"} 
+[2026-02-08 18:49:35] local.INFO: Public scan time detection {"student_id":210,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:49:35"} 
+[2026-02-08 18:49:35] local.INFO: Attendance saved {"attendance_id":1,"student_id":210,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:49:35","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:49:35","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:49:35] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":210,"attendance_id":1} 
+[2026-02-08 18:49:35] local.INFO: Public QR attendance recorded {"student_id":210,"student_name":"Angelica S. Gumaru","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:49:44] local.INFO: Public scan received {"student_id":"111_4N5S0C92PF","payload":{"student_id":"111_4N5S0C92PF","qr_data":"111_4N5S0C92PF"},"timestamp":"2026-02-08T18:49:44+08:00"} 
+[2026-02-08 18:49:44] local.INFO: Public scan time detection {"student_id":204,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:49:44"} 
+[2026-02-08 18:49:45] local.INFO: Attendance saved {"attendance_id":2,"student_id":204,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:49:44","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:49:44","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:49:45] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":204,"attendance_id":2} 
+[2026-02-08 18:49:45] local.INFO: Public QR attendance recorded {"student_id":204,"student_name":"Ana Rodriguez","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:49:56] local.INFO: Public scan received {"student_id":"3_JN3STACR65","payload":{"student_id":"3_JN3STACR65","qr_data":"3_JN3STACR65"},"timestamp":"2026-02-08T18:49:56+08:00"} 
+[2026-02-08 18:49:56] local.INFO: Public scan time detection {"student_id":209,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:49:56"} 
+[2026-02-08 18:49:56] local.INFO: Attendance saved {"attendance_id":3,"student_id":209,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:49:56","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:49:56","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:49:56] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":209,"attendance_id":3} 
+[2026-02-08 18:49:56] local.INFO: Public QR attendance recorded {"student_id":209,"student_name":"John Lloyd M. Pua","attendance_type":"time_in_pm","status":"Late"} 
+[2026-02-08 18:50:06] local.INFO: Public scan received {"student_id":"6_HV5AK7P910","payload":{"student_id":"6_HV5AK7P910","qr_data":"6_HV5AK7P910"},"timestamp":"2026-02-08T18:50:06+08:00"} 
+[2026-02-08 18:50:06] local.INFO: Public scan time detection {"student_id":212,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-02-08 18:50:06"} 
+[2026-02-08 18:50:06] local.INFO: Attendance saved {"attendance_id":4,"student_id":212,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:50:06","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:50:06","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-02-08 18:50:06] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":212,"attendance_id":4} 
+[2026-02-08 18:50:06] local.INFO: Public QR attendance recorded {"student_id":212,"student_name":"Rachelle Ann G. Salvador","attendance_type":"time_in_pm","status":"Late"} 

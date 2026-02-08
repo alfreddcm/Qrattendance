@@ -1,13 +1,13 @@
 @php
 // Build time range display for all teacher sections
 $timeRangeDisplay = '';
+
 if (isset($teacherSections) && $teacherSections->count() > 0) {
     $sectionDisplays = [];
     
     foreach ($teacherSections as $teacherSection) {
         $ranges = [];
         
-        // Collect all time ranges for this section
         if ($teacherSection->am_time_in_start && $teacherSection->am_time_in_end) {
             $start = \Carbon\Carbon::parse($teacherSection->am_time_in_start);
             $end = \Carbon\Carbon::parse($teacherSection->am_time_in_end);
@@ -27,7 +27,6 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
     
     $timeRangeDisplay = implode(' • ', $sectionDisplays);
 } elseif ($section) {
-    // Fallback to single section if no teacher sections found
     $ranges = [];
     
     if ($section->am_time_in_start && $section->am_time_in_end) {
@@ -563,7 +562,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
 
      <div class="main-container">
          <div class="top-section">
-             <div class="student-photo-column">
+             <div class="student-photo-column" id="studentPreviewPhoto">
                 @if($currentStudent && $currentStudent->picture)
                     <img src="{{ asset('storage/student_pictures/' . $currentStudent->picture) }}" alt="Student Photo">
                 @else
@@ -573,9 +572,9 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                 @endif
              </div>
 
-             <div class="student-info-column">
+             <div class="student-info-column" id="studentPreviewContainer">
                  <div>
-                     <div style="font-size: 24px; font-weight: 700; color: #007bff; margin-bottom: 4px; text-align: left;">
+                     <div id="studentName" style="font-size: 24px; font-weight: 700; color: #007bff; margin-bottom: 4px; text-align: left;">
                          @if($currentStudent)
                              {{ $currentStudent->name }}
                          @else
@@ -587,7 +586,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                  </div>
 
                  <div>
-                     <div style="font-size: 20px; font-weight: 700; color: #FF9800; margin-bottom: 4px; text-align: left;">
+                     <div id="studentSection" style="font-size: 20px; font-weight: 700; color: #FF9800; margin-bottom: 4px; text-align: left;">
                          @if($currentStudent && $currentStudent->section)
                              {{ $currentStudent->section->name }}
                          @else
@@ -603,7 +602,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                     <div class="card-body">
                         <div class="attendance-line">
                             <span>Morning time in : @if($section && $section->am_time_in_start && $section->am_time_in_end){{ \Carbon\Carbon::parse($section->am_time_in_start)->format('g:i') }} – {{ \Carbon\Carbon::parse($section->am_time_in_end)->format('g:i') }} (time ranges)@endif</span>
-                            <span>
+                            <span id="timeInAmValue">
                                 @if($currentAttendanceRecord && $currentAttendanceRecord->time_in_am)
                                     {{ \Carbon\Carbon::parse($currentAttendanceRecord->time_in_am)->format('g:i A') }}
                                 @else
@@ -613,7 +612,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                         </div>
                         <div class="attendance-line">
                             <span>Morning time out : @if($section && $section->am_time_out_start && $section->am_time_out_end){{ \Carbon\Carbon::parse($section->am_time_out_start)->format('g:i') }} – {{ \Carbon\Carbon::parse($section->am_time_out_end)->format('g:i') }} (time ranges)@endif</span>
-                            <span>
+                            <span id="timeOutAmValue">
                                 @if($currentAttendanceRecord && $currentAttendanceRecord->time_out_am)
                                     {{ \Carbon\Carbon::parse($currentAttendanceRecord->time_out_am)->format('g:i A') }}
                                 @else
@@ -623,7 +622,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                         </div>
                         <div class="attendance-line">
                             <span>Afternoon In: @if($section && $section->pm_time_in_start && $section->pm_time_in_end){{ \Carbon\Carbon::parse($section->pm_time_in_start)->format('g:i') }} – {{ \Carbon\Carbon::parse($section->pm_time_in_end)->format('g:i') }} (time ranges)@endif</span>
-                            <span>
+                            <span id="timeInPmValue">
                                 @if($currentAttendanceRecord && $currentAttendanceRecord->time_in_pm)
                                     {{ \Carbon\Carbon::parse($currentAttendanceRecord->time_in_pm)->format('g:i A') }}
                                 @else
@@ -633,7 +632,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                         </div>
                         <div class="attendance-line">
                             <span>Afternoon Out: @if($section && $section->pm_time_out_start && $section->pm_time_out_end){{ \Carbon\Carbon::parse($section->pm_time_out_start)->format('g:i') }} – {{ \Carbon\Carbon::parse($section->pm_time_out_end)->format('g:i') }} (time ranges)@endif</span>
-                            <span>
+                            <span id="timeOutPmValue">
                                 @if($currentAttendanceRecord && $currentAttendanceRecord->time_out_pm)
                                     {{ \Carbon\Carbon::parse($currentAttendanceRecord->time_out_pm)->format('g:i A') }}
                                 @else
@@ -660,18 +659,19 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                      </div>
                  </div>
                 
-                 @if($currentStudent)
-                     <div class="status-label" style="background: rgba(40, 167, 69, 0.1); color: #28a745;">
-                         STUDENT DETECTED
-                     </div>
-                 @else
-                     <input type="text" 
-                            id="qrInput" 
-                            class="qr-input-field" 
-                            placeholder="WAITING TO SCAN..."
-                            autocomplete="off"
-                            autofocus>
-                 @endif
+                <div 
+                    class="status-label" 
+                    id="scanStatusLabel"
+                    style="background: rgba(40, 167, 69, 0.1); color: #28a745; display: {{ $currentStudent ? 'block' : 'none' }};">
+                    {{ $currentStudent ? 'STUDENT DETECTED' : 'WAITING TO SCAN...' }}
+                </div>
+                <input type="text" 
+                        id="qrInput" 
+                        class="qr-input-field" 
+                        placeholder="WAITING TO SCAN..."
+                        autocomplete="off"
+                        autofocus
+                        style="{{ $currentStudent ? 'display:none;' : 'display:block;' }}">
 
                 <div class="todays-attendance-card">
                     <div class="card-header">Todays Attendance</div>
@@ -697,508 +697,304 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
             </div>
         </div>
 
-        <div class="recent-scans-gallery">
-            @if(isset($recentAttendance) && $recentAttendance->count() > 0)
-                @foreach($recentAttendance as $log)
-                    @php
-                        // Determine the most recent time and its type
-                        $timeType = 'TIME IN';
-                        $lastTime = null;
-                        
-                        if ($log->time_out_pm) {
-                            $lastTime = \Carbon\Carbon::parse($log->time_out_pm)->format('g:i A');
-                            $timeType = 'TIME OUT';
-                        } elseif ($log->time_in_pm) {
-                            $lastTime = \Carbon\Carbon::parse($log->time_in_pm)->format('g:i A');
-                            $timeType = 'TIME IN';
-                        } elseif ($log->time_out_am) {
-                            $lastTime = \Carbon\Carbon::parse($log->time_out_am)->format('g:i A');
-                            $timeType = 'TIME OUT';
-                        } elseif ($log->time_in_am) {
-                            $lastTime = \Carbon\Carbon::parse($log->time_in_am)->format('g:i A');
-                            $timeType = 'TIME IN';
-                        }
-                        
-                        $timeInfo = $lastTime ? "{$timeType}: {$lastTime}" : "TIME IN: ---";
-                    @endphp
-                    <div class="scan-card">
-                        <div class="scan-card-header">{{ $timeInfo }}</div>
-                        <div class="scan-card-body">
-                            @if($log->student && $log->student->picture)
-                                <img src="{{ asset('storage/student_pictures/' . $log->student->picture) }}" alt="Student">
-                            @else
-                                <div class="scan-photo-placeholder">
-                                    <i class="fa-solid fa-user"></i>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="scan-card-footer">
-                            <div class="scan-card-name">{{ $log->student->name ?? '---' }}</div>
-                            <div class="scan-card-section">{{ $log->student->section->name ?? '---' }}</div>
-                        </div>
-                    </div>
-                @endforeach
-
-                @for($i = $recentAttendance->count(); $i < 7; $i++)
-                    <div class="scan-card">
-                        <div class="scan-card-header">TIME IN: ---</div>
-                        <div class="scan-card-body">
-                            <div class="scan-photo-placeholder">
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-                        </div>
-                        <div class="scan-card-footer">
-                            <div class="scan-card-name">---</div>
-                            <div class="scan-card-section">---</div>
-                        </div>
-                    </div>
-                @endfor
-            @else
-                @for($i = 0; $i < 7; $i++)
-                    <div class="scan-card">
-                        <div class="scan-card-header">TIME IN: ---</div>
-                        <div class="scan-card-body">
-                            <div class="scan-photo-placeholder">
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-                        </div>
-                        <div class="scan-card-footer">
-                            <div class="scan-card-name">---</div>
-                            <div class="scan-card-section">---</div>
-                        </div>
-                    </div>
-                @endfor
-            @endif
+        <div class="recent-scans-gallery" id="attendanceHistoryContainer">
+            @include('public.partials.attendance-history', ['recentAttendance' => $recentAttendance])
         </div>
     </div>
 
     <script>
-        function updateClock() {
-            const now = new Date();
-            
-            const options = { 
-                weekday: 'short', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            };
-            const dateStr = now.toLocaleDateString('en-US', options).toUpperCase();
-            
-            const timeStr = now.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
+        (() => {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const scanUrl = '{{ route("public.attendance.scan") }}';
+            const historyUrl = '{{ route("public.attendance.recent", ["code" => $attendanceCode->code]) }}';
 
-            const mainDateEl = document.querySelector('.right-info-column #currentDate');
-            if (mainDateEl) mainDateEl.textContent = `TODAY IS: ${dateStr}`;
-            
-            const mainTimeEl = document.querySelector('.right-info-column #currentTime');
-            if (mainTimeEl) mainTimeEl.textContent = timeStr;
+            let previewTimer = null;
+            let scanSeq = 0;
+            let historyController = null;
+            let scanController = null;
 
-            const headerDateEl = document.querySelector('.header #currentDate');
-            if (headerDateEl) headerDateEl.textContent = dateStr;
-            
-            const headerTimeEl = document.querySelector('.header #currentTime');
-            if (headerTimeEl) headerTimeEl.textContent = timeStr;
-        }
+            function updateClock() {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase();
+                const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
 
-        updateClock();
-        setInterval(updateClock, 1000);
+                const mainDateEl = document.querySelector('.right-info-column #currentDate');
+                if (mainDateEl) mainDateEl.textContent = `TODAY IS: ${dateStr}`;
 
-        // Auto-clear student data after 5 seconds (if student present on page load)
-        @if($currentStudent)
-        console.log('Student detected on page load, will clear in 5 seconds');
-        setTimeout(function() {
-            console.log('5 seconds elapsed, clearing student display...');
-            clearStudentDisplay();
-        }, 5000);
-        @endif
+                const mainTimeEl = document.querySelector('.right-info-column #currentTime');
+                if (mainTimeEl) mainTimeEl.textContent = timeStr;
 
-        // QR Code Scanner and Data Management
-        let clearStudentTimeout = null;
-        let qrTimeout = null; // Declare qrTimeout variable
+                const headerDateEl = document.querySelector('.header #currentDate');
+                if (headerDateEl) headerDateEl.textContent = dateStr;
 
-        // Function to fetch and display student data
-        function fetchStudentData() {
-            fetch(window.location.href, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.currentStudent) {
-                    displayStudent(data.currentStudent, data.currentAttendanceRecord);
-                    updateRecentAttendance(data.recentAttendance);
-                    
-                    // Clear after 5 seconds
-                    if (clearStudentTimeout) {
-                        clearTimeout(clearStudentTimeout);
-                    }
-                    clearStudentTimeout = setTimeout(() => {
-                        clearStudentDisplay();
-                    }, 5000);
-                } else {
-                    // If no student data, just update recent attendance
-                    updateRecentAttendance(data.recentAttendance);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching student data:', error);
-            });
-        }
-
-        // Function to display student
-        function displayStudent(student, attendance) {
-            console.log('Displaying student:', student);
-            
-            // Update photo
-            const photoColumn = document.querySelector('.student-photo-column');
-            if (photoColumn) {
-                if (student.picture) {
-                    photoColumn.innerHTML = `<img src="{{ asset('storage/student_pictures/') }}/${student.picture}" alt="Student Photo">`;
-                } else {
-                    photoColumn.innerHTML = `<div class="student-photo-placeholder"><i class="fa-solid fa-user"></i></div>`;
-                }
+                const headerTimeEl = document.querySelector('.header #currentTime');
+                if (headerTimeEl) headerTimeEl.textContent = timeStr;
             }
 
-            // Update student name
-            const nameEl = document.querySelector('.student-info-column > div:first-child > div:first-child');
-            if (nameEl) {
-                nameEl.innerHTML = `${student.name}`;
-                nameEl.style.color = '#007bff';
-            }
+            updateClock();
+            setInterval(updateClock, 1000);
 
-            // Update section
-            const sectionEl = document.querySelector('.student-info-column > div:nth-child(2) > div:first-child');
-            if (sectionEl) {
-                sectionEl.innerHTML = student.section ? student.section.name : '<span style="color: #ccc; font-style: italic;">---</span>';
-                sectionEl.style.color = '#FF9800';
-            }
+            updateClock();
+            setInterval(updateClock, 1000);
 
-            // Update attendance record in the card
-            if (attendance) {
-                const attendanceLines = document.querySelectorAll('.attendance-record-card .attendance-line span:last-child');
-                if (attendanceLines[0]) attendanceLines[0].textContent = attendance.time_in_am ? formatTime(attendance.time_in_am) : '---';
-                if (attendanceLines[1]) attendanceLines[1].textContent = attendance.time_out_am ? formatTime(attendance.time_out_am) : '---';
-                if (attendanceLines[2]) attendanceLines[2].textContent = attendance.time_in_pm ? formatTime(attendance.time_in_pm) : '---';
-                if (attendanceLines[3]) attendanceLines[3].textContent = attendance.time_out_pm ? formatTime(attendance.time_out_pm) : '---';
-            }
+            function normalizeTime(value) {
+                if (!value) return '---';
+                 if (/am|pm/i.test(value)) return value;
 
-            // Replace QR input with status label
-            const qrInputField = document.getElementById('qrInput');
-            if (qrInputField) {
-                qrInputField.outerHTML = '<div class="status-label" id="statusLabel" style="background: rgba(40, 167, 69, 0.1); color: #28a745;">STUDENT DETECTED</div>';
-            }
-        }
-
-        // Function to clear student display
-        function clearStudentDisplay() {
-            // Call server to clear session
-            fetch(`/public/attendance/{{ $attendanceCode->code }}/clear`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]').content,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(() => {
-                console.log('Session cleared, resetting display');
-                
-                // Reset photo
-                const photoColumn = document.querySelector('.student-photo-column');
-                if (photoColumn) {
-                    photoColumn.innerHTML = `<div class="student-photo-placeholder"><i class="fa-solid fa-user"></i></div>`;
+                 const isoGuess = Date.parse(value);
+                if (!Number.isNaN(isoGuess)) {
+                    return new Date(isoGuess).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                 }
 
-                // Reset name
-                const nameEl = document.querySelector('.student-info-column > div:first-child > div:first-child');
+                return '---';
+            }
+
+            function setAttendanceValue(elId, value) {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                el.textContent = normalizeTime(value) || '---';
+            }
+
+            function setWaitingState() {
+                const photo = document.getElementById('studentPreviewPhoto');
+                if (photo) {
+                    photo.innerHTML = '<div class="student-photo-placeholder"><i class="fa-solid fa-user"></i></div>';
+                }
+
+                const nameEl = document.getElementById('studentName');
                 if (nameEl) {
                     nameEl.innerHTML = '<span style="color: #ccc; font-style: italic;">---</span>';
                 }
 
-                // Reset section
-                const sectionEl = document.querySelector('.student-info-column > div:nth-child(2) > div:first-child');
+                const sectionEl = document.getElementById('studentSection');
                 if (sectionEl) {
                     sectionEl.innerHTML = '<span style="color: #ccc; font-style: italic;">---</span>';
                 }
 
-                // Reset attendance records in the card
-                const attendanceLines = document.querySelectorAll('.attendance-record-card .attendance-line span:last-child');
-                attendanceLines.forEach(line => {
-                    line.textContent = '---';
-                });
+                setAttendanceValue('timeInAmValue', null);
+                setAttendanceValue('timeOutAmValue', null);
+                setAttendanceValue('timeInPmValue', null);
+                setAttendanceValue('timeOutPmValue', null);
 
-                // Replace status label with QR input
-                const statusLabel = document.getElementById('statusLabel');
+                const statusLabel = document.getElementById('scanStatusLabel');
                 if (statusLabel) {
-                    statusLabel.outerHTML = '<input type="text" id="qrInput" class="qr-input-field" placeholder="WAITING TO SCAN..." autocomplete="off" autofocus>';
-                    
-                    // Re-attach event listeners to new input
-                    attachQRInputListeners();
+                    statusLabel.style.display = 'block';
+                    statusLabel.textContent = 'WAITING TO SCAN...';
+                    statusLabel.style.color = '#FF9800';
                 }
-                
-                // Reload recent attendance list
-                fetchRecentAttendance();
-            });
-        }
-        
-        // Function to fetch and update recent attendance without full reload
-        function fetchRecentAttendance() {
-            fetch(window.location.href, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.recentAttendance) {
-                    updateRecentAttendance(data.recentAttendance);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching recent attendance:', error);
-            });
-        }
 
-        // Function to update recent attendance
-        function updateRecentAttendance(recentData) {
-            console.log('Updating recent attendance with data:', recentData);
-            
-            if (!recentData || recentData.length === 0) {
-                console.log('No recent data to update');
-                return;
-            }
-            
-            // Build HTML for each recent attendance record
-            const recentHTML = recentData.map(record => {
-                // Determine time info
-                let timeInfo = 'TIME IN: ---';
-                let lastTime = null;
-                
-                if (record.time_out_pm) {
-                    lastTime = formatTime(record.time_out_pm);
-                    timeInfo = `TIME OUT: ${lastTime}`;
-                } else if (record.time_in_pm) {
-                    lastTime = formatTime(record.time_in_pm);
-                    timeInfo = `TIME IN: ${lastTime}`;
-                } else if (record.time_out_am) {
-                    lastTime = formatTime(record.time_out_am);
-                    timeInfo = `TIME OUT: ${lastTime}`;
-                } else if (record.time_in_am) {
-                    lastTime = formatTime(record.time_in_am);
-                    timeInfo = `TIME IN: ${lastTime}`;
+                const input = document.getElementById('qrInput');
+                if (input) {
+                    input.style.display = 'block';
+                    input.style.opacity = '1';
+                    input.disabled = false;
+                    input.placeholder = 'WAITING TO SCAN...';
+                    input.focus();
                 }
-                
-                return `
-                    <div class="scan-card">
-                        <div class="scan-card-header">${timeInfo}</div>
-                        <div class="scan-card-body">
-                            ${record.student && record.student.picture ? 
-                                `<img src="{{ asset('storage/student_pictures/') }}/${record.student.picture}" alt="Student">` :
-                                '<div class="scan-photo-placeholder"><i class="fa-solid fa-user"></i></div>'
-                            }
-                        </div>
-                        <div class="scan-card-footer">
-                            <div class="scan-card-name">${record.student ? record.student.name : '---'}</div>
-                            <div class="scan-card-section">${record.student && record.student.section ? record.student.section.name : '---'}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            // Fill remaining slots up to 7
-            let fillHTML = '';
-            for (let i = recentData.length; i < 7; i++) {
-                fillHTML += `
-                    <div class="scan-card">
-                        <div class="scan-card-header">TIME IN: ---</div>
-                        <div class="scan-card-body">
-                            <div class="scan-photo-placeholder"><i class="fa-solid fa-user"></i></div>
-                        </div>
-                        <div class="scan-card-footer">
-                            <div class="scan-card-name">---</div>
-                            <div class="scan-card-section">---</div>
-                        </div>
-                    </div>
-                `;
             }
-            
-            // Find the recent scans gallery and update it
-            const recentScansGallery = document.querySelector('.recent-scans-gallery');
-            if (recentScansGallery) {
-                recentScansGallery.innerHTML = recentHTML + fillHTML;
-                console.log('Recent attendance updated successfully');
-            } else {
-                console.error('Recent scans gallery not found');
-            }
-        }
 
-        // Helper function to format time
-        function formatTime(timeString) {
-            if (!timeString) return '---';
-            
-            try {
-                const date = new Date(timeString);
-                
-                // Check if date is valid
-                if (isNaN(date.getTime())) {
-                    console.error('Invalid date:', timeString);
-                    return '---';
+            function showStudentPreview(payload) {
+                const seq = ++scanSeq;
+                if (previewTimer) {
+                    clearTimeout(previewTimer);
                 }
-                
-                return date.toLocaleTimeString('en-US', { 
-                    hour: 'numeric', 
-                    minute: '2-digit',
-                    hour12: true 
-                });
-            } catch (error) {
-                console.error('Error formatting time:', timeString, error);
-                return '---';
-            }
-        }
 
-        // Function to attach QR input listeners
-        function attachQRInputListeners() {
-            const qrInput = document.getElementById('qrInput');
-            if (!qrInput) {
-                console.log('QR input field not found');
-                return;
-            }
-            
-            console.log('Attaching QR input listeners to field');
-            qrInput.focus();
+                const student = payload.student || payload.currentStudent;
+                const attendance = payload.attendance || payload.currentAttendanceRecord || payload.attendance_record;
 
-            // Handle QR code input - barcode scanners type fast and press Enter
-            qrInput.addEventListener('input', function(e) {
-                const value = e.target.value.trim();
-                console.log('Input event - value:', value, 'length:', value.length);
-                
-                // Clear existing timeout
-                if (qrTimeout) {
-                    clearTimeout(qrTimeout);
-                }
-                
-                // Don't auto-submit on input, wait for Enter key
-                // Barcode scanners will send Enter when done
-            });
-
-            // Handle Enter key (most barcode scanners send Enter)
-            qrInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const value = e.target.value.trim();
-                    console.log('Enter pressed - value:', value);
-                    
-                    if (qrTimeout) {
-                        clearTimeout(qrTimeout);
+                if (student) {
+                    const photo = document.getElementById('studentPreviewPhoto');
+                    if (photo) {
+                        if (student.picture) {
+                            photo.innerHTML = `<img src="${student.picture}" alt="Student Photo">`;
+                        } else {
+                            photo.innerHTML = '<div class="student-photo-placeholder"><i class="fa-solid fa-user"></i></div>';
+                        }
                     }
-                    
-                    if (value) {
-                        console.log('Submitting on Enter:', value);
-                        processQRCode(value);
-                        qrInput.value = ''; // Clear immediately
+
+                    const nameEl = document.getElementById('studentName');
+                    if (nameEl) {
+                        nameEl.textContent = student.name || '---';
+                    }
+
+                    const sectionEl = document.getElementById('studentSection');
+                    if (sectionEl) {
+                        sectionEl.textContent = (student.section && student.section.name) ? student.section.name : '---';
                     }
                 }
-            });
-            
-            console.log('QR input listeners attached successfully');
-        }
-        
-        // Keep focus on QR input (separate from attachQRInputListeners to avoid duplicates)
-        function maintainQRFocus() {
-            const input = document.getElementById('qrInput');
-            if (input && document.activeElement !== input) {
-                input.focus();
-            }
-        }
-        
-        // Maintain focus every 500ms
-        setInterval(maintainQRFocus, 500);
-        
-        // Initial attachment of listeners
-        attachQRInputListeners();
 
-        // Process QR Code function
-        function processQRCode(studentId) {
-            console.log('=== Processing QR code:', studentId, '===');
-            
-            const qrInput = document.getElementById('qrInput');
-            if (!qrInput) {
-                console.error('QR input not found in processQRCode');
-                return;
-            }
-            
-            // Clear the input immediately
-            qrInput.value = '';
-            qrInput.placeholder = 'PROCESSING...';
-            qrInput.disabled = true;
-            
-            console.log('Sending attendance record request...');
+                if (attendance) {
+                    setAttendanceValue('timeInAmValue', attendance.time_in_am_formatted || attendance.time_in_am);
+                    setAttendanceValue('timeOutAmValue', attendance.time_out_am_formatted || attendance.time_out_am);
+                    setAttendanceValue('timeInPmValue', attendance.time_in_pm_formatted || attendance.time_in_pm);
+                    setAttendanceValue('timeOutPmValue', attendance.time_out_pm_formatted || attendance.time_out_pm);
+                }
 
-            // Make API call to record attendance
-            fetch('{{ route("public.attendance.scan") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    student_id: studentId,
-                    qr_data: studentId
+                const statusLabel = document.getElementById('scanStatusLabel');
+                if (statusLabel) {
+                    statusLabel.style.display = 'block';
+                    statusLabel.textContent = 'STUDENT DETECTED';
+                    statusLabel.style.color = '#28a745';
+                }
+
+                const input = document.getElementById('qrInput');
+                if (input) {
+                    input.style.opacity = '0';
+                    input.value = '';
+                    input.focus();
+                }
+
+                previewTimer = setTimeout(() => {
+                    if (scanSeq === seq) {
+                        setWaitingState();
+                    }
+                }, 5000);
+            }
+
+            function reloadAttendanceHistory() {
+                if (historyController) {
+                    historyController.abort();
+                }
+
+                historyController = new AbortController();
+                const container = document.getElementById('attendanceHistoryContainer');
+                if (!container) return Promise.resolve();
+
+                return fetch(`${historyUrl}?format=html`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    },
+                    signal: historyController.signal
                 })
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Scan API response:', data);
-                if (data.success) {
-                    console.log('✓ Attendance recorded successfully, fetching student data...');
-                    // Fetch and display student data instead of reloading
-                    fetchStudentData();
-                } else {
-                    // Show error in placeholder instead of alert
-                    console.error('✗ Scan failed:', data.message);
-                    qrInput.value = '';
-                    
-                    // Simplify error messages for placeholder
-                    let errorMsg = data.message;
-                    if (errorMsg.includes('not found')) {
-                        errorMsg = 'Student not found!';
-                    } else if (errorMsg.includes('already') || errorMsg.includes('duplicate')) {
-                        errorMsg = 'Already recorded!';
-                    }
-                    
-                    qrInput.placeholder = errorMsg;
-                    qrInput.disabled = false;
-                    qrInput.focus();
-                    
-                    // Reset placeholder after 3 seconds
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load history');
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .catch(error => {
+                    if (error.name === 'AbortError') return;
+                    console.error('History reload failed:', error);
+                });
+            }
+
+            function handleScanError(message) {
+                const input = document.getElementById('qrInput');
+                const statusLabel = document.getElementById('scanStatusLabel');
+                
+                if (input) {
+                    input.disabled = false;
+                    input.placeholder = message || 'Error! Please try again.';
+                    input.style.display = 'block';
+                    input.focus();
                     setTimeout(() => {
-                        qrInput.placeholder = 'WAITING TO SCAN...';
+                        input.placeholder = 'WAITING TO SCAN...';
                     }, 3000);
                 }
-            })
-            .catch(error => {
-                console.error('✗ Error during scan:', error);
-                qrInput.value = '';
-                qrInput.placeholder = 'Error! Please try again.';
-                qrInput.disabled = false;
-                qrInput.focus();
                 
-                // Reset placeholder after 3 seconds
-                setTimeout(() => {
-                    qrInput.placeholder = 'WAITING TO SCAN...';
-                }, 3000);
-            });
-        }
+                if (statusLabel) {
+                    statusLabel.style.display = 'none';
+                }
+            }
+
+            function processQRCode(studentId) {
+                const input = document.getElementById('qrInput');
+                if (!input) return;
+
+                if (scanController) {
+                    scanController.abort();
+                }
+
+                scanController = new AbortController();
+
+                input.value = '';
+                input.placeholder = 'PROCESSING...';
+                input.disabled = true;
+
+                const seq = ++scanSeq;
+
+                fetch(scanUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        qr_data: studentId
+                    }),
+                    signal: scanController.signal
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (seq !== scanSeq) return;
+                    if (data.success) {
+                        showStudentPreview({ student: data.student, attendance: data.attendance });
+                        reloadAttendanceHistory();
+                    } else {
+                        handleScanError(data.message || 'Scan failed');
+                    }
+                })
+                .catch(error => {
+                    if (error.name === 'AbortError') return;
+                    console.error('Scan error:', error);
+                    handleScanError('Error! Please try again.');
+                })
+                .finally(() => {
+                    if (input) {
+                        input.disabled = false;
+                    }
+                });
+            }
+
+            function attachQRInputListeners() {
+                const qrInput = document.getElementById('qrInput');
+                if (!qrInput) return;
+
+                qrInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = e.target.value.trim();
+                        if (value) {
+                            processQRCode(value);
+                            e.target.value = '';
+                        }
+                    }
+                });
+            }
+
+            function maintainQRFocus() {
+                const input = document.getElementById('qrInput');
+                if (input && document.activeElement !== input && input.style.display !== 'none') {
+                    input.focus();
+                }
+            }
+
+            attachQRInputListeners();
+            setInterval(maintainQRFocus, 500);
+            reloadAttendanceHistory();
+            setInterval(reloadAttendanceHistory, 4000);
+
+            @if($currentStudent)
+                showStudentPreview({
+                    student: {
+                        id: {{ $currentStudent->id }},
+                        name: @json($currentStudent->name),
+                        section: { name: @json($currentStudent->section->name ?? '---') },
+                        picture: @json($currentStudent->picture ? asset('storage/student_pictures/' . $currentStudent->picture) : null)
+                    },
+                    attendance: {
+                        time_in_am: @json($currentAttendanceRecord->time_in_am ?? null),
+                        time_out_am: @json($currentAttendanceRecord->time_out_am ?? null),
+                        time_in_pm: @json($currentAttendanceRecord->time_in_pm ?? null),
+                        time_out_pm: @json($currentAttendanceRecord->time_out_pm ?? null)
+                    }
+                });
+            @endif
+        })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

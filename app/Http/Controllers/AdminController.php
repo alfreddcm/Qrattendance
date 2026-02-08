@@ -20,6 +20,11 @@ use ZipArchive;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Concerns\ValidatesForResponse;
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class AdminController extends Controller
 {
@@ -409,8 +414,29 @@ class AdminController extends Controller
      */
     public function manageTeachers(Request $request)
     {
+        // Get active school year
+        $activeSchoolYear = \App\Models\SchoolYear::where('status', 'active')->first();
+        
         $query = User::where('role', 'teacher')
-                    ->with(['school', 'sections.students', 'section.students']);
+                    ->with(['school', 
+                            'sections' => function($query) use ($activeSchoolYear) {
+                                if ($activeSchoolYear) {
+                                    $query->where('school_year_id', $activeSchoolYear->id);
+                                }
+                            },
+                            'sections.students',
+                            'sections.schoolYear',
+                            'section' => function($query) use ($activeSchoolYear) {
+                                if ($activeSchoolYear) {
+                                    $query->where('school_year_id', $activeSchoolYear->id);
+                                }
+                            },
+                            'section.students',
+                            'section.schoolYear',
+                            'attendanceCodes' => function($query) {
+                                $query->where('is_active', true)->latest();
+                            }
+                    ]);
         
         // Handle sorting
         $sortBy = $request->get('sort_by', 'name');
@@ -423,44 +449,84 @@ class AdminController extends Controller
         
         $query->orderBy($sortBy, $sortOrder);
         
-        $teachers = $query->paginate(10);
+        $teachers = $query->get();
         
         $schools = School::all();
-        $sections = \App\Models\Section::with(['teacher', 'schoolYear', 'students'])->get();
+        
+        // Only get sections from active school year
+        $sectionsQuery = \App\Models\Section::with(['teacher', 'schoolYear', 'students']);
+        if ($activeSchoolYear) {
+            $sectionsQuery->where('school_year_id', $activeSchoolYear->id);
+        }
+        $sections = $sectionsQuery->get();
+        
         $schoolYears = \App\Models\SchoolYear::all();
         
+        // Count teachers with sections in active school year
         $teachersWithSections = User::where('role', 'teacher')
-                                   ->where(function($query) {
-                                       $query->whereNotNull('section_id')
-                                             ->orWhereHas('sections');
+                                   ->where(function($query) use ($activeSchoolYear) {
+                                       if ($activeSchoolYear) {
+                                           $query->whereHas('section', function($q) use ($activeSchoolYear) {
+                                               $q->where('school_year_id', $activeSchoolYear->id);
+                                           })
+                                           ->orWhereHas('sections', function($q) use ($activeSchoolYear) {
+                                               $q->where('school_year_id', $activeSchoolYear->id);
+                                           });
+                                       } else {
+                                           $query->whereNotNull('section_id')
+                                                 ->orWhereHas('sections');
+                                       }
                                    })->count();
         
         $teachersWithoutSections = User::where('role', 'teacher')
-                                      ->whereNull('section_id')
-                                      ->whereDoesntHave('sections')
-                                      ->count();
+                                      ->where(function($query) use ($activeSchoolYear) {
+                                          if ($activeSchoolYear) {
+                                              $query->whereDoesntHave('section', function($q) use ($activeSchoolYear) {
+                                                  $q->where('school_year_id', $activeSchoolYear->id);
+                                              })
+                                              ->whereDoesntHave('sections', function($q) use ($activeSchoolYear) {
+                                                  $q->where('school_year_id', $activeSchoolYear->id);
+                                              });
+                                          } else {
+                                              $query->whereNull('section_id')
+                                                    ->whereDoesntHave('sections');
+                                          }
+                                      })->count();
         
-        $sectionsWithTeachers = \App\Models\Section::where(function($query) {
+        // Count sections in active school year
+        $sectionsWithTeachersQuery = \App\Models\Section::where(function($query) {
                                     $query->whereNotNull('teacher_id')
                                           ->orWhereHas('teachers');
-                                })->count();
+                                });
+        if ($activeSchoolYear) {
+            $sectionsWithTeachersQuery->where('school_year_id', $activeSchoolYear->id);
+        }
+        $sectionsWithTeachers = $sectionsWithTeachersQuery->count();
         
-        $sectionsWithoutTeachers = \App\Models\Section::whereNull('teacher_id')
-                                                      ->whereDoesntHave('teachers')
-                                                      ->count();
+        $sectionsWithoutTeachersQuery = \App\Models\Section::whereNull('teacher_id')
+                                                      ->whereDoesntHave('teachers');
+        if ($activeSchoolYear) {
+            $sectionsWithoutTeachersQuery->where('school_year_id', $activeSchoolYear->id);
+        }
+        $sectionsWithoutTeachers = $sectionsWithoutTeachersQuery->count();
         
-        // Calculate statistics
+        // Calculate statistics for active school year
+        $totalSectionsQuery = \App\Models\Section::query();
+        if ($activeSchoolYear) {
+            $totalSectionsQuery->where('school_year_id', $activeSchoolYear->id);
+        }
+        
         $stats = [
             'total_teachers' => User::where('role', 'teacher')->count(),
             'teachers_with_sections' => $teachersWithSections,
             'teachers_without_sections' => $teachersWithoutSections,
-            'total_sections' => \App\Models\Section::count(),
+            'total_sections' => $totalSectionsQuery->count(),
             'sections_with_teachers' => $sectionsWithTeachers,
             'sections_without_teachers' => $sectionsWithoutTeachers,
             'total_students_in_sections' => \App\Models\Student::whereNotNull('section_id')->count(),
         ];
 
-        return view('admin.manage-teachers', compact('teachers', 'schools', 'sections', 'schoolYears', 'stats'));
+        return view('admin.manage-teachers', compact('teachers', 'schools', 'sections', 'schoolYears', 'stats', 'activeSchoolYear'));
     }
 
     /**
@@ -1858,6 +1924,187 @@ class AdminController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
+     * Export teacher attendance as Excel (with proper column widths)
+     */
+    public function exportTeacherAttendanceExcel(Request $request)
+    {
+        try {
+            // Get filtered students
+            $students = $this->getFilteredStudents($request);
+            $type = $request->input('type', 'daily');
+            $schoolYearId = $request->input('school_year_id');
+            $gradeSection = $request->input('grade_section');
+            
+            // Create new Spreadsheet
+            $spreadsheet = new Spreadsheet();
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Get school info from first student
+            $schoolName = 'School Name Not Set';
+            if ($students->isNotEmpty() && $students->first()->school) {
+                $schoolName = $students->first()->school->name;
+            }
+            
+            // Get school year
+            $schoolYear = null;
+            $schoolYearText = '';
+            if ($schoolYearId) {
+                $schoolYear = SchoolYear::find($schoolYearId);
+                if ($schoolYear) {
+                    $schoolYearText = $this->extractSchoolYearFromSemester($schoolYear->name);
+                }
+            }
+            if (!$schoolYearText) {
+                $currentYear = Carbon::now()->year;
+                $currentMonth = Carbon::now()->month;
+                if ($currentMonth <= 6) {
+                    $schoolYearText = ($currentYear - 1) . '-' . $currentYear;
+                } else {
+                    $schoolYearText = $currentYear . '-' . ($currentYear + 1);
+                }
+            }
+            
+            // Get grade/section info
+            $gradeLevel = null;
+            $sectionName = null;
+            if ($gradeSection) {
+                $parts = explode('|', $gradeSection);
+                if (count($parts) == 2) {
+                    $gradeLevel = $parts[0];
+                    $sectionName = $parts[1];
+                }
+            }
+            
+            // Write header information
+            $row = 1;
+            if ($gradeLevel && $sectionName) {
+                $gradeSectionText = 'Grade ' . $gradeLevel . ' - ' . $sectionName;
+                $worksheet->setCellValue('A' . $row++, 'School Name: ' . $schoolName);
+                $worksheet->setCellValue('A' . $row++, 'School Year: ' . $schoolYearText);
+                $worksheet->setCellValue('A' . $row++, 'Grade/Section: ' . $gradeSectionText);
+            } else {
+                $worksheet->setCellValue('A' . $row++, 'School Name: ' . $schoolName);
+                $worksheet->setCellValue('A' . $row++, 'School Year: ' . $schoolYearText);
+            }
+            
+            if ($type === 'daily') {
+                $date = $request->input('start_date', now()->toDateString());
+                $formattedDate = Carbon::parse($date)->format('F d, Y');
+                $worksheet->setCellValue('A' . $row++, 'Report Type: Daily - ' . $formattedDate);
+                $row++; // Empty row
+                
+                // Headers
+                $worksheet->setCellValue('A' . $row, 'Date');
+                $worksheet->setCellValue('B' . $row, 'ID No');
+                $worksheet->setCellValue('C' . $row, 'Name');
+                $worksheet->setCellValue('D' . $row, 'AM In');
+                $worksheet->setCellValue('E' . $row, 'AM Out');
+                $worksheet->setCellValue('F' . $row, 'PM In');
+                $worksheet->setCellValue('G' . $row, 'PM Out');
+                $worksheet->setCellValue('H' . $row, 'Status');
+                
+                // Style header row
+                $headerStyle = [
+                    'font' => ['bold' => true],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'E0E0E0']
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN
+                        ]
+                    ]
+                ];
+                $worksheet->getStyle('A' . $row . ':H' . $row)->applyFromArray($headerStyle);
+                $row++;
+                
+                // Get attendance data
+                $attendances = Attendance::whereDate('date', $date)
+                    ->whereIn('student_id', $students->pluck('id'))
+                    ->get()
+                    ->keyBy('student_id');
+                    
+                foreach ($students as $student) {
+                    $att = $attendances->get($student->id);
+                    
+                    // Determine status
+                    $status = '--';
+                    if ($att) {
+                        if ($att->time_in_am && $att->time_out_am && $att->time_in_pm && $att->time_out_pm) {
+                            $status = 'Present';
+                        } elseif ($att->time_in_am || $att->time_in_pm) {
+                            $status = 'Partial';
+                        } else {
+                            $status = 'Absent';
+                        }
+                    } else {
+                        $status = 'Absent';
+                    }
+                    
+                    $worksheet->setCellValue('A' . $row, $date);
+                    $worksheet->setCellValue('B' . $row, $student->id_no);
+                    $worksheet->setCellValue('C' . $row, $student->name);
+                    $worksheet->setCellValue('D' . $row, $att && $att->time_in_am ? Carbon::parse($att->time_in_am)->setTimezone('Asia/Manila')->format('h:i A') : '--');
+                    $worksheet->setCellValue('E' . $row, $att && $att->time_out_am ? Carbon::parse($att->time_out_am)->setTimezone('Asia/Manila')->format('h:i A') : '--');
+                    $worksheet->setCellValue('F' . $row, $att && $att->time_in_pm ? Carbon::parse($att->time_in_pm)->setTimezone('Asia/Manila')->format('h:i A') : '--');
+                    $worksheet->setCellValue('G' . $row, $att && $att->time_out_pm ? Carbon::parse($att->time_out_pm)->setTimezone('Asia/Manila')->format('h:i A') : '--');
+                    $worksheet->setCellValue('H' . $row, $status);
+                    
+                    // Add borders to data rows
+                    $worksheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color' => ['rgb' => 'CCCCCC']
+                            ]
+                        ]
+                    ]);
+                    
+                    $row++;
+                }
+                
+                // Set column widths
+                $worksheet->getColumnDimension('A')->setWidth(15); // Date
+                $worksheet->getColumnDimension('B')->setWidth(12); // ID No
+                $worksheet->getColumnDimension('C')->setWidth(30); // Name
+                $worksheet->getColumnDimension('D')->setWidth(12); // AM In
+                $worksheet->getColumnDimension('E')->setWidth(12); // AM Out
+                $worksheet->getColumnDimension('F')->setWidth(12); // PM In
+                $worksheet->getColumnDimension('G')->setWidth(12); // PM Out
+                $worksheet->getColumnDimension('H')->setWidth(12); // Status
+            }
+            
+            // Generate filename
+            $filename = 'attendance_report_' . now()->format('Ymd_His') . '.xlsx';
+            $filepath = storage_path('app/public/temp/' . $filename);
+            
+            // Create temp directory if it doesn't exist
+            if (!file_exists(storage_path('app/public/temp'))) {
+                mkdir(storage_path('app/public/temp'), 0755, true);
+            }
+            
+            // Save the file
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filepath);
+            
+            // Return file download response
+            return response()->download($filepath, $filename)->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Error exporting teacher attendance to Excel', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export attendance: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     /**

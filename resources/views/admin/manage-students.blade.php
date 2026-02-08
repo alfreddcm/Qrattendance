@@ -746,7 +746,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 202401" min="1" title="Enter student ID number">
+                            <input type="number" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 202401" min="10000000000" max="99999999999" pattern="\d{11}" maxlength="11" title="Enter 11-digit student ID number">
                         </div>
                         <div class="col-md-6">
                             <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
@@ -819,7 +819,7 @@
                         </div>
                         <div class="col-md-4">
                             <label for="cp_no" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="cp_no" name="cp_no" required placeholder="09123456789" min="0" title="Enter 11-digit phone number">
+                            <input type="number" class="form-control" id="cp_no" name="cp_no" required placeholder="09123456789" min="10000000000" max="99999999999" pattern="\d{11}" maxlength="11" title="Enter 11-digit phone number">
                         </div>
                         <div class="col-md-12">
                             <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
@@ -841,7 +841,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="contact_person_contact" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09123456789" min="0" title="Enter 11-digit phone number">
+                            <input type="number" class="form-control" id="contact_person_contact" name="contact_person_contact" required placeholder="09123456789" min="10000000000" max="99999999999" pattern="\d{11}" maxlength="11" title="Enter 11-digit phone number">
                         </div>
                         <div class="col-md-12">
                             <label for="contact_person_relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
@@ -1432,11 +1432,9 @@ function loadPrintTeachers() {
     const teacherSelect = document.getElementById('print_teacher_id');
     const sectionSelect = document.getElementById('print_section_id');
     
-    // Reset dependent dropdown
-    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+     sectionSelect.innerHTML = '<option value="">All Sections</option>';
     
-    // If both school and school year are empty, load all teachers
-    if (!schoolId && !schoolYearId) {
+     if (!schoolId && !schoolYearId) {
         teacherSelect.innerHTML = '<option value="">All Teachers</option>';
         @foreach($teachers ?? [] as $t)
             const optionAll{{ $t->id }} = document.createElement('option');
@@ -1464,8 +1462,7 @@ function loadPrintTeachers() {
             url += `?${params.toString()}`;
         }
     } else if (schoolYearId) {
-        // If only school year is selected, fetch all teachers and filter
-        teacherSelect.innerHTML = '<option value="">All Teachers</option>';
+         teacherSelect.innerHTML = '<option value="">All Teachers</option>';
         @foreach($teachers ?? [] as $t)
             const optionSY{{ $t->id }} = document.createElement('option');
             optionSY{{ $t->id }}.value = '{{ $t->id }}';

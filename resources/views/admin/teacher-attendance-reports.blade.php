@@ -335,8 +335,11 @@
                             <p class="text-muted mb-0 small">Download your report in various formats</p>
                         </div>
                         <div class="d-flex gap-3">
-                            <form method="POST" action="{{ route('admin.teacher-attendance.export.csv') }}" class="d-inline">
+                            <form method="POST" action="{{ route('admin.teacher-attendance.export.excel') }}" class="d-inline">
                                 @csrf
+                                <input type="hidden" name="school_year_id" value="{{ request('school_year_id') }}">
+                                <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                                <input type="hidden" name="end_date" value="{{ request('end_date') }}">
                                 <input type="hidden" name="type" value="{{ request('type', 'daily') }}">
                                 <input type="hidden" name="semester_id" value="{{ request('semester_id') }}">
                                 <input type="hidden" name="teacher_id" value="{{ request('teacher_id') }}">
@@ -345,7 +348,7 @@
                                 <input type="hidden" name="report_date" value="{{ request('report_date') }}">
                                 <input type="hidden" name="report_month_year" value="{{ request('report_month_year') }}">
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-file-csv me-2"></i>Export CSV
+                                    <i class="fas fa-file-excel me-2"></i>Export Excel
                                 </button>
                             </form>
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sf2Modal">

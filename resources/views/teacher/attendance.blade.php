@@ -702,16 +702,35 @@
 
         // Handle QR code image
         const qrImage = document.getElementById('qrCodeImage');
+        const qrContainer = qrImage.parentElement;
+        
+        // Clear any existing error messages
+        const existingErrors = qrContainer.querySelectorAll('p.text-danger, p.text-muted');
+        existingErrors.forEach(error => error.remove());
+        
         if (codeData.qr_code_url) {
+            qrImage.style.display = 'block';
             qrImage.src = codeData.qr_code_url;
-                            qrImage.onerror = function() {
+            qrImage.onerror = function() {
                 console.error('Failed to load QR image:', codeData.qr_code_url);
                 this.style.display = 'none';
-                this.parentElement.innerHTML += '<p class="text-danger small">QR code image failed to load</p>';
+                // Check if error message already exists
+                if (!qrContainer.querySelector('p.text-danger.qr-error')) {
+                    const errorMsg = document.createElement('p');
+                    errorMsg.className = 'text-danger small qr-error';
+                    errorMsg.textContent = 'QR code image failed to load';
+                    qrContainer.appendChild(errorMsg);
+                }
             };
         } else {
             qrImage.style.display = 'none';
-            qrImage.parentElement.innerHTML += '<p class="text-muted small">QR code not available</p>';
+            // Check if message already exists
+            if (!qrContainer.querySelector('p.text-muted.qr-unavailable')) {
+                const unavailableMsg = document.createElement('p');
+                unavailableMsg.className = 'text-muted small qr-unavailable';
+                unavailableMsg.textContent = 'QR code not available';
+                qrContainer.appendChild(unavailableMsg);
+            }
         }
 
         document.getElementById('accessUrl').textContent = codeData.access_url;

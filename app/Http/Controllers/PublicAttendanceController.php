@@ -133,7 +133,7 @@ class PublicAttendanceController extends Controller
         ]);
     }
 
-    public function getRecentLogs($code)
+    public function getRecentLogs(Request $request, $code)
     {
         $attendanceCode = AttendanceCode::where('code', $code)->where('is_active', true)->first();
         
@@ -141,41 +141,65 @@ class PublicAttendanceController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid code']);
         }
 
-        $recentAttendance = Attendance::with(['student'])
+        $acceptHeader = $request->header('Accept');
+        $asHtml = $request->query('format') === 'html' || ($acceptHeader && str_contains($acceptHeader, 'text/html'));
+
+        $recentAttendance = Attendance::with(['student.section'])
             ->whereDate('date', today())
             ->where('teacher_id', $attendanceCode->teacher_id)
             ->latest('updated_at')
             ->take(7)
-            ->get()
-            ->map(function($attendance) {
-                // Determine the most recent time and its type
-                $timeType = 'TIME IN';
-                $lastTime = null;
-                
-                if ($attendance->time_out_pm) {
-                    $lastTime = $attendance->time_out_pm;
-                    $timeType = 'TIME OUT';
-                } elseif ($attendance->time_in_pm) {
-                    $lastTime = $attendance->time_in_pm;
-                    $timeType = 'TIME IN';
-                } elseif ($attendance->time_out_am) {
-                    $lastTime = $attendance->time_out_am;
-                    $timeType = 'TIME OUT';
-                } elseif ($attendance->time_in_am) {
-                    $lastTime = $attendance->time_in_am;
-                    $timeType = 'TIME IN';
-                }
-                
-                return [
-                    'photo' => $attendance->student->picture ? asset('storage/' . $attendance->student->picture) : asset('img/default-avatar.png'),
-                    'student_name' => $attendance->student->name,
-                    'section' => $attendance->student->section->name ?? 'N/A',
-                    'time_in' => $lastTime ? Carbon::parse($lastTime)->format('g:i A') : '--:--',
-                    'time_type' => $timeType
-                ];
-            });
+            ->get();
 
-        return response()->json(['success' => true, 'data' => $recentAttendance]);
+        if ($asHtml) {
+            return view('public.partials.attendance-history', compact('recentAttendance'));
+        }
+
+        $recentData = $recentAttendance->map(function ($attendance) {
+            $timeType = 'TIME IN';
+            $lastTime = null;
+            $date = $attendance->date;
+
+            if ($attendance->time_out_pm) {
+                $lastTime = $attendance->time_out_pm;
+                $timeType = 'TIME OUT';
+            } elseif ($attendance->time_in_pm) {
+                $lastTime = $attendance->time_in_pm;
+                $timeType = 'TIME IN';
+            } elseif ($attendance->time_out_am) {
+                $lastTime = $attendance->time_out_am;
+                $timeType = 'TIME OUT';
+            } elseif ($attendance->time_in_am) {
+                $lastTime = $attendance->time_in_am;
+                $timeType = 'TIME IN';
+            }
+
+            // Helper to create full datetime string from date + time
+            $makeDateTime = function($time) use ($date) {
+                if (!$time) return null;
+                return Carbon::parse($date . ' ' . $time)->toIso8601String();
+            };
+
+            return [
+                'id' => $attendance->id,
+                'student' => [
+                    'id' => $attendance->student->id ?? null,
+                    'name' => $attendance->student->name ?? '---',
+                    'section' => [
+                        'name' => $attendance->student->section->name ?? '---'
+                    ],
+                    'picture' => $attendance->student->picture ? asset('storage/student_pictures/' . $attendance->student->picture) : null,
+                ],
+                'time_in_am' => $makeDateTime($attendance->time_in_am),
+                'time_out_am' => $makeDateTime($attendance->time_out_am),
+                'time_in_pm' => $makeDateTime($attendance->time_in_pm),
+                'time_out_pm' => $makeDateTime($attendance->time_out_pm),
+                'display_time' => $lastTime ? Carbon::parse($date . ' ' . $lastTime)->format('g:i A') : '--:--',
+                'display_type' => $timeType,
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $recentData]);
     }
 
     public function getTodaySummary($code)
@@ -248,9 +272,17 @@ class PublicAttendanceController extends Controller
     public function scanQR(Request $request)
     {
         try {
+            $now = Carbon::now('Asia/Manila');
+
             $request->validate([
                 'qr_data' => 'required|string',
                 'student_id' => 'required|string',
+            ]);
+
+            Log::info('Public scan received', [
+                'student_id' => $request->student_id,
+                'payload' => $request->all(),
+                'timestamp' => $now->toIso8601String()
             ]);
 
             // Find student by stud_code (QR code data)
@@ -279,7 +311,7 @@ class PublicAttendanceController extends Controller
                 ], 400);
             }
 
-            $timeCheck = $this->validateAttendanceTimeWindow();
+            $timeCheck = $this->validateAttendanceTimeWindow($student->section);
             if (!$timeCheck['valid']) {
                 return response()->json([
                     'success' => false,
@@ -300,10 +332,16 @@ class PublicAttendanceController extends Controller
                 ], 400);
             }
 
+            Log::info('Public scan time detection', [
+                'student_id' => $student->id,
+                'time_detection' => $timeDetection,
+                'now' => $now->toDateTimeString()
+            ]);
+
             $status = $this->calculateAttendanceStatus(
                 $student->section,
                 $timeDetection['type'],
-                now()
+                $now
             );
 
             $attendance = $this->saveAttendanceRecord(
@@ -316,8 +354,24 @@ class PublicAttendanceController extends Controller
                 $status,
                 $student->user_id,
                 null,
-                null
+                $now
             );
+
+            Log::info('Attendance saved', [
+                'attendance_id' => $attendance->id,
+                'student_id' => $student->id,
+                'column_updated' => $timeDetection['column'],
+                'status_column' => $timeDetection['status_column'],
+                'record_time' => $now->toDateTimeString(),
+                'saved_values' => [
+                    'time_in_am' => $attendance->time_in_am,
+                    'time_out_am' => $attendance->time_out_am,
+                    'time_in_pm' => $attendance->time_in_pm,
+                    'time_out_pm' => $attendance->time_out_pm,
+                    'am_status' => $attendance->am_status,
+                    'pm_status' => $attendance->pm_status,
+                ]
+            ]);
 
             // Queue notification
             $this->queueAttendanceNotification(
@@ -354,6 +408,10 @@ class PublicAttendanceController extends Controller
                 'status' => $status
             ]);
 
+            // Refresh to get exact stored values
+            $attendance->refresh();
+            $date = $attendance->date;
+
             return response()->json([
                 'success' => true,
                 'message' => $this->getAttendanceSuccessMessage($timeDetection['type'], $status),
@@ -361,8 +419,8 @@ class PublicAttendanceController extends Controller
                     'id' => $student->id,
                     'id_no' => $student->id_no,
                     'name' => $student->name,
-                    'picture' => $student->picture ? asset('storage/' . $student->picture) : asset('img/default-avatar.png'),
-                    'section' => $student->section->name,
+                    'picture' => $student->picture ? asset('storage/student_pictures/' . $student->picture) : null,
+                    'section' => ['name' => $student->section->name],
                     'semester' => $student->schoolYear->name,
                 ],
                 'attendance' => [
@@ -370,12 +428,16 @@ class PublicAttendanceController extends Controller
                     'type' => $timeDetection['type'],
                     'period' => $timeDetection['period'],
                     'status' => $status,
-                    'recorded_time' => now()->format('g:i A'),
-                    'recorded_date' => now()->format('F d, Y'),
-                    'am_in' => $attendance->time_in_am ? Carbon::parse($attendance->time_in_am)->format('g:i A') : null,
-                    'am_out' => $attendance->time_out_am ? Carbon::parse($attendance->time_out_am)->format('g:i A') : null,
-                    'pm_in' => $attendance->time_in_pm ? Carbon::parse($attendance->time_in_pm)->format('g:i A') : null,
-                    'pm_out' => $attendance->time_out_pm ? Carbon::parse($attendance->time_out_pm)->format('g:i A') : null,
+                    'recorded_time' => $now->format('g:i A'),
+                    'recorded_date' => $now->format('F d, Y'),
+                    'time_in_am' => $attendance->time_in_am ? Carbon::parse($date . ' ' . $attendance->time_in_am)->toIso8601String() : null,
+                    'time_out_am' => $attendance->time_out_am ? Carbon::parse($date . ' ' . $attendance->time_out_am)->toIso8601String() : null,
+                    'time_in_pm' => $attendance->time_in_pm ? Carbon::parse($date . ' ' . $attendance->time_in_pm)->toIso8601String() : null,
+                    'time_out_pm' => $attendance->time_out_pm ? Carbon::parse($date . ' ' . $attendance->time_out_pm)->toIso8601String() : null,
+                    'time_in_am_formatted' => $attendance->time_in_am ? Carbon::parse($date . ' ' . $attendance->time_in_am)->format('g:i A') : null,
+                    'time_out_am_formatted' => $attendance->time_out_am ? Carbon::parse($date . ' ' . $attendance->time_out_am)->format('g:i A') : null,
+                    'time_in_pm_formatted' => $attendance->time_in_pm ? Carbon::parse($date . ' ' . $attendance->time_in_pm)->format('g:i A') : null,
+                    'time_out_pm_formatted' => $attendance->time_out_pm ? Carbon::parse($date . ' ' . $attendance->time_out_pm)->format('g:i A') : null,
                 ],
             ]);
 
@@ -678,7 +740,7 @@ class PublicAttendanceController extends Controller
         ?Carbon $overrideTime = null
     ): Attendance {
         $today = now()->toDateString();
-        $recordTime = $overrideTime ?? now();
+        $recordTime = $overrideTime ?? Carbon::now('Asia/Manila');
 
         $attendanceData = [
             'student_id' => $studentId,
@@ -694,6 +756,8 @@ class PublicAttendanceController extends Controller
 
         if (!$attendance->exists) {
             $attendance->school_id = Student::find($studentId)->school_id;
+            $attendance->teacher_id = $teacherId;
+        } elseif (!$attendance->teacher_id && $teacherId) {
             $attendance->teacher_id = $teacherId;
         }
 
@@ -794,18 +858,58 @@ class PublicAttendanceController extends Controller
         return "Your child {$student->name} - {$action} recorded at {$time}";
     }
 
-    private function validateAttendanceTimeWindow(): array
+    private function validateAttendanceTimeWindow(Section $section): array
     {
-        $now = now();
-        $currentHour = $now->hour;
+        $now = Carbon::now('Asia/Manila');
+        $currentTime = $now->format('H:i:s');
         
-        if ($currentHour < 6 || $currentHour >= 18) {
-            return [
-                'valid' => false,
-                'error' => 'Outside attendance hours (6:00 AM - 6:00 PM)'
-            ];
+         $validWindows = [];
+        
+        if ($section->am_time_in_start && $section->am_time_in_end) {
+            $amInStart = Carbon::parse($section->am_time_in_start)->format('H:i:s');
+            $amInEnd = Carbon::parse($section->am_time_in_end)->format('H:i:s');
+            if ($currentTime >= $amInStart && $currentTime <= $amInEnd) {
+                return ['valid' => true];
+            }
+            $validWindows[] = 'AM In: ' . Carbon::parse($section->am_time_in_start)->format('g:i A') . ' - ' . Carbon::parse($section->am_time_in_end)->format('g:i A');
         }
-
-        return ['valid' => true];
+        
+        if ($section->am_time_out_start && $section->am_time_out_end) {
+            $amOutStart = Carbon::parse($section->am_time_out_start)->format('H:i:s');
+            $amOutEnd = Carbon::parse($section->am_time_out_end)->format('H:i:s');
+            if ($currentTime >= $amOutStart && $currentTime <= $amOutEnd) {
+                return ['valid' => true];
+            }
+            $validWindows[] = 'AM Out: ' . Carbon::parse($section->am_time_out_start)->format('g:i A') . ' - ' . Carbon::parse($section->am_time_out_end)->format('g:i A');
+        }
+        
+        if ($section->pm_time_in_start && $section->pm_time_in_end) {
+            $pmInStart = Carbon::parse($section->pm_time_in_start)->format('H:i:s');
+            $pmInEnd = Carbon::parse($section->pm_time_in_end)->format('H:i:s');
+            if ($currentTime >= $pmInStart && $currentTime <= $pmInEnd) {
+                return ['valid' => true];
+            }
+            $validWindows[] = 'PM In: ' . Carbon::parse($section->pm_time_in_start)->format('g:i A') . ' - ' . Carbon::parse($section->pm_time_in_end)->format('g:i A');
+        }
+        
+        if ($section->pm_time_out_start && $section->pm_time_out_end) {
+            $pmOutStart = Carbon::parse($section->pm_time_out_start)->format('H:i:s');
+            $pmOutEnd = Carbon::parse($section->pm_time_out_end)->format('H:i:s');
+            if ($currentTime >= $pmOutStart && $currentTime <= $pmOutEnd) {
+                return ['valid' => true];
+            }
+            $validWindows[] = 'PM Out: ' . Carbon::parse($section->pm_time_out_start)->format('g:i A') . ' - ' . Carbon::parse($section->pm_time_out_end)->format('g:i A');
+        }
+        
+         if (empty($validWindows)) {
+            return ['valid' => true];
+        }
+        
+        // Current time is outside all configured windows
+        $windowsList = implode(', ', $validWindows);
+        return [
+            'valid' => false,
+            'error' => 'Current time (' . $now->format('g:i A') . ') is outside configured attendance hours. Valid windows: ' . $windowsList
+        ];
     }
 }

@@ -11,7 +11,7 @@
             </h4>
             <p class="subtitle fs-6 mb-0">Add, edit, and manage schools</p>
         </div>
-
+        
     </div>
 </div>
 
@@ -19,6 +19,15 @@
         @include('partials.alerts')
 
      <div class="row mb-3 gx-3">
+        @if($activeSchoolYear)
+        <div>
+            <span class="mb-2">
+                <i class="fas fa-calendar-alt me-1"></i>
+                Active School Year: {{ $activeSchoolYear->name ?? ($activeSchoolYear->school_year_start . '-' . $activeSchoolYear->school_year_end) }}
+            </span>
+        </div>
+        
+        @endif
         <div class="col-md-3 col-6">
             <div class="card stats-card primary h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -65,10 +74,6 @@
         </div>
     </div>
 
-
-
-
-
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -78,7 +83,7 @@
                         Teachers List
                     </h6>
                     <div>
-                        <span class="badge bg-light text-dark me-2">{{ $teachers->total() }} teachers</span>
+                        <span class="badge bg-light text-dark me-2">{{ $teachers->count() }} teachers</span>
                         <button type="button" class="btn btn-light btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
                             <i class="fas fa-plus me-1"></i>Add Teacher
                         </button>
@@ -86,123 +91,73 @@
                 </div>
                 <div class="card-body p-0">
                     @if($teachers->count() > 0)
-                        <div class="table-responsive">
+                        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
                             <table class="table table-hover table-compact mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="sortable" data-sort="name">
-                                            <a href="{{ route('admin.manage-teachers') }}?sort_by=name&sort_order={{ request('sort_by') == 'name' && request('sort_order') == 'asc' ? 'desc' : 'asc' }}" class="text-decoration-none text-dark">
-                                                Name
-                                                @if(request('sort_by') == 'name')
-                                                    @if(request('sort_order') == 'asc')
-                                                        <i class="fas fa-sort-up ms-1"></i>
-                                                    @else
-                                                        <i class="fas fa-sort-down ms-1"></i>
-                                                    @endif
-                                                @else
-                                                    <i class="fas fa-sort ms-1 text-muted"></i>
-                                                @endif
-                                            </a>
-                                        </th>
-                                        <th>Username</th>
+                                        <th>Name</th>
                                         <th>School</th>
-                                        <th>Position</th>
-                                        <th>Section & Students</th>
-                                        <th class="sortable" data-sort="phone_number">
-                                            <a href="{{ route('admin.manage-teachers') }}?sort_by=phone_number&sort_order={{ request('sort_by') == 'phone_number' && request('sort_order') == 'asc' ? 'desc' : 'asc' }}" class="text-decoration-none text-dark">
-                                                Phone Number
-                                                @if(request('sort_by') == 'phone_number')
-                                                    @if(request('sort_order') == 'asc')
-                                                        <i class="fas fa-sort-up ms-1"></i>
-                                                    @else
-                                                        <i class="fas fa-sort-down ms-1"></i>
-                                                    @endif
-                                                @else
-                                                    <i class="fas fa-sort ms-1 text-muted"></i>
-                                                @endif
-                                            </a>
-                                        </th>
-                                        <th style="width: 120px;">Actions</th>
+                                        <th>Sections</th>
+                                        <th>Phone</th>
+                                        <th>Attendance Code</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($teachers as $teacher)
                                     <tr>
                                         <td>
-                                            <div class="d-flex flex-column">
+                                            <div>
                                                 <strong>{{ $teacher->name }}</strong>
-                                                <small class="text-muted">{{ $teacher->email }}</small>
+                                                <small class="text-muted d-block">{{ $teacher->username }}</small>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">{{ $teacher->username }}</span>
-                                        </td>
-                                        <td>
                                             @if($teacher->school)
-                                                <span class="badge bg-success">{{ Str::limit($teacher->school->name, 15) }}</span>
+                                                <small>{{ Str::limit($teacher->school->name, 20) }}</small>
                                             @else
                                                 <span class="badge bg-warning">No School</span>
                                             @endif
                                         </td>
-                                        <td>{{ $teacher->position ?? 'N/A' }}</td>
                                         <td>
                                             @php
                                                 $allSections = collect();
-                                                
                                                 if($teacher->section) {
                                                     $allSections->push($teacher->section);
                                                 }
-                                                
                                                 $allSections = $allSections->merge($teacher->sections);
                                                 $allSections = $allSections->unique('id');
                                             @endphp
 
                                             @if($allSections->count() > 0)
-                                                <div class="d-flex flex-column">
-                                                    @foreach($allSections as $section)
-                                                        <div class="mb-1">
-                                                            <span class="fw-bold">{{ $section->section_name ?? $section->name }} - Grade {{ $section->grade_level ?? $section->gradelevel }}</span>
-                                                            <small class="text-muted d-block">
-                                                                <i class="fas fa-users me-1"></i>
-                                                                {{ $section->students ? $section->students->count() : 0 }} students
-                                                            </small>
-                                                        </div>
+                                                <div>
+                                                    @foreach($allSections->take(2) as $section)
+                                                        <small class="d-block">{{ $section->name }} - G{{ $section->gradelevel }}</small>
                                                     @endforeach
-                                                    @if($allSections->count() > 1)
-                                                        <span class="badge bg-info">{{ $allSections->count() }} Sections</span>
+                                                    @if($allSections->count() > 2)
+                                                        <small class="text-muted">+{{ $allSections->count() - 2 }} more</small>
                                                     @endif
                                                 </div>
                                             @else
-                                                <span class="text-muted">Not Assigned</span>
+                                                <small class="text-muted">None</small>
                                             @endif
                                         </td>
-                                        <td>{{ $teacher->phone_number ?? 'N/A' }}</td>
+                                        <td><small>{{ $teacher->phone_number ?? 'N/A' }}</small></td>
                                         <td>
-                                            <div class="btn-group btn-group-sm d-flex flex-column gap-1" role="group">
-                                                <div class="btn-group btn-group-sm">
-                                                    <button type="button"
-                                                            class="btn btn-outline-primary btn-sm"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#editTeacherModal"
-                                                            onclick="editTeacher({{ $teacher->id }})"
-                                                            title="Edit">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-
-                                                    <button type="button"
-                                                            class="btn btn-outline-danger btn-sm"
-                                                            onclick="if(confirm('Are you sure you want to delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }"
-                                                            title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                                
-                                                <button type="button"
-                                                        class="btn btn-outline-success btn-sm w-100"
-                                                        onclick="openAttendanceCodeModal({{ $teacher->id }}, {{ json_encode($teacher->name) }})"
-                                                        title="Manage Attendance Code">
-                                                    <i class="fas fa-qrcode"></i> Code
-                                                </button>
+                                            @php
+                                                $activeCode = $teacher->attendanceCodes()->where('is_active', true)->first();
+                                            @endphp
+                                            @if($activeCode)
+                                                <span class="badge bg-success">{{ $activeCode->code }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">None</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#viewTeacherModal" onclick="viewTeacher({{ $teacher->id }})" title="View"><i class="fas fa-eye"></i></button>
+                                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editTeacherModal" onclick="editTeacher({{ $teacher->id }})" title="Edit"><i class="fas fa-edit"></i></button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="if(confirm('Delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }" title="Delete"><i class="fas fa-trash"></i></button>
                                             </div>
                                             <form id="delete-form-{{ $teacher->id }}" method="POST" action="{{ route('admin.delete-teacher', $teacher->id) }}" style="display: none;">
                                                 @csrf
@@ -213,11 +168,6 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
-
-
-                        <div class="card-footer">
-                            {{ $teachers->links() }}
                         </div>
                     @else
                         <div class="text-center py-5">
@@ -348,7 +298,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ route('admin.store-teacher') }}">
+            <form id="addTeacherForm" method="POST" action="{{ route('admin.store-teacher') }}">
                 @csrf
                 <div class="modal-body">
                     <div class="row">
@@ -492,10 +442,17 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="add_phone_number" class="form-label">Phone Number</label>
-                            <input type="number" class="form-control" id="add_phone_number" name="phone_number"
+                            <input type="text" class="form-control" id="add_phone_number" name="phone_number"
                                    value="{{ old('phone_number') }}"
-                                   placeholder="09123456789" min="0"
-                                   title="Enter phone number">
+                                   placeholder="09123456789"
+                                   pattern="[0-9]{11}"
+                                   maxlength="11"
+                                   inputmode="numeric"
+                                   title="Enter 11-digit phone number"
+                                   required>
+                            <div class="invalid-feedback">
+                                Phone number must be 11 digits.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -789,6 +746,70 @@
     </div>
 </div>
 
+<!-- View Teacher Modal -->
+<div class="modal fade" id="viewTeacherModal" tabindex="-1" aria-labelledby="viewTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="viewTeacherModalLabel">
+                    <i class="fas fa-eye me-2"></i>View Teacher Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Full Name</label>
+                        <p class="form-control-plaintext border-bottom" id="view_name">-</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Username</label>
+                        <p class="form-control-plaintext border-bottom" id="view_username">-</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <p class="form-control-plaintext border-bottom" id="view_email">-</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">School</label>
+                        <p class="form-control-plaintext border-bottom" id="view_school">-</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Position</label>
+                        <p class="form-control-plaintext border-bottom" id="view_position">-</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Phone Number</label>
+                        <p class="form-control-plaintext border-bottom" id="view_phone_number">-</p>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Active Attendance Code</label>
+                        <div class="p-3 bg-light rounded text-center" id="view_attendance_code">
+                            <span class="badge bg-secondary">No Active Code</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Assigned Sections</label>
+                        <div id="view_sections" class="border rounded p-3 bg-light">
+                            <p class="text-muted mb-0">No sections assigned</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -916,9 +937,26 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="edit_phone_number" class="form-label">Phone Number</label>
-                            <input type="number" class="form-control" id="edit_phone_number" name="phone_number"
-                                   placeholder="09123456789" min="0"
-                                   title="Enter phone number">
+                            <input type="text" class="form-control" id="edit_phone_number" name="phone_number"
+                                   placeholder="09123456789"
+                                   pattern="[0-9]{11}"
+                                   maxlength="11"
+                                   inputmode="numeric"
+                                   title="Enter 11-digit phone number"
+                                   required>
+                            <div class="invalid-feedback">
+                                Phone number must be 11 digits.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Active Attendance Code</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="edit_attendance_code" readonly value="No Active Code">
+                                <button type="button" class="btn btn-primary" onclick="regenerateCodeForTeacher()">
+                                    <i class="fas fa-sync-alt"></i> Regenerate
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1090,7 +1128,7 @@
 </style>
 
 <script>
-const teachers = @json($teachers->items());
+const teachers = @json($teachers);
 
 function editTeacher(teacherId) {
     const teacher = teachers.find(t => t.id === teacherId);
@@ -1141,6 +1179,107 @@ function editTeacher(teacherId) {
             currentSectionCheckbox.checked = true;
         }
     }
+}
+
+function viewTeacher(teacherId) {
+    const teacher = teachers.find(t => t.id === teacherId);
+    if (!teacher) return;
+
+    // Populate basic information
+    document.getElementById('view_name').textContent = teacher.name || '-';
+    document.getElementById('view_username').textContent = teacher.username || '-';
+    document.getElementById('view_email').textContent = teacher.email || '-';
+    document.getElementById('view_school').textContent = teacher.school ? teacher.school.name : '-';
+    document.getElementById('view_position').textContent = teacher.position || '-';
+    document.getElementById('view_phone_number').textContent = teacher.phone_number || '-';
+
+    // Populate sections
+    const sectionsContainer = document.getElementById('view_sections');
+    let sectionsHtml = '';
+
+    const allSections = [];
+    if (teacher.section) {
+        allSections.push(teacher.section);
+    }
+    if (teacher.sections && Array.isArray(teacher.sections)) {
+        teacher.sections.forEach(section => {
+            if (!allSections.find(s => s.id === section.id)) {
+                allSections.push(section);
+            }
+        });
+    }
+
+    if (allSections.length > 0) {
+        sectionsHtml = '<div class="list-group">';
+        allSections.forEach(section => {
+            const sectionName = section.section_name || section.name;
+            const gradeLevel = section.grade_level || section.gradelevel;
+            const studentCount = section.students ? section.students.length : 0;
+            const schoolYear = section.school_year ? (section.school_year.name || `${section.school_year.school_year_start}-${section.school_year.school_year_end}`) : '';
+            
+            sectionsHtml += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${sectionName} - Grade ${gradeLevel}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>${studentCount} students
+                                ${schoolYear ? ` | ${schoolYear}` : ''}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        sectionsHtml += '</div>';
+    } else {
+        sectionsHtml = '<p class="text-muted mb-0">No sections assigned</p>';
+    }
+
+    sectionsContainer.innerHTML = sectionsHtml;
+}
+
+function regenerateCodeForTeacher() {
+    const form = document.getElementById('editTeacherForm');
+    const teacherId = form.action.split('/').pop();
+    
+    if (!teacherId) {
+        alert('Unable to determine teacher ID');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to regenerate the attendance code for this teacher? The old code will no longer work.')) {
+        return;
+    }
+
+    const btn = document.getElementById('edit_regenerateCodeBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Regenerating...';
+
+    fetch(`/admin/attendance-codes/regenerate/${teacherId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Code regenerated successfully! New code: ${data.code}`);
+        } else {
+            alert(data.message || 'Failed to regenerate code');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while regenerating the code');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
 }
 
 function openReassignModal(sectionId, sectionName, currentTeacherId, currentTeacherName) {
@@ -1649,6 +1788,69 @@ async function regenerateCodeFromModal() {
         alert('Failed to regenerate attendance code. Error: ' + error.message);
     }
 }
+
+// Phone number validation - ensure 11 digits
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInputs = ['add_phone_number', 'edit_phone_number'];
+    
+    phoneInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            // Only allow digits
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length > 11) {
+                    this.value = this.value.slice(0, 11);
+                }
+            });
+            
+            // Validate on blur
+            input.addEventListener('blur', function(e) {
+                if (this.value && this.value.length !== 11) {
+                    this.setCustomValidity('Phone number must be 11 digits');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.setCustomValidity('');
+                    this.classList.remove('is-invalid');
+                }
+            });
+            
+            // Clear validation on focus
+            input.addEventListener('focus', function(e) {
+                this.classList.remove('is-invalid');
+            });
+        }
+    });
+    
+    // Form submission validation
+    const addForm = document.getElementById('addTeacherForm');
+    if (addForm) {
+        addForm.addEventListener('submit', function(e) {
+            const phoneInput = document.getElementById('add_phone_number');
+            if (phoneInput && phoneInput.value && phoneInput.value.length !== 11) {
+                e.preventDefault();
+                phoneInput.focus();
+                phoneInput.setCustomValidity('Phone number must be 11 digits');
+                phoneInput.reportValidity();
+                return false;
+            }
+        });
+    }
+    
+    const editForm = document.getElementById('editTeacherForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            const phoneInput = document.getElementById('edit_phone_number');
+            if (phoneInput && phoneInput.value && phoneInput.value.length !== 11) {
+                e.preventDefault();
+                phoneInput.focus();
+                phoneInput.setCustomValidity('Phone number must be 11 digits');
+                phoneInput.reportValidity();
+                return false;
+            }
+        });
+    }
+});
 </script>
 
 <!-- Attendance Code Modal -->
@@ -1708,9 +1910,6 @@ async function regenerateCodeFromModal() {
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" id="generateCodeBtn" class="btn btn-primary" onclick="generateCodeFromModal()">
                     <i class="fas fa-plus-circle me-1"></i>Generate Code
-                </button>
-                <button type="button" id="regenerateCodeBtn" class="btn btn-warning" onclick="regenerateCodeFromModal()" style="display: none;">
-                    <i class="fas fa-sync-alt me-1"></i>Regenerate Code
                 </button>
             </div>
         </div>
