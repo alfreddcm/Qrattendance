@@ -17,7 +17,7 @@ echo ""
 # Ensure storage/app/public exists
 if [ ! -d "storage/app/public" ]; then
     echo "Creating storage/app/public..."
-    mkdir -p storage/app/public/{student_pictures,school_logos,qr_codes,qr-codes,generated,templates,imports}
+    mkdir -p storage/app/public/{student_pictures,school_logos,qr_codes,qr-codes,generated,templates,imports,branding}
     echo "✓ Created storage/app/public"
 fi
 
@@ -33,7 +33,7 @@ echo ""
 echo "Creating storage symlinks..."
 
 # Array of folders to symlink
-folders=("student_pictures" "school_logos" "qr_codes" "qr-codes" "generated" "templates" "imports")
+folders=("student_pictures" "school_logos" "qr_codes" "qr-codes" "generated" "templates" "imports" "branding")
 
 for folder in "${folders[@]}"; do
     # Backup old folder if it exists and is not a symlink
