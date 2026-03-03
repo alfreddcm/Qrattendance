@@ -279,6 +279,9 @@
                             <button type="button" class="btn btn-outline-secondary px-4" onclick="clearFilters()">
                                 <i class="fas fa-eraser me-2"></i>Clear All Filters
                             </button>
+                            <button type="button" class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#sf2Modal">
+                                <i class="fas fa-file-excel me-2"></i>Generate SF2
+                            </button>
                             <button type="submit" class="btn btn-gradient text-white px-5">
                                 <i class="fas fa-chart-bar me-2"></i>Generate Report
                             </button>
@@ -351,9 +354,6 @@
                                     <i class="fas fa-file-excel me-2"></i>Export Excel
                                 </button>
                             </form>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sf2Modal">
-                                <i class="fas fa-file-excel me-2"></i>Generate SF2
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -378,6 +378,12 @@
                     Configure the parameters below to generate a detailed SF2 attendance form.
                 </div>
 
+                <!-- Error container for validation messages -->
+                <div id="sf2ErrorContainer" class="alert alert-danger border-0 mb-4" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span id="sf2ErrorMessage"></span>
+                </div>
+
                 <form id="sf2Form">
                     @csrf
                     <div class="row g-4">
@@ -393,7 +399,7 @@
                                 <select name="school_id" id="sf2_school" class="form-select" required>
                                     <option value="">Select School</option>
                                     @foreach($schools as $school)
-                                        <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
+                                        <option value="{{ $school->id }}" {{ (request('school_id') == $school->id || (count($schools) == 1)) ? 'selected' : '' }}>
                                             {{ $school->name }}
                                         </option>
                                     @endforeach
@@ -406,15 +412,24 @@
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <select name="semester_id" id="sf2_semester" class="form-select" required>
+                                <select name="school_year_id" id="sf2_school_year" class="form-select" required>
                                     <option value="">Select School Year</option>
-                                    @foreach($schoolYears as $semester)
-                                        <option value="{{ $semester->id }}" {{ request('semester_id') == $semester->id ? 'selected' : '' }}>
-                                            {{ $semester->name }}
+                                    @foreach($schoolYears as $schoolYear)
+                                        @php
+                                            $isActive = $schoolYear->status === 'active';
+                                            $isCurrent = now()->between($schoolYear->start_date, $schoolYear->end_date);
+                                        @endphp
+                                        <option value="{{ $schoolYear->id }}" 
+                                            {{ ($isActive || $isCurrent) ? 'selected' : '' }}
+                                            data-start-month="{{ \Carbon\Carbon::parse($schoolYear->start_date)->month }}"
+                                            data-start-year="{{ \Carbon\Carbon::parse($schoolYear->start_date)->year }}"
+                                            data-end-month="{{ \Carbon\Carbon::parse($schoolYear->end_date)->month }}"
+                                            data-end-year="{{ \Carbon\Carbon::parse($schoolYear->end_date)->year }}">
+                                            {{ $schoolYear->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <label for="sf2_semester">
+                                <label for="sf2_school_year">
                                     <i class="fas fa-graduation-cap text-primary me-2"></i>School Year
                                 </label>
                             </div>
@@ -429,38 +444,22 @@
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <select name="teacher_id" id="sf2_teacher" class="form-select">
-                                    <option value="">All Teachers</option>
-                                    @foreach($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                            {{ $teacher->name }}
-                                        </option>
-                                    @endforeach
+                                <select name="teacher_id" id="sf2_teacher" class="form-select" required>
+                                    <option value="">Select Teacher</option>
                                 </select>
                                 <label for="sf2_teacher">
-                                    <i class="fas fa-chalkboard-teacher text-success me-2"></i>Teacher (Optional)
+                                    <i class="fas fa-chalkboard-teacher text-success me-2"></i>Teacher <span class="text-danger">*</span>
                                 </label>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <select name="grade_section" id="sf2_grade_section" class="form-select">
-                                    <option value="">All Sections</option>
-                                    @if(isset($gradeSectionOptions))
-                                        @foreach($gradeSectionOptions as $option)
-                                            @php
-                                                $parts = explode('|', $option);
-                                                $displayText = count($parts) == 2 ? "Grade {$parts[0]} - {$parts[1]}" : $option;
-                                            @endphp
-                                            <option value="{{ $option }}" {{ request('grade_section') == $option ? 'selected' : '' }}>
-                                                {{ $displayText }}
-                                            </option>
-                                        @endforeach
-                                    @endif
+                                <select name="grade_section" id="sf2_grade_section" class="form-select" required>
+                                    <option value="">Select Grade & Section</option>
                                 </select>
                                 <label for="sf2_grade_section">
-                                    <i class="fas fa-layer-group text-success me-2"></i>Grade & Section (Optional)
+                                    <i class="fas fa-layer-group text-success me-2"></i>Grade & Section <span class="text-danger">*</span>
                                 </label>
                             </div>
                         </div>
@@ -472,34 +471,17 @@
                             </h6>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-floating">
-                                <select name="month" id="sf2_month" class="form-select" required>
-                                    @for($m = 1; $m <= 12; $m++)
-                                        <option value="{{ $m }}" {{ request('report_month', date('n')) == $m ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                        </option>
-                                    @endfor
+                                <select name="month_year" id="sf2_month_year" class="form-select" required>
+                                    <option value="">Select School Year First</option>
                                 </select>
-                                <label for="sf2_month">
-                                    <i class="fas fa-calendar-alt text-info me-2"></i>Month
+                                <label for="sf2_month_year">
+                                    <i class="fas fa-calendar-alt text-info me-2"></i>Month & Year
                                 </label>
                             </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <select name="year" id="sf2_year" class="form-select" required>
-                                    @for($y = date('Y') - 5; $y <= date('Y') + 1; $y++)
-                                        <option value="{{ $y }}" {{ request('report_year', date('Y')) == $y ? 'selected' : '' }}>
-                                            {{ $y }}
-                                        </option>
-                                    @endfor
-                                </select>
-                                <label for="sf2_year">
-                                    <i class="fas fa-calendar text-info me-2"></i>Year
-                                </label>
-                            </div>
+                            <input type="hidden" name="month" id="sf2_month_hidden">
+                            <input type="hidden" name="year" id="sf2_year_hidden">
                         </div>
                     </div>
                 </form>
@@ -601,15 +583,46 @@ function setupCascadingDropdowns() {
     // SF2 Modal cascading dropdowns
     $('#sf2_school').change(function() {
         var schoolId = $(this).val();
+        hideSF2Error(); // Clear any previous errors
         updateSF2Teachers(schoolId);
         // Clear dependent dropdowns
-        $('#sf2_teacher').html('<option value="">All Teachers</option>');
-        $('#sf2_grade_section').html('<option value="">All Sections</option>');
+        $('#sf2_teacher').html('<option value="">Select Teacher</option>');
+        $('#sf2_grade_section').html('<option value="">Select Grade & Section</option>');
     });
 
     $('#sf2_teacher').change(function() {
         var teacherId = $(this).val();
+        hideSF2Error(); // Clear any previous errors
         updateSF2GradeSections(teacherId);
+    });
+
+    // SF2 School Year change - update month/year options
+    $('#sf2_school_year').change(function() {
+        updateSF2MonthYearOptions();
+    });
+
+    // SF2 Month/Year change - split into separate fields
+    $('#sf2_month_year').change(function() {
+        var value = $(this).val();
+        if (value) {
+            var parts = value.split('-');
+            $('#sf2_month_hidden').val(parseInt(parts[1], 10)); // Month as integer
+            $('#sf2_year_hidden').val(parseInt(parts[0], 10));  // Year as integer
+        }
+    });
+
+    // Initialize SF2 form when modal opens
+    $('#sf2Modal').on('shown.bs.modal', function() {
+        loadSF2FormDefaults();
+    });
+
+    // Reset form when modal closes
+    $('#sf2Modal').on('hidden.bs.modal', function() {
+        $('#sf2Form')[0].reset();
+        hideSF2Error();
+        $('#sf2_teacher').html('<option value="">Select Teacher</option>');
+        $('#sf2_grade_section').html('<option value="">Select Grade & Section</option>');
+        $('#sf2_month_year').html('<option value="">Select School Year First</option>');
     });
 }
 
@@ -736,7 +749,7 @@ function updateSF2Teachers(schoolId) {
     var $teacherSelect = $('#sf2_teacher');
 
     if (!schoolId) {
-        $teacherSelect.html('<option value="">All Teachers</option>');
+        $teacherSelect.html('<option value="">Select Teacher</option>');
         return;
     }
 
@@ -744,7 +757,13 @@ function updateSF2Teachers(schoolId) {
 
     $.get(`/admin/schools/${schoolId}/teachers`)
         .done(function(teachers) {
-            $teacherSelect.html('<option value="">All Teachers</option>').prop('disabled', false);
+            $teacherSelect.html('<option value="">Select Teacher</option>').prop('disabled', false);
+
+            if (teachers.length === 0) {
+                $teacherSelect.append('<option value="" disabled>No teachers found in this school</option>');
+                showSF2Error('No teachers found for the selected school. Please select a different school.');
+                return;
+            }
 
             teachers.forEach(function(teacher) {
                 var optionText = teacher.sections_count > 0
@@ -753,9 +772,16 @@ function updateSF2Teachers(schoolId) {
 
                 $teacherSelect.append(`<option value="${teacher.id}">${optionText}</option>`);
             });
+
+            // Pre-select if only one teacher
+            if (teachers.length === 1) {
+                $teacherSelect.val(teachers[0].id).trigger('change');
+            }
         })
-        .fail(function() {
+        .fail(function(xhr, status, error) {
+            console.error('Failed to load teachers:', error);
             $teacherSelect.html('<option value="">Error loading teachers</option>').prop('disabled', false);
+            showSF2Error('Failed to load teachers. Please try refreshing the page or contact support.');
         });
 }
 
@@ -763,7 +789,7 @@ function updateSF2GradeSections(teacherId) {
     var $sectionSelect = $('#sf2_grade_section');
 
     if (!teacherId) {
-        $sectionSelect.html('<option value="">All Sections</option>');
+        $sectionSelect.html('<option value="">Select Grade & Section</option>');
         return;
     }
 
@@ -771,15 +797,28 @@ function updateSF2GradeSections(teacherId) {
 
     $.get(`/api/teacher-sections/${teacherId}`)
         .done(function(sections) {
-            $sectionSelect.html('<option value="">All Sections</option>').prop('disabled', false);
+            $sectionSelect.html('<option value="">Select Grade & Section</option>').prop('disabled', false);
+
+            if (sections.length === 0) {
+                $sectionSelect.append('<option value="" disabled>No sections assigned to this teacher</option>');
+                showSF2Error('The selected teacher has no sections assigned. Please select a different teacher.');
+                return;
+            }
 
             sections.forEach(function(section) {
                 var optionText = `${section.display_name} (${section.students_count} students)`;
                 $sectionSelect.append(`<option value="${section.value}">${optionText}</option>`);
             });
+
+            // Pre-select if only one section
+            if (sections.length === 1) {
+                $sectionSelect.val(sections[0].value);
+            }
         })
-        .fail(function() {
+        .fail(function(xhr, status, error) {
+            console.error('Failed to load sections:', error);
             $sectionSelect.html('<option value="">Error loading sections</option>').prop('disabled', false);
+            showSF2Error('Failed to load sections. Please try again or contact support.');
         });
 }
 
@@ -851,6 +890,108 @@ function updateSF2MonthsForSemester() {
         });
 }
 
+// New SF2 functions for month/year handling
+function updateSF2MonthYearOptions() {
+    var $schoolYearSelect = $('#sf2_school_year');
+    var $monthYearSelect = $('#sf2_month_year');
+    var selectedOption = $schoolYearSelect.find('option:selected');
+
+    if (!selectedOption.val()) {
+        $monthYearSelect.html('<option value="">Select School Year First</option>');
+        return;
+    }
+
+    var startMonth = parseInt(selectedOption.data('start-month'));
+    var startYear = parseInt(selectedOption.data('start-year'));
+    var endMonth = parseInt(selectedOption.data('end-month'));
+    var endYear = parseInt(selectedOption.data('end-year'));
+
+    $monthYearSelect.html('');
+
+    var currentDate = new Date();
+    var currentMonth = currentDate.getMonth() + 1;
+    var currentYear = currentDate.getFullYear();
+
+    var months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+
+    var year = startYear;
+    var month = startMonth;
+    var currentMonthFound = false;
+
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+        var value = year + '-' + String(month).padStart(2, '0');
+        var label = months[month - 1] + ' ' + year;
+        var option = `<option value="${value}">${label}</option>`;
+        $monthYearSelect.append(option);
+
+        // Check if this is the current month/year
+        if (month === currentMonth && year === currentYear) {
+            $monthYearSelect.val(value);
+            $('#sf2_month_hidden').val(month); // Integer value
+            $('#sf2_year_hidden').val(year); // Integer value
+            currentMonthFound = true;
+        }
+
+        month++;
+        if (month > 12) {
+            month = 1;
+            year++;
+        }
+    }
+
+    // If current month not found, select the first option
+    if (!currentMonthFound && $monthYearSelect.find('option').length > 0) {
+        var firstValue = $monthYearSelect.find('option:first').val();
+        $monthYearSelect.val(firstValue);
+        if (firstValue) {
+            var parts = firstValue.split('-');
+            $('#sf2_month_hidden').val(parseInt(parts[1], 10)); // Integer value
+            $('#sf2_year_hidden').val(parseInt(parts[0], 10)); // Integer value
+        }
+    }
+}
+
+function loadSF2FormDefaults() {
+    // Hide any previous errors when modal opens
+    hideSF2Error();
+    
+    // School year should already be pre-selected from the blade template
+    // Trigger month/year update
+    updateSF2MonthYearOptions();
+
+    // If school is already selected, load teachers
+    var schoolId = $('#sf2_school').val();
+    console.log('SF2 Modal opened - School ID:', schoolId);
+    
+    if (schoolId) {
+        console.log('Loading teachers for school:', schoolId);
+        updateSF2Teachers(schoolId);
+    } else {
+        console.warn('No school selected when SF2 modal opened');
+        showSF2Error('Please select a school first to load teachers.');
+    }
+    
+    // Trigger month/year change to populate hidden fields
+    setTimeout(function() {
+        $('#sf2_month_year').trigger('change');
+    }, 100);
+}
+
+// SF2 Modal Error Display Functions
+function showSF2Error(message) {
+    $('#sf2ErrorMessage').text(message);
+    $('#sf2ErrorContainer').fadeIn(300);
+    
+    // Scroll modal to top to show error
+    $('#sf2Modal .modal-body').animate({ scrollTop: 0 }, 300);
+}
+
+function hideSF2Error() {
+    $('#sf2ErrorContainer').fadeOut(200);
+    $('#sf2ErrorMessage').text('');
+}
+
 function clearFilters() {
     $('#filterForm')[0].reset();
     updateFilterFields();
@@ -862,32 +1003,70 @@ function clearFilters() {
 $('#generateSF2Btn').click(function() {
     var formData = new FormData($('#sf2Form')[0]);
 
+    // Hide any previous errors
+    hideSF2Error();
+
+    // Debug: Log form values
+    console.log('SF2 Form Data:', {
+        school_id: formData.get('school_id'),
+        school_year_id: formData.get('school_year_id'),
+        teacher_id: formData.get('teacher_id'),
+        grade_section: formData.get('grade_section'),
+        month: formData.get('month'),
+        month_type: typeof formData.get('month'),
+        year: formData.get('year'),
+        year_type: typeof formData.get('year'),
+        month_year: formData.get('month_year')
+    });
+
     // Validation
-    if (!formData.get('school_id') || !formData.get('semester_id') ||
-        !formData.get('month') || !formData.get('year')) {
-        showError('Please fill in all required fields (School, Semester, Month, Year)');
+    if (!formData.get('school_id')) {
+        showSF2Error('Please select a school');
+        return;
+    }
+    if (!formData.get('school_year_id')) {
+        showSF2Error('Please select a school year');
+        return;
+    }
+    if (!formData.get('teacher_id')) {
+        showSF2Error('Please select a teacher');
+        return;
+    }
+    if (!formData.get('grade_section')) {
+        showSF2Error('Please select a grade & section');
+        return;
+    }
+    if (!formData.get('month') || !formData.get('year')) {
+        showSF2Error('Please select a month and year');
         return;
     }
 
     $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Generating...');
 
-    $.post('{{ route("admin.sf2.generate") }}', formData, {
+    $.ajax({
+        url: '{{ route("admin.sf2.generate") }}',
+        method: 'POST',
+        data: formData,
         processData: false,
-        contentType: false
+        contentType: false,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
     })
     .done(function(response) {
         if (response.success) {
             $('#sf2Modal').modal('hide');
+            hideSF2Error();
             $('#sf2ResultMessage').text(response.message);
             $('#downloadExcelBtn').attr('href', response.download_url);
             $('#sf2ResultModal').modal('show');
         } else {
-            showError(response.message || 'Failed to generate SF2');
+            showSF2Error(response.message || 'Failed to generate SF2');
         }
     })
     .fail(function(xhr) {
         var message = xhr.responseJSON?.message || 'An error occurred while generating SF2';
-        showError(message);
+        showSF2Error(message);
     })
     .always(function() {
         $('#generateSF2Btn').prop('disabled', false).html('<i class="fas fa-file-excel me-1"></i>Generate SF2');

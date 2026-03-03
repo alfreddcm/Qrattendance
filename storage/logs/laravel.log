@@ -1169,3 +1169,81 @@
 [2026-02-08 18:50:06] local.INFO: Attendance saved {"attendance_id":4,"student_id":212,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-02-08 18:50:06","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-02-08 18:50:06","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
 [2026-02-08 18:50:06] local.INFO: Session stored for student {"session_key":"scanned_student_867363","student_id":212,"attendance_id":4} 
 [2026-02-08 18:50:06] local.INFO: Public QR attendance recorded {"student_id":212,"student_name":"Rachelle Ann G. Salvador","attendance_type":"time_in_pm","status":"Late"} 
+[2026-03-03 23:42:39] local.WARNING: Failed login attempt {"username":"admin","ip":"127.0.0.1"} 
+[2026-03-03 23:42:44] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-03 23:57:08] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-04 00:00:58] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-04 00:02:08] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-04 00:02:14] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-04 00:02:44] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-04 00:09:06] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-03-04 00:12:56] local.INFO: School Year index accessed {"user_id":1,"user_role":"admin"} 
+[2026-03-04 00:12:56] local.INFO: Admin viewing all school years {"user_id":1,"school_years_count":2,"sections_count":5} 
+[2026-03-04 00:13:08] local.INFO: School Year edit accessed {"school_year_id":"2","user_id":1} 
+[2026-03-04 00:32:57] local.INFO: SF2 School Info {"school_id":"33011","school_name":"San Guillermo Vocational and Industrial High School","C6_value":"33011","C8_value":"San Guillermo Vocational and Industrial High School"} 
+[2026-03-04 00:32:58] local.INFO: calculateConsecutiveAbsences called {"students_count":60,"month":"3","year":"2026","gender":"Male"} 
+[2026-03-04 00:32:58] local.INFO: After gender filter {"gender":"Male","filtered_count":31} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":204,"student_name":"Ana Rodriguez","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":207,"student_name":"Mark Kevin L. Agcaoili","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":209,"student_name":"John Lloyd M. Pua","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":211,"student_name":"Christian Dave T. Baggayan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":213,"student_name":"Jericho M. Raspado","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":215,"student_name":"Ruel Jhon B. Corpuz","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":217,"student_name":"Arjay V. Taccad","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":219,"student_name":"Kevin Roy S. Tumaliuan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":221,"student_name":"Justin P. Macapulay","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":223,"student_name":"Dexter M. Zipagan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":225,"student_name":"Marvin J. Bangayan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":227,"student_name":"Jayson C. Tallud","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":229,"student_name":"Roderick S. Addun","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":231,"student_name":"Francis G. Baccay","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":233,"student_name":"Kyle Vincent B. Siriban","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":235,"student_name":"Paulo D. Malana","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":237,"student_name":"Adrian C. Sibbaluca","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":239,"student_name":"Ian Gabriel M. Baligod","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":241,"student_name":"Bryan J. Caraig","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":243,"student_name":"Kenneth D. Lingan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":245,"student_name":"Mark Anthony G. Tuliao","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":247,"student_name":"Vincent Paul S. Calimag","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":249,"student_name":"Joshua D. Coballes","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":251,"student_name":"Christian B. Soriano","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":253,"student_name":"Rafael C. Mallillin","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":255,"student_name":"Miguel J. Mamba","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":257,"student_name":"Lawrence G. Cabildo","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":259,"student_name":"Daniel P. Bassig","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":261,"student_name":"Angelo M. Cudal","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":263,"student_name":"Gabriel L. Gatan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":265,"student_name":"Dominic S. Respicio","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Final consecutive absence count {"count":0,"gender":"Male","weekdays_checked":0,"latest_data_date":"2026-02-08"} 
+[2026-03-04 00:32:58] local.INFO: calculateConsecutiveAbsences called {"students_count":60,"month":"3","year":"2026","gender":"Female"} 
+[2026-03-04 00:32:58] local.INFO: After gender filter {"gender":"Female","filtered_count":29} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":208,"student_name":"Jenny Rose B. Mamauag","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":210,"student_name":"Angelica S. Gumaru","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":212,"student_name":"Rachelle Ann G. Salvador","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":214,"student_name":"Liza Mae C. Domingo","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":216,"student_name":"Princess Nicole D. Gatan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":218,"student_name":"Mary Joy A. Balubal","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":220,"student_name":"Shaira Mae D. Gannaban","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":222,"student_name":"Camille B. Aggabao","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":224,"student_name":"Hazel Ann L. Cauilan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":226,"student_name":"Ella Victoria R. Allam","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":228,"student_name":"Kimberly G. Bunagan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":230,"student_name":"Nicole S. Dayag","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":232,"student_name":"Bea Angela M. Laggui","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":234,"student_name":"Micaela R. Pagulayan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":236,"student_name":"Jasmine T. Zinampan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":238,"student_name":"Chloe Rose G. Madduma","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":240,"student_name":"Lyka Mae S. Callueng","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":242,"student_name":"Trisha Ann L. Quilang","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":244,"student_name":"Sofia Marie B. Taguinod","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":246,"student_name":"Rochelle P. Macaraniag","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":248,"student_name":"Abigail M. Narag","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":250,"student_name":"Mary Grace L. Furigay","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":252,"student_name":"Irish Janine G. Manuel","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":254,"student_name":"Andrea S. Pattugalan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":256,"student_name":"Kristel Mae T. Duruin","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":258,"student_name":"Sharmaine B. Mabborang","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":260,"student_name":"Fatima S. Guifaya","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":262,"student_name":"Mariel C. Tamayao","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":264,"student_name":"Samantha B. Baggayan","attendance_records":0,"weekdays_in_month":0} 
+[2026-03-04 00:32:58] local.INFO: Final consecutive absence count {"count":0,"gender":"Female","weekdays_checked":0,"latest_data_date":"2026-02-08"} 
