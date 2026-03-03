@@ -107,7 +107,7 @@
         <div class="row g-4 align-items-center">
             <div class="col-lg-6 d-flex flex-column justify-content-center">
                 <div class="d-flex justify-content-center justify-content-lg-start mb-3 mt-4">
-                    <img src="{{ asset('img/icon.png') }}" alt="Scan-to-Notify Logo" class="hero-logo">
+                    <img src="{{ asset('storage/branding/icon.png') }}" alt="Scan-to-Notify Logo" class="hero-logo">
                 </div>
                 <h1 class="mb-3 text-center text-lg-start">
 
