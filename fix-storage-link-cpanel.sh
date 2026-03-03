@@ -1,96 +1,75 @@
 #!/bin/bash
 
 # Fix Storage Link for cPanel Deployment
-# This script properly creates the storage symlink for Laravel on cPanel
-# Usage: Upload to your project root on cPanel, then run: bash fix-storage-link-cpanel.sh
+# CUSTOM SETUP: Web root is public_html (not public_html/public)
+# Usage: bash fix-storage-link-cpanel.sh
 
 echo "========================================="
-echo "  Laravel Storage Link Fix for cPanel"
+echo "  Storage Link Fix for cPanel"
+echo "  Custom Setup: public_html is web root"
 echo "========================================="
 echo ""
 
-# Navigate to project root (adjust if needed)
 cd "$(dirname "$0")"
-
 echo "Current directory: $(pwd)"
 echo ""
 
-# Check if storage/app/public exists
+# Ensure storage/app/public exists
 if [ ! -d "storage/app/public" ]; then
-    echo "✗ Error: storage/app/public directory not found!"
-    echo "Creating storage/app/public directory..."
-    mkdir -p storage/app/public
+    echo "Creating storage/app/public..."
+    mkdir -p storage/app/public/{student_pictures,school_logos,qr_codes,qr-codes,generated,templates,imports}
     echo "✓ Created storage/app/public"
 fi
 
-# Remove existing storage link/directory if it exists
-if [ -L "public/storage" ]; then
-    echo "Removing existing symbolic link..."
-    rm -f public/storage
-    echo "✓ Old symlink removed"
-elif [ -d "public/storage" ]; then
-    echo "⚠ Warning: public/storage is a real directory (not a symlink)!"
-    echo "This directory will be backed up then removed..."
-    
-    # Backup existing directory
-    BACKUP_DIR="public/storage_backup_$(date +%Y%m%d_%H%M%S)"
-    mv public/storage "$BACKUP_DIR"
-    echo "✓ Backed up to: $BACKUP_DIR"
+# Remove broken symlink inside storage if it exists
+if [ -L "storage/app/public/public" ]; then
+    echo "Removing broken symlink from storage/app/public..."
+    rm -f storage/app/public/public
+    echo "✓ Removed broken symlink"
 fi
 
-# Create fresh symbolic link using relative path (works better on cPanel)
+# Create symlinks in storage/ pointing to app/public/ subdirectories
 echo ""
-echo "Creating symbolic link..."
-ln -s ../storage/app/public public/storage
+echo "Creating storage symlinks..."
 
-# Verify the link was created
-if [ -L "public/storage" ]; then
-    echo ""
-    echo "✅ SUCCESS! Symbolic link created successfully!"
-    echo ""
-    echo "Link details:"
-    ls -la public/ | grep storage
-    echo ""
+# Array of folders to symlink
+folders=("student_pictures" "school_logos" "qr_codes" "qr-codes" "generated" "templates" "imports")
+
+for folder in "${folders[@]}"; do
+    # Backup old folder if it exists and is not a symlink
+    if [ -d "storage/$folder" ] && [ ! -L "storage/$folder" ]; then
+        echo "Backing up storage/$folder..."
+        mv "storage/$folder" "storage/${folder}_backup_$(date +%Y%m%d_%H%M%S)"
+    fi
     
-    # Show storage contents
-    echo "Files in storage/app/public:"
-    ls -la storage/app/public/
-    echo ""
+    # Remove old symlink
+    rm -f "storage/$folder"
     
-    # Set proper permissions
-    echo "Setting permissions..."
-    chmod -R 755 storage
-    chmod -R 755 bootstrap/cache
-    echo "✓ Permissions set"
-    echo ""
-    
-    echo "========================================="
-    echo "✅ STORAGE LINK FIXED!"
-    echo "========================================="
-    echo ""
-    echo "Your files are now accessible at:"
-    echo "https://yourdomain.com/storage/..."
-    echo ""
-    echo "Examples:"
-    echo "- Student pictures: /storage/student_pictures/..."
-    echo "- School logos: /storage/school_logos/..."
-    echo "- QR codes: /storage/qr_codes/..."
-    echo ""
-else
-    echo ""
-    echo "❌ FAILED to create symbolic link automatically"
-    echo ""
-    echo "Please try manually:"
-    echo "1. SSH into your cPanel"
-    echo "2. Navigate to your project directory"
-    echo "3. Run these commands:"
-    echo ""
-    echo "   cd $(pwd)"
-    echo "   rm -rf public/storage"
-    echo "   ln -s ../storage/app/public public/storage"
-    echo "   chmod -R 755 storage"
-    echo ""
-    echo "Or try Laravel's artisan command:"
-    echo "   php artisan storage:link"
-    echo ""
-fi
+    # Create new symlink
+    if [ -d "storage/app/public/$folder" ]; then
+        ln -s "app/public/$folder" "storage/$folder"
+        echo "✓ storage/$folder -> app/public/$folder"
+    fi
+done
+
+echo ""
+echo "Setting permissions..."
+chmod -R 755 storage
+chmod -R 755 bootstrap/cache
+echo "✓ Permissions set"
+
+echo ""
+echo "========================================="
+echo "✅ STORAGE LINKS CREATED!"
+echo "========================================="
+echo ""
+echo "Symlinks created in storage/:"
+ls -la storage/ | grep "^l"
+echo ""
+echo "Files accessible at:"
+echo "  https://sgvihsscan.com/storage/student_pictures/..."
+echo "  https://sgvihsscan.com/storage/school_logos/..."
+echo "  https://sgvihsscan.com/storage/qr_codes/..."
+echo ""
+echo "Next: Run 'php artisan config:clear' and 'php artisan cache:clear'"
+echo ""
