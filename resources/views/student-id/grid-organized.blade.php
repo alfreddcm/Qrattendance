@@ -265,7 +265,7 @@
                                         </td>
                                         <td class="info-cell">
                                             <div class="student-name">{{ $student->name }}</div>
-                                            <div class="student-id-number">ID: {{ $student->id_no }}</div>
+                                            <div class="student-id-number">LRN: {{ $student->id_no }}</div>
                                             <div class="info-line">
                                                 @if($student->section)
                                                     Grade {{ $student->section->gradelevel }} - {{ $student->section->name }}

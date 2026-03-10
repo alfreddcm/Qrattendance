@@ -176,7 +176,7 @@
                             <tr>
                                 <th class="text-center" style="width: 60px;">#</th>
                                 <th class="text-center" style="width: 80px;">Photo</th>
-                                <th class="sortable" data-sort="name" style="cursor: pointer;">Name & ID <i class="fas fa-sort text-muted"></i></th>
+                                <th class="sortable" data-sort="name" style="cursor: pointer;">Name & LRN <i class="fas fa-sort text-muted"></i></th>
                                 <th class="sortable" data-sort="section" style="cursor: pointer;">Section <i class="fas fa-sort text-muted"></i></th>
                                 <th class="text-center sortable" data-sort="gender" style="width: 100px; cursor: pointer;">Gender <i class="fas fa-sort text-muted"></i></th>
                                 <th class="text-center sortable" data-sort="age" style="width: 80px; cursor: pointer;">Age <i class="fas fa-sort text-muted"></i></th>
@@ -226,7 +226,7 @@
 
                                 <td>
                                     <div class="fw-bold">{{ $student->name }}</div>
-                                    <small class="text-muted">ID: {{ $student->id_no ?? 'N/A' }}</small>
+                                    <small class="text-muted">LRN: {{ $student->id_no ?? 'N/A' }}</small>
                                 </td>
 
 
@@ -654,7 +654,7 @@
                     <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code" class="img-fluid d-block mx-auto" style="max-width: 300px;">
                     <div class="mt-3">
                         <h6>{{ $student->name }}</h6>
-                        <p class="text-muted mb-0">ID: {{ $student->id_no ?? 'N/A' }}</p>
+                        <p class="text-muted mb-0">LRN: {{ $student->id_no ?? 'N/A' }}</p>
                     </div>
                 @else
                     <div class="text-muted">
@@ -745,8 +745,8 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="id_no" name="id_no" required placeholder="e.g., 202401" min="10000000000" max="99999999999" pattern="\d{11}" maxlength="11" title="Enter 11-digit student ID number">
+                            <label for="id_no" class="form-label">LRN (Learner Reference Number) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="id_no" name="id_no" required placeholder="LRN Number" maxlength="12" pattern="\d{1,12}" title="Enter up to 12-digit LRN number">
                         </div>
                         <div class="col-md-6">
                             <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
@@ -965,9 +965,9 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <ul class="mb-0" style="font-size: 0.75rem;">
-                                                <li>Fill all required fields: Student ID, Name <strong>(LN, FN MI.)</strong>, Gender (M/F), Age, School ID, Teacher ID, Section ID, Emergency Contact Name, Relationship, Emergency Contact Phone</li>
+                                                <li>Fill all required fields: LRN, Name <strong>(LN, FN MI.)</strong>, Gender (M/F), Age, School ID, Teacher ID, Section ID, Emergency Contact Name, Relationship, Emergency Contact Phone</li>
                                                 <li>Name format must be: <strong>Last Name, First Name Middle Initial.</strong> (example: Dela Cruz, Juan M.)</li>
-                                                <li>Student IDs must be unique - duplicates will be skipped</li>
+                                                <li>LRNs must be unique - duplicates will be skipped</li>
                                                 <li>School ID, Teacher ID, and Section ID must match existing records in the system</li>
                                             </ul>
                                         </div>

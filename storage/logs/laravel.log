@@ -1247,3 +1247,4 @@
 [2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":262,"student_name":"Mariel C. Tamayao","attendance_records":0,"weekdays_in_month":0} 
 [2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":264,"student_name":"Samantha B. Baggayan","attendance_records":0,"weekdays_in_month":0} 
 [2026-03-04 00:32:58] local.INFO: Final consecutive absence count {"count":0,"gender":"Female","weekdays_checked":0,"latest_data_date":"2026-02-08"} 
+[2026-03-04 21:03:13] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 

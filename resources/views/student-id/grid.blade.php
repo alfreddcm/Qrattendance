@@ -169,7 +169,7 @@
                             </div>
                         </td>
                         <td class="info-cell">
-                            <div class="student-id-number">ID: {{ $student->id_no }}</div>
+                            <div class="student-id-number">LRN: {{ $student->id_no }}</div>
                             <div class="student-name">{{ $student->name }}</div>
                             <div class="school-info">{{ $student->school->name ?? 'San Guillermo Vocational and Industrial High School' }}</div>
                             <div class="info-line">

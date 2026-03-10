@@ -934,7 +934,7 @@
                     <div class="row text-start">
                         <div class="col-6"><strong>Name:</strong></div>
                         <div class="col-6">${data.student.name}</div>
-                        <div class="col-6"><strong>ID No:</strong></div>
+                        <div class="col-6"><strong>LRN:</strong></div>
                         <div class="col-6">${data.student.id_no}</div>
                         <div class="col-6"><strong>Section:</strong></div>
                         <div class="col-6">${data.student.section || 'N/A'}</div>

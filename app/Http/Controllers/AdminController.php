@@ -2745,7 +2745,7 @@ class AdminController extends Controller
 
         try {
             $validated = $request->validate([
-                'id_no' => 'required|string|max:255|unique:students,id_no',
+                'id_no' => 'required|string|max:12|unique:students,id_no',
                 'name' => 'required|string|max:255',
                 'gender' => 'required|string|max:1',
                 'age' => 'required|integer',
@@ -2830,7 +2830,7 @@ class AdminController extends Controller
     {
         $student = Student::findOrFail($id);
         $validated = $request->validate([
-            'id_no' => 'required|string|max:255|unique:students,id_no,' . $id,
+            'id_no' => 'required|string|max:12|unique:students,id_no,' . $id,
             'name' => 'required|string|max:255',
             'gender' => 'required|string|max:1',
             'age' => 'required|integer',
@@ -3044,7 +3044,7 @@ class AdminController extends Controller
             $handle = fopen('php://output', 'w');
             
             fputcsv($handle, [
-                'ID No',
+                'LRN',
                 'Name',
                 'Gender',
                 'Age',
@@ -3105,7 +3105,7 @@ class AdminController extends Controller
             
             // Standard headers matching ImportController expected order
             fputcsv($handle, [
-                'ID No',
+                'LRN',
                 'Name',
                 'Gender',
                 'Age',
@@ -3118,7 +3118,7 @@ class AdminController extends Controller
             
             // Add example data rows
             fputcsv($handle, [
-                '0001',
+                '',
                 'Juan Dela Cruz',
                 'M',
                 '17',
@@ -3130,7 +3130,7 @@ class AdminController extends Controller
             ]);
             
             fputcsv($handle, [
-                '0002',
+                '',
                 'Maria Santos',
                 'F',
                 '16',
@@ -3142,7 +3142,7 @@ class AdminController extends Controller
             ]);
             
             fputcsv($handle, [
-                '0003',
+                '',
                 'Ana Rodriguez',
                 'F',
                 '18',
@@ -3256,7 +3256,7 @@ class AdminController extends Controller
             $handle = fopen('php://output', 'w');
             
             fputcsv($handle, [
-                'ID No',
+                'LRN',
                 'Name',
                 'Gender',
                 'Age',
@@ -3420,7 +3420,7 @@ class AdminController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'id_no' => 'required|string|max:20|unique:students,id_no,' . $id,
+            'id_no' => 'required|string|max:12|unique:students,id_no,' . $id,
             'age' => 'required|integer|min:1|max:100',
             'gender' => 'required|in:M,F',
             'address' => 'required|string|max:500',

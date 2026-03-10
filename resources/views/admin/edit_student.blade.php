@@ -240,8 +240,8 @@
 
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <label for="id_no" class="form-label small">ID No</label>
-                            <input type="number" class="form-control form-control-sm" id="id_no" name="id_no" value="{{ $student->id_no ?? $student->student_id ?? '' }}" required min="1" title="Enter student ID number">
+                            <label for="id_no" class="form-label small">LRN</label>
+                            <input type="text" class="form-control form-control-sm" id="id_no" name="id_no" value="{{ $student->id_no ?? $student->student_id ?? '' }}" required maxlength="12" pattern="\d{1,12}" title="Enter LRN (up to 12 digits)">
                         </div>
 
                         <div class="col-md-6">

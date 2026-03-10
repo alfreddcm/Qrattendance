@@ -190,7 +190,7 @@
                                         <th>Date</th>
                                         <th>Time</th>
                                         <th>Student</th>
-                                        <th>Student ID</th>
+                                        <th>LRN</th>
                                         <th>School</th>
                                         <th>Teacher</th>
                                         <th>Section</th>

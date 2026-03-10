@@ -228,7 +228,7 @@
 
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <label for="id_no" class="form-label small">ID No</label>
+                            <label for="id_no" class="form-label small">LRN</label>
                             <input type="text" class="form-control form-control-sm" id="id_no" name="id_no" value="{{ $student->id_no }}" required>
                         </div>
 
@@ -584,7 +584,7 @@ editForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
         let changedFields = [];
-        if (idNoChanged) changedFields.push(`ID No: "${originalIdNo}" → "${currentIdNo}"`);
+        if (idNoChanged) changedFields.push(`LRN: "${originalIdNo}" → "${currentIdNo}"`);
         if (nameChanged) changedFields.push(`Name: "${originalName}" → "${currentName}"`);
         
         Swal.fire({
@@ -600,7 +600,7 @@ editForm.addEventListener('submit', function(e) {
                         The existing QR code will be <strong>deleted</strong> because:
                     </p>
                     <ul style="margin: 10px 0; padding-left: 20px; color: #6c757d; font-size: 0.9em;">
-                        ${idNoChanged ? '<li>ID No is used in QR code data</li>' : ''}
+                        ${idNoChanged ? '<li>LRN is used in QR code data</li>' : ''}
                         ${nameChanged || idNoChanged ? '<li>File name must match student info</li>' : ''}
                     </ul>
                     <p style="margin-top: 15px; color: #28a745;">

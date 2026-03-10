@@ -25,7 +25,7 @@
                     <tr>
                         @if($type === 'daily')
                             <th width="8%">Date</th>
-                            <th width="12%">ID No</th>
+                            <th width="12%">LRN</th>
                             <th width="20%">Student Name</th>
                             <th width="10%">Grade</th>
                             <th width="10%">Section</th>
@@ -35,7 +35,7 @@
                             <th width="8%">PM Out</th>
                             <th width="8%">Status</th>
                         @elseif($type === 'monthly')
-                            <th width="12%">ID No</th>
+                            <th width="12%">LRN</th>
                             <th width="25%">Student Name</th>
                             <th width="10%">Grade</th>
                             <th width="10%">Section</th>
@@ -45,7 +45,7 @@
                             <th width="8%">Partial</th>
                             <th width="11%">Remarks</th>
                         @elseif($type === 'quarterly')
-                            <th width="12%">ID No</th>
+                            <th width="12%">LRN</th>
                             <th width="25%">Student Name</th>
                             <th width="10%">Grade</th>
                             <th width="15%">School Info</th>

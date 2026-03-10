@@ -185,7 +185,7 @@ class StudentManagementController extends Controller
 
         try {
             $validated = $this->validateForResponse($request, [
-                'id_no' => 'required|string|max:255|unique:students,id_no',
+                'id_no' => 'required|string|max:12|unique:students,id_no',
                 'name' => 'required|string|max:255',
                 'section_id' => [
                     'required',
@@ -341,7 +341,7 @@ class StudentManagementController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $this->validateForResponse($request, [
-            'id_no' => 'required|string|max:255',
+            'id_no' => 'required|string|max:12',
             'name' => 'required|string|max:255',
             'section_id' => 'required|integer',
             'gender' => 'required|string|max:1',
@@ -837,7 +837,7 @@ public function bulkDelete(Request $request)
             $handle = fopen('php://output', 'w');
             
              fputcsv($handle, [
-                'ID No',
+                'LRN',
                 'Name',
                 'Section',
                 'Grade Level',
@@ -913,7 +913,7 @@ public function bulkDelete(Request $request)
             
             // Standard headers matching ImportController expected order
             fputcsv($handle, [
-                'ID No',
+                'LRN',
                 'Name',
                 'Gender',
                 'Age',
@@ -926,7 +926,7 @@ public function bulkDelete(Request $request)
             
             // Add example data rows
             fputcsv($handle, [
-                '0001',
+                '',
                 'Juan Dela Cruz',
                 'M',
                 '17',
@@ -938,7 +938,7 @@ public function bulkDelete(Request $request)
             ]);
             
             fputcsv($handle, [
-                '0002',
+                '',
                 'Maria Santos',
                 'F',
                 '16',
