@@ -53,7 +53,7 @@
                             <table class="table table-bordered table-striped">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>ID No</th>
+                                        <th>LRN</th>
                                         <th>Name</th>
                                         <th>Gender</th>
                                         <th>Age</th>

@@ -280,7 +280,7 @@
                             <th class="text-center" style="width: 60px;">#</th>
                             <th class="text-center" style="width: 80px;">Photo</th>
                             <th>
-                                Name & ID
+                                Name & LRN
                             </th>
                             <th>
                                 Section
@@ -337,7 +337,7 @@
 
                              <td>
                                 <div class="fw-bold">{{ $student->name }}</div>
-                                <small class="text-muted">ID: {{ $student->id_no }}</small>
+                                <small class="text-muted">LRN: {{ $student->id_no }}</small>
                             </td>
 
                              <td>
@@ -707,7 +707,7 @@
                     </div>
                 @endif
                 <div class="mt-3">
-                    <small class="text-muted">Student ID: {{ $student->id_no }}</small>
+                    <small class="text-muted">LRN: {{ $student->id_no }}</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -734,7 +734,7 @@
                 <div class="mb-3">
                     <i class="fas fa-qrcode text-primary" style="font-size: 3rem;"></i>
                 </div>
-                <p class="mb-3">Generate a QR code for <strong>{{ $student->name }}</strong> (ID: {{ $student->id_no }})?</p>
+                <p class="mb-3">Generate a QR code for <strong>{{ $student->name }}</strong> (LRN: {{ $student->id_no }})?</p>
                 <p class="text-muted small">This will create a unique QR code that can be used for attendance tracking.</p>
             </div>
             <div class="modal-footer">
@@ -834,8 +834,8 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="id_no" class="form-label">Student ID <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="id_no" name="id_no" value="{{ old('id_no') }}" required placeholder="e.g., 2024-001">
+                                    <label for="id_no" class="form-label">LRN (Learner Reference Number) <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="id_no" name="id_no" value="{{ old('id_no') }}" required placeholder="LRN Number" maxlength="12" pattern="\d{1,12}">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="name" class="form-label">Full Name (LN, FN MI.) <span class="text-danger">*</span></label>
@@ -1561,10 +1561,10 @@ document.addEventListener('DOMContentLoaded', function() {
              // Validate all required fields
              const validationErrors = [];
              
-             // Student ID
+             // LRN
              const idNo = this.querySelector('#id_no');
              if (!idNo.value.trim()) {
-                 validationErrors.push('Student ID is required');
+                 validationErrors.push('LRN is required');
                  idNo.classList.add('is-invalid');
              }
              

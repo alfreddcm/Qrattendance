@@ -381,7 +381,7 @@
                                     <thead class="table-dark sticky-top">
                                         <tr>
                                             <th style="width: 50px;">No.</th>
-                                            <th style="width: 80px;">Student ID</th>
+                                            <th style="width: 80px;">LRN</th>
                                             <th style="width: 200px;">Name</th>
                                             <th style="width: 120px;">Section</th>
                                             <th style="min-width: 200px;">Missing Information</th>

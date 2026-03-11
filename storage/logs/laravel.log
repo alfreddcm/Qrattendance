@@ -1247,6 +1247,7 @@
 [2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":262,"student_name":"Mariel C. Tamayao","attendance_records":0,"weekdays_in_month":0} 
 [2026-03-04 00:32:58] local.INFO: Student attendance check {"student_id":264,"student_name":"Samantha B. Baggayan","attendance_records":0,"weekdays_in_month":0} 
 [2026-03-04 00:32:58] local.INFO: Final consecutive absence count {"count":0,"gender":"Female","weekdays_checked":0,"latest_data_date":"2026-02-08"} 
+<<<<<<< HEAD
 [2026-03-10 23:07:24] local.ERROR: SQLSTATE[HY000] [1049] Unknown database 'scan' (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: scan, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`) {"exception":"[object] (Illuminate\\Database\\QueryException(code: 1049): SQLSTATE[HY000] [1049] Unknown database 'scan' (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: scan, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`) at C:/Users/Russell Jheiss/OneDrive - isu.edu.ph/Documents/Qrattendance/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838)
 [stacktrace]
 #0 C:/Users/Russell Jheiss/OneDrive - isu.edu.ph/Documents/Qrattendance/vendor/laravel/framework/src/Illuminate/Database/Connection.php(794): Illuminate/Database/Connection->runQueryCallback('select exists (...', Array, Object(Closure))
@@ -3084,3 +3085,6 @@
 [2026-03-11 16:14:27] local.INFO: Public QR attendance recorded {"student_id":155,"student_name":"TUGADE,DERIC BAUTISTA","attendance_type":"time_in_pm","status":"Late"} 
 [2026-03-11 16:14:35] local.INFO: Attendance code deactivated {"teacher_id":6,"code":"526036"} 
 [2026-03-11 18:28:56] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+=======
+[2026-03-04 21:03:13] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+>>>>>>> 8f2a75333164ebce855ee522d36eac51d848be37

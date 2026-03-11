@@ -401,7 +401,7 @@
                     <thead style="position: sticky; top: 0; z-index: 2;">
                         <tr>
                             <th style="width: 20px; background: #212529; color: #fff;">#</th>
-                            <th style="width: 120px; background: #212529; color: #fff;">ID No</th>
+                            <th style="width: 120px; background: #212529; color: #fff;">LRN</th>
                             <th style="width: 180px; background: #212529; color: #fff;">Name</th>
                             <th style="width: 80px; background: #212529; color: #fff;">Gender</th>
                             <th style="width: 70px; background: #212529; color: #fff;">Age</th>
@@ -1013,7 +1013,7 @@
                         <table class="table table-sm table-bordered">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>ID No</th>
+                                    <th>LRN</th>
                                     <th>Existing Name</th>
                                     <th>New Name</th>
                                     <th>Section</th>

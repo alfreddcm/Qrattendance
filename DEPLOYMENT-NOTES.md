@@ -2,7 +2,7 @@
 
 ## ⚠️ Important: Non-Standard Laravel Setup
 
-**Your cPanel has a custom configuration:**
+**Your cPanel has a cfustom configuration:**
 - Web root: `public_html` (NOT `public_html/public`)
 - Laravel files: Located directly in `public_html/`
 - Storage files: `public_html/storage/app/public/`
