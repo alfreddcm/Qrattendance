@@ -166,6 +166,14 @@
             background-color: #dc3545 !important;
         }
 
+        .duplicate-row {
+            background-color: #fff3cd !important;
+            border-left: 3px solid #ffc107 !important;
+        }
+        .duplicate-row td:nth-child(2) input {
+            border-color: #dc3545 !important;
+            background-color: #fff5f5 !important;
+        }
 
         .form-select:disabled, .form-control:disabled {
             background-color: #f8f9fa;
@@ -734,6 +742,8 @@
 
         // Form submission validation
         document.getElementById('studentsForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Always prevent default first for async check
+
             @if($user->role === 'admin')
                 const allSelected = validationState.school && validationState.schoolYear && validationState.teacher && validationState.section;
             @else
@@ -741,18 +751,149 @@
             @endif
 
             if (!allSelected) {
-                e.preventDefault();
-                alert('Please complete all required selections before submitting.');
+                Swal.fire({ icon: 'warning', title: 'Incomplete', text: 'Please complete all required selections before submitting.', confirmButtonColor: '#1976d2' });
                 return false;
             }
 
-            // Check if there are any students to import
             const studentRows = document.querySelectorAll('#studentsTable tbody tr:not(:last-child)');
             if (studentRows.length === 0) {
-                e.preventDefault();
-                alert('Please add at least one student before submitting.');
+                Swal.fire({ icon: 'warning', title: 'No Students', text: 'Please add at least one student before submitting.', confirmButtonColor: '#1976d2' });
                 return false;
             }
+
+            // If conflicts already confirmed, submit directly
+            if (document.getElementById('confirm_conflicts').value === '1') {
+                e.target.submit();
+                return;
+            }
+
+            // Collect all ID numbers from the table
+            const idInputs = document.querySelectorAll('#studentsTable tbody tr:not(:last-child) td:nth-child(2) input');
+            const idNumbers = [];
+            idInputs.forEach(input => {
+                const val = input.value.trim();
+                if (val) idNumbers.push(val);
+            });
+
+            if (idNumbers.length === 0) {
+                e.target.submit();
+                return;
+            }
+
+            // Show loading
+            Swal.fire({ title: 'Checking for duplicates...', text: 'Please wait while we verify student IDs.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            // AJAX check for duplicate IDs
+            fetch('{{ route("import.check-duplicates") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ id_numbers: idNumbers })
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+
+                // Clear previous highlights
+                document.querySelectorAll('#studentsTable tbody tr.duplicate-row').forEach(row => {
+                    row.classList.remove('duplicate-row');
+                    row.style.backgroundColor = '';
+                });
+
+                const dbDuplicates = data.duplicates || [];
+                const inFileDuplicates = data.in_file_duplicates || [];
+                const dbDupIds = dbDuplicates.map(d => d.id_no.toString());
+                const hasDbDuplicates = dbDuplicates.length > 0;
+                const hasFileDuplicates = inFileDuplicates.length > 0;
+
+                if (!hasDbDuplicates && !hasFileDuplicates) {
+                    // No duplicates, submit the form
+                    e.target.submit();
+                    return;
+                }
+
+                // Highlight duplicate rows in the table
+                idInputs.forEach(input => {
+                    const val = input.value.trim();
+                    const row = input.closest('tr');
+                    if (dbDupIds.includes(val) || inFileDuplicates.includes(val)) {
+                        row.classList.add('duplicate-row');
+                        row.style.backgroundColor = '#fff3cd';
+                    }
+                });
+
+                // Build alert HTML
+                let alertHtml = '<div class="text-start">';
+
+                if (hasFileDuplicates) {
+                    alertHtml += `
+                        <div class="alert alert-danger mb-3">
+                            <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Duplicate IDs in file!</strong>
+                            The following ID numbers appear more than once in your import list:
+                            <strong>${inFileDuplicates.join(', ')}</strong>
+                        </div>`;
+                }
+
+                if (hasDbDuplicates) {
+                    alertHtml += `
+                        <div class="alert alert-warning mb-3">
+                            <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> ${dbDuplicates.length} student(s) with matching ID numbers already exist in the database.</strong>
+                        </div>
+                        <p class="mb-2">These students will be <strong>updated</strong> if you proceed:</p>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-dark">
+                                    <tr><th>ID No</th><th>Existing Name</th><th>Section</th></tr>
+                                </thead>
+                                <tbody>`;
+                    dbDuplicates.forEach(dup => {
+                        alertHtml += `<tr><td><strong>${dup.id_no}</strong></td><td>${dup.name}</td><td>Grade ${dup.grade_level} - ${dup.section}</td></tr>`;
+                    });
+                    alertHtml += `</tbody></table></div>`;
+                }
+
+                alertHtml += '</div>';
+
+                // If only in-file duplicates, block submission
+                if (hasFileDuplicates && !hasDbDuplicates) {
+                    Swal.fire({
+                        title: 'Duplicate IDs Found in File',
+                        html: alertHtml,
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: '<i class="bi bi-pencil me-1"></i> Fix Duplicates',
+                        width: '600px'
+                    });
+                    return;
+                }
+
+                // Show confirmation dialog for database duplicates
+                Swal.fire({
+                    title: 'Duplicate Student IDs Detected',
+                    html: alertHtml,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: hasFileDuplicates ? '#6c757d' : '#ffc107',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: hasFileDuplicates ? '<i class="bi bi-pencil me-1"></i> Fix & Retry' : '<i class="bi bi-check-circle me-1"></i> Continue & Update',
+                    cancelButtonText: '<i class="bi bi-x-circle me-1"></i> Cancel & Review',
+                    width: '700px'
+                }).then(result => {
+                    if (result.isConfirmed && !hasFileDuplicates) {
+                        document.getElementById('confirm_conflicts').value = '1';
+                        e.target.submit();
+                    }
+                });
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Duplicate check failed:', error);
+                // On error, fall back to server-side check
+                e.target.submit();
+            });
         });
 
          function attachRemoveEvents() {

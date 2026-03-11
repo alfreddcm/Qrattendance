@@ -527,4 +527,38 @@ class ImportController extends Controller
         
         return strtoupper(substr($gender, 0, 1));
     }
+
+    /**
+     * Check for duplicate student IDs before importing (AJAX)
+     */
+    public function checkDuplicates(Request $request)
+    {
+        $idNumbers = $request->input('id_numbers', []);
+        
+        if (empty($idNumbers)) {
+            return response()->json(['duplicates' => []]);
+        }
+
+        // Find existing students with these IDs
+        $existing = Student::whereIn('id_no', $idNumbers)
+            ->with('section')
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'id_no' => $student->id_no,
+                    'name' => $student->name,
+                    'section' => $student->section->name ?? 'N/A',
+                    'grade_level' => $student->section->gradelevel ?? 'N/A',
+                ];
+            });
+
+        // Also check for duplicates within the uploaded list itself
+        $counts = array_count_values(array_map('trim', $idNumbers));
+        $inFileDuplicates = array_keys(array_filter($counts, fn($c) => $c > 1));
+
+        return response()->json([
+            'duplicates' => $existing,
+            'in_file_duplicates' => $inFileDuplicates,
+        ]);
+    }
 }

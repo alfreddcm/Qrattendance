@@ -245,6 +245,10 @@ class StudentManagementController extends Controller
                 $picture = $request->file('picture');
                 $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
                 $picture->storeAs('student_pictures', $pictureName, 'public');
+                // Also copy to public/storage for direct web access
+                $publicPicDir = public_path('storage/student_pictures');
+                if (!file_exists($publicPicDir)) { mkdir($publicPicDir, 0755, true); }
+                copy($picture->getRealPath(), $publicPicDir . '/' . $pictureName);
                 $studentData['picture'] = $pictureName;
                 
                 Log::info('Student picture uploaded', [
@@ -260,6 +264,10 @@ class StudentManagementController extends Controller
                 
                 $pictureName = time() . '_' . $request->id_no . '.jpg';
                 Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
+                // Also save to public/storage for direct web access
+                $publicPicDir = public_path('storage/student_pictures');
+                if (!file_exists($publicPicDir)) { mkdir($publicPicDir, 0755, true); }
+                file_put_contents($publicPicDir . '/' . $pictureName, $imageData);
                 $studentData['picture'] = $pictureName;
                 
                 Log::info('Student captured image saved', [
@@ -392,6 +400,10 @@ class StudentManagementController extends Controller
             $picture = $request->file('picture');
             $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
             $picture->storeAs('student_pictures', $pictureName, 'public');
+            // Also copy to public/storage for direct web access
+            $publicPicDir = public_path('storage/student_pictures');
+            if (!file_exists($publicPicDir)) { mkdir($publicPicDir, 0755, true); }
+            copy($picture->getRealPath(), $publicPicDir . '/' . $pictureName);
             $studentData['picture'] = $pictureName;
         } elseif ($request->captured_image) {
              if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
@@ -405,6 +417,10 @@ class StudentManagementController extends Controller
             
             $pictureName = time() . '_' . $request->id_no . '.jpg';
             Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
+            // Also save to public/storage for direct web access
+            $publicPicDir2 = public_path('storage/student_pictures');
+            if (!file_exists($publicPicDir2)) { mkdir($publicPicDir2, 0755, true); }
+            file_put_contents($publicPicDir2 . '/' . $pictureName, $imageData);
             $studentData['picture'] = $pictureName;
         }
 
@@ -750,7 +766,13 @@ public function bulkDelete(Request $request)
                 
                 Storage::disk('public')->put($qrPath, $qrImage);
                 
-                // File is now accessible via /storage/ URL through the symlink
+                // Also save to public/storage/ for direct web access (symlink fallback)
+                $publicPath = public_path('storage/' . $qrPath);
+                $publicDir = dirname($publicPath);
+                if (!file_exists($publicDir)) {
+                    mkdir($publicDir, 0755, true);
+                }
+                file_put_contents($publicPath, $qrImage);
                 
                  // Save both qr_code (file path) and stud_code (the data)
                 $student->update([

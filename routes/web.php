@@ -177,6 +177,7 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/import/upload', [ImportController::class, 'showUploadForm'])->name('import.upload.form');
     Route::post('/import/upload', [ImportController::class, 'preview'])->name('import.upload');
     Route::post('/import/import', [ImportController::class, 'import'])->name('import.import');
+    Route::post('/import/check-duplicates', [ImportController::class, 'checkDuplicates'])->name('import.check-duplicates');
     
     Route::get('/school-years/{schoolYear}/schools', [AdminController::class, 'getSchoolsBySemester'])->name('admin.school-years.schools');
     Route::get('/school-years/{schoolYear}/months', [AdminController::class, 'getSemesterMonths'])->name('admin.school-years.months');
