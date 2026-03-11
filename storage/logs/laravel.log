@@ -3083,3 +3083,4 @@
 [2026-03-11 16:14:27] local.INFO: Session stored for student {"session_key":"scanned_student_908584","student_id":155,"attendance_id":21748} 
 [2026-03-11 16:14:27] local.INFO: Public QR attendance recorded {"student_id":155,"student_name":"TUGADE,DERIC BAUTISTA","attendance_type":"time_in_pm","status":"Late"} 
 [2026-03-11 16:14:35] local.INFO: Attendance code deactivated {"teacher_id":6,"code":"526036"} 
+[2026-03-11 18:28:56] local.INFO: User logged in successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
