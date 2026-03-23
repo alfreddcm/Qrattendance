@@ -147,6 +147,25 @@
                         @endif
                         <button class="btn btn-primary w-100 py-2 fw-semibold" type="submit"><i class="fa fa-unlock-keyhole me-2"></i> Sign In</button>
                     </form>
+
+                    <!-- Student Login Info -->
+                    <div class="mt-3 p-2 bg-light rounded small" style="border-left: 3px solid #17a2b8;">
+                        <strong class="d-block mb-2" style="color: #17a2b8;">
+                            <i class="fas fa-graduation-cap me-1"></i> Student Login
+                        </strong>
+                        <div class="mb-1">
+                            <span class="text-muted">Username:</span>
+                            <span class="fw-semibold">Your LRN / Student ID</span>
+                        </div>
+                        <div>
+                            <span class="text-muted">Password:</span>
+                            <span class="fw-semibold">Your LRN / Student ID</span>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Students can use the same form above. Change password after first login.
+                        </small>
+                    </div>
+
                     <div class="mt-3 small text-secondary">Need help? Contact your system administrator.</div>
                 </div>
             </div>

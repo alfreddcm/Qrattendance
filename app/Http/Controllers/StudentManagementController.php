@@ -11,6 +11,7 @@ use App\Http\Controllers\Concerns\ValidatesForResponse;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use ZipArchive;
 use Maatwebsite\Excel\Facades\Excel;
@@ -362,6 +363,7 @@ class StudentManagementController extends Controller
             'contact_person_relationship' => 'nullable|string|max:255',
             'contact_person_contact' => 'nullable|string|max:15',
             'school_year_id' => 'required|integer',
+            'password' => 'nullable|string|min:8|max:255',
         ]);
 
         if (is_object($validated)) {
@@ -369,34 +371,39 @@ class StudentManagementController extends Controller
         }
 
         $student = Student::where('user_id', Auth::id())->findOrFail($id);
-        
+
         // Verify that the selected section exists and belongs to this teacher
         $section = Section::where('id', $request->section_id)
                          ->where('teacher_id', Auth::id())
                          ->first();
-                         
+
         if (!$section) {
             return redirect()->back()->withErrors(['section_id' => 'The selected section is not valid or does not belong to you.'])->withInput();
         }
 
-        $studentData = $request->except(['_token', '_method', 'regenerate_qr']);
-        $studentData['user_id'] = Auth::id(); 
+        $studentData = $request->except(['_token', '_method', 'regenerate_qr', 'password']);
+        $studentData['user_id'] = Auth::id();
+
+        // Handle password update if provided
+        if ($request->filled('password')) {
+            $studentData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
 
         // Check if QR-critical fields changed (id_no or name)
         $qrCriticalFieldsChanged = ($student->id_no !== $request->id_no) || ($student->name !== $request->name);
-        
+
         // If critical fields changed, clear the QR code
         if ($qrCriticalFieldsChanged && $student->qr_code) {
             $this->clearStudentQrCode($student);
             $studentData['qr_code'] = null;
             $studentData['stud_code'] = null;
         }
-        
+
         if ($request->hasFile('picture')) {
              if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                 Storage::disk('public')->delete('student_pictures/' . $student->picture);
             }
-            
+
             $picture = $request->file('picture');
             $pictureName = time() . '_' . $request->id_no . '.' . $picture->getClientOriginalExtension();
             $picture->storeAs('student_pictures', $pictureName, 'public');
@@ -409,12 +416,12 @@ class StudentManagementController extends Controller
              if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                 Storage::disk('public')->delete('student_pictures/' . $student->picture);
             }
-            
+
              $imageData = $request->captured_image;
             $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
             $imageData = str_replace(' ', '+', $imageData);
             $imageData = base64_decode($imageData);
-            
+
             $pictureName = time() . '_' . $request->id_no . '.jpg';
             Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
             // Also save to public/storage for direct web access
@@ -425,19 +432,31 @@ class StudentManagementController extends Controller
         }
 
         $student->update($studentData);
-        
+
         // If user chose to regenerate QR immediately
         if ($request->regenerate_qr == '1' && $qrCriticalFieldsChanged) {
             $this->generateQrForStudent($student);
-            return redirect()->route('teacher.students')->with('success', 'Student updated successfully and new QR code generated!');
-        }
-        
-        // If QR was deleted but user chose not to regenerate
-        if ($qrCriticalFieldsChanged && $student->qr_code === null) {
-            return redirect()->route('teacher.students')->with('info', 'Student updated successfully. QR code was deleted due to data changes. Please regenerate a new QR code.');
+            $message = 'Student updated successfully and new QR code generated!';
+            if ($request->filled('password')) {
+                $message = 'Student updated successfully, password changed, and new QR code generated!';
+            }
+            return redirect()->route('teacher.students')->with('success', $message);
         }
 
-        return redirect()->route('teacher.students')->with('success', 'Student updated successfully.');
+        // If QR was deleted but user chose not to regenerate
+        if ($qrCriticalFieldsChanged && $student->qr_code === null) {
+            $message = 'Student updated successfully. QR code was deleted due to data changes. Please regenerate a new QR code.';
+            if ($request->filled('password')) {
+                $message = 'Student updated successfully and password changed. QR code was deleted due to data changes. Please regenerate a new QR code.';
+            }
+            return redirect()->route('teacher.students')->with('info', $message);
+        }
+
+        $message = 'Student updated successfully.';
+        if ($request->filled('password')) {
+            $message = 'Student updated successfully and password changed.';
+        }
+        return redirect()->route('teacher.students')->with('success', $message);
     }
 
     /**

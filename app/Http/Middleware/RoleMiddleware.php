@@ -46,11 +46,15 @@ class RoleMiddleware
             case 'admin':
                 return redirect()->route('admin.dashboard')
                     ->with('error', $message . ' Redirected to your dashboard.');
-                
+
             case 'teacher':
                 return redirect()->route('teacher.dashboard')
                     ->with('error', $message . ' Redirected to your dashboard.');
-                                
+
+            case 'student':
+                return redirect()->route('student.dashboard')
+                    ->with('error', $message . ' Redirected to your dashboard.');
+
             default:
                 Auth::logout();
                 return redirect('/')

@@ -3417,7 +3417,7 @@ class AdminController extends Controller
     public function updateStudentAdmin(Request $request, $id)
     {
         $student = \App\Models\Student::findOrFail($id);
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'id_no' => 'required|string|max:12|unique:students,id_no,' . $id,
@@ -3432,15 +3432,21 @@ class AdminController extends Controller
             'contact_person_contact' => 'nullable|string|max:15',
             'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'captured_image' => 'nullable|string',
+            'password' => 'nullable|string|min:8|max:255',
         ]);
 
-         $updateData = $request->except(['picture', 'captured_image']);
-        
+         $updateData = $request->except(['picture', 'captured_image', 'password']);
+
+        // Handle password update if provided
+        if ($request->filled('password')) {
+            $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
         if ($request->hasFile('picture')) {
              if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                 Storage::disk('public')->delete('student_pictures/' . $student->picture);
             }
-            
+
             $picture = $request->file('picture');
             $pictureName = time() . '_' . $student->id . '.' . $picture->getClientOriginalExtension();
             $picture->storeAs('student_pictures', $pictureName, 'public');
@@ -3451,11 +3457,11 @@ class AdminController extends Controller
                  if ($student->picture && Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                     Storage::disk('public')->delete('student_pictures/' . $student->picture);
                 }
-                
+
                 $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
                 $imageData = str_replace(' ', '+', $imageData);
                 $imageData = base64_decode($imageData);
-                
+
                 $pictureName = time() . '_' . $student->id . '.jpg';
                 Storage::disk('public')->put('student_pictures/' . $pictureName, $imageData);
                 $updateData['picture'] = $pictureName;
@@ -3464,7 +3470,12 @@ class AdminController extends Controller
 
         $student->update($updateData);
 
-        return redirect()->route('admin.students.edit', $student->id)->with('success', 'Student updated successfully!');
+        $message = 'Student updated successfully!';
+        if ($request->filled('password')) {
+            $message = 'Student updated successfully! Password has been changed.';
+        }
+
+        return redirect()->route('admin.students.edit', $student->id)->with('success', $message);
     }
 
     /**

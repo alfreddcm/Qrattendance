@@ -4,22 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Student extends Model
+class Student extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     // Table name (optional if your table is 'students')
     protected $table = 'students';
 
     // Fillable fields for mass assignment
     protected $fillable = [
-        'id_no', 
+        'id_no',
         'name',
-        'gender', 
-        'age', 
-        'address', 
-        'cp_no', 
+        'gender',
+        'age',
+        'address',
+        'cp_no',
         'picture',
         'contact_person_name',
         'contact_person_relationship',
@@ -31,9 +33,33 @@ class Student extends Model
         'remarks',
         'user_id',
         'school_id',
-        'qr_code',
-        'stud_code'
+        'password',
+        'remember_token'
     ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'password' => 'hashed',
+        ];
+    }
+
+    // Role accessor - always returns 'student' for consistency with middleware
+    public function getRoleAttribute()
+    {
+        return 'student';
+    }
+
+    // Helper methods for role checking
+    public function isStudent(): bool
+    {
+        return true;
+    }
 
     // Accessor for grade_level (from section relationship)
     public function getGradeLevelAttribute()

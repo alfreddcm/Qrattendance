@@ -312,6 +312,17 @@
                     <input type="text" class="form-control form-control-sm" id="address" name="address" value="{{ $student->address }}" required>
                 </div>
 
+                <div class="col-md-12"><hr class="my-2"><h6 class="small text-muted">Authentication</h6></div>
+
+                <div class="col-md-6">
+                    <label for="password" class="form-label small">
+                        <i class="fas fa-lock me-1"></i>
+                        Password
+                        <span class="badge bg-info ms-2">Optional</span>
+                    </label>
+                    <input type="password" class="form-control form-control-sm" id="password" name="password" placeholder="Leave empty to keep current password" minlength="8" maxlength="255">
+                    <small class="form-text text-muted">Enter new password to update (min 8 characters). Leave empty to keep current password.</small>
+                </div>
 
                 <div class="col-md-12"><hr class="my-2"><h6 class="small text-muted">Contact Person Information</h6></div>
 
