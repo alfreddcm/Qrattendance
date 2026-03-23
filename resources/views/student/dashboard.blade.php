@@ -12,11 +12,13 @@
                     <div class="row align-items-center">
                         <div class="col-auto">
                             @if($school && $school->logo)
-                                <img src="{{ asset('storage/' . $school->logo) }}" alt="School Logo" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                            <img src="{{ asset('storage/' . $school->logo) }}" alt="School Logo" class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover;">
                             @else
-                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                    <i class="fas fa-school text-white" style="font-size: 2rem;"></i>
-                                </div>
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center"
+                                style="width: 80px; height: 80px;">
+                                <i class="fas fa-school text-white" style="font-size: 2rem;"></i>
+                            </div>
                             @endif
                         </div>
                         <div class="col">
@@ -126,92 +128,92 @@
                 </div>
                 <div class="card-body">
                     @if($todayAttendance)
-                        <div class="row">
-                            <!-- Morning In -->
-                            <div class="col-md-6 col-lg-3 mb-3">
-                                <div class="attendance-box p-3 border rounded text-center">
-                                    <small class="text-secondary d-block mb-2">Morning In</small>
-                                    @if($todayAttendance->time_in_am)
-                                        <h5 class="text-success mb-0">
-                                            <i class="fas fa-arrow-right-to-bracket me-1"></i>
-                                            {{ \Carbon\Carbon::parse($todayAttendance->time_in_am)->format('g:i A') }}
-                                        </h5>
-                                    @else
-                                        <h5 class="text-danger mb-0">
-                                            <i class="fas fa-clock me-1"></i>
-                                            No Entry
-                                        </h5>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- Morning Out -->
-                            <div class="col-md-6 col-lg-3 mb-3">
-                                <div class="attendance-box p-3 border rounded text-center">
-                                    <small class="text-secondary d-block mb-2">Morning Out</small>
-                                    @if($todayAttendance->time_out_am)
-                                        <h5 class="text-info mb-0">
-                                            <i class="fas fa-arrow-right-from-bracket me-1"></i>
-                                            {{ \Carbon\Carbon::parse($todayAttendance->time_out_am)->format('g:i A') }}
-                                        </h5>
-                                    @else
-                                        <h5 class="text-secondary mb-0">
-                                            <i class="fas fa-clock me-1"></i>
-                                            -
-                                        </h5>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- PM In -->
-                            <div class="col-md-6 col-lg-3 mb-3">
-                                <div class="attendance-box p-3 border rounded text-center">
-                                    <small class="text-secondary d-block mb-2">PM In</small>
-                                    @if($todayAttendance->time_in_pm)
-                                        <h5 class="text-success mb-0">
-                                            <i class="fas fa-arrow-right-to-bracket me-1"></i>
-                                            {{ \Carbon\Carbon::parse($todayAttendance->time_in_pm)->format('g:i A') }}
-                                        </h5>
-                                    @else
-                                        <h5 class="text-secondary mb-0">
-                                            <i class="fas fa-clock me-1"></i>
-                                            -
-                                        </h5>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- PM Out -->
-                            <div class="col-md-6 col-lg-3 mb-3">
-                                <div class="attendance-box p-3 border rounded text-center">
-                                    <small class="text-secondary d-block mb-2">PM Out</small>
-                                    @if($todayAttendance->time_out_pm)
-                                        <h5 class="text-info mb-0">
-                                            <i class="fas fa-arrow-right-from-bracket me-1"></i>
-                                            {{ \Carbon\Carbon::parse($todayAttendance->time_out_pm)->format('g:i A') }}
-                                        </h5>
-                                    @else
-                                        <h5 class="text-secondary mb-0">
-                                            <i class="fas fa-clock me-1"></i>
-                                            -
-                                        </h5>
-                                    @endif
-                                </div>
+                    <div class="row">
+                        <!-- Morning In -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="attendance-box p-3 border rounded text-center">
+                                <small class="text-secondary d-block mb-2">Morning In</small>
+                                @if($todayAttendance->time_in_am)
+                                <h5 class="text-success mb-0">
+                                    <i class="fas fa-arrow-right-to-bracket me-1"></i>
+                                    {{ \Carbon\Carbon::parse($todayAttendance->time_in_am)->format('g:i A') }}
+                                </h5>
+                                @else
+                                <h5 class="text-danger mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    No Entry
+                                </h5>
+                                @endif
                             </div>
                         </div>
 
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <small class="text-secondary">
-                                    Status: <strong>{{ $todayAttendance->attendance_status }}</strong>
-                                </small>
+                        <!-- Morning Out -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="attendance-box p-3 border rounded text-center">
+                                <small class="text-secondary d-block mb-2">Morning Out</small>
+                                @if($todayAttendance->time_out_am)
+                                <h5 class="text-info mb-0">
+                                    <i class="fas fa-arrow-right-from-bracket me-1"></i>
+                                    {{ \Carbon\Carbon::parse($todayAttendance->time_out_am)->format('g:i A') }}
+                                </h5>
+                                @else
+                                <h5 class="text-secondary mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    -
+                                </h5>
+                                @endif
                             </div>
                         </div>
+
+                        <!-- PM In -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="attendance-box p-3 border rounded text-center">
+                                <small class="text-secondary d-block mb-2">PM In</small>
+                                @if($todayAttendance->time_in_pm)
+                                <h5 class="text-success mb-0">
+                                    <i class="fas fa-arrow-right-to-bracket me-1"></i>
+                                    {{ \Carbon\Carbon::parse($todayAttendance->time_in_pm)->format('g:i A') }}
+                                </h5>
+                                @else
+                                <h5 class="text-secondary mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    -
+                                </h5>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- PM Out -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="attendance-box p-3 border rounded text-center">
+                                <small class="text-secondary d-block mb-2">PM Out</small>
+                                @if($todayAttendance->time_out_pm)
+                                <h5 class="text-info mb-0">
+                                    <i class="fas fa-arrow-right-from-bracket me-1"></i>
+                                    {{ \Carbon\Carbon::parse($todayAttendance->time_out_pm)->format('g:i A') }}
+                                </h5>
+                                @else
+                                <h5 class="text-secondary mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    -
+                                </h5>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <small class="text-secondary">
+                                Status: <strong>{{ $todayAttendance->attendance_status }}</strong>
+                            </small>
+                        </div>
+                    </div>
                     @else
-                        <div class="alert alert-info mb-0">
-                            <i class="fas fa-info-circle me-2"></i>
-                            No attendance record for today yet.
-                        </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No attendance record for today yet.
+                    </div>
                     @endif
                 </div>
             </div>
@@ -259,12 +261,13 @@
 </div>
 
 <style>
-    .attendance-box {
-        background: linear-gradient(135deg, #f5f7fa 0%, #f8fafb 100%);
-        transition: all 0.3s ease;
-    }
-    .attendance-box:hover {
-        background: linear-gradient(135deg, #ececf1 0%, #f1f3f5 100%);
-    }
+.attendance-box {
+    background: linear-gradient(135deg, #f5f7fa 0%, #f8fafb 100%);
+    transition: all 0.3s ease;
+}
+
+.attendance-box:hover {
+    background: linear-gradient(135deg, #ececf1 0%, #f1f3f5 100%);
+}
 </style>
 @endsection
