@@ -10,13 +10,27 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles)
     {
+        \Log::info('=== RoleMiddleware CHECK ===', [
+            'url' => $request->url(),
+            'auth_check' => Auth::check(),
+            'session_id' => $request->session()->getId(),
+            'has_session' => $request->hasSession(),
+            'required_roles' => $roles
+        ]);
 
          if (!Auth::check()) {
+            \Log::warning('RoleMiddleware: Not authenticated, redirecting to login');
             return redirect('/')->with('message', 'Please login to access this page.');
         }
 
         $user = Auth::user();
         $userRole = $user->role;
+
+        \Log::info('RoleMiddleware: User authenticated', [
+            'user_id' => $user->id,
+            'user_role' => $userRole,
+            'user_class' => class_basename(get_class($user))
+        ]);
         
          if (empty($roles)) {
             return $next($request);

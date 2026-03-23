@@ -88,10 +88,19 @@ class AuthController extends Controller
                         \Log::info('Auth::login() completed', [
                             'auth_check' => Auth::check(),
                             'auth_id' => Auth::id(),
-                            'auth_role' => Auth::user()?->role
+                            'auth_role' => Auth::user()?->role,
+                            'session_id_before' => $request->session()->getId()
                         ]);
 
                         $request->session()->regenerate();
+
+                        // Force session save after regeneration
+                        $request->session()->save();
+
+                        \Log::info('Session regenerated and saved', [
+                            'session_id_after' => $request->session()->getId(),
+                            'auth_still_valid' => Auth::check()
+                        ]);
 
                         \Log::info('✓ STUDENT LOGIN SUCCESS', [
                             'student_id' => $student->id,

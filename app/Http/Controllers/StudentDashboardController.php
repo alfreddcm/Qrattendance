@@ -8,9 +8,23 @@ use Carbon\Carbon;
 
 class StudentDashboardController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        \Log::info('=== StudentDashboardController::dashboard() CALLED ===', [
+            'auth_check' => Auth::check(),
+            'auth_id' => Auth::id(),
+            'session_id' => $request->session()->getId(),
+            'has_session' => $request->hasSession(),
+            'session_data' => $request->session()->all()
+        ]);
+
         $student = Auth::user();
+
+        \Log::info('Student loaded', [
+            'student_id' => $student->id,
+            'student_name' => $student->name,
+            'student_class' => class_basename(get_class($student))
+        ]);
 
          $school = $student->school;
 
@@ -20,6 +34,12 @@ class StudentDashboardController extends Controller
         $todayAttendance = $student->attendances()
             ->where('date', $today)
             ->first();
+
+        \Log::info('Dashboard data loaded successfully', [
+            'has_school' => !is_null($school),
+            'has_section' => !is_null($section),
+            'has_today_attendance' => !is_null($todayAttendance)
+        ]);
 
         return view('student.dashboard', [
             'student' => $student,

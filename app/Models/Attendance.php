@@ -22,6 +22,10 @@ class Attendance extends Model
         'remarks',
     ];
 
+    protected $casts = [
+        'date' => 'date',  // Cast to Carbon date instance
+    ];
+
     public function student()
     {
         return $this->belongsTo(Student::class);

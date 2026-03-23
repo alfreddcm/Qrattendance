@@ -61,7 +61,7 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            'driver' => 'multi-model',  // Use custom provider for both User and Student
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
