@@ -19,7 +19,14 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
+            \Log::info('=== LOGIN REQUEST STARTED ===', [
+                'username' => $request->input('username'),
+                'ip' => $request->ip(),
+                'time' => now()
+            ]);
+
             if (Auth::check()) {
+                \Log::info('User already authenticated, redirecting');
                 return $this->redirectToDashboard();
             }
 
@@ -32,41 +39,84 @@ class AuthController extends Controller
             $identifier = $request->input('username');
             $password = $request->input('password');
 
+            \Log::info('Attempting teacher/admin login', ['identifier' => $identifier]);
+
             // Try teacher/admin login first
             $credentials = ['username' => $identifier, 'password' => $password];
             if (Auth::attempt($credentials)) {
                 $request->session()->regenerate();
 
-                \Log::info('User logged in successfully', [
+                \Log::info('✓ TEACHER/ADMIN LOGIN SUCCESS', [
                     'user_id' => Auth::id(),
                     'username' => Auth::user()->username,
                     'role' => Auth::user()->role,
                     'ip' => $request->ip()
                 ]);
 
-                return $this->redirectToDashboard();
+                $redirect = $this->redirectToDashboard();
+                \Log::info('Teacher/Admin redirect response', ['status' => $redirect->getStatusCode()]);
+                return $redirect;
             }
+
+            \Log::info('Teacher/admin login failed, attempting student login');
 
             // Try student login (by id_no or stud_code)
             $student = \App\Models\Student::where('id_no', $identifier)
                 ->orWhere('stud_code', $identifier)
                 ->first();
 
-            if ($student && $student->password && \Hash::check($password, $student->password)) {
-                Auth::login($student);
-                $request->session()->regenerate();
-
-                \Log::info('Student logged in successfully', [
+            if (!$student) {
+                \Log::warning('Student not found', ['identifier' => $identifier]);
+            } else {
+                \Log::info('Student found', [
                     'student_id' => $student->id,
-                    'id_no' => $student->id_no,
-                    'ip' => $request->ip()
+                    'student_name' => $student->name,
+                    'has_password' => !is_null($student->password)
                 ]);
 
-                return $this->redirectToDashboard();
+                if (!$student->password) {
+                    \Log::warning('Student has no password', ['student_id' => $student->id]);
+                } else {
+                    $passwordMatch = \Hash::check($password, $student->password);
+                    \Log::info('Password hash check', ['match' => $passwordMatch]);
+
+                    if ($passwordMatch) {
+                        \Log::info('Password matched, calling Auth::login()', ['student_id' => $student->id]);
+
+                        Auth::login($student);
+
+                        \Log::info('Auth::login() completed', [
+                            'auth_check' => Auth::check(),
+                            'auth_id' => Auth::id(),
+                            'auth_role' => Auth::user()?->role
+                        ]);
+
+                        $request->session()->regenerate();
+
+                        \Log::info('✓ STUDENT LOGIN SUCCESS', [
+                            'student_id' => $student->id,
+                            'id_no' => $student->id_no,
+                            'name' => $student->name,
+                            'role' => Auth::user()?->role,
+                            'ip' => $request->ip()
+                        ]);
+
+                        \Log::info('Calling redirectToDashboard()');
+                        $redirect = $this->redirectToDashboard();
+
+                        \Log::info('Redirect response created', [
+                            'status_code' => $redirect->getStatusCode(),
+                            'location' => $redirect->headers->get('Location')
+                        ]);
+
+                        return $redirect;
+                    }
+                }
             }
 
             \Log::warning('Failed login attempt', [
                 'identifier' => $identifier,
+                'student_exists' => $student ? 'yes' : 'no',
                 'ip' => $request->ip()
             ]);
 
@@ -75,10 +125,13 @@ class AuthController extends Controller
             ])->withInput($request->except('password'));
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Validation exception', ['errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput($request->except('password'));
         } catch (\Exception $e) {
-            \Log::error('Login error: ' . $e->getMessage(), [
+            \Log::error('❌ LOGIN ERROR: ' . $e->getMessage(), [
                 'identifier' => $request->username ?? 'unknown',
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
                 'ip' => $request->ip()
             ]);
 

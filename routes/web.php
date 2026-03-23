@@ -6,6 +6,7 @@ use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\StudentManagementController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AttendanceAnalyticsController;
@@ -24,13 +25,15 @@ Route::get('/', function () {
             return redirect()->route('teacher.dashboard');
         } elseif ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
+        } elseif ($user->role === 'student') {
+            return redirect()->route('student.dashboard');
         }
     }
     return redirect()->route('login');
 })->name('home');
 
- Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware(\Illuminate\Auth\Middleware\RedirectIfAuthenticated::class);
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit')->middleware(\Illuminate\Auth\Middleware\RedirectIfAuthenticated::class);
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware(\Illuminate\Auth\Middleware\RedirectIfAuthenticated::class);
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
  Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/school-years', [SchoolYearController::class, 'index'])->name('teacher.school-years');
@@ -220,6 +223,13 @@ Route::middleware(['role:teacher,admin'])->group(function () {
     Route::get('/student-ids/print-all', [StudentIdController::class, 'printAll'])->name('student.ids.print.all');
     Route::get('/student-ids/print-by-teacher/{teacherId}', [StudentIdController::class, 'printByTeacher'])->name('student.ids.print.by.teacher');
     Route::get('/student-ids/print-my-students', [StudentIdController::class, 'printMyStudents'])->name('student.ids.print.my.students');
+});
+
+Route::middleware(['role:student'])->prefix('student')->group(function () {
+    Route::get('/dashboard', [StudentDashboardController::class, 'dashboard'])->name('student.dashboard');
+    Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('student.attendance');
+    Route::get('/account', [StudentDashboardController::class, 'account'])->name('student.account');
+    Route::put('/account/password', [StudentDashboardController::class, 'updatePassword'])->name('student.account.password');
 });
 
  Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
