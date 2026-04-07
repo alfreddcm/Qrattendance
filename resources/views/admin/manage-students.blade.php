@@ -337,6 +337,11 @@
                                         <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ $student->id }}" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
+                                        @if($hasQrCode)
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="regenerateQr({{ $student->id }}, @js($student->name), @js($student->id_no))" title="Regenerate QR Code">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        @endif
                                         <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-warning btn-sm" title="Edit Student">
                                             <i class="fas fa-edit"></i>
                                         </a>
@@ -965,10 +970,10 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <ul class="mb-0" style="font-size: 0.75rem;">
-                                                <li>Fill all required fields: LRN, Name <strong>(LN, FN MI.)</strong>, Gender (M/F), Age, School ID, Teacher ID, Section ID, Emergency Contact Name, Relationship, Emergency Contact Phone</li>
-                                                <li>Name format must be: <strong>Last Name, First Name Middle Initial.</strong> (example: Dela Cruz, Juan M.)</li>
+                                                <li>Fill all required fields: LRN, Last Name, First Name, Gender (M/F), Age, Contact Person Name, Contact Person Phone, Relationship</li>
+                                                <li>Name fields are combined on save as: <strong>Last Name, First Name Name Extension MI.</strong> (example: Dela Cruz, Juan JR M.)</li>
                                                 <li>LRNs must be unique - duplicates will be skipped</li>
-                                                <li>School ID, Teacher ID, and Section ID must match existing records in the system</li>
+                                                <li>Pick the correct School Year, Teacher, and Section before clicking Add to List</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -1236,6 +1241,42 @@ function generateQr(studentId) {
     csrfToken.value = '{{ csrf_token() }}';
 
     form.appendChild(csrfToken);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function regenerateQr(studentId, studentName, studentIdNo) {
+    const proceed = confirm(
+        `Regenerate QR code for ${studentName} (LRN: ${studentIdNo})?\n\n` +
+        'WARNING: Old printed Student IDs will no longer scan after regeneration. Reissue the student ID card.'
+    );
+
+    if (!proceed) {
+        return;
+    }
+
+    const password = prompt('Enter your password to continue QR regeneration:');
+    if (!password) {
+        alert('Password is required. Regeneration cancelled.');
+        return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/students/${studentId}/regenerate-qr`;
+
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'hidden';
+    passwordInput.name = 'password';
+    passwordInput.value = password;
+
+    form.appendChild(csrfToken);
+    form.appendChild(passwordInput);
     document.body.appendChild(form);
     form.submit();
 }

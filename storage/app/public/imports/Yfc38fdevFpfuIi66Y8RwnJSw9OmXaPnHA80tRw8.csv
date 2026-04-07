@@ -1,0 +1,4 @@
+LRN,Name,Gender,Age,Address,"CP No","Contact Person Name","Contact Person Phone",Relationship
+,"Juan Dela Cruz",M,17,"Barangay Example, San Guillermo, Isabela","	09171234567","Maria Dela Cruz","	09987654321",Mother
+,"Maria Santos",F,16,"Zone 2, San Guillermo, Isabela","	09281234567","Jose Santos","	09123456789",Father
+,"Ana Rodriguez",F,18,"Poblacion, San Guillermo, Isabela","	09123456789","Carlos Rodriguez","	09234567890",Father

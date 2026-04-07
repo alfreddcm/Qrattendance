@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Student;
 use App\Models\Section;
 use App\Models\SchoolYear;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Concerns\ValidatesForResponse;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -727,7 +728,91 @@ public function bulkDelete(Request $request)
         }
     }
 
-     private function generateQrForStudent(Student $student)
+    public function regenerateQr(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!$this->validateAdminPassword($request->password)) {
+            return back()->with('error', 'Incorrect admin password. QR code was not regenerated.');
+        }
+
+        try {
+            $student = Student::where('user_id', Auth::id())->findOrFail($id);
+
+            if ($this->generateQrForStudent($student, true)) {
+                return back()->with('success', 'QR code regenerated successfully. Please reissue this student\'s ID card.');
+            }
+
+            return back()->with('error', 'Failed to regenerate QR code. Please try again.');
+        } catch (\Exception $e) {
+            Log::error('Single QR regeneration failed', [
+                'student_id' => $id,
+                'teacher_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to regenerate QR code. Please try again.');
+        }
+    }
+
+    public function regenerateQrs(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!$this->validateAdminPassword($request->password)) {
+            return back()->with('error', 'Incorrect admin password. QR codes were not regenerated.');
+        }
+
+        $students = Student::where('user_id', Auth::id())->get();
+        $regenerated = 0;
+        $failed = 0;
+
+        foreach ($students as $student) {
+            try {
+                if ($this->generateQrForStudent($student, true)) {
+                    $regenerated++;
+                } else {
+                    $failed++;
+                }
+            } catch (\Exception $e) {
+                $failed++;
+                Log::error('Bulk QR regeneration failed for student', [
+                    'student_id' => $student->id,
+                    'teacher_id' => Auth::id(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($regenerated > 0) {
+            $message = "$regenerated QR code(s) regenerated successfully. Please reissue student ID cards.";
+            if ($failed > 0) {
+                $message .= " $failed regeneration(s) failed.";
+            }
+            return back()->with('success', $message);
+        }
+
+        return back()->with('error', 'No QR codes were regenerated. Please try again.');
+    }
+
+    private function validateAdminPassword(string $password): bool
+    {
+        $admins = User::where('role', 'admin')->get(['password']);
+
+        foreach ($admins as $admin) {
+            if (Hash::check($password, $admin->password)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+     private function generateQrForStudent(Student $student, bool $force = false)
     {
         Log::info('Generating QR for student', [
             'student_id' => $student->id,
@@ -758,7 +843,7 @@ public function bulkDelete(Request $request)
             'file_exists' => Storage::disk('public')->exists($qrPath),
         ]);
 
-        if (!Storage::disk('public')->exists($qrPath) || !$student->qr_code) {
+        if ($force || !Storage::disk('public')->exists($qrPath) || !$student->qr_code) {
             try {
                 $data = [
                     'student_id' => $student->id,
@@ -955,7 +1040,10 @@ public function bulkDelete(Request $request)
             // Standard headers matching ImportController expected order
             fputcsv($handle, [
                 'LRN',
-                'Name',
+                'Last Name',
+                'First Name',
+                'MI',
+                'Name Extension',
                 'Gender',
                 'Age',
                 'Address',
@@ -968,7 +1056,10 @@ public function bulkDelete(Request $request)
             // Add example data rows
             fputcsv($handle, [
                 '',
-                'Juan Dela Cruz',
+                'Dela Cruz',
+                'Juan',
+                'M',
+                'JR',
                 'M',
                 '17',
                 'Barangay Example, San Guillermo, Isabela',
@@ -980,7 +1071,10 @@ public function bulkDelete(Request $request)
             
             fputcsv($handle, [
                 '',
-                'Maria Santos',
+                'Santos',
+                'Maria',
+                'L',
+                '',
                 'F',
                 '16',
                 'Zone 2, San Guillermo, Isabela',
@@ -992,7 +1086,10 @@ public function bulkDelete(Request $request)
             
             fputcsv($handle, [
                 '0003',
-                'Ana Rodriguez',
+                'Rodriguez',
+                'Ana',
+                'C',
+                '',
                 'F',
                 '18',
                 'Poblacion, San Guillermo, Isabela',

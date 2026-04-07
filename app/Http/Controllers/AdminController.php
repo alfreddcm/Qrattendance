@@ -542,7 +542,6 @@ class AdminController extends Controller
                 'username' => 'required|string|unique:users,username|max:255',
                 'password' => 'required|string|min:6',
                 'phone_number' => 'nullable|string|max:20',
-                'position' => 'nullable|string|max:100',
                 'school_id' => 'required|exists:schools,id',
                 'section_id' => 'nullable|exists:sections,id', // Single section for Add modal
                 'section_ids' => 'nullable|array', // Multiple sections for future use
@@ -565,7 +564,7 @@ class AdminController extends Controller
                 'password' => Hash::make($validated['password']),
                 'role' => 'teacher',
                 'phone_number' => $validated['phone_number'],
-                'position' => $validated['position'],
+                'position' => null,
                 'school_id' => $validated['school_id'],
                 'section_id' => $sectionIds ? $sectionIds[0] : null // Primary section
             ]);
@@ -630,7 +629,6 @@ class AdminController extends Controller
             'username' => 'required|string|unique:users,username,' . $teacher->id . '|max:255',
             'password' => 'nullable|string|min:6',
             'phone_number' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:100',
             'school_id' => 'required|exists:schools,id',
             'section_ids' => 'nullable|array',
             'section_ids.*' => 'exists:sections,id'
@@ -647,7 +645,7 @@ class AdminController extends Controller
                 'email' => $request->email,
                 'username' => $request->username,
                 'phone_number' => $request->phone_number,
-                'position' => $request->position,
+                'position' => null,
                 'school_id' => $request->school_id,
                 'section_id' => !empty($newSectionIds) ? $newSectionIds[0] : null // Primary section
             ];
@@ -2942,10 +2940,30 @@ class AdminController extends Controller
         }
     }
 
+    public function regenerateQr(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'Incorrect password. QR code was not regenerated.');
+        }
+
+        $student = Student::findOrFail($id);
+
+        if ($this->generateQrForStudent($student, true)) {
+            return back()->with('success', 'QR code regenerated successfully. Please reissue this student\'s ID card.');
+        }
+
+        return back()->with('error', 'Failed to regenerate QR code. Please try again.');
+    }
+
     /**
      * Generate QR code for a student
      */
-    private function generateQrForStudent(Student $student)
+    private function generateQrForStudent(Student $student, bool $force = false)
     {
         // Generate random 10-character string (alphanumeric)
         $randomString = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10);
@@ -2954,7 +2972,7 @@ class AdminController extends Controller
         $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
         $qrPath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
 
-        if (!Storage::disk('public')->exists($qrPath) || !$student->qr_code) {
+        if ($force || !Storage::disk('public')->exists($qrPath) || !$student->qr_code) {
             $data = [
                 'student_id' => $student->id,
                 'name' => $student->name,
@@ -3106,7 +3124,10 @@ class AdminController extends Controller
             // Standard headers matching ImportController expected order
             fputcsv($handle, [
                 'LRN',
-                'Name',
+                'Last Name',
+                'First Name',
+                'MI',
+                'Name Extension',
                 'Gender',
                 'Age',
                 'Address',
@@ -3119,7 +3140,10 @@ class AdminController extends Controller
             // Add example data rows
             fputcsv($handle, [
                 '',
-                'Juan Dela Cruz',
+                'Dela Cruz',
+                'Juan',
+                'M',
+                'JR',
                 'M',
                 '17',
                 'Barangay Example, San Guillermo, Isabela',
@@ -3131,7 +3155,10 @@ class AdminController extends Controller
             
             fputcsv($handle, [
                 '',
-                'Maria Santos',
+                'Santos',
+                'Maria',
+                'L',
+                '',
                 'F',
                 '16',
                 'Zone 2, San Guillermo, Isabela',
@@ -3143,7 +3170,10 @@ class AdminController extends Controller
             
             fputcsv($handle, [
                 '',
-                'Ana Rodriguez',
+                'Rodriguez',
+                'Ana',
+                'C',
+                '',
                 'F',
                 '18',
                 'Poblacion, San Guillermo, Isabela',
@@ -3177,23 +3207,24 @@ class AdminController extends Controller
             
             fputcsv($handle, [
                 'id_no',
-                'name',
+                'last_name',
+                'first_name',
+                'mi',
+                'name_extension',
                 'gender',
                 'age',
-                'school_id',
-                'teacher_id',
                 'address',
                 'cp_no',
                 'contact_person_name',
-                'contact_person_relationship',
-                'contact_person_contact'
+                'contact_person_contact',
+                'contact_person_relationship'
             ]);
             
             // Sample data
             $sampleData = [
-                ['2024001', 'Alice Johnson', 'F', '19', '1', '1', '456 Oak Ave, Springfield', '09111111111', 'Robert Johnson', 'Father', '09222222222'],
-                ['2024002', 'Bob Smith', 'M', '20', '1', '1', '789 Pine St, Springfield', '09333333333', 'Mary Smith', 'Mother', '09444444444'],
-                ['2024003', 'Carol Davis', 'F', '18', '1', '', '321 Elm St, Springfield', '09555555555', 'David Davis', 'Father', '09666666666'],
+                ['2024001', 'Johnson', 'Alice', 'P', '', 'F', '19', '456 Oak Ave, Springfield', '09111111111', 'Robert Johnson', '09222222222', 'Father'],
+                ['2024002', 'Smith', 'Bob', 'A', 'JR', 'M', '20', '789 Pine St, Springfield', '09333333333', 'Mary Smith', '09444444444', 'Mother'],
+                ['2024003', 'Davis', 'Carol', '', '', 'F', '18', '321 Elm St, Springfield', '09555555555', 'David Davis', '09666666666', 'Father'],
             ];
 
             foreach ($sampleData as $row) {

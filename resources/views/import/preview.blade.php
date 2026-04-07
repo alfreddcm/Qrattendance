@@ -401,8 +401,11 @@
                     <thead style="position: sticky; top: 0; z-index: 2;">
                         <tr>
                             <th style="width: 20px; background: #212529; color: #fff;">#</th>
-                            <th style="width: 120px; background: #212529; color: #fff;">LRN</th>
-                            <th style="width: 180px; background: #212529; color: #fff;">Name</th>
+                            <th style="width: 170px; background: #212529; color: #fff;">LRN</th>
+                            <th style="width: 140px; background: #212529; color: #fff;">Last Name</th>
+                            <th style="width: 140px; background: #212529; color: #fff;">First Name</th>
+                            <th style="width: 80px; background: #212529; color: #fff;">MI</th>
+                            <th style="width: 120px; background: #212529; color: #fff;">Name Ext</th>
                             <th style="width: 80px; background: #212529; color: #fff;">Gender</th>
                             <th style="width: 70px; background: #212529; color: #fff;">Age</th>
                             <th style="min-width: 150px; background: #212529; color: #fff;">Address</th>
@@ -410,8 +413,6 @@
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Name</th>
                             <th style="width: 120px; background: #212529; color: #fff;">Contact Phone</th>
                             <th style="width: 100px; background: #212529; color: #fff;">Relationship</th>
-                            <th style="width: 100px; background: #212529; color: #fff;">Grade Level</th>
-                            <th style="width: 120px; background: #212529; color: #fff;">Section Name</th>
                             <th style="width: 60px; background: #212529; color: #fff;">Action</th>
                         </tr>
                     </thead>
@@ -420,26 +421,23 @@
                             @if(count($row) >= 3)
                             <tr>
                                 <td class="row-number"></td>
-                                <td><input type="text" name="students[{{ $i }}][0]" value="{{ $row[0] ?? '' }}" class="form-control form-control-sm w-100" required></td>
+                                <td><input type="text" name="students[{{ $i }}][0]" value="{{ $row[0] ?? '' }}" class="form-control form-control-sm w-100" style="min-width: 140px;" required></td>
                                 <td><input type="text" name="students[{{ $i }}][1]" value="{{ $row[1] ?? '' }}" class="form-control form-control-sm w-100" required></td>
+                                <td><input type="text" name="students[{{ $i }}][2]" value="{{ $row[2] ?? '' }}" class="form-control form-control-sm w-100" required></td>
+                                <td><input type="text" name="students[{{ $i }}][3]" value="{{ $row[3] ?? '' }}" class="form-control form-control-sm w-100" maxlength="1"></td>
+                                <td><input type="text" name="students[{{ $i }}][4]" value="{{ $row[4] ?? '' }}" class="form-control form-control-sm w-100" placeholder="Jr / Sr"></td>
                                 <td>
-                                    <select name="students[{{ $i }}][2]" class="form-select form-select-sm w-100" required>
-                                        <option value="M" {{ (isset($row[2]) && (strtolower($row[2]) == 'male' || strtolower($row[2]) == 'm')) ? 'selected' : '' }}>Male</option>
-                                        <option value="F" {{ (isset($row[2]) && (strtolower($row[2]) == 'female' || strtolower($row[2]) == 'f')) ? 'selected' : '' }}>Female</option>
+                                    <select name="students[{{ $i }}][5]" class="form-select form-select-sm w-100" required>
+                                        <option value="M" {{ (isset($row[5]) && (strtolower($row[5]) == 'male' || strtolower($row[5]) == 'm')) ? 'selected' : '' }}>Male</option>
+                                        <option value="F" {{ (isset($row[5]) && (strtolower($row[5]) == 'female' || strtolower($row[5]) == 'f')) ? 'selected' : '' }}>Female</option>
                                     </select>
                                 </td>
-                                <td><input type="number" name="students[{{ $i }}][3]" value="{{ $row[3] ?? '' }}" class="form-control form-control-sm w-100" required></td>
-                                <td><input type="text" name="students[{{ $i }}][4]" value="{{ $row[4] ?? '' }}" class="form-control form-control-sm w-100"></td>
-                                <td><input type="text" name="students[{{ $i }}][5]" value="{{ $row[5] ?? '' }}" class="form-control form-control-sm w-100"></td>
-                                <td><input type="text" name="students[{{ $i }}][6]" value="{{ $row[6] ?? '' }}" class="form-control form-control-sm w-100"></td>
+                                <td><input type="number" name="students[{{ $i }}][6]" value="{{ $row[6] ?? '' }}" class="form-control form-control-sm w-100" required></td>
                                 <td><input type="text" name="students[{{ $i }}][7]" value="{{ $row[7] ?? '' }}" class="form-control form-control-sm w-100"></td>
                                 <td><input type="text" name="students[{{ $i }}][8]" value="{{ $row[8] ?? '' }}" class="form-control form-control-sm w-100"></td>
-                                <td class="grade-level-cell">
-                                    <span class="text-muted">Select section</span>
-                                </td>
-                                <td class="section-name-cell">
-                                    <span class="text-muted">Select section</span>
-                                </td>
+                                <td><input type="text" name="students[{{ $i }}][9]" value="{{ $row[9] ?? '' }}" class="form-control form-control-sm w-100"></td>
+                                <td><input type="text" name="students[{{ $i }}][10]" value="{{ $row[10] ?? '' }}" class="form-control form-control-sm w-100"></td>
+                                <td><input type="text" name="students[{{ $i }}][11]" value="{{ $row[11] ?? '' }}" class="form-control form-control-sm w-100"></td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm remove-row" title="Remove">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -451,7 +449,7 @@
                             @endif
                         @endforeach
                         <tr>
-                            <td colspan="13" class="text-center">
+                            <td colspan="14" class="text-center">
                                 <button type="button" class="btn btn-primary btn-sm" id="addRowBtn">
                                     Add Row
                                 </button>
@@ -460,7 +458,7 @@
                     </tbody>
                     <tfoot>
                         <tr class="table-secondary" style="position: sticky; bottom: 0; z-index: 2;">
-                            <td colspan="13" class="text-end fw-bold">
+                            <td colspan="14" class="text-end fw-bold">
                                 Total Students: <span id="totalStudents">0</span>
                             </td>
 
@@ -569,25 +567,8 @@
         function updateTeacherSectionInfo() {
             const sectionSelect = document.getElementById('teacher_section');
             const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
-
-            if (selectedOption && selectedOption.value) {
-                const gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
-                const sectionName = selectedOption.getAttribute('data-name') || 'N/A';
-
-                // Update all existing rows with section info
-                document.querySelectorAll('.grade-level-cell').forEach(cell => {
-                    cell.textContent = gradeLevel;
-                });
-                document.querySelectorAll('.section-name-cell').forEach(cell => {
-                    cell.textContent = sectionName;
-                });
-            } else {
-                document.querySelectorAll('.grade-level-cell').forEach(cell => {
-                    cell.innerHTML = '<span class="text-muted">Select section</span>';
-                });
-                document.querySelectorAll('.section-name-cell').forEach(cell => {
-                    cell.innerHTML = '<span class="text-muted">Select section</span>';
-                });
+            if (!selectedOption) {
+                return;
             }
         }
         @endif
@@ -711,24 +692,9 @@
             document.getElementById('selectedSectionId').value = sectionSelect.value;
             validationState.section = sectionSelect.value !== '';
 
-            if (selectedOption && selectedOption.value) {
-                const gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
-                const sectionName = selectedOption.getAttribute('data-name') || 'N/A';
-
-                // Update all existing rows with section info
-                document.querySelectorAll('.grade-level-cell').forEach(cell => {
-                    cell.textContent = gradeLevel;
-                });
-                document.querySelectorAll('.section-name-cell').forEach(cell => {
-                    cell.textContent = sectionName;
-                });
-            } else {
-                document.querySelectorAll('.grade-level-cell').forEach(cell => {
-                    cell.innerHTML = '<span class="text-muted">Select section</span>';
-                });
-                document.querySelectorAll('.section-name-cell').forEach(cell => {
-                    cell.innerHTML = '<span class="text-muted">Select section</span>';
-                });
+            if (!selectedOption) {
+                updateSelectionStatus();
+                return;
             }
 
             updateSelectionStatus();
@@ -916,45 +882,26 @@
             let addRowBtnRow = document.getElementById('addRowBtn').closest('tr');
             let rowCount = tbody.querySelectorAll('tr').length - 1;
 
-            // Get current section info for new rows
-            let gradeLevel = 'N/A';
-            let sectionName = 'N/A';
-
-            @if(auth()->user()->role === 'admin')
-                const sectionSelect = document.getElementById('admin_section_id');
-                if (sectionSelect && sectionSelect.value) {
-                    const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
-                    gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
-                    sectionName = selectedOption.getAttribute('data-name') || 'N/A';
-                }
-            @else
-                const sectionSelect = document.getElementById('teacher_section');
-                if (sectionSelect && sectionSelect.value) {
-                    const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
-                    gradeLevel = selectedOption.getAttribute('data-gradelevel') || 'N/A';
-                    sectionName = selectedOption.getAttribute('data-name') || 'N/A';
-                }
-            @endif
-
             let newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td class="row-number"></td>
-                <td><input type="text" name="students[new_${rowCount}][0]" class="form-control form-control-sm w-100" required></td>
+                <td><input type="text" name="students[new_${rowCount}][0]" class="form-control form-control-sm w-100" style="min-width: 140px;" required></td>
                 <td><input type="text" name="students[new_${rowCount}][1]" class="form-control form-control-sm w-100" required></td>
+                <td><input type="text" name="students[new_${rowCount}][2]" class="form-control form-control-sm w-100" required></td>
+                <td><input type="text" name="students[new_${rowCount}][3]" class="form-control form-control-sm w-100" maxlength="1"></td>
+                <td><input type="text" name="students[new_${rowCount}][4]" class="form-control form-control-sm w-100" placeholder="Jr / Sr"></td>
                 <td>
-                    <select name="students[new_${rowCount}][2]" class="form-select form-select-sm w-100" required>
+                    <select name="students[new_${rowCount}][5]" class="form-select form-select-sm w-100" required>
                         <option value="M">Male</option>
                         <option value="F">Female</option>
                     </select>
                 </td>
-                <td><input type="number" name="students[new_${rowCount}][3]" class="form-control form-control-sm w-100" required></td>
-                <td><input type="text" name="students[new_${rowCount}][4]" class="form-control form-control-sm w-100"></td>
-                <td><input type="text" name="students[new_${rowCount}][5]" class="form-control form-control-sm w-100"></td>
-                <td><input type="text" name="students[new_${rowCount}][6]" class="form-control form-control-sm w-100"></td>
+                <td><input type="number" name="students[new_${rowCount}][6]" class="form-control form-control-sm w-100" required></td>
                 <td><input type="text" name="students[new_${rowCount}][7]" class="form-control form-control-sm w-100"></td>
                 <td><input type="text" name="students[new_${rowCount}][8]" class="form-control form-control-sm w-100"></td>
-                <td class="grade-level-cell text-center">${gradeLevel}</td>
-                <td class="section-name-cell text-center">${sectionName}</td>
+                <td><input type="text" name="students[new_${rowCount}][9]" class="form-control form-control-sm w-100"></td>
+                <td><input type="text" name="students[new_${rowCount}][10]" class="form-control form-control-sm w-100"></td>
+                <td><input type="text" name="students[new_${rowCount}][11]" class="form-control form-control-sm w-100"></td>
                 <td class="text-center">
                     <button type="button" class="btn btn-danger btn-sm remove-row" title="Remove">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">

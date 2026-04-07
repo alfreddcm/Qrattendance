@@ -135,7 +135,7 @@
     <!-- Pagination -->
     @if($attendances->count() > 0)
         <div class="d-flex justify-content-center mt-4">
-            {{ $attendances->links() }}
+            {{ $attendances->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     @endif
 </div>

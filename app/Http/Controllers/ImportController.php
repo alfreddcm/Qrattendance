@@ -57,16 +57,18 @@ class ImportController extends Controller
                  Storage::disk('public')->delete($path);
                 return redirect()->back()->with('error', 'The uploaded file is empty or contains no valid data.');
             }
-            
-             if (count($data[0]) < 2) {
+
+            $normalizedData = $this->normalizeImportDataForPreview($data[0]);
+
+             if (count($normalizedData) < 2) {
                 Storage::disk('public')->delete($path);
                 return redirect()->back()->with('error', 'The file must contain at least a header row and one data row.');
             }
             
-             $headerRow = $data[0][0];
-            if (count($headerRow) < 4) {
+             $headerRow = $normalizedData[0];
+            if (count($headerRow) < 7) {
                 Storage::disk('public')->delete($path);
-                return redirect()->back()->with('error', 'Invalid file format. The file must contain at least 4 columns (ID, Name, Gender, Age).');
+                return redirect()->back()->with('error', 'Invalid file format. The file must contain LRN, name fields, gender, and age columns.');
             }
             
             $schoolYears = SchoolYear::all();
@@ -97,7 +99,7 @@ class ImportController extends Controller
             }
 
             return view('import.preview', [
-                'data' => $data[0],
+                'data' => $normalizedData,
                 'file' => $path,
                 'schoolYears' => $schoolYears,
                 'semesters' => $schoolYears,
@@ -208,8 +210,9 @@ class ImportController extends Controller
                     if (empty(array_filter($row))) {
                         continue;
                     }
-                    $idNo = trim($row[0] ?? '');
-                    $name = trim($row[1] ?? '');
+                    $parsedRow = $this->parseImportStudentRow($row);
+                    $idNo = $parsedRow['id_no'];
+                    $name = $parsedRow['name'];
                     
                     if (empty($idNo) || empty($name)) {
                         continue;
@@ -255,8 +258,10 @@ class ImportController extends Controller
                         continue;
                     }
 
-                     if (empty(trim($row[0] ?? '')) || empty(trim($row[1] ?? '')) || empty(trim($row[2] ?? '')) || empty(trim($row[3] ?? ''))) {
-                        $errors[] = "Row " . ($index + 1) . ": Missing required fields (ID, Name, Gender, or Age)";
+                    $parsedRow = $this->parseImportStudentRow($row);
+
+                     if (empty($parsedRow['id_no']) || empty($parsedRow['name']) || empty($parsedRow['gender']) || empty($parsedRow['age'])) {
+                        $errors[] = "Row " . ($index + 1) . ": Missing required fields (LRN, Name, Gender, or Age)";
                         \Log::warning('Import row skipped: Missing required fields', [
                             'row' => $index + 1,
                             'user_id' => $user_id
@@ -264,7 +269,7 @@ class ImportController extends Controller
                         continue;
                     }
 
-                     $idNo = trim($row[0]);
+                     $idNo = $parsedRow['id_no'];
                     if (!preg_match('/^[a-zA-Z0-9]+$/', $idNo)) {
                         $errors[] = "Row " . ($index + 1) . ": Invalid ID format. Only letters and numbers are allowed.";
                         \Log::warning('Import row skipped: Invalid ID format', [
@@ -275,7 +280,7 @@ class ImportController extends Controller
                         continue;
                     }
 
-                     $age = trim($row[3]);
+                     $age = trim((string) $parsedRow['age']);
                     if (!is_numeric($age) || $age < 1 || $age > 100) {
                         $errors[] = "Row " . ($index + 1) . ": Invalid age. Age must be between 1 and 100.";
                         \Log::warning('Import row skipped: Invalid age', [
@@ -291,21 +296,21 @@ class ImportController extends Controller
                         ->where('user_id', $user_id)
                         ->first();
 
-                    $cpNo = isset($row[5]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[5])) : null;
-                    $contactPersonContact = isset($row[7]) ? $this->formatPhoneNumber($this->cleanTabPrefix($row[7])) : null;
+                    $cpNo = $this->formatPhoneNumber($this->cleanTabPrefix($parsedRow['cp_no']));
+                    $contactPersonContact = $this->formatPhoneNumber($this->cleanTabPrefix($parsedRow['contact_person_contact']));
 
-                    $gender = $this->normalizeGender($row[2]);
+                    $gender = $this->normalizeGender($parsedRow['gender']);
                     if (!in_array($gender, ['M', 'F'])) {
                         $errors[] = "Row " . ($index + 1) . ": Invalid gender format. Use M/F or Male/Female.";
                         \Log::warning('Import row skipped: Invalid gender format', [
                             'row' => $index + 1,
-                            'gender' => $row[2],
+                            'gender' => $parsedRow['gender'],
                             'user_id' => $user_id
                         ]);
                         continue;
                     }
 
-                    $name = trim($row[1]);
+                    $name = trim($parsedRow['name']);
                     if (strlen($name) > 255) {
                         $errors[] = "Row " . ($index + 1) . ": Name is too long (maximum 255 characters).";
                         \Log::warning('Import row skipped: Name too long', [
@@ -321,10 +326,10 @@ class ImportController extends Controller
                         'name'                          => $name,
                         'gender'                        => $gender,
                         'age'                           => (int)$age,
-                        'address'                       => isset($row[4]) ? trim(substr($row[4], 0, 255)) : '',
+                        'address'                       => trim(substr($parsedRow['address'] ?? '', 0, 255)),
                         'cp_no'                         => $cpNo,
-                        'contact_person_name'           => isset($row[6]) ? trim(substr($row[6], 0, 255)) : null,
-                        'contact_person_relationship'   => isset($row[8]) ? trim(substr($row[8], 0, 255)) : null,
+                        'contact_person_name'           => !empty($parsedRow['contact_person_name']) ? trim(substr($parsedRow['contact_person_name'], 0, 255)) : null,
+                        'contact_person_relationship'   => !empty($parsedRow['contact_person_relationship']) ? trim(substr($parsedRow['contact_person_relationship'], 0, 255)) : null,
                         'contact_person_contact'        => $contactPersonContact,
                         'school_year_id'                   => $schoolYear_id,
                         'section_id'                    => $section_id,
@@ -526,6 +531,203 @@ class ImportController extends Controller
         }
         
         return strtoupper(substr($gender, 0, 1));
+    }
+
+    private function normalizeImportDataForPreview(array $rows): array
+    {
+        $normalized = [[
+            'LRN',
+            'Last Name',
+            'First Name',
+            'MI',
+            'Name Extension',
+            'Gender',
+            'Age',
+            'Address',
+            'CP No',
+            'Contact Person Name',
+            'Contact Person Phone',
+            'Relationship',
+        ]];
+
+        foreach (array_slice($rows, 1) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $parsed = $this->parseImportStudentRow($row);
+            if (empty($parsed['id_no']) && empty($parsed['last_name']) && empty($parsed['first_name'])) {
+                continue;
+            }
+
+            $normalized[] = [
+                $parsed['id_no'],
+                $parsed['last_name'],
+                $parsed['first_name'],
+                $parsed['middle_initial'],
+                $parsed['name_extension'],
+                $parsed['gender'],
+                $parsed['age'],
+                $parsed['address'],
+                $parsed['cp_no'],
+                $parsed['contact_person_name'],
+                $parsed['contact_person_contact'],
+                $parsed['contact_person_relationship'],
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function parseImportStudentRow(array $row): array
+    {
+        $idNo = trim((string) ($row[0] ?? ''));
+
+        $isNewTemplate = $this->isNewNameTemplateRow($row);
+        if ($isNewTemplate) {
+            $lastName = trim((string) ($row[1] ?? ''));
+            $firstName = trim((string) ($row[2] ?? ''));
+            $middleInitial = trim((string) ($row[3] ?? ''));
+            $nameExtension = trim((string) ($row[4] ?? ''));
+
+            return [
+                'id_no' => $idNo,
+                'last_name' => $this->formatNamePart($lastName),
+                'first_name' => $this->formatNamePart($firstName),
+                'middle_initial' => $this->normalizeMiddleInitial($middleInitial),
+                'name_extension' => $this->normalizeNameExtension($nameExtension),
+                'name' => $this->buildFormattedName($lastName, $firstName, $middleInitial, $nameExtension),
+                'gender' => trim((string) ($row[5] ?? '')),
+                'age' => trim((string) ($row[6] ?? '')),
+                'address' => trim((string) ($row[7] ?? '')),
+                'cp_no' => trim((string) ($row[8] ?? '')),
+                'contact_person_name' => trim((string) ($row[9] ?? '')),
+                'contact_person_contact' => trim((string) ($row[10] ?? '')),
+                'contact_person_relationship' => trim((string) ($row[11] ?? '')),
+            ];
+        }
+
+        $legacyName = trim((string) ($row[1] ?? ''));
+        [$lastName, $firstName, $middleInitial, $nameExtension] = $this->splitLegacyName($legacyName);
+
+        return [
+            'id_no' => $idNo,
+            'last_name' => $this->formatNamePart($lastName),
+            'first_name' => $this->formatNamePart($firstName),
+            'middle_initial' => $this->normalizeMiddleInitial($middleInitial),
+            'name_extension' => $this->normalizeNameExtension($nameExtension),
+            'name' => $this->buildFormattedName($lastName, $firstName, $middleInitial, $nameExtension),
+            'gender' => trim((string) ($row[2] ?? '')),
+            'age' => trim((string) ($row[3] ?? '')),
+            'address' => trim((string) ($row[4] ?? '')),
+            'cp_no' => trim((string) ($row[5] ?? '')),
+            'contact_person_name' => trim((string) ($row[6] ?? '')),
+            'contact_person_contact' => trim((string) ($row[7] ?? '')),
+            'contact_person_relationship' => trim((string) ($row[8] ?? '')),
+        ];
+    }
+
+    private function isNewNameTemplateRow(array $row): bool
+    {
+        $genderCandidate = strtolower(trim((string) ($row[5] ?? '')));
+        $hasNameParts = !empty(trim((string) ($row[1] ?? ''))) || !empty(trim((string) ($row[2] ?? '')));
+
+        return count($row) >= 12 && $hasNameParts && in_array($genderCandidate, ['m', 'f', 'male', 'female']);
+    }
+
+    private function splitLegacyName(string $fullName): array
+    {
+        $fullName = trim(preg_replace('/\s+/', ' ', $fullName));
+        if ($fullName === '') {
+            return ['', '', '', ''];
+        }
+
+        if (str_contains($fullName, ',')) {
+            $parts = array_map('trim', explode(',', $fullName, 2));
+            $lastName = $parts[0] ?? '';
+            $rest = $parts[1] ?? '';
+            $tokens = preg_split('/\s+/', trim($rest)) ?: [];
+            $firstName = array_shift($tokens) ?? '';
+
+            $middleInitial = '';
+            $nameExtension = '';
+            if (!empty($tokens)) {
+                $lastToken = strtoupper(rtrim(end($tokens), '.'));
+                if (in_array($lastToken, ['JR', 'SR', 'II', 'III', 'IV', 'V'])) {
+                    $nameExtension = array_pop($tokens);
+                }
+            }
+            if (!empty($tokens)) {
+                $middleInitial = array_pop($tokens);
+            }
+
+            return [$lastName, $firstName, $middleInitial, $nameExtension];
+        }
+
+        $tokens = preg_split('/\s+/', $fullName) ?: [];
+        if (count($tokens) === 1) {
+            return ['', $tokens[0], '', ''];
+        }
+
+        $firstName = array_shift($tokens);
+        $lastName = implode(' ', $tokens);
+        return [$lastName, $firstName, '', ''];
+    }
+
+    private function buildFormattedName(string $lastName, string $firstName, string $middleInitial = '', string $nameExtension = ''): string
+    {
+        $formattedLastName = $this->formatNamePart($lastName);
+        $formattedFirstName = $this->formatNamePart($firstName);
+        $formattedMiddleInitial = $this->normalizeMiddleInitial($middleInitial);
+        $formattedNameExtension = $this->normalizeNameExtension($nameExtension);
+
+        if ($formattedLastName !== '' && $formattedFirstName !== '') {
+            $name = $formattedLastName . ', ' . $formattedFirstName;
+        } elseif ($formattedLastName !== '') {
+            $name = $formattedLastName;
+        } else {
+            $name = $formattedFirstName;
+        }
+
+        if ($formattedNameExtension !== '') {
+            $name .= ' ' . $formattedNameExtension;
+        }
+
+        if ($formattedMiddleInitial !== '') {
+            $name .= ' ' . $formattedMiddleInitial . '.';
+        }
+
+        return trim($name);
+    }
+
+    private function formatNamePart(string $value): string
+    {
+        $value = trim(preg_replace('/\s+/', ' ', $value));
+        if ($value === '') {
+            return '';
+        }
+
+        return ucwords(strtolower($value));
+    }
+
+    private function normalizeMiddleInitial(string $value): string
+    {
+        $value = strtoupper(trim(str_replace('.', '', $value)));
+        if ($value === '') {
+            return '';
+        }
+
+        return substr($value, 0, 1);
+    }
+
+    private function normalizeNameExtension(string $value): string
+    {
+        $value = strtoupper(trim(str_replace('.', '', $value)));
+        if ($value === '') {
+            return '';
+        }
+
+        return preg_replace('/\s+/', ' ', $value);
     }
 
     /**

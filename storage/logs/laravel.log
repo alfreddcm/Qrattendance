@@ -1,0 +1,97 @@
+[2026-04-07 15:13:20] local.INFO: Public scan received {"student_id":"103677140021_NIKW80LYF2","qr_data":"103677140021_NIKW80LYF2","payload":{"student_id":"103677140021_NIKW80LYF2","qr_data":"103677140021_NIKW80LYF2"},"timestamp":"2026-04-07T15:13:20+08:00"} 
+[2026-04-07 15:13:20] local.INFO: Public scan normalized payload {"scan_value":"103677140021_NIKW80LYF2","scan_length":23} 
+[2026-04-07 15:13:20] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103677140021_NIKW80LYF2","fallback_id_no":"103677140021","matched_student_id":120,"stored_stud_code":"103677140021_SKTFWGOV7Q"} 
+[2026-04-07 15:13:22] local.INFO: Public scan received {"student_id":"103690140117_RZC7S50PE4","qr_data":"103690140117_RZC7S50PE4","payload":{"student_id":"103690140117_RZC7S50PE4","qr_data":"103690140117_RZC7S50PE4"},"timestamp":"2026-04-07T15:13:22+08:00"} 
+[2026-04-07 15:13:22] local.INFO: Public scan normalized payload {"scan_value":"103690140117_RZC7S50PE4","scan_length":23} 
+[2026-04-07 15:13:22] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103690140117_RZC7S50PE4","fallback_id_no":"103690140117","matched_student_id":106,"stored_stud_code":"103690140117_OW7DCG3Q1F"} 
+[2026-04-07 15:13:22] local.INFO: Public scan time detection {"student_id":106,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-04-07 15:13:22"} 
+[2026-04-07 15:13:22] local.INFO: Attendance saved {"attendance_id":26188,"student_id":106,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-04-07 15:13:22","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-04-07 15:13:22","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-04-07 15:13:22] local.INFO: Session stored for student {"session_key":"scanned_student_614012","student_id":106,"attendance_id":26188} 
+[2026-04-07 15:13:22] local.INFO: Public QR attendance recorded {"student_id":106,"student_name":"SUNGA,RHON MARK PARAYNO","attendance_type":"time_in_pm","status":"Late"} 
+[2026-04-07 15:15:06] local.INFO: Public scan received {"student_id":"103675140011_AWGPBS5LOR","qr_data":"103675140011_AWGPBS5LOR","payload":{"student_id":"103675140011_AWGPBS5LOR","qr_data":"103675140011_AWGPBS5LOR"},"timestamp":"2026-04-07T15:15:06+08:00"} 
+[2026-04-07 15:15:06] local.INFO: Public scan normalized payload {"scan_value":"103675140011_AWGPBS5LOR","scan_length":23} 
+[2026-04-07 15:15:06] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103675140011_AWGPBS5LOR","fallback_id_no":"103675140011","matched_student_id":104,"stored_stud_code":"103675140011_1CNUO8Z0VY"} 
+[2026-04-07 15:15:06] local.INFO: Public scan time detection {"student_id":104,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-04-07 15:15:06"} 
+[2026-04-07 15:15:06] local.INFO: Attendance saved {"attendance_id":26189,"student_id":104,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-04-07 15:15:06","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-04-07 15:15:06","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-04-07 15:15:06] local.INFO: Session stored for student {"session_key":"scanned_student_614012","student_id":104,"attendance_id":26189} 
+[2026-04-07 15:15:06] local.INFO: Public QR attendance recorded {"student_id":104,"student_name":"EBREO,JOHN LLOYD LIMOS","attendance_type":"time_in_pm","status":"Late"} 
+[2026-04-07 15:15:15] local.INFO: Public scan received {"student_id":"103697140008_0JQGEFM6OV","qr_data":"103697140008_0JQGEFM6OV","payload":{"student_id":"103697140008_0JQGEFM6OV","qr_data":"103697140008_0JQGEFM6OV"},"timestamp":"2026-04-07T15:15:15+08:00"} 
+[2026-04-07 15:15:15] local.INFO: Public scan normalized payload {"scan_value":"103697140008_0JQGEFM6OV","scan_length":23} 
+[2026-04-07 15:15:15] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103697140008_0JQGEFM6OV","fallback_id_no":"103697140008","matched_student_id":112,"stored_stud_code":"103697140008_Q5LPFO6AGX"} 
+[2026-04-07 15:15:17] local.INFO: Public scan received {"student_id":"103888140022_CT3F2RWGOA","qr_data":"103888140022_CT3F2RWGOA","payload":{"student_id":"103888140022_CT3F2RWGOA","qr_data":"103888140022_CT3F2RWGOA"},"timestamp":"2026-04-07T15:15:17+08:00"} 
+[2026-04-07 15:15:17] local.INFO: Public scan normalized payload {"scan_value":"103888140022_CT3F2RWGOA","scan_length":23} 
+[2026-04-07 15:15:17] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103888140022_CT3F2RWGOA","fallback_id_no":"103888140022","matched_student_id":103,"stored_stud_code":"103888140022_52LJK1T3SI"} 
+[2026-04-07 15:15:21] local.INFO: Public scan received {"student_id":"103688140011_F9RHK7T6JN","qr_data":"103688140011_F9RHK7T6JN","payload":{"student_id":"103688140011_F9RHK7T6JN","qr_data":"103688140011_F9RHK7T6JN"},"timestamp":"2026-04-07T15:15:21+08:00"} 
+[2026-04-07 15:15:21] local.INFO: Public scan normalized payload {"scan_value":"103688140011_F9RHK7T6JN","scan_length":23} 
+[2026-04-07 15:15:21] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103688140011_F9RHK7T6JN","fallback_id_no":"103688140011","matched_student_id":114,"stored_stud_code":"103688140011_7G3ZH6IEUV"} 
+[2026-04-07 15:15:21] local.INFO: Public scan time detection {"student_id":114,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-04-07 15:15:21"} 
+[2026-04-07 15:15:21] local.INFO: Attendance saved {"attendance_id":26181,"student_id":114,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-04-07 15:15:21","saved_values":{"time_in_am":"09:59:25","time_out_am":null,"time_in_pm":"2026-04-07 15:15:21","time_out_pm":null,"am_status":"On Time","pm_status":"Late"}} 
+[2026-04-07 15:15:21] local.INFO: Session stored for student {"session_key":"scanned_student_614012","student_id":114,"attendance_id":26181} 
+[2026-04-07 15:15:21] local.INFO: Public QR attendance recorded {"student_id":114,"student_name":"JAVELLANA,ALONA CUTARAN","attendance_type":"time_in_pm","status":"Late"} 
+[2026-04-07 15:17:27] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/sections/3","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:17:27] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:17:27] local.INFO: Updating section {"section_id":3,"user_id":1} 
+[2026-04-07 15:17:27] local.INFO: Teacher assignments updated {"section_id":3,"old_teacher_id":5,"new_teacher_id":"6","students_updated":21,"users_updated":0} 
+[2026-04-07 15:17:27] local.INFO: Section updated successfully {"section_id":3,"section_name":"Moonstone","grade_level":"11","old_teacher_id":5,"new_teacher_id":"6","school_year_id":"1"} 
+[2026-04-07 15:17:27] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-teachers","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:17:27] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:17:39] local.INFO: Public scan received {"student_id":"103678140011_9HVSA06JFR","qr_data":"103678140011_9HVSA06JFR","payload":{"student_id":"103678140011_9HVSA06JFR","qr_data":"103678140011_9HVSA06JFR"},"timestamp":"2026-04-07T15:17:39+08:00"} 
+[2026-04-07 15:17:39] local.INFO: Public scan normalized payload {"scan_value":"103678140011_9HVSA06JFR","scan_length":23} 
+[2026-04-07 15:17:39] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103678140011_9HVSA06JFR","fallback_id_no":"103678140011","matched_student_id":109,"stored_stud_code":"103678140011_P1UBYI2OQK"} 
+[2026-04-07 15:17:39] local.INFO: Public scan time detection {"student_id":109,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-04-07 15:17:39"} 
+[2026-04-07 15:17:39] local.INFO: Attendance saved {"attendance_id":26190,"student_id":109,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-04-07 15:17:39","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-04-07 15:17:39","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-04-07 15:17:39] local.INFO: Session stored for student {"session_key":"scanned_student_614012","student_id":109,"attendance_id":26190} 
+[2026-04-07 15:17:39] local.INFO: Public QR attendance recorded {"student_id":109,"student_name":"BUTAC,JESSICA CAMBI","attendance_type":"time_in_pm","status":"Late"} 
+[2026-04-07 15:17:43] local.INFO: Public scan received {"student_id":"103677140017_NJOI40W7ST","qr_data":"103677140017_NJOI40W7ST","payload":{"student_id":"103677140017_NJOI40W7ST","qr_data":"103677140017_NJOI40W7ST"},"timestamp":"2026-04-07T15:17:43+08:00"} 
+[2026-04-07 15:17:43] local.INFO: Public scan normalized payload {"scan_value":"103677140017_NJOI40W7ST","scan_length":23} 
+[2026-04-07 15:17:43] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103677140017_NJOI40W7ST","fallback_id_no":"103677140017","matched_student_id":111,"stored_stud_code":"103677140017_A26QOID8YH"} 
+[2026-04-07 15:17:43] local.INFO: Public scan time detection {"student_id":111,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-04-07 15:17:43"} 
+[2026-04-07 15:17:43] local.INFO: Attendance saved {"attendance_id":26180,"student_id":111,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-04-07 15:17:43","saved_values":{"time_in_am":"09:59:14","time_out_am":null,"time_in_pm":"2026-04-07 15:17:43","time_out_pm":null,"am_status":"On Time","pm_status":"Late"}} 
+[2026-04-07 15:17:43] local.INFO: Session stored for student {"session_key":"scanned_student_614012","student_id":111,"attendance_id":26180} 
+[2026-04-07 15:17:43] local.INFO: Public QR attendance recorded {"student_id":111,"student_name":"DOMINGO,ZYRINE MAE QUILANG","attendance_type":"time_in_pm","status":"Late"} 
+[2026-04-07 15:18:36] local.INFO: Public scan received {"student_id":"103698130017_W1SCIGQ6X4","qr_data":"103698130017_W1SCIGQ6X4","payload":{"student_id":"103698130017_W1SCIGQ6X4","qr_data":"103698130017_W1SCIGQ6X4"},"timestamp":"2026-04-07T15:18:36+08:00"} 
+[2026-04-07 15:18:36] local.INFO: Public scan normalized payload {"scan_value":"103698130017_W1SCIGQ6X4","scan_length":23} 
+[2026-04-07 15:18:36] local.WARNING: Public scan fallback match by id_no prefix {"scan_value":"103698130017_W1SCIGQ6X4","fallback_id_no":"103698130017","matched_student_id":116,"stored_stud_code":"103698130017_PR2QOMWG1L"} 
+[2026-04-07 15:18:36] local.INFO: Public scan time detection {"student_id":116,"time_detection":{"valid":true,"type":"time_in_pm","column":"time_in_pm","status_column":"pm_status","period":"PM","action":"Recording afternoon time in"},"now":"2026-04-07 15:18:36"} 
+[2026-04-07 15:18:36] local.INFO: Attendance saved {"attendance_id":26191,"student_id":116,"column_updated":"time_in_pm","status_column":"pm_status","record_time":"2026-04-07 15:18:36","saved_values":{"time_in_am":null,"time_out_am":null,"time_in_pm":"2026-04-07 15:18:36","time_out_pm":null,"am_status":null,"pm_status":"Late"}} 
+[2026-04-07 15:18:36] local.INFO: Session stored for student {"session_key":"scanned_student_614012","student_id":116,"attendance_id":26191} 
+[2026-04-07 15:18:36] local.INFO: Public QR attendance recorded {"student_id":116,"student_name":"PAULO,LYCA MAY FELIX","attendance_type":"time_in_pm","status":"Late"} 
+[2026-04-07 15:19:52] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-teachers","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:19:52] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:05] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/message","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:05] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:05] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-all-students","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:05] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:05] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-teachers","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:05] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:06] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:06] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:06] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:06] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:20:56] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:20:56] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:21:05] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:21:05] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:21:16] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/send-sms","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:21:16] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:21:16] local.INFO: Sending SMS via Android Gateway {"recipients":["+639812002057"],"message_length":4,"sender_id":"Scan-to-notify","gateway_url":"http://192.168.0.118:8080","full_request_data":{"textMessage":{"text":"kkkk","senderId":"Scan-to-notify"},"phoneNumbers":["+639812002057"]}} 
+[2026-04-07 15:21:16] local.INFO: SMS sent successfully {"response":{"deviceId":"ffffffff8eb1c7c20000019c19397c0d","id":"hJbufMjalhN222JKH1wLT","isEncrypted":false,"isHashed":false,"recipients":[{"phoneNumber":"+639812002057","state":"Pending"}],"state":"Pending","states":{"Pending":"2026-04-07T15:21:14.880+08:00"}},"recipients":["+639812002057"],"sender_id":"Scan-to-notify"} 
+[2026-04-07 15:21:16] local.INFO: SMS sent successfully {"message_id":"hJbufMjalhN222JKH1wLT","student_id":"128","number":"+639812002057"} 
+[2026-04-07 15:21:17] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:21:17] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:21:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:21:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:23:13] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/dashboard","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:23:13] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:23:14] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:23:14] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:23:14] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/database","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:23:14] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:23:14] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/storage","auth_check":true,"session_id":"D7YcB6vzias273wuURomjwdjQnE179NKWBOrjC5b","has_session":true,"required_roles":["admin"]} 
+[2026-04-07 15:23:14] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-04-07 15:23:17] local.INFO: Session check {"scan_time":"2026-04-07 15:18:36","current_time":"2026-04-07 15:23:17","seconds_elapsed":281.498053,"will_show":false} 
+[2026-04-07 15:23:17] local.INFO: Session expired and cleared {"seconds_elapsed":281.498053} 
+[2026-04-07 15:23:17] local.INFO: Getting today attendance summary {"teacher_id":6,"date":"2026-04-07"} 
+[2026-04-07 15:23:17] local.INFO: Today attendance summary calculated {"morning_in":34,"morning_out":0,"afternoon_in":17,"afternoon_out":0} 

@@ -63,9 +63,11 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::get('/students/import', [ImportController::class, 'showUploadForm'])->name('teacher.students.import');
 
     Route::post('/students/generate-qrs', [StudentManagementController::class, 'generateQrs'])->name('teacher.students.generateQrs');
+    Route::post('/students/regenerate-qrs', [StudentManagementController::class, 'regenerateQrs'])->name('teacher.students.regenerateQrs');
     Route::get('/students/print-qrs', [StudentManagementController::class, 'printQrs'])->name('teacher.students.printQrs');
     Route::get('/students/download-qrs', [StudentManagementController::class, 'downloadQrs'])->name('teacher.students.downloadQrs');
     Route::post('/students/{id}/generate-qr', [StudentManagementController::class, 'generateQr'])->name('teacher.students.generateQr');
+    Route::post('/students/{id}/regenerate-qr', [StudentManagementController::class, 'regenerateQr'])->name('teacher.students.regenerateQr');
 
     Route::get('/message', [TeacherController::class, 'message'])->name('teacher.message');
     Route::get('/attendance', [AttendanceAnalyticsController::class, 'attendanceToday'])->name('teacher.attendance');
@@ -170,6 +172,7 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/students/print-qrs', [AdminController::class, 'printQrs'])->name('admin.students.printQrs');
     Route::get('/students/download-qrs', [AdminController::class, 'downloadQrs'])->name('admin.students.downloadQrs');
     Route::post('/students/{id}/generate-qr', [AdminController::class, 'generateQr'])->name('admin.students.generateQr');
+    Route::post('/students/{id}/regenerate-qr', [AdminController::class, 'regenerateQr'])->name('admin.students.regenerateQr');
     Route::get('/students/export', [AdminController::class, 'exportStudents'])->name('admin.students.export');
     
     Route::get('/students/download-template', [AdminController::class, 'downloadTemplate'])->name('admin.students.downloadTemplate');
@@ -225,14 +228,15 @@ Route::middleware(['role:teacher,admin'])->group(function () {
     Route::get('/student-ids/print-my-students', [StudentIdController::class, 'printMyStudents'])->name('student.ids.print.my.students');
 });
 
-Route::middleware(['role:student'])->prefix('student')->group(function () {
+Route::middleware(['role:student', 'student.password.change'])->prefix('student')->group(function () {
     Route::get('/dashboard', [StudentDashboardController::class, 'dashboard'])->name('student.dashboard');
     Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('student.attendance');
     Route::get('/account', [StudentDashboardController::class, 'account'])->name('student.account');
     Route::put('/account/password', [StudentDashboardController::class, 'updatePassword'])->name('student.account.password');
 });
 
- Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::post('/attendance-code/generate', [App\Http\Controllers\AttendanceCodeController::class, 'generate'])->name('teacher.attendance.code.generate');
@@ -260,4 +264,3 @@ Route::get('/api/semester/time-sessions', [App\Http\Controllers\AttendanceSessio
 Route::get('/api/teacher-sections/{teacherId}', [App\Http\Controllers\AdminController::class, 'getTeacherSections']);
 Route::get('/api/student-attendance-today/{studentId}', [AttendanceController::class, 'getStudentAttendanceToday']);
 Route::get('/teacher/attendance-forecast', [App\Http\Controllers\AttendanceForecastController::class, 'index'])->name('teacher.attendance.forecast');
-

@@ -34,6 +34,7 @@ class AuthController extends Controller
             $request->validate([
                 'username' => 'required|string|max:255',
                 'password' => 'required|string|min:1',
+                'app_mode' => 'nullable|string|max:50',
             ]);
 
             $identifier = $request->input('username');
@@ -44,6 +45,16 @@ class AuthController extends Controller
             // Try teacher/admin login first
             $credentials = ['username' => $identifier, 'password' => $password];
             if (Auth::attempt($credentials)) {
+                if ($request->input('app_mode') === 'student-pwa' && Auth::user()?->role !== 'student') {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return back()->withErrors([
+                        'login' => 'Only student accounts can sign in from the installed app. Use the web portal for admin or teacher access.',
+                    ])->withInput($request->except('password'));
+                }
+
                 $request->session()->regenerate();
 
                 \Log::info('✓ TEACHER/ADMIN LOGIN SUCCESS', [
@@ -81,26 +92,19 @@ class AuthController extends Controller
                     \Log::info('Password hash check', ['match' => $passwordMatch]);
 
                     if ($passwordMatch) {
-                        \Log::info('Password matched, calling Auth::login()', ['student_id' => $student->id]);
+                        $studentOnlyApp = $request->input('app_mode') === 'student-pwa';
 
                         Auth::login($student);
 
-                        \Log::info('Auth::login() completed', [
-                            'auth_check' => Auth::check(),
-                            'auth_id' => Auth::id(),
-                            'auth_role' => Auth::user()?->role,
-                            'session_id_before' => $request->session()->getId()
-                        ]);
+                        if ($studentOnlyApp) {
+                            \Log::info('Student PWA login confirmed', [
+                                'student_id' => $student->id,
+                                'id_no' => $student->id_no,
+                            ]);
+                        }
 
                         $request->session()->regenerate();
-
-                        // Force session save after regeneration
                         $request->session()->save();
-
-                        \Log::info('Session regenerated and saved', [
-                            'session_id_after' => $request->session()->getId(),
-                            'auth_still_valid' => Auth::check()
-                        ]);
 
                         \Log::info('✓ STUDENT LOGIN SUCCESS', [
                             'student_id' => $student->id,
@@ -110,15 +114,7 @@ class AuthController extends Controller
                             'ip' => $request->ip()
                         ]);
 
-                        \Log::info('Calling redirectToDashboard()');
-                        $redirect = $this->redirectToDashboard();
-
-                        \Log::info('Redirect response created', [
-                            'status_code' => $redirect->getStatusCode(),
-                            'location' => $redirect->headers->get('Location')
-                        ]);
-
-                        return $redirect;
+                        return $this->redirectToDashboard();
                     }
                 }
             }
@@ -173,6 +169,12 @@ class AuthController extends Controller
             return redirect('/teacher/dashboard');
         } else if ($user->role === 'student') {
             \Log::info('Redirecting student user', ['student_id' => $user->id, 'id_no' => $user->id_no ?? 'unknown']);
+
+            if ($user instanceof \App\Models\Student && $user->usesDefaultPassword()) {
+                return redirect()->route('student.account')
+                    ->with('info', 'Please change your temporary password before continuing.');
+            }
+
             return redirect('/student/dashboard');
         }
 

@@ -232,6 +232,12 @@
                         <button class="btn btn-success btn-sm" disabled title="All students have QR codes">
                             <i class="fas fa-check-circle me-1"></i>All QR Generated
                         </button>
+                        <form method="POST" action="{{ route('teacher.students.regenerateQrs') }}" id="regenerateAllQrForm" style="display: inline;">
+                            @csrf
+                            <button type="button" class="btn btn-warning btn-sm" id="regenerateAllQrBtn">
+                                <i class="fas fa-sync-alt me-1"></i>Regenerate All QR
+                            </button>
+                        </form>
                     @endif
 
                     <a href="{{ route('student.ids.print.my.students') }}" class="btn btn-light btn-sm" target="_blank">
@@ -434,6 +440,14 @@
                                        title="Print ID">
                                         <i class="fas fa-print"></i>
                                     </a>
+                                    @if($hasQrCode)
+                                        <form action="{{ route('teacher.students.regenerateQr', $student->id) }}" method="POST" class="d-inline regenerate-qr-form" data-student-name="{{ $student->name }}" data-student-idno="{{ $student->id_no }}">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Regenerate QR">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                     <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
@@ -1896,6 +1910,55 @@ function showAlert(type, message) {
     });
 });
 
+document.querySelectorAll('.regenerate-qr-form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const studentName = form.dataset.studentName || 'this student';
+        const studentIdNo = form.dataset.studentIdno || 'N/A';
+
+        Swal.fire({
+            title: 'Regenerate QR Code?',
+            html: `
+                <p class="mb-2">You are about to regenerate the QR code for <strong>${studentName}</strong> (LRN: <strong>${studentIdNo}</strong>).</p>
+                <div class="alert alert-warning text-start mb-3">
+                    <strong>Warning:</strong> Old printed Student IDs will no longer scan after regeneration. Reissue the student ID card after this action.
+                </div>
+            `,
+            icon: 'warning',
+            input: 'password',
+            inputLabel: 'Enter admin password to continue',
+            inputPlaceholder: 'Password',
+            inputAttributes: {
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Regenerate QR',
+            cancelButtonText: 'Cancel',
+            preConfirm: (password) => {
+                if (!password) {
+                    Swal.showValidationMessage('Admin password is required');
+                    return false;
+                }
+                return password;
+            }
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'password';
+            passwordInput.value = result.value;
+            form.appendChild(passwordInput);
+
+            form.submit();
+        });
+    });
+});
+
 // SweetAlert for Generate All QR Codes
 const generateQrBtn = document.getElementById('generateQrBtn');
 if (generateQrBtn) {
@@ -1926,6 +1989,64 @@ if (generateQrBtn) {
                 
                 form.submit();
             }
+        });
+    });
+}
+
+const regenerateAllQrBtn = document.getElementById('regenerateAllQrBtn');
+if (regenerateAllQrBtn) {
+    regenerateAllQrBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Regenerate All QR Codes?',
+            html: `
+                <p class="mb-2">All student QR codes for your class will be regenerated.</p>
+                <div class="alert alert-warning text-start mb-3">
+                    <strong>Warning:</strong> All previously printed Student IDs will stop working. Reissue all student IDs after regeneration.
+                </div>
+            `,
+            icon: 'warning',
+            input: 'password',
+            inputLabel: 'Enter admin password to continue',
+            inputPlaceholder: 'Admin password',
+            inputAttributes: {
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Regenerate All',
+            cancelButtonText: 'Cancel',
+            preConfirm: (password) => {
+                if (!password) {
+                    Swal.showValidationMessage('Admin password is required');
+                    return false;
+                }
+                return password;
+            }
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const form = document.getElementById('regenerateAllQrForm');
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'password';
+            passwordInput.value = result.value;
+            form.appendChild(passwordInput);
+
+            Swal.fire({
+                title: 'Regenerating QR Codes...',
+                text: 'Please wait while QR codes are being regenerated.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            form.submit();
         });
     });
 }

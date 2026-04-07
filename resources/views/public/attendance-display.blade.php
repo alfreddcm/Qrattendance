@@ -8,16 +8,30 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
     foreach ($teacherSections as $teacherSection) {
         $ranges = [];
         
-        if ($teacherSection->am_time_in_start && $teacherSection->am_time_in_end) {
-            $start = \Carbon\Carbon::parse($teacherSection->am_time_in_start);
-            $end = \Carbon\Carbon::parse($teacherSection->am_time_in_end);
-            $ranges[] = 'AM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
+        // Morning time window
+        if ($teacherSection->am_time_in_start && $teacherSection->am_time_in_end && $teacherSection->am_time_out_start && $teacherSection->am_time_out_end) {
+            $inStart = \Carbon\Carbon::parse($teacherSection->am_time_in_start);
+            $inEnd = \Carbon\Carbon::parse($teacherSection->am_time_in_end);
+            $outStart = \Carbon\Carbon::parse($teacherSection->am_time_out_start);
+            $outEnd = \Carbon\Carbon::parse($teacherSection->am_time_out_end);
+            $ranges[] = 'AM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A') . ', OUT ' . $outStart->format('g:i A') . '-' . $outEnd->format('g:i A');
+        } elseif ($teacherSection->am_time_in_start && $teacherSection->am_time_in_end) {
+            $inStart = \Carbon\Carbon::parse($teacherSection->am_time_in_start);
+            $inEnd = \Carbon\Carbon::parse($teacherSection->am_time_in_end);
+            $ranges[] = 'AM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A');
         }
         
-        if ($teacherSection->pm_time_in_start && $teacherSection->pm_time_in_end) {
-            $start = \Carbon\Carbon::parse($teacherSection->pm_time_in_start);
-            $end = \Carbon\Carbon::parse($teacherSection->pm_time_in_end);
-            $ranges[] = 'PM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
+        // Afternoon time window
+        if ($teacherSection->pm_time_in_start && $teacherSection->pm_time_in_end && $teacherSection->pm_time_out_start && $teacherSection->pm_time_out_end) {
+            $inStart = \Carbon\Carbon::parse($teacherSection->pm_time_in_start);
+            $inEnd = \Carbon\Carbon::parse($teacherSection->pm_time_in_end);
+            $outStart = \Carbon\Carbon::parse($teacherSection->pm_time_out_start);
+            $outEnd = \Carbon\Carbon::parse($teacherSection->pm_time_out_end);
+            $ranges[] = 'PM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A') . ', OUT ' . $outStart->format('g:i A') . '-' . $outEnd->format('g:i A');
+        } elseif ($teacherSection->pm_time_in_start && $teacherSection->pm_time_in_end) {
+            $inStart = \Carbon\Carbon::parse($teacherSection->pm_time_in_start);
+            $inEnd = \Carbon\Carbon::parse($teacherSection->pm_time_in_end);
+            $ranges[] = 'PM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A');
         }
         
         if (count($ranges) > 0) {
@@ -29,20 +43,42 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
 } elseif ($section) {
     $ranges = [];
     
-    if ($section->am_time_in_start && $section->am_time_in_end) {
-        $start = \Carbon\Carbon::parse($section->am_time_in_start);
-        $end = \Carbon\Carbon::parse($section->am_time_in_end);
-        $ranges[] = 'AM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
+    // Morning time window
+    if ($section->am_time_in_start && $section->am_time_in_end && $section->am_time_out_start && $section->am_time_out_end) {
+        $inStart = \Carbon\Carbon::parse($section->am_time_in_start);
+        $inEnd = \Carbon\Carbon::parse($section->am_time_in_end);
+        $outStart = \Carbon\Carbon::parse($section->am_time_out_start);
+        $outEnd = \Carbon\Carbon::parse($section->am_time_out_end);
+        $ranges[] = 'AM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A') . ', OUT ' . $outStart->format('g:i A') . '-' . $outEnd->format('g:i A');
+    } elseif ($section->am_time_in_start && $section->am_time_in_end) {
+        $inStart = \Carbon\Carbon::parse($section->am_time_in_start);
+        $inEnd = \Carbon\Carbon::parse($section->am_time_in_end);
+        $ranges[] = 'AM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A');
     }
     
-    if ($section->pm_time_in_start && $section->pm_time_in_end) {
-        $start = \Carbon\Carbon::parse($section->pm_time_in_start);
-        $end = \Carbon\Carbon::parse($section->pm_time_in_end);
-        $ranges[] = 'PM: ' . $start->format('g:i A') . '-' . $end->format('g:i A');
+    // Afternoon time window
+    if ($section->pm_time_in_start && $section->pm_time_in_end && $section->pm_time_out_start && $section->pm_time_out_end) {
+        $inStart = \Carbon\Carbon::parse($section->pm_time_in_start);
+        $inEnd = \Carbon\Carbon::parse($section->pm_time_in_end);
+        $outStart = \Carbon\Carbon::parse($section->pm_time_out_start);
+        $outEnd = \Carbon\Carbon::parse($section->pm_time_out_end);
+        $ranges[] = 'PM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A') . ', OUT ' . $outStart->format('g:i A') . '-' . $outEnd->format('g:i A');
+    } elseif ($section->pm_time_in_start && $section->pm_time_in_end) {
+        $inStart = \Carbon\Carbon::parse($section->pm_time_in_start);
+        $inEnd = \Carbon\Carbon::parse($section->pm_time_in_end);
+        $ranges[] = 'PM: IN ' . $inStart->format('g:i A') . '-' . $inEnd->format('g:i A');
     }
     
     if (count($ranges) > 0) {
         $timeRangeDisplay = $section->name . ' – ' . implode(' | ', $ranges);
+    }
+}
+
+$schoolLogoUrl = null;
+if (!empty($school?->logo)) {
+    $normalizedLogoPath = ltrim(str_replace('storage/', '', $school->logo), '/');
+    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedLogoPath)) {
+        $schoolLogoUrl = asset('storage/' . $normalizedLogoPath);
     }
 }
 @endphp
@@ -529,8 +565,8 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
      <div class="header">
         <div class="header-left">
             <div class="school-logo">
-                @if($school->logo)
-                    <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name ?? 'School' }} Logo">
+                @if($schoolLogoUrl)
+                    <img src="{{ $schoolLogoUrl }}" alt="{{ $school->name ?? 'School' }} Logo">
                 @else
                     {{ substr($school->name ?? 'S', 0, 1) }}
                 @endif
@@ -706,6 +742,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
         (() => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const scanUrl = '{{ route("public.attendance.scan") }}';
+            const attendanceCode = '{{ $attendanceCode->code }}';
             const historyUrl = '{{ route("public.attendance.recent", ["code" => $attendanceCode->code]) }}';
 
             let previewTimer = null;
@@ -860,12 +897,14 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                 const container = document.getElementById('attendanceHistoryContainer');
                 if (!container) return Promise.resolve();
 
-                return fetch(`${historyUrl}?format=html`, {
+                return fetch(`${historyUrl}?format=html&t=${Date.now()}`, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html'
+                        'Accept': 'text/html',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate'
                     },
-                    signal: historyController.signal
+                    signal: historyController.signal,
+                    cache: 'no-store'
                 })
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to load history');
@@ -923,6 +962,7 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
+                        code: attendanceCode,
                         student_id: studentId,
                         qr_data: studentId
                     }),

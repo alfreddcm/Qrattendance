@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
 class Student extends Authenticatable
 {
@@ -59,6 +60,13 @@ class Student extends Authenticatable
     public function isStudent(): bool
     {
         return true;
+    }
+
+    public function usesDefaultPassword(): bool
+    {
+        return !empty($this->password)
+            && !empty($this->id_no)
+            && Hash::check((string) $this->id_no, $this->password);
     }
 
     // Accessor for grade_level (from section relationship)

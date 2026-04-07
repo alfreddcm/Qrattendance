@@ -369,18 +369,6 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-
-
-                        <div class="col-md-6 mb-3">
-                            <label for="add_position" class="form-label">Position</label>
-                            <select class="form-select" id="add_position" name="position" title="Select position">
-                                <option value="">Select Position</option>
-                                <option value="Teacher" {{ old('position') == 'Teacher' ? 'selected' : '' }}>Teacher</option>
-                                <option value="Adviser" {{ old('position') == 'Adviser' ? 'selected' : '' }}>Adviser</option>
-                            </select>
-                        </div>
-
-
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Section Assignment</label>
                             @if($sections->count() > 0)
@@ -873,18 +861,6 @@
                                 @endforeach
                             </select>
                         </div>
-
-
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_position" class="form-label">Position</label>
-                            <select class="form-select" id="edit_position" name="position" title="Select position">
-                                <option value="">Select Position</option>
-                                <option value="Teacher">Teacher</option>
-                                <option value="Adviser">Adviser</option>
-                            </select>
-                        </div>
-
-
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Section Assignment</label>
                             @if($sections->count() > 0)
@@ -1140,7 +1116,6 @@ function editTeacher(teacherId) {
     document.getElementById('edit_email').value = teacher.email || '';
     document.getElementById('edit_password').value = '';
     document.getElementById('edit_school_id').value = teacher.school_id || '';
-    document.getElementById('edit_position').value = teacher.position || '';
     document.getElementById('edit_phone_number').value = teacher.phone_number || '';
 
      const currentTeacherId = teacher.id;
@@ -1604,7 +1579,6 @@ document.getElementById('editSectionForm').addEventListener('submit', function(e
                 username: username,
                 email: email,
                 school_id: schoolId,
-                position: document.getElementById('add_position').value,
                 phone_number: document.getElementById('add_phone_number').value,
                 section_id: document.querySelector('input[name="section_id"]:checked')?.value || ''
             });

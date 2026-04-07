@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scan-to-Notify | QR Attendance & Parent Notification</title>
+    <meta name="theme-color" content="#0d6efd">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('img/icon-192.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -33,9 +36,10 @@
         
         /* Mobile Responsive Styles */
         @media (max-width: 992px) { 
-            .glass-panel { margin:2rem auto 0; max-width:100%; }
+            .glass-panel { margin:0 auto; max-width:100%; }
             body { overflow:auto; }
             header.hero { padding: calc(70px + 1rem) 0 5rem; min-height:auto; }
+            .login-pane { margin-bottom:.5rem; }
         }
         
         @media (max-width: 768px) {
@@ -51,6 +55,7 @@
             .mini-item { padding:.55rem .5rem; font-size:.68rem; }
             .mini-item i { font-size:.9rem; }
             .badge-soft { font-size:.6rem; padding:.35rem .65rem; }
+            .footer-inline { position:static; }
         }
         
         @media (max-width: 576px) {
@@ -68,6 +73,26 @@
             .footer-inline { font-size:.6rem; padding:.4rem 0; }
             .gradient-circle { width:300px; height:300px; top:-100px; left:-100px; }
             .gradient-circle.two { width:300px; height:300px; bottom:-120px; right:-120px; }
+            .marketing-pane .tagline,
+            .marketing-pane .mini-grid,
+            .marketing-pane .badge-soft-row {
+                display:none !important;
+            }
+            .marketing-pane .hero-logo {
+                width:64px;
+                height:64px;
+            }
+            .marketing-pane h1 {
+                font-size:1.05rem;
+                margin-bottom:.25rem !important;
+            }
+            .marketing-pane .mb-3.mt-4 {
+                margin-top:.25rem !important;
+                margin-bottom:.4rem !important;
+            }
+            .glass-panel {
+                margin-top:0 !important;
+            }
         }
         
         @media (max-width: 400px) {
@@ -105,7 +130,7 @@
     <div class="gradient-circle two"></div>
     <div class="container position-relative">
         <div class="row g-4 align-items-center">
-            <div class="col-lg-6 d-flex flex-column justify-content-center">
+            <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center marketing-pane">
                 <div class="d-flex justify-content-center justify-content-lg-start mb-3 mt-4">
                     <img src="{{ asset('storage/branding/icon.png') }}" alt="Scan-to-Notify Logo" class="hero-logo">
                 </div>
@@ -115,7 +140,7 @@
                 <p class="tagline text-secondary mb-3 text-center text-lg-start">Streamline attendance capture, eliminate manual errors, and keep families informed in real time—all within a single secure platform.</p>
                 <div class="cta-buttons d-flex flex-wrap gap-2 mb-3">
                 </div>
-                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-2 small text-secondary flex-wrap">
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-2 small text-secondary flex-wrap badge-soft-row">
                     <div class="badge-soft"><i class="fa fa-bolt me-1"></i> Real-Time</div>
                     <div class="badge-soft"><i class="fa fa-bell me-1"></i> Notifications</div>
                     <div class="badge-soft"><i class="fa fa-lock me-1"></i> Secure</div>
@@ -128,12 +153,13 @@
                     <div class="mini-item"><i class="fa fa-user-shield"></i><span>Role-based access</span></div>
                 </div>
             </div>
-            <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
+            <div class="col-lg-6 order-1 order-lg-2 d-flex justify-content-lg-end justify-content-center login-pane">
                 <div class="glass-panel shadow-sm" id="login">
-                    <div class="text-uppercase fw-semibold small mb-2 text-primary">Login</div>
-                    <h6 class="fw-semibold mb-3">Administrator / Teacher Login</h6>
+                    <div class="text-uppercase fw-semibold small mb-2 text-primary" id="loginModeLabel">Login</div>
+                    <h6 class="fw-semibold mb-3" id="loginTitle">Administrator / Teacher Login</h6>
                     <form method="POST" action="{{ route('login') }}" class="login-panel">
                         @csrf
+                        <input type="hidden" name="app_mode" id="app_mode" value="{{ request('app_mode', '') }}">
                         <div class="mb-2">
                             <label class="form-label small text-uppercase fw-semibold mb-1">Username</label>
                             <input type="text" name="username" class="form-control" required autofocus placeholder="Enter username">
@@ -149,7 +175,7 @@
                     </form>
 
                     <!-- Student Login Info -->
-                    <div class="mt-3 p-2 bg-light rounded small" style="border-left: 3px solid #17a2b8;">
+                    <div class="mt-3 p-2 bg-light rounded small" id="studentLoginInfo" style="border-left: 3px solid #17a2b8;">
                         <strong class="d-block mb-2" style="color: #17a2b8;">
                             <i class="fas fa-graduation-cap me-1"></i> Student Login
                         </strong>
@@ -167,6 +193,7 @@
                     </div>
 
                     <div class="mt-3 small text-secondary">Need help? Contact your system administrator.</div>
+
                 </div>
             </div>
         </div>
@@ -176,5 +203,46 @@
 <footer class="footer-inline">&copy; {{ date('Y') }} Scan-to-Notify • All rights reserved.</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const appModeInput = document.getElementById('app_mode');
+        const loginModeLabel = document.getElementById('loginModeLabel');
+        const loginTitle = document.getElementById('loginTitle');
+        const studentLoginInfo = document.getElementById('studentLoginInfo');
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {
+                    return null;
+                });
+            });
+        }
+
+
+        if (isStandalone) {
+            if (appModeInput) {
+                appModeInput.value = 'student-pwa';
+            }
+
+            if (loginModeLabel) {
+                loginModeLabel.textContent = 'Student Login';
+            }
+
+            if (loginTitle) {
+                loginTitle.textContent = 'Student Login';
+            }
+
+            if (studentLoginInfo) {
+                studentLoginInfo.classList.add('border-primary');
+            }
+        }
+
+        const urlMode = new URLSearchParams(window.location.search).get('app_mode');
+        if (urlMode === 'student-pwa' && appModeInput) {
+            appModeInput.value = 'student-pwa';
+        }
+    });
+</script>
 </body>
 </html>
