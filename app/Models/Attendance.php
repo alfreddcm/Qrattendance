@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuidRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
 class Attendance extends Model
 {
+    use HasUuidRouteKey;
+
     protected $fillable = [
+        'uuid',
         'school_year_id',
         'student_id',
         'school_id',

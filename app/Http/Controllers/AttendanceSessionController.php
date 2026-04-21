@@ -76,7 +76,7 @@ class AttendanceSessionController extends Controller
                 'success' => true,
                 'message' => $message,
                 'session' => [
-                    'id' => $session->id,
+                    'id' => $session->uuid,
                     'token' => $session->session_token,
                     'name' => $session->session_name,
                     'public_url' => $session->getPublicUrl(),
@@ -209,7 +209,7 @@ class AttendanceSessionController extends Controller
                 'success' => true,
                 'sessions' => $sessions->map(function($session) {
                     return [
-                        'id' => $session->id,
+                        'id' => $session->uuid,
                         'token' => $session->session_token,
                         'name' => $session->session_name,
                         'public_url' => $session->getPublicUrl(),
@@ -238,14 +238,13 @@ class AttendanceSessionController extends Controller
     }
 
     
-    public function closeSession(Request $request, $sessionId)
+    public function closeSession(Request $request, AttendanceSession $attendanceSession)
     {
         try {
             $teacherId = Auth::id();
+            $this->authorize('view', $attendanceSession);
             
-            $session = AttendanceSession::where('id', $sessionId)
-                ->where('teacher_id', $teacherId)
-                ->first();
+            $session = $attendanceSession->teacher_id == $teacherId ? $attendanceSession : null;
 
             if (!$session) {
                 return response()->json([

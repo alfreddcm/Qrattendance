@@ -501,13 +501,10 @@ class AttendanceController extends Controller
     /**
      * Get student's attendance records for today with period interpretation
      */
-    public function getStudentAttendanceToday($studentId)
+    public function getStudentAttendanceToday(Student $student)
     {
         try {
-            $student = Student::find($studentId);
-            if (!$student) {
-                return response()->json(['success' => false, 'message' => 'Student not found.']);
-            }
+            $this->authorize('view', $student);
 
             $schoolYear = SchoolYear::find($student->school_year_id);
             if (!$schoolYear) {
@@ -515,7 +512,7 @@ class AttendanceController extends Controller
             }
 
             // Get today's attendance records for this student
-            $todayAttendance = Attendance::where('student_id', $studentId)
+            $todayAttendance = Attendance::where('student_id', $student->id)
                 ->whereDate('created_at', Carbon::today('Asia/Manila'))
                 ->get();
 

@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuidRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class OutboundMessage extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuidRouteKey;
 
     protected $fillable = [
+        'uuid',
         'teacher_id',
         'admin_id',
         'student_id',

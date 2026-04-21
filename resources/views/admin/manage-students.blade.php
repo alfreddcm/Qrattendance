@@ -64,7 +64,7 @@
                     <select name="teacher_id" id="filterTeacher" class="form-select form-select-sm" onchange="loadSectionsForFilter()">
                         <option value="">All Teachers</option>
                         @foreach($teachers ?? [] as $t)
-                            <option value="{{ $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                            <option value="{{ $t->id }}" data-route-key="{{ $t->uuid ?? $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -325,7 +325,7 @@
                                              data-bs-toggle="modal" data-bs-target="#qrModal{{ $student->id }}"
                                              class="cursor-pointer">
                                     @else
-                                        <button class="btn btn-outline-warning btn-sm" onclick="generateQr({{ $student->id }})" title="Generate QR Code">
+                                        <button class="btn btn-outline-warning btn-sm" onclick="generateQr('{{ $student->uuid ?? $student->id }}')" title="Generate QR Code">
                                             <i class="fas fa-qrcode"></i>
                                         </button>
                                     @endif
@@ -338,14 +338,14 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         @if($hasQrCode)
-                                            <button type="button" class="btn btn-warning btn-sm" onclick="regenerateQr({{ $student->id }}, @js($student->name), @js($student->id_no))" title="Regenerate QR Code">
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="regenerateQr('{{ $student->uuid ?? $student->id }}', @js($student->name), @js($student->id_no))" title="Regenerate QR Code">
                                                 <i class="fas fa-sync-alt"></i>
                                             </button>
                                         @endif
-                                        <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-warning btn-sm" title="Edit Student">
+                                        <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-warning btn-sm" title="Edit Student">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this student?');">
+                                        <form action="{{ route('admin.students.destroy', $student) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this student?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm" title="Delete Student">
@@ -609,10 +609,10 @@
                 </div>
             </div>
             <div class="modal-footer bg-light py-2">
-                <a href="{{ route('student.id.print', $student->id) }}" class="btn btn-outline-primary btn-sm" title="Print Student ID" target="_blank">
+                <a href="{{ route('student.id.print', $student) }}" class="btn btn-outline-primary btn-sm" title="Print Student ID" target="_blank">
                     <i class="fas fa-print me-1"></i>Print ID
                 </a>
-                <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-edit me-1"></i>Edit
                 </a>
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
@@ -783,7 +783,7 @@
                             <select class="form-select" id="admin_school_id" name="school_id" required onchange="loadTeachersBySchool()">
                                 <option value="">Select School</option>
                                 @foreach($schools ?? [] as $school)
-                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                    <option value="{{ $school->id }}" data-route-key="{{ $school->uuid ?? $school->id }}">{{ $school->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -1153,6 +1153,7 @@ function removePhoto() {
     const schoolYearSelect = document.getElementById('admin_school_year_id');
 
     const schoolId = schoolSelect.value;
+    const schoolRouteKey = schoolSelect.options[schoolSelect.selectedIndex]?.dataset.routeKey || schoolId;
 
      teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
     sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
@@ -1160,12 +1161,13 @@ function removePhoto() {
     sectionSelect.disabled = true;
 
     if (schoolId) {
-        fetch(`/admin/schools/${schoolId}/teachers`)
+        fetch(`/admin/schools/${schoolRouteKey}/teachers`)
             .then(response => response.json())
             .then(teachers => {
                 teachers.forEach(teacher => {
                     const option = document.createElement('option');
                     option.value = teacher.id;
+                    option.dataset.routeKey = teacher.uuid || teacher.id;
                     option.textContent = teacher.name;
                     teacherSelect.appendChild(option);
                 });
@@ -1192,13 +1194,14 @@ function loadSectionsByTeacher() {
     const schoolYearSelect = document.getElementById('admin_school_year_id');
 
     const teacherId = teacherSelect.value;
+    const teacherRouteKey = teacherSelect.options[teacherSelect.selectedIndex]?.dataset.routeKey || teacherId;
     const schoolYearId = schoolYearSelect ? schoolYearSelect.value : '';
 
      sectionSelect.innerHTML = '<option value="">Select Grade & Section</option>';
     sectionSelect.disabled = !teacherId;
 
     if (teacherId) {
-        const url = `/admin/teachers/${teacherId}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
+        const url = `/admin/teachers/${teacherRouteKey}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
          
         fetch(url)
             .then(response => response.json())
@@ -1311,6 +1314,7 @@ function loadSectionsForFilter() {
     const schoolYearSelect = document.querySelector('select[name="school_year_id"]');
     
     const teacherId = teacherSelect.value;
+    const teacherRouteKey = teacherSelect.options[teacherSelect.selectedIndex]?.dataset.routeKey || teacherId;
     const schoolYearId = schoolYearSelect ? schoolYearSelect.value : '';
     const currentSectionId = '{{ request("section_id") }}';
     
@@ -1320,7 +1324,7 @@ function loadSectionsForFilter() {
         sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
         sectionSelect.disabled = true;
         
-        const url = `/admin/teachers/${teacherId}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
+        const url = `/admin/teachers/${teacherRouteKey}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
         
         fetch(url)
             .then(response => response.json())
@@ -1398,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <select name="school_id" id="print_school_id" class="form-select" onchange="loadPrintSchoolYears()">
                                 <option value="">All Schools</option>
                                 @foreach($schools ?? [] as $school)
-                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                    <option value="{{ $school->id }}" data-route-key="{{ $school->uuid ?? $school->id }}">{{ $school->name }}</option>
                                 @endforeach
                             </select>
                             <small class="text-muted">Filter by specific school or select all</small>
@@ -1430,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <select name="teacher_id" id="print_teacher_id" class="form-select" onchange="loadPrintSections()">
                                 <option value="">All Teachers</option>
                                 @foreach($teachers ?? [] as $t)
-                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                    <option value="{{ $t->id }}" data-route-key="{{ $t->uuid ?? $t->id }}">{{ $t->name }}</option>
                                 @endforeach
                             </select>
                             <small class="text-muted">Filter by teacher</small>
@@ -1468,7 +1472,9 @@ function loadPrintSchoolYears() {
 }
 
 function loadPrintTeachers() {
-    const schoolId = document.getElementById('print_school_id').value;
+    const schoolSelect = document.getElementById('print_school_id');
+    const schoolId = schoolSelect.value;
+    const schoolRouteKey = schoolSelect.options[schoolSelect.selectedIndex]?.dataset.routeKey || schoolId;
     const schoolYearId = document.getElementById('print_school_year_id').value;
     const teacherSelect = document.getElementById('print_teacher_id');
     const sectionSelect = document.getElementById('print_section_id');
@@ -1480,6 +1486,7 @@ function loadPrintTeachers() {
         @foreach($teachers ?? [] as $t)
             const optionAll{{ $t->id }} = document.createElement('option');
             optionAll{{ $t->id }}.value = '{{ $t->id }}';
+            optionAll{{ $t->id }}.dataset.routeKey = '{{ $t->uuid ?? $t->id }}';
             optionAll{{ $t->id }}.textContent = '{{ $t->name }}';
             teacherSelect.appendChild(optionAll{{ $t->id }});
         @endforeach
@@ -1498,7 +1505,7 @@ function loadPrintTeachers() {
     }
     
     if (schoolId) {
-        url = `/admin/schools/${schoolId}/teachers`;
+        url = `/admin/schools/${schoolRouteKey}/teachers`;
         if (params.toString()) {
             url += `?${params.toString()}`;
         }
@@ -1507,6 +1514,7 @@ function loadPrintTeachers() {
         @foreach($teachers ?? [] as $t)
             const optionSY{{ $t->id }} = document.createElement('option');
             optionSY{{ $t->id }}.value = '{{ $t->id }}';
+            optionSY{{ $t->id }}.dataset.routeKey = '{{ $t->uuid ?? $t->id }}';
             optionSY{{ $t->id }}.textContent = '{{ $t->name }}';
             teacherSelect.appendChild(optionSY{{ $t->id }});
         @endforeach
@@ -1527,6 +1535,7 @@ function loadPrintTeachers() {
                 teachers.forEach(teacher => {
                     const option = document.createElement('option');
                     option.value = teacher.id;
+                    option.dataset.routeKey = teacher.uuid || teacher.id;
                     option.textContent = teacher.name;
                     teacherSelect.appendChild(option);
                 });
@@ -1546,7 +1555,9 @@ function loadPrintTeachers() {
 }
 
 function loadPrintSections() {
-    const teacherId = document.getElementById('print_teacher_id').value;
+    const teacherSelect = document.getElementById('print_teacher_id');
+    const teacherId = teacherSelect.value;
+    const teacherRouteKey = teacherSelect.options[teacherSelect.selectedIndex]?.dataset.routeKey || teacherId;
     const schoolYearId = document.getElementById('print_school_year_id').value;
     const sectionSelect = document.getElementById('print_section_id');
     
@@ -1556,7 +1567,7 @@ function loadPrintSections() {
         sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
         sectionSelect.disabled = true;
         
-        const url = `/admin/teachers/${teacherId}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
+        const url = `/admin/teachers/${teacherRouteKey}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
         
         fetch(url)
             .then(response => response.json())

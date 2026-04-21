@@ -255,7 +255,7 @@
                                 <select id="admin_school_id" name="school_id" class="form-select" onchange="loadSchoolData()" style="font-size: 0.9rem;">
                                     <option value="">Choose school...</option>
                                     @foreach($schools as $school)
-                                        <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                        <option value="{{ $school->id }}" data-route-key="{{ $school->uuid ?? $school->id }}">{{ $school->name }}</option>
                                     @endforeach
                                 </select>
                                 <div class="form-text" style="font-size: 0.75rem;">Select the target school</div>
@@ -606,6 +606,7 @@
             const schoolYearSelect = document.getElementById('admin_school_year_id');
             const teacherSelect = document.getElementById('admin_teacher_id');
             const sectionSelect = document.getElementById('admin_section_id');
+            const schoolRouteKey = schoolSelect.options[schoolSelect.selectedIndex]?.dataset.routeKey || schoolSelect.value;
 
             document.getElementById('selectedSchoolYearId').value = schoolYearSelect.value;
             validationState.schoolYear = schoolYearSelect.value !== '';
@@ -627,12 +628,12 @@
             resetDropdown(sectionSelect, 'Choose teacher first...');
 
             // Fetch teachers for the selected school
-            fetch(`/admin/schools/${schoolSelect.value}/teachers`)
+            fetch(`/admin/schools/${schoolRouteKey}/teachers`)
                 .then(response => response.json())
                 .then(data => {
                     teacherSelect.innerHTML = '<option value="">Choose teacher...</option>';
                     data.forEach(teacher => {
-                        teacherSelect.innerHTML += `<option value="${teacher.id}">${teacher.name}</option>`;
+                        teacherSelect.innerHTML += `<option value="${teacher.id}" data-route-key="${teacher.uuid || teacher.id}">${teacher.name}</option>`;
                     });
                     teacherSelect.disabled = false;
                     updateSelectionStatus();
@@ -649,6 +650,7 @@
             const teacherSelect = document.getElementById('admin_teacher_id');
             const schoolYearSelect = document.getElementById('admin_school_year_id');
             const sectionSelect = document.getElementById('admin_section_id');
+            const teacherRouteKey = teacherSelect.options[teacherSelect.selectedIndex]?.dataset.routeKey || teacherSelect.value;
 
             document.getElementById('selectedUserId').value = teacherSelect.value;
             validationState.teacher = teacherSelect.value !== '';
@@ -667,7 +669,7 @@
             sectionSelect.disabled = true;
 
             // Fetch sections for the selected teacher and School Year
-            fetch(`/admin/teachers/${teacherSelect.value}/sections?school_year_id=${schoolYearSelect.value}`)
+            fetch(`/admin/teachers/${teacherRouteKey}/sections?school_year_id=${schoolYearSelect.value}`)
                 .then(response => response.json())
                 .then(data => {
                     sectionSelect.innerHTML = '<option value="">Choose section...</option>';

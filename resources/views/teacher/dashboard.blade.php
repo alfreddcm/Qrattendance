@@ -428,7 +428,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <a href="{{ route('teacher.students.edit', $student->id) }}"
+                                                <a href="{{ route('teacher.students.edit', $student) }}"
                                                     class="btn btn-compact btn-primary" title="View details">
                                                     <i class="fas fa-edit"></i>
                                                 </a>

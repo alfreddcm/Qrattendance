@@ -88,6 +88,7 @@ class AdminController extends Controller
             
             $recentAttendance[] = [
                 'teacher_id' => $teacher->id,
+                'teacher_uuid' => $teacher->uuid,
                 'school_id' => $teacher->school_id,
                 'school_name' => $teacher->school->name ?? 'N/A',
                 'attendance_code' => $activeCode ? $activeCode->code : 'Not Generated',
@@ -323,18 +324,18 @@ class AdminController extends Controller
     /**
      * Show edit school form
      */
-    public function editSchoolForm($id)
+    public function editSchoolForm(School $school)
     {
-        $school = School::findOrFail($id);
+        $this->authorize('view', $school);
         return view('admin.edit-school', compact('school'));
     }
 
     /**
      * Update school
      */
-    public function updateSchool(Request $request, $id)
+    public function updateSchool(Request $request, School $school)
     {
-        $school = School::findOrFail($id);
+        $this->authorize('view', $school);
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -359,13 +360,13 @@ class AdminController extends Controller
             'logo' => $logoPath
         ]);
 
-        return redirect()->route('admin.edit-school', $school->id)->with('success', 'School updated successfully!');
+        return redirect()->route('admin.edit-school', $school)->with('success', 'School updated successfully!');
     }
 
  
-    public function deleteSchool($id)
+    public function deleteSchool(School $school)
     {
-        $school = School::findOrFail($id);
+        $this->authorize('view', $school);
         
          $teachers = User::where('role', 'teacher')
                         ->where('school_id', $school->school_id)
@@ -614,9 +615,9 @@ class AdminController extends Controller
     /**
      * Update teacher with proper dual-reference handling
      */
-    public function updateTeacher(Request $request, $id)
+    public function updateTeacher(Request $request, User $teacher)
     {
-        $teacher = User::findOrFail($id);
+        $this->authorize('view', $teacher);
         
         // Debug: Force to not be treated as AJAX/JSON request
         $request->headers->remove('X-Requested-With');
@@ -947,11 +948,10 @@ class AdminController extends Controller
     /**
      * Delete teacher and cascade delete related students
      */
-    public function deleteTeacher($id)
+    public function deleteTeacher(User $teacher)
     {
+        $this->authorize('view', $teacher);
         try {
-            $teacher = User::findOrFail($id);
-            
             \DB::beginTransaction();
             
             // Get students associated with this teacher
@@ -999,12 +999,19 @@ class AdminController extends Controller
     /**
      * Generate attendance code for a teacher
      */
-    public function generateAttendanceCode($teacherId)
+    public function generateAttendanceCode(User $teacher)
     {
-        Log::info('generateAttendanceCode called', ['teacher_id' => $teacherId, 'user_id' => Auth::id()]);
+        $this->authorize('view', $teacher);
+
+        Log::info('generateAttendanceCode called', ['teacher_id' => $teacher->id, 'user_id' => Auth::id()]);
         
         try {
-            $teacher = User::where('role', 'teacher')->findOrFail($teacherId);
+            if ($teacher->role !== 'teacher') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected user is not a teacher.'
+                ], 400);
+            }
             Log::info('Teacher found', ['teacher_name' => $teacher->name]);
             
             // Check if teacher has sections assigned
@@ -1018,7 +1025,7 @@ class AdminController extends Controller
             }
             
             // Check if active code already exists
-            $existingCode = \App\Models\AttendanceCode::where('teacher_id', $teacherId)
+            $existingCode = \App\Models\AttendanceCode::where('teacher_id', $teacher->id)
                 ->where('is_active', true)
                 ->first();
             
@@ -1030,10 +1037,10 @@ class AdminController extends Controller
             }
             
             // Generate new code
-            $attendanceCode = \App\Models\AttendanceCode::createForTeacher($teacherId);
+            $attendanceCode = \App\Models\AttendanceCode::createForTeacher($teacher->id);
             
             Log::info("Attendance code generated for teacher {$teacher->name}", [
-                'teacher_id' => $teacherId,
+                'teacher_id' => $teacher->id,
                 'code' => $attendanceCode->code
             ]);
             
@@ -1056,12 +1063,19 @@ class AdminController extends Controller
     /**
      * Regenerate attendance code for a teacher (invalidates old code)
      */
-    public function regenerateAttendanceCode($teacherId)
+    public function regenerateAttendanceCode(User $teacher)
     {
-        Log::info('regenerateAttendanceCode called', ['teacher_id' => $teacherId, 'user_id' => Auth::id()]);
+        $this->authorize('view', $teacher);
+
+        Log::info('regenerateAttendanceCode called', ['teacher_id' => $teacher->id, 'user_id' => Auth::id()]);
         
         try {
-            $teacher = User::where('role', 'teacher')->findOrFail($teacherId);
+            if ($teacher->role !== 'teacher') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected user is not a teacher.'
+                ], 400);
+            }
             Log::info('Teacher found for regeneration', ['teacher_name' => $teacher->name]);
             
             // Check if teacher has sections assigned
@@ -1075,7 +1089,7 @@ class AdminController extends Controller
             }
             
             // Deactivate all existing codes for this teacher
-            $oldCodes = \App\Models\AttendanceCode::where('teacher_id', $teacherId)
+            $oldCodes = \App\Models\AttendanceCode::where('teacher_id', $teacher->id)
                 ->where('is_active', true)
                 ->get();
             
@@ -1084,10 +1098,10 @@ class AdminController extends Controller
             }
             
             // Generate new code
-            $newCode = \App\Models\AttendanceCode::createForTeacher($teacherId);
+            $newCode = \App\Models\AttendanceCode::createForTeacher($teacher->id);
             
             Log::info("Attendance code regenerated for teacher {$teacher->name}", [
-                'teacher_id' => $teacherId,
+                'teacher_id' => $teacher->id,
                 'old_codes' => $oldCodes->pluck('code')->toArray(),
                 'new_code' => $newCode->code
             ]);
@@ -1111,15 +1125,22 @@ class AdminController extends Controller
     /**
      * Get attendance code status for a teacher
      */
-    public function getAttendanceCodeStatus($teacherId)
+    public function getAttendanceCodeStatus(User $teacher)
     {
-        Log::info('getAttendanceCodeStatus called', ['teacher_id' => $teacherId, 'user_id' => Auth::id()]);
+        $this->authorize('view', $teacher);
+
+        Log::info('getAttendanceCodeStatus called', ['teacher_id' => $teacher->id, 'user_id' => Auth::id()]);
         
         try {
-            $teacher = User::where('role', 'teacher')->findOrFail($teacherId);
+            if ($teacher->role !== 'teacher') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected user is not a teacher.'
+                ], 400);
+            }
             Log::info('Teacher found for status check', ['teacher_name' => $teacher->name]);
             
-            $activeCode = \App\Models\AttendanceCode::where('teacher_id', $teacherId)
+            $activeCode = \App\Models\AttendanceCode::where('teacher_id', $teacher->id)
                 ->where('is_active', true)
                 ->first();
             
@@ -2824,11 +2845,11 @@ class AdminController extends Controller
     /**
      * Update a student
      */
-    public function updateStudent(Request $request, $id)
+    public function updateStudent(Request $request, Student $student)
     {
-        $student = Student::findOrFail($id);
+        $this->authorize('view', $student);
         $validated = $request->validate([
-            'id_no' => 'required|string|max:12|unique:students,id_no,' . $id,
+            'id_no' => 'required|string|max:12|unique:students,id_no,' . $student->id,
             'name' => 'required|string|max:255',
             'gender' => 'required|string|max:1',
             'age' => 'required|integer',
@@ -2848,9 +2869,9 @@ class AdminController extends Controller
     /**
      * Delete a student
      */
-    public function deleteStudent($id)
+    public function deleteStudent(Student $student)
     {
-        $student = Student::findOrFail($id);
+        $this->authorize('view', $student);
         
         // Clear QR code files
         if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
@@ -2929,9 +2950,9 @@ class AdminController extends Controller
     /**
      * Generate QR code for individual student
      */
-    public function generateQr($id)
+    public function generateQr(Student $student)
     {
-        $student = Student::findOrFail($id);
+        $this->authorize('view', $student);
 
         if ($this->generateQrForStudent($student)) {
             return back()->with('success', 'QR code generated for student.');
@@ -2940,8 +2961,10 @@ class AdminController extends Controller
         }
     }
 
-    public function regenerateQr(Request $request, $id)
+    public function regenerateQr(Request $request, Student $student)
     {
+        $this->authorize('view', $student);
+
         $request->validate([
             'password' => 'required|string',
         ]);
@@ -2950,8 +2973,6 @@ class AdminController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->with('error', 'Incorrect password. QR code was not regenerated.');
         }
-
-        $student = Student::findOrFail($id);
 
         if ($this->generateQrForStudent($student, true)) {
             return back()->with('success', 'QR code regenerated successfully. Please reissue this student\'s ID card.');
@@ -3388,10 +3409,10 @@ class AdminController extends Controller
     /**
      * Get sections for a specific teacher (API endpoint)
      */
-    public function getTeacherSections($teacherId)
+    public function getTeacherSections(User $teacher)
     {
         try {
-            $teacher = User::findOrFail($teacherId);
+            $this->authorize('view', $teacher);
             
             if ($teacher->role !== 'teacher') {
                 return response()->json([
@@ -3402,10 +3423,10 @@ class AdminController extends Controller
 
             // Get sections where teacher is assigned (both legacy teacher_id and many-to-many)
             $sections = Section::with(['schoolYear', 'students'])
-                              ->where(function($query) use ($teacherId) {
-                                  $query->where('teacher_id', $teacherId)
-                                        ->orWhereHas('teachers', function($subQuery) use ($teacherId) {
-                                            $subQuery->where('users.id', $teacherId);
+                              ->where(function($query) use ($teacher) {
+                                  $query->where('teacher_id', $teacher->id)
+                                        ->orWhereHas('teachers', function($subQuery) use ($teacher) {
+                                            $subQuery->where('users.id', $teacher->id);
                                         });
                               })
                               ->get()
@@ -3433,9 +3454,11 @@ class AdminController extends Controller
     /**
      * Show edit student form (admin)
      */
-    public function editStudent($id)
+    public function editStudent(Student $student)
     {
-        $student = \App\Models\Student::with(['school', 'section'])->findOrFail($id);
+        $this->authorize('view', $student);
+
+        $student->load(['school', 'section']);
         $schools = School::all();
         $sections = \App\Models\Section::all();
         
@@ -3445,13 +3468,13 @@ class AdminController extends Controller
     /**
      * Update student (admin)
      */
-    public function updateStudentAdmin(Request $request, $id)
+    public function updateStudentAdmin(Request $request, Student $student)
     {
-        $student = \App\Models\Student::findOrFail($id);
+        $this->authorize('view', $student);
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'id_no' => 'required|string|max:12|unique:students,id_no,' . $id,
+            'id_no' => 'required|string|max:12|unique:students,id_no,' . $student->id,
             'age' => 'required|integer|min:1|max:100',
             'gender' => 'required|in:M,F',
             'address' => 'required|string|max:500',
@@ -3506,16 +3529,18 @@ class AdminController extends Controller
             $message = 'Student updated successfully! Password has been changed.';
         }
 
-        return redirect()->route('admin.students.edit', $student->id)->with('success', $message);
+        return redirect()->route('admin.students.edit', $student)->with('success', $message);
     }
 
     /**
      * Get teachers by school for cascading dropdown
      */
-    public function getTeachersBySchool($schoolId)
+    public function getTeachersBySchool(School $school)
     {
+        $this->authorize('view', $school);
+
         $teachers = User::where('role', 'teacher')
-                       ->where('school_id', $schoolId)
+                       ->where('school_id', $school->id)
                        ->where('is_active', true)
                        ->with(['sections' => function($query) {
                            $query->select('sections.id', 'sections.name', 'sections.gradelevel');
@@ -3541,13 +3566,15 @@ class AdminController extends Controller
     /**
      * Get sections by teacher for cascading dropdown
      */
-    public function getSectionsByTeacher($teacherId, Request $request)
+    public function getSectionsByTeacher(User $teacher, Request $request)
     {
+        $this->authorize('view', $teacher);
+
         $query = Section::with(['schoolYear', 'students'])
-                       ->where(function($q) use ($teacherId) {
-                           $q->where('teacher_id', $teacherId)
-                             ->orWhereHas('teachers', function($subQuery) use ($teacherId) {
-                                 $subQuery->where('users.id', $teacherId);
+                       ->where(function($q) use ($teacher) {
+                           $q->where('teacher_id', $teacher->id)
+                             ->orWhereHas('teachers', function($subQuery) use ($teacher) {
+                                 $subQuery->where('users.id', $teacher->id);
                              });
                        });
         

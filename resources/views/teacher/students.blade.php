@@ -429,26 +429,26 @@
                                             title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <a href="{{ route('teacher.students.edit', $student->id) }}" 
+                                    <a href="{{ route('teacher.students.edit', $student) }}" 
                                        class="btn btn-outline-secondary btn-sm"
                                        title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{{ route('student.id.print', $student->id) }}" 
+                                    <a href="{{ route('student.id.print', $student) }}" 
                                        class="btn btn-outline-info btn-sm" 
                                        target="_blank"
                                        title="Print ID">
                                         <i class="fas fa-print"></i>
                                     </a>
                                     @if($hasQrCode)
-                                        <form action="{{ route('teacher.students.regenerateQr', $student->id) }}" method="POST" class="d-inline regenerate-qr-form" data-student-name="{{ $student->name }}" data-student-idno="{{ $student->id_no }}">
+                                        <form action="{{ route('teacher.students.regenerateQr', $student) }}" method="POST" class="d-inline regenerate-qr-form" data-student-name="{{ $student->name }}" data-student-idno="{{ $student->id_no }}">
                                             @csrf
                                             <button type="submit" class="btn btn-outline-warning btn-sm" title="Regenerate QR">
                                                 <i class="fas fa-sync-alt"></i>
                                             </button>
                                         </form>
                                     @endif
-                                    <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('teacher.students.destroy', $student) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
@@ -662,10 +662,10 @@
                 </div>
             </div>
             <div class="modal-footer bg-light py-2">
-                <a href="{{ route('student.id.print', $student->id) }}" class="btn btn-outline-primary btn-sm" title="Print Student ID" target="_blank">
+                <a href="{{ route('student.id.print', $student) }}" class="btn btn-outline-primary btn-sm" title="Print Student ID" target="_blank">
                     <i class="fas fa-print me-1"></i>Print ID
                 </a>
-                <a href="{{ route('teacher.students.edit', $student->id) }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('teacher.students.edit', $student) }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-edit me-1"></i>Edit
                 </a>
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
@@ -755,7 +755,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Cancel
                 </button>
-                <form method="POST" action="{{ route('teacher.students.generateQr', $student->id) }}" class="d-inline">
+                <form method="POST" action="{{ route('teacher.students.generateQr', $student) }}" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-magic me-2"></i>Generate QR Code

@@ -209,9 +209,11 @@ class StudentIdController extends Controller
 
     // Print methods for web pages (Ctrl+P to print)
     
-    public function printSingle($id)
+    public function printSingle(Student $student)
     {
-        $student = Student::with(['school', 'user'])->findOrFail($id);
+        $this->authorize('view', $student);
+
+        $student->load(['school', 'user']);
         $currentUser = auth()->user();
         
         // Check authorization
@@ -323,33 +325,30 @@ class StudentIdController extends Controller
         return view('student-id.grid-organized', compact('organized', 'students'));
     }
 
-    public function printByTeacher($teacherId = null)
+    public function printByTeacher(User $teacher)
     {
+        $this->authorize('view', $teacher);
+
         $currentUser = auth()->user();
-        
-        if (!$teacherId) {
-            $teacherId = $currentUser->id;
-        }
-        
-        if ($currentUser->role === 'teacher' && $currentUser->id != $teacherId) {
+
+        if ($currentUser->role === 'teacher' && $currentUser->id != $teacher->id) {
             abort(403, 'You can only print student IDs for your own students.');
         }
 
         $selectedSchoolYear = $this->getCurrentSchoolYearId();
 
         $students = Student::with(['school', 'user'])
-            ->where('user_id', $teacherId)
+            ->where('user_id', $teacher->id)
             ->where('school_year_id', $selectedSchoolYear)
             ->get();
          
         if ($students->count() === 0) {
-            $teacher = User::find($teacherId);
-            $teacherName = $teacher ? $teacher->name : 'Teacher';
+            $teacherName = $teacher->name ?: 'Teacher';
             
             return response()->view('errors.no-students', [
                 'message' => "No students found for {$teacherName} in the current semester.",
                 'suggestion' => 'Please add students first using the toolbar options such as "Add Student" or import students, then generate QR codes before printing student IDs.',
-                'teacherId' => $teacherId
+                'teacherId' => $teacher->id
             ], 404);
         }
         

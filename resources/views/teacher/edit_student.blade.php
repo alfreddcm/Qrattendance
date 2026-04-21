@@ -161,7 +161,7 @@
     </div>
     <div class="card-body p-3">
 
-        <form method="POST" action="{{ route('teacher.students.update', $student->id) }}" enctype="multipart/form-data" id="editStudentForm">
+        <form method="POST" action="{{ route('teacher.students.update', $student) }}" enctype="multipart/form-data" id="editStudentForm">
             @csrf
             @method('PUT')
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">

@@ -193,8 +193,8 @@
                                                     @else
                                                         <span class="text-muted">Not Generated</span>
                                                         @if($record['has_section'])
-                                                            <button class="btn btn-sm btn-primary ms-2" 
-                                                                    onclick="generateAttendanceCode({{ $record['teacher_id'] }}, {{ json_encode($record['teacher_name']) }})"
+                                                                <button class="btn btn-sm btn-primary ms-2" 
+                                                                    onclick="generateAttendanceCode('{{ $record['teacher_uuid'] ?? $record['teacher_id'] }}', {{ json_encode($record['teacher_name']) }})"
                                                                     title="Generate Code">
                                                                 <i class="fas fa-plus-circle"></i> Generate
                                                             </button>

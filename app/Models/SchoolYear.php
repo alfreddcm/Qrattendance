@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuidRouteKey;
 use Illuminate\Database\Eloquent\Model;
 
 class SchoolYear extends Model
 {
+    use HasUuidRouteKey;
+
     protected $fillable = [
+        'uuid',
         'school_id',
         'school_year_start',
         'school_year_end',

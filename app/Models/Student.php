@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuidRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,13 +11,14 @@ use Illuminate\Support\Facades\Hash;
 
 class Student extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasUuidRouteKey;
 
     // Table name (optional if your table is 'students')
     protected $table = 'students';
 
     // Fillable fields for mass assignment
     protected $fillable = [
+        'uuid',
         'id_no',
         'name',
         'gender',

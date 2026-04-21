@@ -241,39 +241,38 @@ class SchoolYearController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit(SchoolYear $schoolYear)
     {
         try {
-            $schoolYear = SchoolYear::findOrFail($id);
-            
+            $this->authorize('view', $schoolYear);
+
             Log::info('School Year edit accessed', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id()
             ]);
 
             return response()->json($schoolYear);
-            
         } catch (\Exception $e) {
             Log::error('Error loading school year for edit', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json(['error' => 'School year not found'], 404);
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, SchoolYear $schoolYear)
     {
         try {
             Log::info('School Year update attempt', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id(),
                 'request_data' => $request->all()
             ]);
 
-            $schoolYear = SchoolYear::findOrFail($id);
+            $this->authorize('view', $schoolYear);
 
             $validated = $this->validateForResponse($request, [
                 'school_id' => 'required|exists:schools,id',
@@ -293,23 +292,23 @@ class SchoolYearController extends Controller
             if ($user->role !== 'admin' && $schoolYear->school_id != $user->school_id) {
                 Log::warning('Unauthorized school year update attempt', [
                     'user_id' => $user->id,
-                    'school_year_id' => $id,
+                    'school_year_id' => $schoolYear->id,
                     'school_year_school_id' => $schoolYear->school_id,
                     'user_school_id' => $user->school_id
                 ]);
-                
+
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
             if ($validated['status'] === 'active' && $schoolYear->status !== 'active') {
                 SchoolYear::where('school_id', $validated['school_id'])
-                    ->where('id', '!=', $id)
+                    ->where('id', '!=', $schoolYear->id)
                     ->where('status', 'active')
                     ->update(['status' => 'inactive']);
-                    
+
                 Log::info('Deactivated other school years in school', [
                     'school_id' => $validated['school_id'],
-                    'current_school_year_id' => $id
+                    'current_school_year_id' => $schoolYear->id
                 ]);
             }
 
@@ -318,7 +317,7 @@ class SchoolYearController extends Controller
             $schoolYear->update($validated);
 
             Log::info('School Year updated successfully', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'school_year_name' => $schoolYear->name,
                 'user_id' => $user->id
             ]);
@@ -328,35 +327,33 @@ class SchoolYearController extends Controller
                 'message' => 'School year updated successfully',
                 'schoolYear' => $schoolYear
             ]);
-            
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('School Year update validation failed', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id(),
                 'errors' => $e->errors()
             ]);
-            
+
             return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
-            
         } catch (\Exception $e) {
             Log::error('Error updating school year', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json(['error' => 'Error updating school year: ' . $e->getMessage()], 500);
         }
     }
 
-    public function destroy($id)
+    public function destroy(SchoolYear $schoolYear)
     {
         try {
-            $schoolYear = SchoolYear::findOrFail($id);
-            
+            $this->authorize('view', $schoolYear);
+
             Log::info('School Year delete attempt', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id()
             ]);
 
@@ -364,72 +361,71 @@ class SchoolYearController extends Controller
             if ($user->role !== 'admin' && $schoolYear->school_id != $user->school_id) {
                 Log::warning('Unauthorized school year deletion attempt', [
                     'user_id' => $user->id,
-                    'school_year_id' => $id
+                    'school_year_id' => $schoolYear->id
                 ]);
-                
+
                 return redirect()->back()->with('error', 'Unauthorized action.');
             }
 
             $schoolYear->delete();
 
             Log::info('School Year deleted successfully', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => $user->id
             ]);
 
             return redirect()->route('admin.manage-school-years')->with('success', 'School year deleted successfully.');
-            
         } catch (\Exception $e) {
             Log::error('Error deleting school year', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
-            
+
             return redirect()->back()->with('error', 'Error deleting school year: ' . $e->getMessage());
         }
     }
 
-    public function toggleStatus(Request $request, $id)
+    public function toggleStatus(Request $request, SchoolYear $schoolYear)
     {
         try {
             Log::info('School Year toggle status attempt', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id()
             ]);
 
-            $schoolYear = SchoolYear::findOrFail($id);
+            $this->authorize('view', $schoolYear);
             $user = Auth::user();
 
             if ($user->role !== 'admin' && $schoolYear->school_id != $user->school_id) {
                 Log::warning('Unauthorized school year status toggle attempt', [
                     'user_id' => $user->id,
-                    'school_year_id' => $id
+                    'school_year_id' => $schoolYear->id
                 ]);
-                
+
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
             $newStatus = $schoolYear->status === 'active' ? 'inactive' : 'active';
 
-            // If setting to active, deactivate other school years in the same school
             if ($newStatus === 'active') {
                 SchoolYear::where('school_id', $schoolYear->school_id)
-                    ->where('id', '!=', $id)
+                    ->where('id', '!=', $schoolYear->id)
                     ->where('status', 'active')
                     ->update(['status' => 'inactive']);
-                    
+
                 Log::info('Deactivated other school years in school', [
                     'school_id' => $schoolYear->school_id,
-                    'current_school_year_id' => $id
+                    'current_school_year_id' => $schoolYear->id
                 ]);
             }
 
+            $oldStatus = $schoolYear->status;
             $schoolYear->update(['status' => $newStatus]);
 
             Log::info('School Year status toggled successfully', [
-                'school_year_id' => $id,
-                'old_status' => $schoolYear->status === 'active' ? 'inactive' : 'active',
+                'school_year_id' => $schoolYear->id,
+                'old_status' => $oldStatus,
                 'new_status' => $newStatus,
                 'user_id' => $user->id
             ]);
@@ -439,14 +435,13 @@ class SchoolYearController extends Controller
                 'message' => "School year status changed to {$newStatus}",
                 'status' => $newStatus
             ]);
-            
         } catch (\Exception $e) {
             Log::error('Error toggling school year status', [
-                'school_year_id' => $id,
+                'school_year_id' => $schoolYear->id,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json(['error' => 'Error toggling status: ' . $e->getMessage()], 500);
         }
     }

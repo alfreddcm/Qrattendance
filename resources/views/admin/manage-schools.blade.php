@@ -103,13 +103,13 @@
                             </td>
                             <td class="py-1">
                                 <div class="btn-group btn-group-sm" role="group">
-                                   <a href="{{ route('admin.edit-school', $school->id) }}"
+                                   <a href="{{ route('admin.edit-school', $school) }}"
                                                    class="btn btn-sm btn-outline-primary px-2 py-1"
                                                    title="Edit School">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                     <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1"
-                                            onclick="deleteSchool({{ $school->id }}, '{{ $school->name }}')">
+                                            onclick="deleteSchool('{{ $school->uuid }}', '{{ $school->name }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

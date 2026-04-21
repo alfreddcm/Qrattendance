@@ -175,7 +175,7 @@
         <h6 class="mb-0"><i class="fas fa-edit me-2"></i> Student Information - {{ $student->name }}</h6>
     </div>
     <div class="card-body p-3">
-        <form method="POST" action="{{ route('admin.students.updateAdmin', $student->id) }}"
+        <form method="POST" action="{{ route('admin.students.updateAdmin', $student) }}"
             enctype="multipart/form-data">
             @csrf
             @method('PUT')

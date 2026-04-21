@@ -52,11 +52,11 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
     Route::get('/students', [StudentManagementController::class, 'index'])->name('teacher.students');
     Route::post('/students/add', [StudentManagementController::class, 'addStudent'])->name('teacher.students.add');
-    Route::get('/students/{id}/edit', [StudentManagementController::class, 'edit'])->name('teacher.students.edit');
-    Route::put('/students/{id}', [StudentManagementController::class, 'update'])->name('teacher.students.update');
-    Route::post('/students/{id}/quick-update', [StudentManagementController::class, 'quickUpdate'])->name('teacher.students.quick-update');
+    Route::get('/students/{student}/edit', [StudentManagementController::class, 'edit'])->name('teacher.students.edit');
+    Route::put('/students/{student}', [StudentManagementController::class, 'update'])->name('teacher.students.update');
+    Route::post('/students/{student}/quick-update', [StudentManagementController::class, 'quickUpdate'])->name('teacher.students.quick-update');
     Route::get('/students/sections', [StudentManagementController::class, 'getSections'])->name('teacher.students.sections');
-    Route::delete('/students/{id}', [StudentManagementController::class, 'destroy'])->name('teacher.students.destroy');
+    Route::delete('/students/{student}', [StudentManagementController::class, 'destroy'])->name('teacher.students.destroy');
     Route::delete('/students/bulk-delete', [StudentManagementController::class, 'bulkDelete'])->name('teacher.students.bulkDelete');
     Route::get('/students/export', [StudentManagementController::class, 'export'])->name('teacher.students.export');
     Route::get('/students/download-template', [StudentManagementController::class, 'downloadTemplate'])->name('teacher.students.downloadTemplate');
@@ -66,8 +66,8 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::post('/students/regenerate-qrs', [StudentManagementController::class, 'regenerateQrs'])->name('teacher.students.regenerateQrs');
     Route::get('/students/print-qrs', [StudentManagementController::class, 'printQrs'])->name('teacher.students.printQrs');
     Route::get('/students/download-qrs', [StudentManagementController::class, 'downloadQrs'])->name('teacher.students.downloadQrs');
-    Route::post('/students/{id}/generate-qr', [StudentManagementController::class, 'generateQr'])->name('teacher.students.generateQr');
-    Route::post('/students/{id}/regenerate-qr', [StudentManagementController::class, 'regenerateQr'])->name('teacher.students.regenerateQr');
+    Route::post('/students/{student}/generate-qr', [StudentManagementController::class, 'generateQr'])->name('teacher.students.generateQr');
+    Route::post('/students/{student}/regenerate-qr', [StudentManagementController::class, 'regenerateQr'])->name('teacher.students.regenerateQr');
 
     Route::get('/message', [TeacherController::class, 'message'])->name('teacher.message');
     Route::get('/attendance', [AttendanceAnalyticsController::class, 'attendanceToday'])->name('teacher.attendance');
@@ -100,7 +100,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     
     Route::post('/send-sms', [MessageApiController::class, 'sendSms'])->name('teacher.send.sms');
     Route::get('/outbound-messages', [MessageApiController::class, 'getOutboundMessages'])->name('teacher.outbound.messages');
-    Route::get('/message-status/{id}', [MessageApiController::class, 'getMessageStatus'])->name('teacher.message.status');
+    Route::get('/message-status/{outboundMessage}', [MessageApiController::class, 'getMessageStatus'])->name('teacher.message.status');
     Route::post('/check-rate-limit', [MessageApiController::class, 'checkRateLimit'])->name('teacher.check.rate.limit');
     Route::get('/test-rate-limit', [MessageApiController::class, 'testRateLimit'])->name('teacher.test.rate.limit');
     Route::get('/test-sms-gateway', [MessageApiController::class, 'testGateway'])->name('teacher.test.gateway');
@@ -111,7 +111,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::post('/attendance-session/create', [App\Http\Controllers\AttendanceSessionController::class, 'createSession'])->name('teacher.attendance.session.create');
     Route::get('/attendance-session/active', [App\Http\Controllers\AttendanceSessionController::class, 'getActiveSessions'])->name('teacher.attendance.session.active');
     Route::get('/attendance-session/today', [App\Http\Controllers\AttendanceSessionController::class, 'getTodaySession'])->name('teacher.attendance.session.today');
-    Route::post('/attendance-session/{id}/close', [App\Http\Controllers\AttendanceSessionController::class, 'closeSession'])->name('teacher.attendance.session.close');
+    Route::post('/attendance-session/{attendanceSession}/close', [App\Http\Controllers\AttendanceSessionController::class, 'closeSession'])->name('teacher.attendance.session.close');
 
 });
 
@@ -128,21 +128,21 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/manage-schools', [AdminController::class, 'manageSchools'])->name('admin.manage-schools');
     Route::get('/add-school', [AdminController::class, 'addSchoolForm'])->name('admin.add-school');
     Route::post('/store-school', [AdminController::class, 'storeSchool'])->name('admin.store-school');
-    Route::get('/edit-school/{id}', [AdminController::class, 'editSchoolForm'])->name('admin.edit-school');
-    Route::put('/update-school/{id}', [AdminController::class, 'updateSchool'])->name('admin.update-school');
-    Route::delete('/delete-school/{id}', [AdminController::class, 'deleteSchool'])->name('admin.delete-school');
+    Route::get('/edit-school/{school}', [AdminController::class, 'editSchoolForm'])->name('admin.edit-school');
+    Route::put('/update-school/{school}', [AdminController::class, 'updateSchool'])->name('admin.update-school');
+    Route::delete('/delete-school/{school}', [AdminController::class, 'deleteSchool'])->name('admin.delete-school');
     
     Route::get('/manage-teachers', [AdminController::class, 'manageTeachers'])->name('admin.manage-teachers');
     Route::post('/store-teacher', [AdminController::class, 'storeTeacher'])->name('admin.store-teacher');
-    Route::put('/teachers/{id}', [AdminController::class, 'updateTeacher'])->name('admin.update-teacher');
-    Route::delete('/teachers/{id}', [AdminController::class, 'deleteTeacher'])->name('admin.delete-teacher');
+    Route::put('/teachers/{teacher}', [AdminController::class, 'updateTeacher'])->name('admin.update-teacher');
+    Route::delete('/teachers/{teacher}', [AdminController::class, 'deleteTeacher'])->name('admin.delete-teacher');
     Route::post('/reassign-section', [AdminController::class, 'reassignSection'])->name('admin.reassign-section');
     Route::post('/create-section-for-teacher', [AdminController::class, 'createSectionForTeacher'])->name('admin.create-section-for-teacher');
     
     // Attendance Code Management Routes
-    Route::post('/attendance-codes/generate/{teacherId}', [AdminController::class, 'generateAttendanceCode'])->name('admin.attendance-code.generate');
-    Route::post('/attendance-codes/regenerate/{teacherId}', [AdminController::class, 'regenerateAttendanceCode'])->name('admin.attendance-code.regenerate');
-    Route::get('/attendance-codes/status/{teacherId}', [AdminController::class, 'getAttendanceCodeStatus'])->name('admin.attendance-code.status');
+    Route::post('/attendance-codes/generate/{teacher}', [AdminController::class, 'generateAttendanceCode'])->name('admin.attendance-code.generate');
+    Route::post('/attendance-codes/regenerate/{teacher}', [AdminController::class, 'regenerateAttendanceCode'])->name('admin.attendance-code.regenerate');
+    Route::get('/attendance-codes/status/{teacher}', [AdminController::class, 'getAttendanceCodeStatus'])->name('admin.attendance-code.status');
     
     Route::get('/manage-school-years', [SchoolYearController::class, 'index'])->name('admin.manage-school-years');
     Route::get('/school-years/create', [SchoolYearController::class, 'create'])->name('admin.school-year.create');
@@ -162,17 +162,17 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/manage-students', [AdminController::class, 'manageStudents'])->name('admin.manage-students');
     Route::get('/manage-students-new', [AdminController::class, 'manageStudentsNew'])->name('admin.manage-students-new');
     Route::post('/students/store', [AdminController::class, 'storeStudent'])->name('admin.students.store');
-    Route::get('/students/{id}/edit', [AdminController::class, 'editStudent'])->name('admin.students.edit');
-    Route::put('/students/{id}', [AdminController::class, 'updateStudent'])->name('admin.students.update');
-    Route::put('/students/{id}/admin-update', [AdminController::class, 'updateStudentAdmin'])->name('admin.students.updateAdmin');
-    Route::delete('/students/{id}', [AdminController::class, 'deleteStudent'])->name('admin.students.destroy');
+    Route::get('/students/{student}/edit', [AdminController::class, 'editStudent'])->name('admin.students.edit');
+    Route::put('/students/{student}', [AdminController::class, 'updateStudent'])->name('admin.students.update');
+    Route::put('/students/{student}/admin-update', [AdminController::class, 'updateStudentAdmin'])->name('admin.students.updateAdmin');
+    Route::delete('/students/{student}', [AdminController::class, 'deleteStudent'])->name('admin.students.destroy');
     Route::delete('/students/bulk-delete', [AdminController::class, 'bulkDeleteStudents'])->name('admin.students.bulkDelete');
     Route::post('/students/bulk-export', [AdminController::class, 'bulkExportStudents'])->name('admin.students.bulkExport');
     Route::post('/students/generate-qrs', [AdminController::class, 'generateQrs'])->name('admin.students.generateQrs');
     Route::get('/students/print-qrs', [AdminController::class, 'printQrs'])->name('admin.students.printQrs');
     Route::get('/students/download-qrs', [AdminController::class, 'downloadQrs'])->name('admin.students.downloadQrs');
-    Route::post('/students/{id}/generate-qr', [AdminController::class, 'generateQr'])->name('admin.students.generateQr');
-    Route::post('/students/{id}/regenerate-qr', [AdminController::class, 'regenerateQr'])->name('admin.students.regenerateQr');
+    Route::post('/students/{student}/generate-qr', [AdminController::class, 'generateQr'])->name('admin.students.generateQr');
+    Route::post('/students/{student}/regenerate-qr', [AdminController::class, 'regenerateQr'])->name('admin.students.regenerateQr');
     Route::get('/students/export', [AdminController::class, 'exportStudents'])->name('admin.students.export');
     
     Route::get('/students/download-template', [AdminController::class, 'downloadTemplate'])->name('admin.students.downloadTemplate');
@@ -213,7 +213,7 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/message', [AdminController::class, 'message'])->name('admin.message');
     Route::post('/send-sms', [MessageApiController::class, 'sendSms'])->name('admin.send.sms');
     Route::get('/outbound-messages', [MessageApiController::class, 'getOutboundMessages'])->name('admin.outbound.messages');
-    Route::get('/message-status/{id}', [MessageApiController::class, 'getMessageStatus'])->name('admin.message.status');
+    Route::get('/message-status/{outboundMessage}', [MessageApiController::class, 'getMessageStatus'])->name('admin.message.status');
     Route::post('/check-rate-limit', [MessageApiController::class, 'checkRateLimit'])->name('admin.check.rate.limit');
     Route::get('/test-rate-limit', [MessageApiController::class, 'testRateLimit'])->name('admin.test.rate.limit');
     Route::get('/test-sms-gateway', [MessageApiController::class, 'testGateway'])->name('admin.test.gateway');
@@ -222,9 +222,9 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
 });
 
 Route::middleware(['role:teacher,admin'])->group(function () {
-    Route::get('/student-id/print/{id}', [StudentIdController::class, 'printSingle'])->name('student.id.print');
+    Route::get('/student-id/print/{student}', [StudentIdController::class, 'printSingle'])->name('student.id.print');
     Route::get('/student-ids/print-all', [StudentIdController::class, 'printAll'])->name('student.ids.print.all');
-    Route::get('/student-ids/print-by-teacher/{teacherId}', [StudentIdController::class, 'printByTeacher'])->name('student.ids.print.by.teacher');
+    Route::get('/student-ids/print-by-teacher/{teacher}', [StudentIdController::class, 'printByTeacher'])->name('student.ids.print.by.teacher');
     Route::get('/student-ids/print-my-students', [StudentIdController::class, 'printMyStudents'])->name('student.ids.print.my.students');
 });
 
@@ -241,8 +241,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::post('/attendance-code/generate', [App\Http\Controllers\AttendanceCodeController::class, 'generate'])->name('teacher.attendance.code.generate');
     Route::get('/attendance-code/active', [App\Http\Controllers\AttendanceCodeController::class, 'getActive'])->name('teacher.attendance.code.active');
-    Route::delete('/attendance-code/{id}/deactivate', [App\Http\Controllers\AttendanceCodeController::class, 'deactivate'])->name('teacher.attendance.code.deactivate');
-    Route::get('/attendance-code/{id}/print', [App\Http\Controllers\AttendanceCodeController::class, 'printCode'])->name('teacher.attendance.code.print');
+    Route::delete('/attendance-code/{attendanceCode}/deactivate', [App\Http\Controllers\AttendanceCodeController::class, 'deactivate'])->name('teacher.attendance.code.deactivate');
+    Route::get('/attendance-code/{attendanceCode}/print', [App\Http\Controllers\AttendanceCodeController::class, 'printCode'])->name('teacher.attendance.code.print');
 });
 
 
@@ -261,6 +261,6 @@ Route::get('/public/attendance/{code}/recent', [App\Http\Controllers\PublicAtten
 Route::get('/public/attendance/{code}/summary', [App\Http\Controllers\PublicAttendanceController::class, 'getTodaySummary'])->name('public.attendance.summary');
  
 Route::get('/api/semester/time-sessions', [App\Http\Controllers\AttendanceSessionController::class, 'getTimeSessions']);
-Route::get('/api/teacher-sections/{teacherId}', [App\Http\Controllers\AdminController::class, 'getTeacherSections']);
-Route::get('/api/student-attendance-today/{studentId}', [AttendanceController::class, 'getStudentAttendanceToday']);
+Route::get('/api/teacher-sections/{teacher}', [App\Http\Controllers\AdminController::class, 'getTeacherSections']);
+Route::get('/api/student-attendance-today/{student}', [AttendanceController::class, 'getStudentAttendanceToday']);
 Route::get('/teacher/attendance-forecast', [App\Http\Controllers\AttendanceForecastController::class, 'index'])->name('teacher.attendance.forecast');

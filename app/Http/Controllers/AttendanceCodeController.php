@@ -57,7 +57,7 @@ class AttendanceCodeController extends Controller
                     'code' => $attendanceCode->code,
                     'qr_code_url' => $attendanceCode->qr_code_url,
                     'access_url' => url('/public/attendance/' . $attendanceCode->code),
-                    'id' => $attendanceCode->id
+                    'id' => $attendanceCode->uuid
                 ]
             ]);
 
@@ -95,7 +95,7 @@ class AttendanceCodeController extends Controller
                 'success' => true,
                 'has_active_code' => true,
                 'data' => [
-                    'id' => $activeCode->id,
+                    'id' => $activeCode->uuid,
                     'code' => $activeCode->code,
                     'qr_code_url' => $activeCode->qr_code_url,
                     'access_url' => url('/public/attendance/' . $activeCode->code),
@@ -117,16 +117,13 @@ class AttendanceCodeController extends Controller
     }
 
  
-    public function deactivate(Request $request, $id)
+    public function deactivate(Request $request, AttendanceCode $attendanceCode)
     {
         try {
             $teacher = Auth::user();
+            $this->authorize('view', $attendanceCode);
             
-            $attendanceCode = AttendanceCode::where('id', $id)
-                ->where('teacher_id', $teacher->id)
-                ->first();
-
-            if (!$attendanceCode) {
+            if ($attendanceCode->teacher_id !== $teacher->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Code not found or unauthorized.'
@@ -191,19 +188,18 @@ class AttendanceCodeController extends Controller
     }
 
  
-    public function printCode($id)
+    public function printCode(AttendanceCode $attendanceCode)
     {
         try {
             $teacher = Auth::user();
-            
-            $attendanceCode = AttendanceCode::with(['teacher.school', 'section'])
-                ->where('id', $id)
-                ->where('teacher_id', $teacher->id)
-                ->first();
 
-            if (!$attendanceCode) {
+            $this->authorize('view', $attendanceCode);
+
+            if ($attendanceCode->teacher_id !== $teacher->id) {
                 abort(404, 'Attendance code not found or you do not have permission to view it.');
             }
+
+            $attendanceCode->load(['teacher.school', 'section']);
 
             return view('attendance-code.print-single', compact('attendanceCode'));
 

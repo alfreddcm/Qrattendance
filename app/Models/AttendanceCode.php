@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuidRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -10,7 +11,10 @@ use Illuminate\Support\Facades\Storage;
 
 class AttendanceCode extends Model
 {
+    use HasUuidRouteKey;
+
     protected $fillable = [
+        'uuid',
         'teacher_id',
         'section_id',
         'code',

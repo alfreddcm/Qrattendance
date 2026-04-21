@@ -276,10 +276,10 @@ class MessageApiController extends Controller
         }
     }
 
-    public function getMessageStatus($id)
+    public function getMessageStatus(OutboundMessage $outboundMessage)
     {
         try {
-            $outboundMessage = OutboundMessage::find($id);
+            $this->authorize('view', $outboundMessage);
 
             if (!$outboundMessage) {
                 return response()->json([
@@ -303,7 +303,7 @@ class MessageApiController extends Controller
                 ]);
 
                 Log::info('Message status updated', [
-                    'outbound_message_id' => $id,
+                    'outbound_message_id' => $outboundMessage->id,
                     'message_id' => $outboundMessage->message_id,
                     'status' => $statusResult['status']
                 ]);
@@ -316,7 +316,7 @@ class MessageApiController extends Controller
                 ]);
             } else {
                 Log::error('Failed to get message status', [
-                    'outbound_message_id' => $id,
+                    'outbound_message_id' => $outboundMessage->id,
                     'message_id' => $outboundMessage->message_id,
                     'error' => $statusResult['error']
                 ]);
@@ -329,7 +329,7 @@ class MessageApiController extends Controller
 
         } catch (Exception $e) {
             Log::error('Message status check error', [
-                'outbound_message_id' => $id,
+                'outbound_message_id' => $outboundMessage->id,
                 'error' => $e->getMessage()
             ]);
 
@@ -387,6 +387,10 @@ class MessageApiController extends Controller
             }
 
             $messages = $query->paginate(20);
+            $messages->getCollection()->transform(function ($message) {
+                $message->id = $message->uuid;
+                return $message;
+            });
 
              if ($user->role === 'admin') {
                 $stats = [

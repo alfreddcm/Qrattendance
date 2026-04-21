@@ -159,7 +159,7 @@
                                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editTeacherModal" onclick="editTeacher({{ $teacher->id }})" title="Edit"><i class="fas fa-edit"></i></button>
                                                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="if(confirm('Delete this teacher?')) { document.getElementById('delete-form-{{ $teacher->id }}').submit(); }" title="Delete"><i class="fas fa-trash"></i></button>
                                             </div>
-                                            <form id="delete-form-{{ $teacher->id }}" method="POST" action="{{ route('admin.delete-teacher', $teacher->id) }}" style="display: none;">
+                                            <form id="delete-form-{{ $teacher->id }}" method="POST" action="{{ route('admin.delete-teacher', $teacher) }}" style="display: none;">
                                                 @csrf
                                                 @method('DELETE')
                                             </form>
@@ -1106,11 +1106,16 @@
 <script>
 const teachers = @json($teachers);
 
+function getTeacherRouteKeyById(teacherId) {
+    const teacher = teachers.find(t => t.id === teacherId);
+    return teacher && teacher.uuid ? teacher.uuid : teacherId;
+}
+
 function editTeacher(teacherId) {
     const teacher = teachers.find(t => t.id === teacherId);
     if (!teacher) return;
 
-     document.getElementById('editTeacherForm').action = `/admin/teachers/${teacherId}`;
+    document.getElementById('editTeacherForm').action = `/admin/teachers/${getTeacherRouteKeyById(teacherId)}`;
     document.getElementById('edit_name').value = teacher.name || '';
     document.getElementById('edit_username').value = teacher.username || '';
     document.getElementById('edit_email').value = teacher.email || '';
@@ -1232,7 +1237,7 @@ function regenerateCodeForTeacher() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Regenerating...';
 
-    fetch(`/admin/attendance-codes/regenerate/${teacherId}`, {
+    fetch(`/admin/attendance-codes/regenerate/${getTeacherRouteKeyById(parseInt(teacherId, 10) || teacherId)}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1622,7 +1627,7 @@ async function openAttendanceCodeModal(teacherId, teacherName) {
     
     try {
         console.log('Fetching status for teacher:', teacherId);
-        const response = await fetch(`/admin/attendance-codes/status/${teacherId}`);
+        const response = await fetch(`/admin/attendance-codes/status/${getTeacherRouteKeyById(parseInt(teacherId, 10) || teacherId)}`);
         console.log('Response status:', response.status);
         const data = await response.json();
         console.log('Response data:', data);
@@ -1693,7 +1698,7 @@ async function generateCodeFromModal() {
     
     try {
         console.log('Generating code for teacher:', teacherId);
-        const response = await fetch(`/admin/attendance-codes/generate/${teacherId}`, {
+        const response = await fetch(`/admin/attendance-codes/generate/${getTeacherRouteKeyById(parseInt(teacherId, 10) || teacherId)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1737,7 +1742,7 @@ async function regenerateCodeFromModal() {
     
     try {
         console.log('Regenerating code for teacher:', teacherId);
-        const response = await fetch(`/admin/attendance-codes/regenerate/${teacherId}`, {
+        const response = await fetch(`/admin/attendance-codes/regenerate/${getTeacherRouteKeyById(parseInt(teacherId, 10) || teacherId)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

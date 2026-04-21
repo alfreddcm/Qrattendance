@@ -303,9 +303,12 @@ class StudentManagementController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit(Student $student)
     {
-        $student = Student::with('section')->where('user_id', Auth::id())->findOrFail($id);
+        $this->authorize('view', $student);
+        abort_unless($student->user_id === Auth::id(), 403);
+
+        $student->load('section');
         
         // Get available sections from all students
         $availableSections = $this->getAvailableSections();
@@ -348,7 +351,7 @@ class StudentManagementController extends Controller
      * Update student with enhanced section management
      */
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Student $student)
     {
         $validated = $this->validateForResponse($request, [
             'id_no' => 'required|string|max:12',
@@ -371,7 +374,8 @@ class StudentManagementController extends Controller
             return $validated;
         }
 
-        $student = Student::where('user_id', Auth::id())->findOrFail($id);
+        $this->authorize('view', $student);
+        abort_unless($student->user_id === Auth::id(), 403);
 
         // Verify that the selected section exists and belongs to this teacher
         $section = Section::where('id', $request->section_id)
@@ -463,10 +467,11 @@ class StudentManagementController extends Controller
     /**
      * Quick update for inline editing
      */
-    public function quickUpdate(Request $request, $id)
+    public function quickUpdate(Request $request, Student $student)
     {
         try {
-            $student = Student::where('user_id', Auth::id())->findOrFail($id);
+            $this->authorize('view', $student);
+            abort_unless($student->user_id === Auth::id(), 403);
             
             // Validate the specific field being updated
             $rules = [];
@@ -519,7 +524,7 @@ class StudentManagementController extends Controller
             ], 422);
         } catch (\Exception $e) {
             Log::error('Quick update failed', [
-                'student_id' => $id,
+                'student_id' => $student->id,
                 'teacher_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
@@ -531,16 +536,17 @@ class StudentManagementController extends Controller
         }
 }
 
-    public function destroy($id)
+    public function destroy(Student $student)
 {
+    $this->authorize('view', $student);
+    abort_unless($student->user_id === Auth::id(), 403);
+
     Log::info('Student delete request', [
-        'student_id' => $id,
+        'student_id' => $student->id,
         'teacher_id' => Auth::id(),
     ]);
 
     try {
-        $student = Student::where('user_id', Auth::id())->findOrFail($id);
-        
         Log::info('Student found for deletion', [
             'student_id' => $student->id,
             'student_name' => $student->name,
@@ -573,7 +579,7 @@ class StudentManagementController extends Controller
         
     } catch (\Exception $e) {
         Log::error('Failed to delete student', [
-            'student_id' => $id,
+            'student_id' => $student->id,
             'teacher_id' => Auth::id(),
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
@@ -682,17 +688,18 @@ public function bulkDelete(Request $request)
         }
     }
 
-     public function generateQr($id)
+     public function generateQr(Student $student)
     {
+        $this->authorize('view', $student);
+        abort_unless($student->user_id === Auth::id(), 403);
+
         Log::info('Single QR generation started', [
-            'student_id' => $id,
+            'student_id' => $student->id,
             'teacher_id' => Auth::id(),
             'timestamp' => now(),
         ]);
 
         try {
-            $student = Student::where('user_id', Auth::id())->findOrFail($id);
-
             Log::info('Student found for QR generation', [
                 'student_id' => $student->id,
                 'student_name' => $student->name,
@@ -719,7 +726,7 @@ public function bulkDelete(Request $request)
             }
         } catch (\Exception $e) {
             Log::error('Single QR generation failed', [
-                'student_id' => $id,
+                'student_id' => $student->id,
                 'teacher_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -728,8 +735,11 @@ public function bulkDelete(Request $request)
         }
     }
 
-    public function regenerateQr(Request $request, $id)
+    public function regenerateQr(Request $request, Student $student)
     {
+        $this->authorize('view', $student);
+        abort_unless($student->user_id === Auth::id(), 403);
+
         $request->validate([
             'password' => 'required|string',
         ]);
@@ -739,8 +749,6 @@ public function bulkDelete(Request $request)
         }
 
         try {
-            $student = Student::where('user_id', Auth::id())->findOrFail($id);
-
             if ($this->generateQrForStudent($student, true)) {
                 return back()->with('success', 'QR code regenerated successfully. Please reissue this student\'s ID card.');
             }
@@ -748,7 +756,7 @@ public function bulkDelete(Request $request)
             return back()->with('error', 'Failed to regenerate QR code. Please try again.');
         } catch (\Exception $e) {
             Log::error('Single QR regeneration failed', [
-                'student_id' => $id,
+                'student_id' => $student->id,
                 'teacher_id' => Auth::id(),
                 'error' => $e->getMessage(),
             ]);
