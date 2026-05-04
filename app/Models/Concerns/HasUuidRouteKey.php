@@ -19,4 +19,25 @@ trait HasUuidRouteKey
     {
         return 'uuid';
     }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $instance = $this->newQuery();
+
+        if ($field) {
+            return $instance->where($field, $value)->first();
+        }
+
+        $model = $instance->where($this->getRouteKeyName(), $value)->first();
+
+        if ($model) {
+            return $model;
+        }
+
+        if (is_numeric($value)) {
+            return $instance->where($this->getKeyName(), $value)->first();
+        }
+
+        return null;
+    }
 }

@@ -95,10 +95,10 @@
                             </td>
                             <td class="py-1">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1" onclick="editSchoolYear({{ $schoolYear->id }})" title="Edit School Year">
+                                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1" onclick="editSchoolYear(@js($schoolYear->uuid ?? $schoolYear->id))" title="Edit School Year">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteSchoolYear({{ $schoolYear->id }}, '{{ $schoolYear->name }}')">
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteSchoolYear(@js($schoolYear->uuid ?? $schoolYear->id), @js($schoolYear->name))">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -552,8 +552,8 @@ function setupTimeValidation() {
 }
 
 // School Year CRUD functions
-function editSchoolYear(schoolYearId) {
-    fetch(`/admin/school-years/${schoolYearId}/edit`)
+function editSchoolYear(schoolYearRouteKey) {
+    fetch(`/admin/school-years/${schoolYearRouteKey}/edit`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -569,7 +569,7 @@ function editSchoolYear(schoolYearId) {
             document.getElementById('edit_end_date').value = formatDateValue(data.end_date);
             document.getElementById('edit_description').value = data.description || '';
 
-            document.getElementById('editSchoolYearForm').action = '/admin/school-years/' + schoolYearId;
+            document.getElementById('editSchoolYearForm').action = '/admin/school-years/' + schoolYearRouteKey;
 
             new bootstrap.Modal(document.getElementById('editSchoolYearModal')).show();
         })
@@ -579,9 +579,9 @@ function editSchoolYear(schoolYearId) {
         });
 }
 
-function deleteSchoolYear(id, name) {
+function deleteSchoolYear(schoolYearRouteKey, name) {
     document.getElementById('deleteSchoolYearName').textContent = name || 'this school year';
-    document.getElementById('deleteSchoolYearForm').action = '/admin/school-years/' + id;
+    document.getElementById('deleteSchoolYearForm').action = '/admin/school-years/' + schoolYearRouteKey;
     new bootstrap.Modal(document.getElementById('deleteSchoolYearModal')).show();
 }
 

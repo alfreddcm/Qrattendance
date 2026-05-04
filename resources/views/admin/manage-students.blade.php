@@ -1188,6 +1188,28 @@ function removePhoto() {
     }
 }
 
+function fetchSectionsForTeacher(teacherId, teacherRouteKey, schoolYearId) {
+    const routeKey = teacherRouteKey || teacherId;
+    const query = schoolYearId ? `?school_year_id=${encodeURIComponent(schoolYearId)}` : '';
+    const primaryUrl = `/admin/teachers/${encodeURIComponent(routeKey)}/sections${query}`;
+
+    return fetch(primaryUrl).then(async (response) => {
+        if (response.ok) {
+            return response.json();
+        }
+
+        if (teacherId && routeKey !== teacherId) {
+            const fallbackUrl = `/admin/teachers/${encodeURIComponent(teacherId)}/sections${query}`;
+            const fallbackResponse = await fetch(fallbackUrl);
+            if (fallbackResponse.ok) {
+                return fallbackResponse.json();
+            }
+        }
+
+        throw new Error(`HTTP error! status: ${response.status}`);
+    });
+}
+
 function loadSectionsByTeacher() {
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
@@ -1201,10 +1223,7 @@ function loadSectionsByTeacher() {
     sectionSelect.disabled = !teacherId;
 
     if (teacherId) {
-        const url = `/admin/teachers/${teacherRouteKey}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
-         
-        fetch(url)
-            .then(response => response.json())
+        fetchSectionsForTeacher(teacherId, teacherRouteKey, schoolYearId)
             .then(sections => {
                 sections.forEach(section => {
                     const option = document.createElement('option');
@@ -1324,10 +1343,7 @@ function loadSectionsForFilter() {
         sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
         sectionSelect.disabled = true;
         
-        const url = `/admin/teachers/${teacherRouteKey}/sections${schoolYearId ? `?school_year_id=${schoolYearId}` : ''}`;
-        
-        fetch(url)
-            .then(response => response.json())
+        fetchSectionsForTeacher(teacherId, teacherRouteKey, schoolYearId)
             .then(sections => {
                 sectionSelect.innerHTML = '<option value="">All Sections</option>';
                 sections.forEach(section => {

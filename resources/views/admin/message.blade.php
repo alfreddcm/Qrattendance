@@ -175,6 +175,12 @@
                                 </label>
                             </div>
                             <div class="form-check mb-1">
+                                <input class="form-check-input" type="radio" name="recipientType" id="selectedStudentsRadio" value="selected_students" onchange="toggleRecipientOptions()">
+                                <label class="form-check-label small" for="selectedStudentsRadio">
+                                    <i class="fas fa-check-square me-2"></i>Selected Students
+                                </label>
+                            </div>
+                            <div class="form-check mb-1">
                                 <input class="form-check-input" type="radio" name="recipientType" id="specificStudentRadio" value="specific_student" onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="specificStudentRadio">
                                     <i class="fas fa-user-graduate me-2"></i>Specific Student
@@ -206,6 +212,31 @@
                                 <div class="alert alert-info small py-1 px-2 mb-1">
                                     <i class="fas fa-info-circle me-1"></i>
                                     Message will be sent to all parents of students in the system
+                                </div>
+                            </div>
+                            <div id="selectedStudentsDiv" style="display:none;">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-light py-1 px-2 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 small"><i class="fas fa-users me-1"></i>Select Students</h6>
+                                        <span class="badge bg-primary" id="selectedCountBadge">0 selected</span>
+                                    </div>
+                                    <div class="card-body py-1 px-2">
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control form-control-sm" id="studentSearchInput"
+                                                   placeholder="Search students..." oninput="filterStudentCheckboxList()">
+                                        </div>
+                                        <div class="form-check mb-1 border-bottom pb-1">
+                                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                            <label class="form-check-label small fw-bold" for="selectAllCheckbox">
+                                                Select All
+                                            </label>
+                                        </div>
+                                        <div id="studentCheckboxList" style="max-height: 200px; overflow-y: auto;">
+                                            <div class="text-center py-2 text-muted small">
+                                                <i class="fas fa-spinner fa-spin me-1"></i>Loading students...
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div id="studentSelectDiv" style="display:none;">
@@ -581,7 +612,7 @@ function loadStudents() {
 
                 data.students.forEach(student => {
                     const option = $('<option></option>')
-                        .val(student.id)
+                        .val(student.uuid || student.id)
                         .data('teacher', student.user ? student.user.name : 'Unknown')
                         .data('parent', student.contact_person_contact || '')
                         .data('parent-name', student.contact_person_name || '')
@@ -589,6 +620,9 @@ function loadStudents() {
                         .text(student.name.trim());
                     studentSelect.append(option);
                 });
+
+                // Build checkbox list for Selected Students
+                buildStudentCheckboxList(data.students);
             } else {
                 console.error('Error loading students:', data.message);
                 showAlert('Error loading students: ' + data.message, 'danger');
@@ -777,6 +811,7 @@ function toggleRecipientOptions() {
     $('#allTeachersDiv').hide();
     $('#teacherSelectDiv').hide();
     $('#allParentsDiv').hide();
+    $('#selectedStudentsDiv').hide();
     $('#studentSelectDiv').hide();
     $('#customNumberDiv').hide();
     $('#teacherInfoPanel').hide();
@@ -794,6 +829,8 @@ function toggleRecipientOptions() {
         }
     } else if (selectedType === 'all_parents') {
         $('#allParentsDiv').show();
+    } else if (selectedType === 'selected_students') {
+        $('#selectedStudentsDiv').show();
     } else if (selectedType === 'specific_student') {
         $('#studentSelectDiv').show();
         const selectedValue = $('#studentSelect').val();
@@ -803,6 +840,93 @@ function toggleRecipientOptions() {
         }
     } else if (selectedType === 'custom') {
         $('#customNumberDiv').show();
+    }
+
+    updateSendButtonState();
+}
+
+function buildStudentCheckboxList(students) {
+    const container = $('#studentCheckboxList');
+    container.empty();
+
+    if (!students || students.length === 0) {
+        container.html('<div class="text-center py-2 text-muted small">No students found</div>');
+        return;
+    }
+
+    students.forEach(student => {
+        const uuid = student.uuid || '';
+        const name = (student.name || '').trim();
+        const teacherName = student.user ? student.user.name : '';
+        const hasContact = student.contact_person_contact && student.contact_person_contact !== '';
+
+        const row = $(`
+            <div class="form-check mb-1 student-checkbox-row" data-name="${name.toLowerCase()}">
+                <input class="form-check-input student-checkbox" type="checkbox" 
+                       value="${uuid}" id="student_${uuid}"
+                       ${!hasContact ? 'disabled' : ''}
+                       onchange="updateSelectedCount()">
+                <label class="form-check-label small ${!hasContact ? 'text-muted' : ''}" for="student_${uuid}">
+                    ${name}
+                    <span class="text-muted ms-1">${teacherName ? '(' + teacherName + ')' : ''}</span>
+                    ${!hasContact ? '<span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem">No contact</span>' : ''}
+                </label>
+            </div>
+        `);
+        container.append(row);
+    });
+}
+
+function toggleSelectAll() {
+    const isChecked = $('#selectAllCheckbox').is(':checked');
+    $('.student-checkbox:not(:disabled):visible').each(function() {
+        $(this).prop('checked', isChecked);
+    });
+    updateSelectedCount();
+}
+
+function filterStudentCheckboxList() {
+    const searchTerm = $('#studentSearchInput').val().toLowerCase().trim();
+    $('.student-checkbox-row').each(function() {
+        const name = $(this).data('name') || '';
+        if (searchTerm === '' || name.includes(searchTerm)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+
+    const visibleCheckboxes = $('.student-checkbox:not(:disabled):visible');
+    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+    $('#selectAllCheckbox').prop('checked', allVisibleChecked);
+}
+
+function updateSelectedCount() {
+    const count = $('.student-checkbox:checked').length;
+    $('#selectedCountBadge').text(count + ' selected');
+
+    const visibleCheckboxes = $('.student-checkbox:not(:disabled):visible');
+    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+    $('#selectAllCheckbox').prop('checked', allVisibleChecked);
+
+    updateSendButtonState();
+}
+
+function updateSendButtonState() {
+    const selectedType = $('input[name="recipientType"]:checked').val();
+    const sendBtn = $('#composeModal .modal-footer .btn-primary');
+
+    if (selectedType === 'selected_students') {
+        const count = $('.student-checkbox:checked').length;
+        sendBtn.prop('disabled', count === 0);
+    } else if (selectedType === 'specific_student') {
+        const selected = $('#studentSelect').val();
+        sendBtn.prop('disabled', !selected);
+    } else if (selectedType === 'specific_teacher') {
+        const selected = $('#teacherSelect').val();
+        sendBtn.prop('disabled', !selected);
+    } else {
+        sendBtn.prop('disabled', false);
     }
 }
 
@@ -946,19 +1070,22 @@ function sendSMS() {
         }
     } else if (selectedType === 'all_parents') {
         phoneNumber = 'all_parents';
-    } else if (selectedType === 'specific_student') {
-        studentId = $('#studentSelect').val();
-
-        if (!studentId) {
-            showAlert('Please select a student', 'warning');
+    } else if (selectedType === 'selected_students') {
+        // Handle selected students with checkboxes
+        const selectedUuids = [];
+        $('.student-checkbox:checked').each(function() {
+            selectedUuids.push($(this).val());
+        });
+        if (selectedUuids.length === 0) {
+            showAlert('Please select at least one student', 'warning');
             return;
         }
+        // Will send via send_to=selected
+    } else if (selectedType === 'specific_student') {
+        const specificUuid = $('#studentSelect').val();
 
-        const selectedOption = $('#studentSelect option:selected');
-        phoneNumber = selectedOption.data('parent');
-
-        if (!phoneNumber) {
-            showAlert('Selected student has no parent/guardian contact number', 'warning');
+        if (!specificUuid) {
+            showAlert('Please select a student', 'warning');
             return;
         }
     } else if (selectedType === 'custom') {
@@ -981,21 +1108,35 @@ function sendSMS() {
     }
 
     const data = {
-        number: phoneNumber,
         message: message,
-        send_to_all: selectedType.includes('all_'),
         recipient_type: selectedType
     };
+
+    // Build data based on type
+    if (selectedType === 'selected_students') {
+        data.send_to = 'selected';
+        data.selected_students = [];
+        $('.student-checkbox:checked').each(function() {
+            data.selected_students.push($(this).val());
+        });
+    } else if (selectedType === 'specific_student') {
+        data.send_to = 'specific';
+        data.specific_student = $('#studentSelect').val();
+    } else if (selectedType === 'all_parents') {
+        data.send_to = 'all';
+        data.number = 'all_parents';
+        data.send_to_all = true;
+    } else {
+        // Legacy teacher/custom flows
+        data.number = phoneNumber;
+        data.send_to_all = selectedType.includes('all_');
+    }
 
     if (teacherId) {
         data.teacher_id = teacherId;
     }
 
-    if (studentId) {
-        data.student_id = studentId;
-    }
-
-    const sendBtn = $('.modal-footer .btn-primary');
+    const sendBtn = $('#composeModal .modal-footer .btn-primary');
     sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
 
     fetch('/admin/send-sms', {
@@ -1015,6 +1156,10 @@ function sendSMS() {
             $('#charCount').text('0');
             $('#smsCount').text('1');
             $('#allTeachersRadio').prop('checked', true);
+            // Uncheck all student checkboxes
+            $('.student-checkbox').prop('checked', false);
+            $('#selectAllCheckbox').prop('checked', false);
+            updateSelectedCount();
             toggleRecipientOptions();
             loadMessages();
         } else {

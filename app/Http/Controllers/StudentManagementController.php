@@ -1142,7 +1142,7 @@ public function bulkDelete(Request $request)
         }
         
          $students = $query->with('section')
-                         ->select('id', 'name', 'cp_no', 'contact_person_contact', 'contact_person_name', 'id_no', 'section_id')
+                         ->select('id', 'uuid', 'name', 'cp_no', 'contact_person_contact', 'contact_person_name', 'id_no', 'section_id')
                          ->orderBy('name')
                          ->get();
         

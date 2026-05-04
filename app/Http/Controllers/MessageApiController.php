@@ -37,14 +37,18 @@ class MessageApiController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'number' => 'required|string',
+                'number' => 'nullable|string',
                 'message' => 'required|string|max:1000',
                 'student_id' => 'nullable|exists:students,id',
                 'teacher_id' => 'nullable|exists:users,id',
                 'send_to_all' => 'boolean',
                 'send_to_all_teachers' => 'boolean',
                 'send_to_teacher' => 'boolean',
-                'recipient_type' => 'nullable|string|in:all_teachers,specific_teacher,all_parents,specific_student,custom'
+                'recipient_type' => 'nullable|string|in:all_teachers,specific_teacher,all_parents,all_students,selected_students,specific_student,custom',
+                'send_to' => 'nullable|string|in:all,selected,specific',
+                'selected_students' => 'nullable|array',
+                'selected_students.*' => 'string|uuid',
+                'specific_student' => 'nullable|string|uuid',
             ]);
 
             if ($validator->fails()) {
@@ -59,7 +63,7 @@ class MessageApiController extends Controller
                 ], 422);
             }
 
-            $number = $request->input('number');
+            $number = $request->input('number', '');
             $message = $request->input('message');
             $studentId = $request->input('student_id');
             $teacherId = $request->input('teacher_id');
@@ -67,8 +71,59 @@ class MessageApiController extends Controller
             $sendToAllTeachers = $request->input('send_to_all_teachers', false);
             $sendToTeacher = $request->input('send_to_teacher', false);
             $recipientType = $request->input('recipient_type');
+            $sendTo = $request->input('send_to');
 
-             if ($recipientType === 'all_teachers' || $number === 'all_teachers') {
+            // Handle new send_to parameter (all / selected / specific)
+            if ($sendTo === 'all' || $recipientType === 'all_students') {
+                return $this->sendToAllParents($message);
+            }
+
+            if ($sendTo === 'selected' || $recipientType === 'selected_students') {
+                $selectedUuids = $request->input('selected_students', []);
+                if (empty($selectedUuids)) {
+                    return response()->json([
+                        'status' => 'fail',
+                        'message' => 'Please select at least one student'
+                    ], 422);
+                }
+                return $this->sendToSelectedStudents($message, $selectedUuids);
+            }
+
+            if ($sendTo === 'specific') {
+                $specificUuid = $request->input('specific_student');
+                if (!$specificUuid) {
+                    return response()->json([
+                        'status' => 'fail',
+                        'message' => 'Please select a student'
+                    ], 422);
+                }
+                $student = Student::where('uuid', $specificUuid)->first();
+                if (!$student) {
+                    return response()->json([
+                        'status' => 'fail',
+                        'message' => 'Student not found'
+                    ], 404);
+                }
+                // For teacher, ensure student belongs to them
+                $user = auth()->user();
+                if ($user->role === 'teacher' && $student->user_id !== $user->id) {
+                    return response()->json([
+                        'status' => 'fail',
+                        'message' => 'Unauthorized: student does not belong to your class'
+                    ], 403);
+                }
+                if (!$student->contact_person_contact) {
+                    return response()->json([
+                        'status' => 'fail',
+                        'message' => 'Selected student has no parent/guardian contact number'
+                    ], 422);
+                }
+                $number = $student->contact_person_contact;
+                $studentId = $student->id;
+            }
+
+            // Legacy recipient_type handling
+            if ($recipientType === 'all_teachers' || $number === 'all_teachers') {
                 return $this->sendToAllTeachers($message);
             }
 
@@ -78,6 +133,10 @@ class MessageApiController extends Controller
 
             if ($recipientType === 'all_parents' || $number === 'all_parents') {
                 return $this->sendToAllParents($message);
+            }
+
+            if ($recipientType === 'specific_student' && $studentId) {
+                // Existing specific student flow continues below
             }
 
              if ($sendToAllTeachers) {
@@ -272,6 +331,125 @@ class MessageApiController extends Controller
             return response()->json([
                 'status' => 'fail',
                 'message' => 'An error occurred while sending broadcast SMS'
+            ], 500);
+        }
+    }
+
+    /**
+     * Send SMS to selected students by UUID
+     */
+    private function sendToSelectedStudents($message, array $studentUuids)
+    {
+        try {
+            $user = auth()->user();
+
+            // Build query based on role
+            $query = Student::whereIn('uuid', $studentUuids)
+                ->whereNotNull('contact_person_contact')
+                ->where('contact_person_contact', '!=', '');
+
+            // Teacher can only send to their own students
+            if ($user->role === 'teacher') {
+                $query->where('user_id', $user->id);
+            }
+
+            $students = $query->get();
+
+            if ($students->isEmpty()) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'No selected students with valid parent contact numbers found'
+                ], 404);
+            }
+
+            $recipients = [];
+            foreach ($students as $student) {
+                $contactNumber = $student->contact_person_contact;
+                if (!$this->isValidPhoneNumber($contactNumber)) {
+                    continue;
+                }
+                $recipients[] = [
+                    'student' => $student,
+                    'number' => $this->normalizePhoneNumber($contactNumber)
+                ];
+            }
+
+            $totalRecipients = count($recipients);
+
+            if ($totalRecipients === 0) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'No valid parent contact numbers found for selected students'
+                ], 404);
+            }
+
+            $successCount = 0;
+            $failCount = 0;
+            $messageIds = [];
+
+            foreach ($recipients as $recipient) {
+                $result = $this->smsService->sendSms($message, $recipient['number']);
+
+                if ($result['success']) {
+                    $successCount++;
+                    if (isset($result['message_id'])) {
+                        $messageIds[] = $result['message_id'];
+                    }
+                } else {
+                    $failCount++;
+                }
+            }
+
+            // Create outbound message record
+            OutboundMessage::create([
+                'teacher_id' => $user->role === 'teacher' ? $user->id : null,
+                'admin_id' => $user->role === 'admin' ? $user->id : null,
+                'contact_number' => 'SELECTED_STUDENTS',
+                'message' => $message,
+                'message_id' => json_encode($messageIds),
+                'status' => $successCount > 0 ? 'sent' : 'failed',
+                'recipient_type' => 'selected_students',
+                'send_type' => 'selected',
+                'recipient_count' => $totalRecipients
+            ]);
+
+            Log::info('Selected students SMS sent', [
+                'user_id' => $user->id,
+                'role' => $user->role,
+                'total_recipients' => $totalRecipients,
+                'success_count' => $successCount,
+                'fail_count' => $failCount
+            ]);
+
+            if ($successCount > 0) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => "SMS sent successfully to {$successCount} parent(s)" .
+                                ($failCount > 0 ? " ({$failCount} failed)" : ""),
+                    'success_count' => $successCount,
+                    'fail_count' => $failCount,
+                    'total_count' => $totalRecipients
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed to send SMS to any selected student\'s parent',
+                    'success_count' => 0,
+                    'fail_count' => $failCount,
+                    'total_count' => $totalRecipients
+                ], 500);
+            }
+
+        } catch (Exception $e) {
+            Log::error('Selected students SMS error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id()
+            ]);
+
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'An error occurred while sending SMS to selected students'
             ], 500);
         }
     }

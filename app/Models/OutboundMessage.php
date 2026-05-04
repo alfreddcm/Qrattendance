@@ -20,6 +20,7 @@ class OutboundMessage extends Model
         'message_id',
         'status',
         'recipient_type',
+        'send_type',
         'recipient_count',
         'last_sent_at'
     ];

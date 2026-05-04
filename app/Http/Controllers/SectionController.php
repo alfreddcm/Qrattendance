@@ -303,11 +303,7 @@ class SectionController extends Controller
              $oldTeacherId = $section->teacher_id;
             $newTeacherId = $validatedData['teacher_id'];
 
-            $section->update([
-                'name' => $validatedData['name'],
-                'gradelevel' => $validatedData['gradelevel'],
-                'school_year_id' => $validatedData['school_year_id'],
-                'teacher_id' => $validatedData['teacher_id'],
+            $timeRangeData = [
                 'am_time_in_start' => $validatedData['am_time_in_start'],
                 'am_time_in_end' => $validatedData['am_time_in_end'],
                 'am_time_out_start' => $validatedData['am_time_out_start'],
@@ -316,7 +312,25 @@ class SectionController extends Controller
                 'pm_time_in_end' => $validatedData['pm_time_in_end'],
                 'pm_time_out_start' => $validatedData['pm_time_out_start'],
                 'pm_time_out_end' => $validatedData['pm_time_out_end'],
+            ];
+
+            $section->update([
+                'name' => $validatedData['name'],
+                'gradelevel' => $validatedData['gradelevel'],
+                'school_year_id' => $validatedData['school_year_id'],
+                'teacher_id' => $validatedData['teacher_id'],
+                'am_time_in_start' => $timeRangeData['am_time_in_start'],
+                'am_time_in_end' => $timeRangeData['am_time_in_end'],
+                'am_time_out_start' => $timeRangeData['am_time_out_start'],
+                'am_time_out_end' => $timeRangeData['am_time_out_end'],
+                'pm_time_in_start' => $timeRangeData['pm_time_in_start'],
+                'pm_time_in_end' => $timeRangeData['pm_time_in_end'],
+                'pm_time_out_start' => $timeRangeData['pm_time_out_start'],
+                'pm_time_out_end' => $timeRangeData['pm_time_out_end'],
             ]);
+
+            $propagatedSectionsCount = Section::where('id', '!=', $section->id)
+                ->update($timeRangeData);
 
              if ($oldTeacherId !== $newTeacherId) {
                 $this->updateTeacherAssignments($section, $oldTeacherId, $newTeacherId);
@@ -330,7 +344,8 @@ class SectionController extends Controller
                 'grade_level' => $section->gradelevel,
                 'old_teacher_id' => $oldTeacherId,
                 'new_teacher_id' => $newTeacherId,
-                'school_year_id' => $section->school_year_id
+                'school_year_id' => $section->school_year_id,
+                'propagated_sections_count' => $propagatedSectionsCount
             ]);
 
             if ($request->ajax() || $request->isJson()) {

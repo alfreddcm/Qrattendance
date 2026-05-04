@@ -10,6 +10,7 @@ use App\Models\Attendance;
 use App\Models\School;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class SF2TemplateService
 {
@@ -125,15 +126,29 @@ class SF2TemplateService
                 });
             }
             
-            $students = $studentsQuery->with('section')
-                                   ->get()
-                                   ->sortBy(function($student) {
-                                       return [
-                                           $student->section ? $student->section->gradelevel : 0,
-                                           $student->section ? $student->section->name : '',
-                                           $student->name
-                                       ];
-                                   });
+            $hasSeparatedNameColumns = $this->hasSeparatedNameColumns();
+
+            if ($hasSeparatedNameColumns) {
+                $students = $this->applyStudentNameSorting($studentsQuery)
+                    ->with('section')
+                    ->get();
+            } else {
+                $students = $studentsQuery
+                    ->with('section')
+                    ->get()
+                    ->sortBy(function ($student) {
+                        [$lastName, $firstName] = $this->extractNameParts($student);
+
+                        return [
+                            $lastName === '' ? 1 : 0,
+                            $lastName,
+                            $firstName === '' ? 1 : 0,
+                            $firstName,
+                            strtolower(trim((string) $student->name)),
+                        ];
+                    })
+                    ->values();
+            }
 
             // Check if any students were found
             if ($students->isEmpty()) {
@@ -334,11 +349,11 @@ class SF2TemplateService
         // Separate students by gender
         $maleStudents = $students->filter(function($student) {
             return strtolower($student->gender) === 'male' || strtolower($student->gender) === 'm';
-        });
+        })->values();
         
         $femaleStudents = $students->filter(function($student) {
             return strtolower($student->gender) === 'female' || strtolower($student->gender) === 'f';
-        });
+        })->values();
         
         // Populate male students (A13:A33, B13:B33)
         $maleData = $this->populateGenderSection($worksheet, $maleStudents, 13, 33, $month, $year, 'male');
@@ -503,6 +518,59 @@ class SF2TemplateService
         // For now, we'll consider any time_in as present
         // You could add logic here to check for tardiness based on expected times
         return ''; // Present - blank as per SF2 convention
+    }
+
+    /**
+     * Apply SF2 student ordering by last name and first name.
+     *
+     * Uses database-level sorting when `last_name`/`first_name` columns exist.
+     * Falls back to a stable collection sort using parsed values from `name`
+     * for deployments that still use a single name field.
+     */
+    private function applyStudentNameSorting($studentsQuery)
+    {
+        return $studentsQuery
+            // Push null/blank names to the bottom, then sort alphabetically.
+            ->orderByRaw("CASE WHEN TRIM(COALESCE(last_name, '')) = '' THEN 1 ELSE 0 END ASC")
+            ->orderByRaw("LOWER(TRIM(COALESCE(last_name, ''))) ASC")
+            ->orderByRaw("CASE WHEN TRIM(COALESCE(first_name, '')) = '' THEN 1 ELSE 0 END ASC")
+            ->orderByRaw("LOWER(TRIM(COALESCE(first_name, ''))) ASC");
+    }
+
+    private function hasSeparatedNameColumns()
+    {
+        return Schema::hasColumn('students', 'last_name') && Schema::hasColumn('students', 'first_name');
+    }
+
+    private function extractNameParts($student)
+    {
+        $lastName = strtolower(trim((string) ($student->last_name ?? '')));
+        $firstName = strtolower(trim((string) ($student->first_name ?? '')));
+
+        if ($lastName !== '' || $firstName !== '') {
+            return [$lastName, $firstName];
+        }
+
+        $fullName = trim((string) ($student->name ?? ''));
+
+        if ($fullName === '') {
+            return ['', ''];
+        }
+
+        if (str_contains($fullName, ',')) {
+            [$parsedLast, $parsedFirst] = array_pad(array_map('trim', explode(',', $fullName, 2)), 2, '');
+            return [strtolower($parsedLast), strtolower($parsedFirst)];
+        }
+
+        $parts = preg_split('/\s+/', $fullName);
+        if (!$parts || count($parts) === 1) {
+            return [strtolower($fullName), ''];
+        }
+
+        $parsedLast = array_pop($parts);
+        $parsedFirst = implode(' ', $parts);
+
+        return [strtolower(trim($parsedLast)), strtolower(trim($parsedFirst))];
     }
 
     /**

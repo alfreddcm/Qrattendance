@@ -156,53 +156,66 @@
             <div class="modal-body py-2 px-3">
                 <form id="smsForm">
                     <div class="row mb-2">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label mb-1">Send To</label>
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="allParentsRadio" value="all_parents" checked onchange="toggleRecipientOptions()">
-                                <label class="form-check-label small" for="allParentsRadio">
-                                    <i class="fas fa-users me-2"></i>All Student Parents
-                                </label>
-                            </div>
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="specificStudentRadio" value="specific_student" onchange="toggleRecipientOptions()">
-                                <label class="form-check-label small" for="specificStudentRadio">
-                                    <i class="fas fa-user me-2"></i>Specific Student
-                                </label>
-                            </div>
+                            <select class="form-select form-select-sm" id="sendToSelect" onchange="toggleSendToOptions()">
+                                <option value="all">All Students (Parents)</option>
+                                <option value="selected">Selected Students</option>
+                                <option value="specific">Specific Student</option>
+                            </select>
+                        </div>
+                    </div>
 
+                    <!-- All Students Info -->
+                    <div id="allStudentsDiv" class="mb-2">
+                        <div class="alert alert-info small py-1 px-2 mb-1">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Message will be sent to all parents of students in your class
                         </div>
-                        <div class="col-md-6">
-                            <div id="allParentsDiv">
-                                <label class="form-label mb-1">Recipients</label>
-                                <div class="alert alert-info small py-1 px-2 mb-1">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Message will be sent to all parents of students in your class
+                    </div>
+
+                    <!-- Selected Students Checkbox List -->
+                    <div id="selectedStudentsDiv" style="display:none;" class="mb-2">
+                        <div class="card border-primary">
+                            <div class="card-header bg-light py-1 px-2 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 small"><i class="fas fa-users me-1"></i>Select Students</h6>
+                                <span class="badge bg-primary" id="selectedCountBadge">0 selected</span>
+                            </div>
+                            <div class="card-body py-1 px-2">
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="studentSearchInput"
+                                           placeholder="Search students..." oninput="filterStudentCheckboxList()">
+                                </div>
+                                <div class="form-check mb-1 border-bottom pb-1">
+                                    <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                    <label class="form-check-label small fw-bold" for="selectAllCheckbox">
+                                        Select All
+                                    </label>
+                                </div>
+                                <div id="studentCheckboxList" style="max-height: 200px; overflow-y: auto;">
+                                    <div class="text-center py-2 text-muted small">
+                                        <i class="fas fa-spinner fa-spin me-1"></i>Loading students...
+                                    </div>
                                 </div>
                             </div>
-                            <div id="studentSelectDiv" style="display:none;">
-                                <label for="studentSelect" class="form-label mb-1">Select Student</label>
-                                <select class="form-select form-select-sm" id="studentSelect" onchange="onStudentSelect()">
-                                    <option value="">Choose a student...</option>
-                                    @foreach($students as $student)
-                                        <option value="{{ $student->id }}"
-                                                data-phone="{{ $student->contact_person_contact ?? '' }}"
-                                                data-parent="{{ $student->contact_person_contact ?? '' }}"
-                                                data-parent-name="{{ $student->contact_person_name ?? 'Unknown' }}">
-                                            {{ $student->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div id="customNumberDiv" style="display:none;">
-                                <label for="customNumber" class="form-label mb-1">Mobile Number</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">+63</span>
-                                    <input type="text" class="form-control" id="customNumber" placeholder="9123456789" maxlength="10" pattern="[0-9]{10}">
-                                </div>
-                                <div class="form-text small">Enter 10 digits (e.g., 9123456789)</div>
-                            </div>
                         </div>
+                    </div>
+
+                    <!-- Specific Student Dropdown -->
+                    <div id="specificStudentDiv" style="display:none;" class="mb-2">
+                        <label for="studentSelect" class="form-label mb-1">Select Student</label>
+                        <select class="form-select form-select-sm" id="studentSelect" onchange="onStudentSelect()">
+                            <option value="">Choose a student...</option>
+                            @foreach($students as $student)
+                                <option value="{{ $student->uuid }}"
+                                        data-phone="{{ $student->contact_person_contact ?? '' }}"
+                                        data-parent="{{ $student->contact_person_contact ?? '' }}"
+                                        data-parent-name="{{ $student->contact_person_name ?? 'Unknown' }}"
+                                        data-student-id="{{ $student->id }}">
+                                    {{ $student->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                      <div class="mb-2" id="studentInfoPanel" style="display:none;">
@@ -548,45 +561,140 @@ function loadStudents() {
         })
         .then(students => {
             console.log('Students loaded:', students);
-            console.log('First student data:', students[0]);
             allStudents = students;
 
             // Populate the filter dropdown
             const studentFilter = $('#studentFilter');
             studentFilter.empty().append('<option value="">All Students</option>');
 
-            // Populate the select dropdown for sending messages
-            const studentSelect = $('#studentSelect');
-            studentSelect.empty().append('<option value="">Select Student</option>');
-
             students.forEach(student => {
-                console.log(`Student ${student.name}: section=${student.section}, grade=${student.grade_level}`);
-
-                // Create option for filter dropdown
                 const filterOption = $('<option></option>')
                     .val(student.id)
                     .text(student.name.trim());
                 studentFilter.append(filterOption);
-
-                // Create option for select dropdown (with data attributes)
-                const selectOption = $('<option></option>')
-                    .val(student.id)
-                    .data('section', student.section || '')
-                    .data('grade', student.grade_level || '')
-                    .data('parent', student.contact_person_contact || '')
-                    .data('parent-name', student.contact_person_name || '')
-                    .text(student.name.trim());
-                console.log('Created option with data:', {
-                    section: selectOption.data('section'),
-                    grade: selectOption.data('grade')
-                });
-                studentSelect.append(selectOption);
             });
+
+            // Build checkbox list for "Selected Students"
+            buildStudentCheckboxList(students);
         })
         .catch(error => {
             console.error('Error loading students:', error);
             showAlert('Error loading students: ' + error.message, 'danger');
         });
+}
+
+function buildStudentCheckboxList(students) {
+    const container = $('#studentCheckboxList');
+    container.empty();
+
+    if (!students || students.length === 0) {
+        container.html('<div class="text-center py-2 text-muted small">No students found</div>');
+        return;
+    }
+
+    students.forEach(student => {
+        const uuid = student.uuid || '';
+        const name = (student.name || '').trim();
+        const parentContact = student.contact_person_contact || 'No contact';
+        const section = student.section || '';
+        const hasContact = student.contact_person_contact && student.contact_person_contact !== '';
+
+        const row = $(`
+            <div class="form-check mb-1 student-checkbox-row" data-name="${name.toLowerCase()}">
+                <input class="form-check-input student-checkbox" type="checkbox" 
+                       value="${uuid}" id="student_${uuid}"
+                       ${!hasContact ? 'disabled' : ''}
+                       onchange="updateSelectedCount()">
+                <label class="form-check-label small ${!hasContact ? 'text-muted' : ''}" for="student_${uuid}">
+                    ${name}
+                    <span class="text-muted ms-1">${section ? '(' + section + ')' : ''}</span>
+                    ${!hasContact ? '<span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem">No contact</span>' : ''}
+                </label>
+            </div>
+        `);
+        container.append(row);
+    });
+}
+
+function toggleSendToOptions() {
+    const sendTo = $('#sendToSelect').val();
+
+    $('#allStudentsDiv').hide();
+    $('#selectedStudentsDiv').hide();
+    $('#specificStudentDiv').hide();
+    $('#studentInfoPanel').hide();
+
+    if (sendTo === 'all') {
+        $('#allStudentsDiv').show();
+    } else if (sendTo === 'selected') {
+        $('#selectedStudentsDiv').show();
+    } else if (sendTo === 'specific') {
+        $('#specificStudentDiv').show();
+        const selectedValue = $('#studentSelect').val();
+        if (selectedValue) {
+            $('#studentInfoPanel').show();
+            onStudentSelect();
+        }
+    }
+
+    updateSendButtonState();
+}
+
+function toggleSelectAll() {
+    const isChecked = $('#selectAllCheckbox').is(':checked');
+    $('.student-checkbox:not(:disabled):visible').each(function() {
+        $(this).prop('checked', isChecked);
+    });
+    updateSelectedCount();
+}
+
+function filterStudentCheckboxList() {
+    const searchTerm = $('#studentSearchInput').val().toLowerCase().trim();
+    $('.student-checkbox-row').each(function() {
+        const name = $(this).data('name') || '';
+        if (searchTerm === '' || name.includes(searchTerm)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+
+    // Update select all state
+    const visibleCheckboxes = $('.student-checkbox:not(:disabled):visible');
+    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+    $('#selectAllCheckbox').prop('checked', allVisibleChecked);
+}
+
+function updateSelectedCount() {
+    const count = $('.student-checkbox:checked').length;
+    $('#selectedCountBadge').text(count + ' selected');
+
+    // Update select all checkbox state
+    const visibleCheckboxes = $('.student-checkbox:not(:disabled):visible');
+    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+    $('#selectAllCheckbox').prop('checked', allVisibleChecked);
+
+    updateSendButtonState();
+}
+
+function updateSendButtonState() {
+    const sendTo = $('#sendToSelect').val();
+    const sendBtn = $('#composeModal .modal-footer .btn-primary');
+
+    if (sendTo === 'selected') {
+        const count = $('.student-checkbox:checked').length;
+        sendBtn.prop('disabled', count === 0);
+    } else if (sendTo === 'specific') {
+        const selected = $('#studentSelect').val();
+        sendBtn.prop('disabled', !selected);
+    } else {
+        sendBtn.prop('disabled', false);
+    }
+}
+
+// Keep legacy function name for compatibility
+function toggleRecipientOptions() {
+    toggleSendToOptions();
 }
 
  function loadMessages() {
@@ -781,7 +889,7 @@ function loadStudents() {
  function applyTemplate() {
     const template = $('#messageTemplate').val();
     if (template && messageTemplates[template]) {
-        const selectedType = $('input[name="recipientType"]:checked').val();
+        const sendTo = $('#sendToSelect').val();
         let message = messageTemplates[template];
 
          const today = new Date().toLocaleDateString('en-PH', {
@@ -792,7 +900,7 @@ function loadStudents() {
         message = message.replace(/\[DATE\]/g, today);
 
         // Replace student-specific placeholders
-        if (selectedType === 'specific_student') {
+        if (sendTo === 'specific') {
             const selectedStudent = $('#studentSelect option:selected').text();
             if (selectedStudent && selectedStudent !== 'Choose a student...') {
                 message = message.replace(/\[STUDENT_NAME\]/g, selectedStudent);
@@ -872,57 +980,43 @@ function addSignature() {
 
 // Send SMS
 function sendSMS() {
-    const selectedType = $('input[name="recipientType"]:checked').val();
-    let phoneNumber = '';
-    let studentId = null;
-
-    if (selectedType === 'all_parents') {
-        phoneNumber = 'all_parents';
-    } else if (selectedType === 'specific_student') {
-        studentId = $('#studentSelect').val();
-
-        if (!studentId) {
-            showAlert('Please select a student', 'warning');
-            return;
-        }
-
-         const selectedOption = $('#studentSelect option:selected');
-        phoneNumber = selectedOption.data('parent');
-
-        if (!phoneNumber) {
-            showAlert('Selected student has no parent/guardian contact number', 'warning');
-            return;
-        }
-    } else if (selectedType === 'custom') {
-        const customNumberInput = $('#customNumber').val();
-        if (!customNumberInput || customNumberInput.length !== 10) {
-            showAlert('Please enter a valid 10-digit phone number', 'warning');
-            return;
-        }
-
-        phoneNumber = '+63' + customNumberInput;
-    } else {
-        showAlert('Please select a recipient type', 'warning');
-        return;
-    }
-
+    const sendTo = $('#sendToSelect').val();
     const message = $('#messageText').val().trim();
+
     if (!message) {
         showAlert('Please enter a message', 'warning');
         return;
     }
 
     const data = {
-        number: phoneNumber,
         message: message,
-        send_to_all: selectedType === 'all_parents'
+        send_to: sendTo,
+        recipient_type: sendTo === 'all' ? 'all_students' : (sendTo === 'selected' ? 'selected_students' : 'specific_student')
     };
 
-    if (studentId) {
-        data.student_id = studentId;
+    if (sendTo === 'all') {
+        data.number = 'all_parents';
+        data.send_to_all = true;
+    } else if (sendTo === 'selected') {
+        const selectedUuids = [];
+        $('.student-checkbox:checked').each(function() {
+            selectedUuids.push($(this).val());
+        });
+        if (selectedUuids.length === 0) {
+            showAlert('Please select at least one student', 'warning');
+            return;
+        }
+        data.selected_students = selectedUuids;
+    } else if (sendTo === 'specific') {
+        const specificUuid = $('#studentSelect').val();
+        if (!specificUuid) {
+            showAlert('Please select a student', 'warning');
+            return;
+        }
+        data.specific_student = specificUuid;
     }
 
-    const sendBtn = $('.modal-footer .btn-primary');
+    const sendBtn = $('#composeModal .modal-footer .btn-primary');
     sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
 
     fetch('/teacher/send-sms', {
@@ -941,10 +1035,14 @@ function sendSMS() {
             $('#smsForm')[0].reset();
             $('#charCount').text('0');
             $('#smsCount').text('1');
-             $('#allParentsRadio').prop('checked', true);
-            toggleRecipientOptions();
+            // Reset to default
+            $('#sendToSelect').val('all');
+            toggleSendToOptions();
+            // Uncheck all checkboxes
+            $('.student-checkbox').prop('checked', false);
+            $('#selectAllCheckbox').prop('checked', false);
+            updateSelectedCount();
             loadMessages();
-
         } else {
             showAlert('Error: ' + data.message, 'danger');
         }
@@ -954,7 +1052,7 @@ function sendSMS() {
         showAlert('Error sending SMS', 'danger');
     })
     .finally(() => {
-        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Okay');
+        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Send SMS');
     });
 }
 
@@ -1054,9 +1152,12 @@ async function testSMSGateway() {
     let recipientDisplay = '';
     let recipientIcon = '';
 
-    if (message.recipient_type === 'broadcast') {
+    if (message.recipient_type === 'broadcast' || message.recipient_type === 'all_students') {
         recipientDisplay = `All Parents (${message.recipient_count || 'Multiple'} recipients)`;
         recipientIcon = '<i class="fas fa-users text-primary me-1"></i>';
+    } else if (message.recipient_type === 'selected_students') {
+        recipientDisplay = `Selected Students (${message.recipient_count || 'Multiple'} recipients)`;
+        recipientIcon = '<i class="fas fa-check-square text-success me-1"></i>';
     } else if (message.student) {
         recipientDisplay = message.student.name;
         recipientIcon = '<i class="fas fa-user text-info me-1"></i>';
@@ -1199,10 +1300,10 @@ function addSignature() {
  $(document).ready(function() {
     console.log('Document ready - initializing SMS message interface...');
     console.log('jQuery version:', $.fn.jquery);
-   loadStudents();
+    loadStudents();
     loadMessages();
 
-     $('#messageText').on('input', function() {
+    $('#messageText').on('input', function() {
         const text = $(this).val();
         const charCount = text.length;
         const smsCount = Math.ceil(charCount / 160) || 1;
@@ -1213,7 +1314,7 @@ function addSignature() {
 
     console.log('Event handlers attached successfully');
 
-     $('#autoSignature').on('change', function() {
+    $('#autoSignature').on('change', function() {
         if (this.checked) {
             addSignature();
         } else {
@@ -1223,31 +1324,29 @@ function addSignature() {
         }
     });
 
-     $('#studentSelect').on('change', function() {
+    $('#studentSelect').on('change', function() {
         onStudentSelect();
+        updateSendButtonState();
     });
 
-     $('#customNumber').on('input', function() {
-        formatCustomNumber();
+    $('#sendToSelect').on('change', function() {
+        toggleSendToOptions();
     });
 
-     $('#recipientType').on('change', function() {
-        toggleRecipientOptions();
-    });
+    // Initialize send to options
+    toggleSendToOptions();
 
-     toggleRecipientOptions();
+    setInterval(loadMessages, 30000);
 
-     setInterval(loadMessages, 30000);
+    // Pre-load SMS Gateway status on page load (like dashboard)
+    setTimeout(() => {
+        testSMSGateway();
+    }, 1000);
 
-     // Pre-load SMS Gateway status on page load (like dashboard)
-     setTimeout(() => {
-         testSMSGateway();
-     }, 1000); // Wait 1 second after page load
-
-     // Auto-check SMS status every 2 minutes
-     setInterval(() => {
-         testSMSGateway();
-     }, 120000); // 2 minutes = 120,000ms
+    // Auto-check SMS status every 2 minutes
+    setInterval(() => {
+        testSMSGateway();
+    }, 120000);
 });
 </script>
 

@@ -3389,7 +3389,7 @@ class AdminController extends Controller
     public function getAllStudentsForApi()
     {
         try {
-            $students = Student::select('id', 'name', 'user_id', 'contact_person_name', 'contact_person_contact', 'school_id')
+            $students = Student::select('id', 'uuid', 'name', 'user_id', 'contact_person_name', 'contact_person_contact', 'school_id')
                              ->with(['user:id,name', 'school:id,name'])
                              ->orderBy('name')
                              ->get();

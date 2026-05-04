@@ -255,13 +255,13 @@
                                         <div class="btn-group btn-group-sm" role="group">
                                             <button type="button"
                                                     class="btn btn-outline-primary btn-sm"
-                                                    onclick="editSection({{ $section->id }})"
+                                                    onclick="editSection(@js($section->uuid ?? $section->id))"
                                                     title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button type="button"
                                                     class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteSection({{ $section->id }}, '{{ $section->name }}')"
+                                                    onclick="deleteSection(@js($section->uuid ?? $section->id), @js($section->name))"
                                                     title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -1393,11 +1393,13 @@ function loadSectionsForModal(schoolId, container, modalType) {
 
  const sections = @json($sections ?? []);
 
-function editSection(sectionId) {
-    const section = sections.find(s => s.id === sectionId);
+function editSection(sectionRouteKey) {
+    const section = sections.find(s => String(s.uuid ?? s.id) === String(sectionRouteKey));
     if (!section) return;
 
-     document.getElementById('editSectionForm').action = `/admin/sections/${sectionId}`;
+    const routeKey = section.uuid || sectionRouteKey;
+
+     document.getElementById('editSectionForm').action = `{{ url('/admin/sections') }}/${encodeURIComponent(routeKey)}`;
 
      document.getElementById('edit_section_name').value = section.name || '';
     document.getElementById('edit_gradelevel').value = section.gradelevel || '';
@@ -1416,8 +1418,8 @@ function editSection(sectionId) {
      new bootstrap.Modal(document.getElementById('editSectionModal')).show();
 }
 
-function deleteSection(sectionId, sectionName) {
-     document.getElementById('deleteSectionForm').action = `/admin/sections/${sectionId}`;
+function deleteSection(sectionRouteKey, sectionName) {
+    document.getElementById('deleteSectionForm').action = `{{ url('/admin/sections') }}/${encodeURIComponent(sectionRouteKey)}`;
 
      document.getElementById('deleteSectionName').textContent = sectionName;
 
