@@ -97,11 +97,14 @@
                         <button class="btn btn-light btn-sm" onclick="loadMessages()" title="Refresh message list">
                             <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
-                        <button class="btn btn-success btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()" title="Test SMS Gateway connectivity">
+                        <button class="btn btn-success btn-sm" id="checkSmsStatusBtn" onclick="testSMSGateway()"
+                            title="Test SMS Gateway connectivity">
                             <i class="fas fa-satellite-dish me-1"></i><span id="checkSmsStatusText">Ping Gateway</span>
-                            <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+                            <span id="checkSmsStatusSpinner" class="spinner-border spinner-border-sm ms-1 d-none"
+                                role="status" aria-hidden="true"></span>
                         </button>
-                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal" title="Compose new SMS message">
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#composeModal"
+                            title="Compose new SMS message">
                             <i class="fas fa-paper-plane me-1"></i>Send SMS
                         </button>
                     </div>
@@ -143,7 +146,7 @@
 </div>
 
 <div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header py-2 px-3">
                 <h5 class="modal-title fs-6" id="composeModalLabel">
@@ -157,37 +160,46 @@
                         <div class="col-md-6">
                             <label class="form-label mb-1">Send To</label>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="allTeachersRadio" value="all_teachers" checked onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType" id="allTeachersRadio"
+                                    value="all_teachers" checked onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="allTeachersRadio">
                                     <i class="fas fa-chalkboard-teacher me-2"></i>All Teachers
                                 </label>
                             </div>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="specificTeacherRadio" value="specific_teacher" onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType"
+                                    id="specificTeacherRadio" value="specific_teacher"
+                                    onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="specificTeacherRadio">
                                     <i class="fas fa-user-tie me-2"></i>Specific Teacher
                                 </label>
                             </div>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="allParentsRadio" value="all_parents" onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType" id="allParentsRadio"
+                                    value="all_parents" onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="allParentsRadio">
                                     <i class="fas fa-users me-2"></i>All Student Parents
                                 </label>
                             </div>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="selectedStudentsRadio" value="selected_students" onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType"
+                                    id="selectedStudentsRadio" value="selected_students"
+                                    onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="selectedStudentsRadio">
                                     <i class="fas fa-check-square me-2"></i>Selected Students
                                 </label>
                             </div>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="recipientType" id="specificStudentRadio" value="specific_student" onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType"
+                                    id="specificStudentRadio" value="specific_student"
+                                    onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="specificStudentRadio">
                                     <i class="fas fa-user-graduate me-2"></i>Specific Student
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="recipientType" id="customNumberRadio" value="custom" onchange="toggleRecipientOptions()">
+                                <input class="form-check-input" type="radio" name="recipientType" id="customNumberRadio"
+                                    value="custom" onchange="toggleRecipientOptions()">
                                 <label class="form-check-label small" for="customNumberRadio">
                                     <i class="fas fa-phone me-2"></i>Custom Number
                                 </label>
@@ -203,7 +215,8 @@
                             </div>
                             <div id="teacherSelectDiv" style="display:none;">
                                 <label for="teacherSelect" class="form-label mb-1">Select Teacher</label>
-                                <select class="form-select form-select-sm" id="teacherSelect" onchange="onTeacherSelect()">
+                                <select class="form-select form-select-sm" id="teacherSelect"
+                                    onchange="onTeacherSelect()">
                                     <option value="">Choose a teacher...</option>
                                 </select>
                             </div>
@@ -216,17 +229,20 @@
                             </div>
                             <div id="selectedStudentsDiv" style="display:none;">
                                 <div class="card border-primary">
-                                    <div class="card-header bg-light py-1 px-2 d-flex justify-content-between align-items-center">
+                                    <div
+                                        class="card-header bg-light py-1 px-2 d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0 small"><i class="fas fa-users me-1"></i>Select Students</h6>
                                         <span class="badge bg-primary" id="selectedCountBadge">0 selected</span>
                                     </div>
                                     <div class="card-body py-1 px-2">
                                         <div class="mb-2">
-                                            <input type="text" class="form-control form-control-sm" id="studentSearchInput"
-                                                   placeholder="Search students..." oninput="filterStudentCheckboxList()">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="studentSearchInput" placeholder="Search students..."
+                                                oninput="filterStudentCheckboxList()">
                                         </div>
                                         <div class="form-check mb-1 border-bottom pb-1">
-                                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox"
+                                                onchange="toggleSelectAll()">
                                             <label class="form-check-label small fw-bold" for="selectAllCheckbox">
                                                 Select All
                                             </label>
@@ -241,7 +257,8 @@
                             </div>
                             <div id="studentSelectDiv" style="display:none;">
                                 <label for="studentSelect" class="form-label mb-1">Select Student</label>
-                                <select class="form-select form-select-sm" id="studentSelect" onchange="onStudentSelect()">
+                                <select class="form-select form-select-sm" id="studentSelect"
+                                    onchange="onStudentSelect()">
                                     <option value="">Choose a student...</option>
                                 </select>
                             </div>
@@ -249,7 +266,8 @@
                                 <label for="customNumber" class="form-label mb-1">Mobile Number</label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">+63</span>
-                                    <input type="text" class="form-control" id="customNumber" placeholder="9123456789" maxlength="10" pattern="[0-9]{10}">
+                                    <input type="text" class="form-control" id="customNumber" placeholder="9123456789"
+                                        maxlength="10" pattern="[0-9]{10}">
                                 </div>
                                 <div class="form-text small">Enter 10 digits (e.g., 9123456789)</div>
                             </div>
@@ -259,7 +277,8 @@
                     <div class="mb-2" id="teacherInfoPanel" style="display:none;">
                         <div class="card border-info mb-0">
                             <div class="card-header bg-light py-1 px-2">
-                                <h6 class="mb-0 small"><i class="fas fa-chalkboard-teacher me-1"></i>Teacher Information</h6>
+                                <h6 class="mb-0 small"><i class="fas fa-chalkboard-teacher me-1"></i>Teacher Information
+                                </h6>
                             </div>
                             <div class="card-body py-1 px-2">
                                 <div class="row g-1">
@@ -328,7 +347,8 @@
 
                     <div class="mb-2">
                         <label for="messageText" class="form-label mb-1">Message</label>
-                        <textarea class="form-control form-control-sm" id="messageText" rows="4" maxlength="1000" placeholder="Type your message here..."></textarea>
+                        <textarea class="form-control form-control-sm" id="messageText" rows="4" maxlength="1000"
+                            placeholder="Type your message here..."></textarea>
                         <div class="d-flex justify-content-between">
                             <div class="form-text small">Characters: <span id="charCount">0</span>/1000</div>
                             <div class="form-text small">Estimated SMS: <span id="smsCount">1</span></div>
@@ -363,7 +383,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="messageDetailModal" tabindex="-1" aria-labelledby="messageDetailModalLabel" aria-hidden="true">
+<div class="modal fade" id="messageDetailModal" tabindex="-1" aria-labelledby="messageDetailModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -427,7 +448,7 @@
 
 #checkSmsStatusBtn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 #checkSmsStatusBtn:disabled {
@@ -446,20 +467,20 @@
 .card-header.bg-primary .btn {
     border: 2px solid transparent;
     font-weight: 500;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .card-header.bg-primary .btn-light {
-    background-color: rgba(255,255,255,0.9);
-    border-color: rgba(255,255,255,0.3);
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
     color: #495057;
 }
 
 .card-header.bg-primary .btn-light:hover {
     background-color: white;
-    border-color: rgba(255,255,255,0.5);
+    border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-header.bg-primary .btn-success {
@@ -472,7 +493,7 @@
     background-color: #218838;
     border-color: #1e7e34;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-header.bg-primary .btn-warning {
@@ -485,7 +506,7 @@
     background-color: #e0a800;
     border-color: #d39e00;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-header.bg-primary .btn-danger {
@@ -498,7 +519,7 @@
     background-color: #c82333;
     border-color: #bd2130;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-header.bg-primary .btn-secondary {
@@ -533,8 +554,13 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>
 
@@ -705,7 +731,8 @@ function displayMessages(messages) {
             recipientDisplay = 'Custom Number';
         }
 
-        const senderName = message.admin ? message.admin.name : (message.teacher ? message.teacher.name : 'System');
+        const senderName = message.admin ? message.admin.name : (message.teacher ? message.teacher.name :
+            'System');
         const messagePreview = message.message && message.message.length > 70 ?
             message.message.substring(0, 70) + '...' : (message.message || 'No message');
 
@@ -771,16 +798,19 @@ function updatePagination(pagination) {
     let paginationHtml = '';
 
     if (currentPage > 1) {
-        paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a></li>`;
+        paginationHtml +=
+            `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a></li>`;
     }
 
     for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
         const activeClass = i === currentPage ? 'active' : '';
-        paginationHtml += `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+        paginationHtml +=
+            `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
     }
 
     if (currentPage < totalPages) {
-        paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a></li>`;
+        paginationHtml +=
+            `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a></li>`;
     }
 
     paginationEl.html(paginationHtml);
@@ -897,7 +927,8 @@ function filterStudentCheckboxList() {
     });
 
     const visibleCheckboxes = $('.student-checkbox:not(:disabled):visible');
-    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length ===
+        visibleCheckboxes.length;
     $('#selectAllCheckbox').prop('checked', allVisibleChecked);
 }
 
@@ -906,7 +937,8 @@ function updateSelectedCount() {
     $('#selectedCountBadge').text(count + ' selected');
 
     const visibleCheckboxes = $('.student-checkbox:not(:disabled):visible');
-    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+    const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.filter(':checked').length ===
+        visibleCheckboxes.length;
     $('#selectAllCheckbox').prop('checked', allVisibleChecked);
 
     updateSendButtonState();
@@ -1140,39 +1172,39 @@ function sendSMS() {
     sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
 
     fetch('/admin/send-sms', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            showAlert('SMS sent successfully!', 'success');
-            $('#composeModal').modal('hide');
-            $('#smsForm')[0].reset();
-            $('#charCount').text('0');
-            $('#smsCount').text('1');
-            $('#allTeachersRadio').prop('checked', true);
-            // Uncheck all student checkboxes
-            $('.student-checkbox').prop('checked', false);
-            $('#selectAllCheckbox').prop('checked', false);
-            updateSelectedCount();
-            toggleRecipientOptions();
-            loadMessages();
-        } else {
-            showAlert('Error: ' + data.message, 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Error sending SMS', 'danger');
-    })
-    .finally(() => {
-        sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Send SMS');
-    });
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('SMS sent successfully!', 'success');
+                $('#composeModal').modal('hide');
+                $('#smsForm')[0].reset();
+                $('#charCount').text('0');
+                $('#smsCount').text('1');
+                $('#allTeachersRadio').prop('checked', true);
+                // Uncheck all student checkboxes
+                $('.student-checkbox').prop('checked', false);
+                $('#selectAllCheckbox').prop('checked', false);
+                updateSelectedCount();
+                toggleRecipientOptions();
+                loadMessages();
+            } else {
+                showAlert('Error: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error sending SMS', 'danger');
+        })
+        .finally(() => {
+            sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>Send SMS');
+        });
 }
 
 // Test SMS Gateway with button-only status updates
@@ -1208,15 +1240,15 @@ async function testSMSGateway() {
         } else {
             const pingTime = responseTime + 'ms';
 
-             btn.classList.remove('btn-secondary');
+            btn.classList.remove('btn-secondary');
             btn.classList.add('btn-danger');
             text.textContent = `Offline (${pingTime})`;
 
-         }
+        }
     } catch (error) {
         const responseTime = Date.now() - startTime;
 
-         btn.classList.remove('btn-secondary');
+        btn.classList.remove('btn-secondary');
         btn.classList.add('btn-danger');
         text.textContent = `Error (${responseTime}ms)`;
 
@@ -1246,7 +1278,7 @@ function viewMessage(messageId) {
 }
 
 function showMessageDetails(message) {
-     let recipientDisplay = '';
+    let recipientDisplay = '';
     let recipientIcon = '';
 
     if (message.recipient_type === 'broadcast') {
@@ -1312,12 +1344,24 @@ function formatDateTimeCompact(dateTime) {
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === today.toDateString()) {
-        return 'Today ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return 'Today ' + date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return 'Yesterday ' + date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     } else {
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
-               date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            }) + ' ' +
+            date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
     }
 }
 
@@ -1329,7 +1373,9 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    return text.replace(/[&<>"']/g, function(m) {
+        return map[m];
+    });
 }
 
 function showAlert(message, type) {

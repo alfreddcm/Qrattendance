@@ -57,8 +57,8 @@
                                 </label>
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="logo-preview" id="logoPreview">
-                                        @if($school->logo)
-                                            <img src="{{ asset('storage/' . $school->logo) }}" alt="Current Logo">
+                                        @if($school->logo_url)
+                                            <img src="{{ $school->logo_url }}" alt="Current Logo" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"placeholder-logo\"><i class=\"fas fa-school fa-3x text-muted\"></i><p class=\"mt-2 mb-0 text-muted\">No logo uploaded</p></div>'">
                                         @else
                                             <div class="placeholder-logo">
                                                 <i class="fas fa-school fa-3x text-muted"></i>

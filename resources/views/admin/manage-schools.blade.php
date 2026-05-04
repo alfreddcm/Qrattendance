@@ -80,9 +80,9 @@
                     <tbody>
                         @forelse($schools as $school)
                         <tr>
-                            <td class="py-1">
-                                @if($school->logo)
-                                    <img src="{{ asset('storage/' . $school->logo) }}" alt="Logo" class="school-logo">
+                            <td class="py-1 school-logo-cell">
+                                @if($school->logo_url)
+                                    <img src="{{ $school->logo_url }}" alt="Logo" class="school-logo" onerror="handleSchoolLogoError(this)">
                                 @else
                                     <div class="school-logo-placeholder">
                                         <i class="fas fa-school"></i>
@@ -241,6 +241,13 @@
 </style>
 
 <script>
+function handleSchoolLogoError(imageElement) {
+    const container = imageElement.closest('.school-logo-cell');
+    if (container) {
+        container.innerHTML = '<div class="school-logo-placeholder"><i class="fas fa-school"></i></div>';
+    }
+}
+
 function editSchool(id, schoolId, name, address, logo) {
     try {
         document.getElementById('edit_school_id').value = schoolId || '';
@@ -250,7 +257,7 @@ function editSchool(id, schoolId, name, address, logo) {
         // Show current logo preview
         const logoPreview = document.getElementById('current_logo_preview');
         if (logo) {
-            logoPreview.innerHTML = `<img src="{{ asset('storage/') }}/${logo}" alt="Current Logo" class="current-logo-preview">`;
+            logoPreview.innerHTML = `<img src="${logo}" alt="Current Logo" class="current-logo-preview" onerror="this.parentElement.innerHTML='<small class=\"text-muted\">No logo currently uploaded</small>'">`;
         } else {
             logoPreview.innerHTML = '<small class="text-muted">No logo currently uploaded</small>';
         }

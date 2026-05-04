@@ -16,6 +16,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MessageApiController;
 use App\Http\Controllers\AttendanceCodeController;
 use App\Http\Controllers\PublicAttendanceController;
+use App\Http\Controllers\PublicStorageController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -34,6 +35,10 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware(\Illuminate\Auth\Middleware\RedirectIfAuthenticated::class);
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+
+Route::get('/public-storage/{path}', [PublicStorageController::class, 'show'])
+    ->where('path', '.*')
+    ->name('public.storage.file');
 
  Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/school-years', [SchoolYearController::class, 'index'])->name('teacher.school-years');

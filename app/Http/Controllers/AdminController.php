@@ -243,13 +243,26 @@ class AdminController extends Controller
             $storagePath = storage_path('app');
             $freeBytes = disk_free_space($storagePath);
             $totalBytes = disk_total_space($storagePath);
+            $publicStoragePath = public_path('storage');
+            $hasPublicStoragePath = file_exists($publicStoragePath);
+            $isSymlink = is_link($publicStoragePath);
+            $linkTarget = $isSymlink ? readlink($publicStoragePath) : null;
+            $isWritable = is_writable(storage_path('app/public'));
             
             if ($freeBytes !== false && $totalBytes !== false) {
                 $usagePercent = round((($totalBytes - $freeBytes) / $totalBytes) * 100, 2);
+
                 return response()->json([
-                    'status' => 'online',
+                    'status' => ($hasPublicStoragePath && $isWritable) ? 'online' : 'warning',
                     'message' => 'Storage accessible',
-                    'usage' => $usagePercent . '% used'
+                    'usage' => $usagePercent . '% used',
+                    'public_storage_path_exists' => $hasPublicStoragePath,
+                    'public_storage_is_symlink' => $isSymlink,
+                    'public_storage_link_target' => $linkTarget,
+                    'storage_public_writable' => $isWritable,
+                    'recommendation' => $hasPublicStoragePath
+                        ? null
+                        : 'Run php artisan storage:link or use fix-storage-link-cpanel.sh',
                 ]);
             } else {
                 return response()->json(['status' => 'offline', 'message' => 'Storage access failed'], 500);
@@ -3545,12 +3558,13 @@ class AdminController extends Controller
                        ->with(['sections' => function($query) {
                            $query->select('sections.id', 'sections.name', 'sections.gradelevel');
                        }])
-                       ->select('id', 'name', 'position')
+                       ->select('id', 'uuid', 'name', 'position')
                        ->orderBy('name')
                        ->get()
                        ->map(function($teacher) {
                            return [
                                'id' => $teacher->id,
+                               'uuid' => $teacher->uuid,
                                'name' => $teacher->name,
                                'position' => $teacher->position,
                                'sections_count' => $teacher->sections->count(),
