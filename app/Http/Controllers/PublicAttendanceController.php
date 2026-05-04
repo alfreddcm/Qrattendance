@@ -992,50 +992,40 @@ class PublicAttendanceController extends Controller
     {
         $now = Carbon::now('Asia/Manila');
         $currentTime = $now->format('H:i:s');
-        
-         $validWindows = [];
-        
-        if ($section->am_time_in_start && $section->am_time_in_end) {
-            $amInStart = Carbon::parse($section->am_time_in_start)->format('H:i:s');
-            $amInEnd = Carbon::parse($section->am_time_in_end)->format('H:i:s');
-            if ($currentTime >= $amInStart && $currentTime <= $amInEnd) {
+        $graceMinutes = 30;
+
+        $validWindows = [];
+
+        $windowDefinitions = [
+            ['label' => 'AM In', 'start' => $section->am_time_in_start, 'end' => $section->am_time_in_end],
+            ['label' => 'AM Out', 'start' => $section->am_time_out_start, 'end' => $section->am_time_out_end],
+            ['label' => 'PM In', 'start' => $section->pm_time_in_start, 'end' => $section->pm_time_in_end],
+            ['label' => 'PM Out', 'start' => $section->pm_time_out_start, 'end' => $section->pm_time_out_end],
+        ];
+
+        foreach ($windowDefinitions as $window) {
+            if (!$window['start'] || !$window['end']) {
+                continue;
+            }
+
+            $windowStart = Carbon::parse($window['start'])->subMinutes($graceMinutes)->format('H:i:s');
+            $windowEnd = Carbon::parse($window['end'])->addMinutes($graceMinutes)->format('H:i:s');
+
+            if ($currentTime >= $windowStart && $currentTime <= $windowEnd) {
                 return ['valid' => true];
             }
-            $validWindows[] = 'AM In: ' . Carbon::parse($section->am_time_in_start)->format('g:i A') . ' - ' . Carbon::parse($section->am_time_in_end)->format('g:i A');
+
+            $validWindows[] = $window['label'] . ': ' 
+                . Carbon::parse($window['start'])->format('g:i A') 
+                . ' - ' 
+                . Carbon::parse($window['end'])->format('g:i A') 
+                . ' (30-minute grace before/after)';
         }
-        
-        if ($section->am_time_out_start && $section->am_time_out_end) {
-            $amOutStart = Carbon::parse($section->am_time_out_start)->format('H:i:s');
-            $amOutEnd = Carbon::parse($section->am_time_out_end)->format('H:i:s');
-            if ($currentTime >= $amOutStart && $currentTime <= $amOutEnd) {
-                return ['valid' => true];
-            }
-            $validWindows[] = 'AM Out: ' . Carbon::parse($section->am_time_out_start)->format('g:i A') . ' - ' . Carbon::parse($section->am_time_out_end)->format('g:i A');
-        }
-        
-        if ($section->pm_time_in_start && $section->pm_time_in_end) {
-            $pmInStart = Carbon::parse($section->pm_time_in_start)->format('H:i:s');
-            $pmInEnd = Carbon::parse($section->pm_time_in_end)->format('H:i:s');
-            if ($currentTime >= $pmInStart && $currentTime <= $pmInEnd) {
-                return ['valid' => true];
-            }
-            $validWindows[] = 'PM In: ' . Carbon::parse($section->pm_time_in_start)->format('g:i A') . ' - ' . Carbon::parse($section->pm_time_in_end)->format('g:i A');
-        }
-        
-        if ($section->pm_time_out_start && $section->pm_time_out_end) {
-            $pmOutStart = Carbon::parse($section->pm_time_out_start)->format('H:i:s');
-            $pmOutEnd = Carbon::parse($section->pm_time_out_end)->format('H:i:s');
-            if ($currentTime >= $pmOutStart && $currentTime <= $pmOutEnd) {
-                return ['valid' => true];
-            }
-            $validWindows[] = 'PM Out: ' . Carbon::parse($section->pm_time_out_start)->format('g:i A') . ' - ' . Carbon::parse($section->pm_time_out_end)->format('g:i A');
-        }
-        
-         if (empty($validWindows)) {
+
+        if (empty($validWindows)) {
             return ['valid' => true];
         }
-        
-        // Current time is outside all configured windows
+
         $windowsList = implode(', ', $validWindows);
         return [
             'valid' => false,

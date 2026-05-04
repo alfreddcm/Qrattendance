@@ -538,6 +538,70 @@ if (!empty($school?->logo)) {
             font-style: italic;
         }
 
+        .scan-error-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+
+        .scan-error-modal.show {
+            display: flex;
+        }
+
+        .scan-error-modal-card {
+            width: min(520px, 100%);
+            background: #fff;
+            border: 3px solid #dc3545;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            animation: errorModalPop 0.18s ease-out;
+        }
+
+        .scan-error-modal-header {
+            background: #dc3545;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scan-error-modal-body {
+            padding: 14px;
+            font-size: 16px;
+            color: #222;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .scan-error-modal-footer {
+            background: #fff5f5;
+            border-top: 1px solid #ffd4d4;
+            color: #a61e2b;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 14px;
+        }
+
+        @keyframes errorModalPop {
+            from {
+                transform: scale(0.96);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 1400px) {
             .top-section {
                 grid-template-columns: 340px 1fr 1fr;
@@ -738,6 +802,18 @@ if (!empty($school?->logo)) {
         </div>
     </div>
 
+    <div class="scan-error-modal" id="scanErrorModal" aria-live="assertive" aria-modal="true" role="alertdialog">
+        <div class="scan-error-modal-card">
+            <div class="scan-error-modal-header">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Scan Failed
+            </div>
+            <div class="scan-error-modal-body" id="scanErrorMessage">
+                Unable to process QR scan.
+            </div>
+        </div>
+    </div>
+
     <script>
         (() => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -749,6 +825,30 @@ if (!empty($school?->logo)) {
             let scanSeq = 0;
             let historyController = null;
             let scanController = null;
+            let errorModalTimer = null;
+
+            function closeErrorModal() {
+                const modal = document.getElementById('scanErrorModal');
+                if (!modal) return;
+                modal.classList.remove('show');
+            }
+
+            function showErrorModal(message) {
+                const modal = document.getElementById('scanErrorModal');
+                const messageEl = document.getElementById('scanErrorMessage');
+                if (!modal || !messageEl) return;
+
+                messageEl.textContent = message || 'Unable to process QR scan.';
+                modal.classList.add('show');
+
+                if (errorModalTimer) {
+                    clearTimeout(errorModalTimer);
+                }
+
+                errorModalTimer = setTimeout(() => {
+                    closeErrorModal();
+                }, 3000);
+            }
 
             function updateClock() {
                 const now = new Date();
@@ -870,7 +970,14 @@ if (!empty($school?->logo)) {
                 const statusLabel = document.getElementById('scanStatusLabel');
                 if (statusLabel) {
                     statusLabel.style.display = 'block';
-                    statusLabel.textContent = 'STUDENT DETECTED';
+                    if (attendance && attendance.type && attendance.recorded_time) {
+                        const formattedType = attendance.type
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (char) => char.toUpperCase());
+                        statusLabel.textContent = `Attendance Recorded: ${formattedType} at ${attendance.recorded_time}`;
+                    } else {
+                        statusLabel.textContent = 'Attendance Recorded';
+                    }
                     statusLabel.style.color = '#28a745';
                 }
 
@@ -922,6 +1029,8 @@ if (!empty($school?->logo)) {
             function handleScanError(message) {
                 const input = document.getElementById('qrInput');
                 const statusLabel = document.getElementById('scanStatusLabel');
+
+                showErrorModal(message || 'Scan failed. Please try again.');
                 
                 if (input) {
                     input.disabled = false;
