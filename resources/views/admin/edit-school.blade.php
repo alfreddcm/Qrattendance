@@ -139,7 +139,7 @@
 
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
+                            <a href="{{ route('admin.manage-schools') }}" class="btn btn-secondary">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-warning">

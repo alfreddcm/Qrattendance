@@ -12,8 +12,8 @@
             <p class="subtitle">Add a new school to the system</p>
         </div>
         <div class="page-actions">
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            <a href="{{ route('admin.manage-schools') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Schools
             </a>
         </div>
     </div>
@@ -131,7 +131,7 @@
 
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
+                            <a href="{{ route('admin.manage-schools') }}" class="btn btn-secondary">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">

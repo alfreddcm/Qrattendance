@@ -5028,3 +5028,238 @@
 [2026-05-04 15:13:02] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
 [2026-05-04 15:13:09] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-students","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
 [2026-05-04 15:13:09] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:18:53] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-students","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:18:53] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:11] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-teachers","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:11] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:26] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-students","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:26] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:33] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/message","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:33] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:34] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-teachers","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:34] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:34] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-all-students","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:34] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:19:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:19:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:20:05] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:20:05] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:20:34] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"SRjygpgi6bSa67SFuPitOwc6sxmjeXmMcFALKnMx","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:20:34] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:20:42] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-05-04 15:20:50] local.INFO: === LOGIN REQUEST STARTED === {"username":"Regielyn","ip":"127.0.0.1","time":"2026-05-04 15:20:50"} 
+[2026-05-04 15:20:50] local.INFO: Attempting teacher/admin login {"identifier":"Regielyn"} 
+[2026-05-04 15:20:50] local.INFO: ✓ TEACHER/ADMIN LOGIN SUCCESS {"user_id":6,"username":"Regielyn","role":"teacher","ip":"127.0.0.1"} 
+[2026-05-04 15:20:50] local.DEBUG: redirectToDashboard called {"user_id":6,"user_class":"User","role":"teacher","is_student":false,"is_user":true} 
+[2026-05-04 15:20:50] local.INFO: Redirecting teacher user {"user_id":6} 
+[2026-05-04 15:20:50] local.INFO: Teacher/Admin redirect response {"status":302} 
+[2026-05-04 15:20:50] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/dashboard","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:20:50] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:20:50] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:20:50] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:20:55] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/dashboard","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:20:55] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:20:55] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:20:55] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:10] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/summary-stats","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:10] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:10] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:10] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:11] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/attendance-trend","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:11] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:11] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:11] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:11] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/absenteeism-rates","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:11] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:11] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:11] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:11] local.INFO: Absenteeism Debug: {"teacher_id":6,"student_count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,146,147,148,151,152,153,154,155,169,170,171,175],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:12] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/weekly-trend","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:12] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:12] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:12] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:12] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/time-patterns","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:12] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:12] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:12] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:13] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/monthly-trend","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:13] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:13] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:21:13] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:21:13] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/attendance-code/active","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:13] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/school-years","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:35] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:35] local.INFO: School Year index accessed {"user_id":6,"user_role":"teacher"} 
+[2026-05-04 15:21:35] local.INFO: Teacher viewing school years {"user_id":6,"school_id":1,"school_years_count":1} 
+[2026-05-04 15:21:41] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/students","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:41] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:42] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/students/sections","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:42] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:47] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/message","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:47] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:48] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/get-students","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:48] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:48] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/outbound-messages","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:48] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:21:48] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/system/status/sms","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:21:48] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:09] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/attendance","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:09] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:09] local.INFO: Teacher Sections Debug: {"teacher_id":6,"direct_sections_found":1,"direct_section_details":[{"id":5,"uuid":"61a91d0e-b03b-4cca-8bfa-befec5d4d287","name":"Alexandrite and Diamond","gradelevel":11,"teacher_id":6,"school_year_id":1,"am_time_in_start":"07:00:00","am_time_in_end":"08:00:00","am_time_out_start":"11:00:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"14:00:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2026-03-11T06:08:08.000000Z","updated_at":"2026-04-28T04:54:55.000000Z","students_count":32,"school_year":{"id":1,"uuid":"babe9d77-6140-42bd-b85e-4b70d4d27c72","school_id":1,"school_year_start":2025,"school_year_end":2026,"name":"2025–2026","start_date":"2025-05-07T16:00:00.000000Z","end_date":"2026-05-29T16:00:00.000000Z","status":"active","description":"Sample school year for seeds","created_at":"2026-03-10T15:25:39.000000Z","updated_at":"2026-04-06T10:01:24.000000Z"}}]} 
+[2026-05-04 15:22:13] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/students","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:13] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:14] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/students/sections","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:14] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:15] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/attendance","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:15] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:15] local.INFO: Teacher Sections Debug: {"teacher_id":6,"direct_sections_found":1,"direct_section_details":[{"id":5,"uuid":"61a91d0e-b03b-4cca-8bfa-befec5d4d287","name":"Alexandrite and Diamond","gradelevel":11,"teacher_id":6,"school_year_id":1,"am_time_in_start":"07:00:00","am_time_in_end":"08:00:00","am_time_out_start":"11:00:00","am_time_out_end":"12:00:00","pm_time_in_start":"13:00:00","pm_time_in_end":"14:00:00","pm_time_out_start":"16:30:00","pm_time_out_end":"17:00:00","created_at":"2026-03-11T06:08:08.000000Z","updated_at":"2026-04-28T04:54:55.000000Z","students_count":32,"school_year":{"id":1,"uuid":"babe9d77-6140-42bd-b85e-4b70d4d27c72","school_id":1,"school_year_start":2025,"school_year_end":2026,"name":"2025–2026","start_date":"2025-05-07T16:00:00.000000Z","end_date":"2026-05-29T16:00:00.000000Z","status":"active","description":"Sample school year for seeds","created_at":"2026-03-10T15:25:39.000000Z","updated_at":"2026-04-06T10:01:24.000000Z"}}]} 
+[2026-05-04 15:22:16] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/attendance-code/active","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:16] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:17] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/report","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:17] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:24] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/account","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:24] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:31] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/report","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:31] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:37] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/sf2/options","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:37] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:46] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/sf2/generate","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:22:46] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:22:48] local.INFO: SF2 School Info {"school_id":"33011","school_name":"San Guillermo Vocational and Industrial High School","C6_value":"33011","C8_value":"San Guillermo Vocational and Industrial High School"} 
+[2026-05-04 15:22:48] local.INFO: calculateConsecutiveAbsences called {"students_count":32,"month":"5","year":"2025","gender":"Male"} 
+[2026-05-04 15:22:48] local.INFO: After gender filter {"gender":"Male","filtered_count":24} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":128,"student_name":"AMBROCIO,JHON REY PALAPOZ","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":128,"student_name":"AMBROCIO,JHON REY PALAPOZ"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":129,"student_name":"AQUINO,JHUN AMPOON","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":129,"student_name":"AQUINO,JHUN AMPOON"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":130,"student_name":"ARQUERO,MARK KELLY PINTUCAN","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":130,"student_name":"ARQUERO,MARK KELLY PINTUCAN"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":131,"student_name":"BALAUAG,STEVEN MHAR SANTOS","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":131,"student_name":"BALAUAG,STEVEN MHAR SANTOS"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":132,"student_name":"BARBOSA,SHAMHER COLLADO","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":132,"student_name":"BARBOSA,SHAMHER COLLADO"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":133,"student_name":"BOTO,LOWIE MARTINEZ","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":133,"student_name":"BOTO,LOWIE MARTINEZ"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":134,"student_name":"BUSTAMANTE,JAMES SERNA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":134,"student_name":"BUSTAMANTE,JAMES SERNA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":135,"student_name":"CACAL,JHON DEXTER VELASCO","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":135,"student_name":"CACAL,JHON DEXTER VELASCO"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":136,"student_name":"CACAL,JOHN ANGEL ESTEBAN","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":136,"student_name":"CACAL,JOHN ANGEL ESTEBAN"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":137,"student_name":"COLLADO,JOSHUA LUBRIN","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":137,"student_name":"COLLADO,JOSHUA LUBRIN"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":138,"student_name":"CUSTODIO,NATHANIEL ALOTA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":138,"student_name":"CUSTODIO,NATHANIEL ALOTA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":139,"student_name":"DALIT,ELSON JADE ULLAIS","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":139,"student_name":"DALIT,ELSON JADE ULLAIS"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":140,"student_name":"DE GUZMAN,ROBINO JR. MAMARIL","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":140,"student_name":"DE GUZMAN,ROBINO JR. MAMARIL"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":141,"student_name":"DOMINGO,JOHN CARLO GUIANG","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":141,"student_name":"DOMINGO,JOHN CARLO GUIANG"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":146,"student_name":"GARDUCE,JHUN MARC PASCUA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":146,"student_name":"GARDUCE,JHUN MARC PASCUA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":147,"student_name":"GODOY,FREDDIE MARC SOLVER","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":147,"student_name":"GODOY,FREDDIE MARC SOLVER"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":148,"student_name":"MARQUEZ,BENIGNO III TADENA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":148,"student_name":"MARQUEZ,BENIGNO III TADENA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":151,"student_name":"NACINO,GIAN OREJAS","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":151,"student_name":"NACINO,GIAN OREJAS"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":152,"student_name":"PLURAD,AJAY CONCEPCION","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":152,"student_name":"PLURAD,AJAY CONCEPCION"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":153,"student_name":"PONCE,DOMINGO TORRES","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":153,"student_name":"PONCE,DOMINGO TORRES"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":154,"student_name":"SANCHEZ,RHEY LAURENZ MANALO","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":154,"student_name":"SANCHEZ,RHEY LAURENZ MANALO"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":155,"student_name":"TUGADE,DERIC BAUTISTA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":155,"student_name":"TUGADE,DERIC BAUTISTA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":169,"student_name":"Weads, Juan C.","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":169,"student_name":"Weads, Juan C."} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":175,"student_name":"Dela Cruz, Juan JR M.","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":175,"student_name":"Dela Cruz, Juan JR M."} 
+[2026-05-04 15:22:48] local.INFO: Final consecutive absence count {"count":24,"gender":"Male","weekdays_checked":22,"latest_data_date":"2026-04-30"} 
+[2026-05-04 15:22:48] local.INFO: calculateConsecutiveAbsences called {"students_count":32,"month":"5","year":"2025","gender":"Female"} 
+[2026-05-04 15:22:48] local.INFO: After gender filter {"gender":"Female","filtered_count":8} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":122,"student_name":"BLANZA,APRIL JOY GASATAN","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":122,"student_name":"BLANZA,APRIL JOY GASATAN"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":123,"student_name":"CLARO,JANEZA PASCUA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":123,"student_name":"CLARO,JANEZA PASCUA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":124,"student_name":"ERIODICO,DIANA MARIZ ABAYA","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":124,"student_name":"ERIODICO,DIANA MARIZ ABAYA"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":125,"student_name":"NOTARTE,PRINCES ANGELINE VALDEZ","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":125,"student_name":"NOTARTE,PRINCES ANGELINE VALDEZ"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":126,"student_name":"PAGADUAN,JOMALYN SALTING","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":126,"student_name":"PAGADUAN,JOMALYN SALTING"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":127,"student_name":"SUBANG,DIANNA JANE CRISTOBAL","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":127,"student_name":"SUBANG,DIANNA JANE CRISTOBAL"} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":170,"student_name":"Santos, Maria C.","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":170,"student_name":"Santos, Maria C."} 
+[2026-05-04 15:22:48] local.INFO: Student attendance check {"student_id":171,"student_name":"Rodriguez, Ana C.","attendance_records":0,"weekdays_in_month":22} 
+[2026-05-04 15:22:48] local.INFO: Found student with consecutive absences {"student_id":171,"student_name":"Rodriguez, Ana C."} 
+[2026-05-04 15:22:48] local.INFO: Final consecutive absence count {"count":8,"gender":"Female","weekdays_checked":22,"latest_data_date":"2026-04-30"} 
+[2026-05-04 15:24:21] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/dashboard","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:21] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:21] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:21] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:22] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/summary-stats","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:22] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:22] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:22] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:23] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/attendance-trend","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:23] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:23] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:23] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:23] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/absenteeism-rates","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:23] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:23] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:23] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:23] local.INFO: Absenteeism Debug: {"teacher_id":6,"student_count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,146,147,148,151,152,153,154,155,169,170,171,175],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:24] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/weekly-trend","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:24] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:24] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:24] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:24] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/time-patterns","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:24] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:24] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:24] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:25] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/analytics/monthly-trend","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:25] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:25] local.INFO: Student Filter Debug: {"teacher_id":6,"teacher_section_ids":[5],"filters":{"school_year_id":1,"section_id":"all","start_date":"2025-05-08","end_date":"2026-05-30"}} 
+[2026-05-04 15:24:25] local.INFO: Final student IDs: {"count":32,"student_ids":[122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141]} 
+[2026-05-04 15:24:25] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/teacher/attendance-code/active","auth_check":true,"session_id":"rb1298w2RbHVQB5nMIZJTrjtVriAEQolvGDipt9K","has_session":true,"required_roles":["teacher"]} 
+[2026-05-04 15:24:25] local.INFO: RoleMiddleware: User authenticated {"user_id":6,"user_role":"teacher","user_class":"User"} 
+[2026-05-04 15:24:27] local.INFO: User logged out successfully {"user_id":6,"username":"Regielyn","ip":"127.0.0.1"} 
+[2026-05-04 15:24:35] local.INFO: === LOGIN REQUEST STARTED === {"username":"adminuser","ip":"127.0.0.1","time":"2026-05-04 15:24:35"} 
+[2026-05-04 15:24:35] local.INFO: Attempting teacher/admin login {"identifier":"adminuser"} 
+[2026-05-04 15:24:35] local.INFO: ✓ TEACHER/ADMIN LOGIN SUCCESS {"user_id":1,"username":"adminuser","role":"admin","ip":"127.0.0.1"} 
+[2026-05-04 15:24:35] local.DEBUG: redirectToDashboard called {"user_id":1,"user_class":"User","role":"admin","is_student":false,"is_user":true} 
+[2026-05-04 15:24:35] local.INFO: Redirecting admin user {"user_id":1} 
+[2026-05-04 15:24:35] local.INFO: Teacher/Admin redirect response {"status":302} 
+[2026-05-04 15:24:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/dashboard","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:24:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:24:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/database","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:24:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:24:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:24:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:24:39] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/storage","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:24:39] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:24:40] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:24:40] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:24:43] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/edit-school/d60dcb55-265e-40f5-9caf-b1f09d8f5054","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:24:43] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:42] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/update-school/d60dcb55-265e-40f5-9caf-b1f09d8f5054","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:42] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:43] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/edit-school/d60dcb55-265e-40f5-9caf-b1f09d8f5054","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:43] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:54] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/dashboard","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:54] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:54] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/database","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:54] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:55] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:55] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:57] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/storage","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:57] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-04 15:26:57] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"BDbv0rkqqF1i3hzFJJWSJod6ABkhOnIHeXUcsrlR","has_session":true,"required_roles":["admin"]} 
+[2026-05-04 15:26:57] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
