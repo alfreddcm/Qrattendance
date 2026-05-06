@@ -90,15 +90,18 @@
         }
 
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 5mm;
-            }
-            body {
-                margin: 0;
-                padding: 0;
-                background: #fff;
-                display: flex;
+                                    @else
+                                        // Fallback to legacy filename pattern stored on the public disk
+                                        $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
+                                        $legacyRelative = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
+                                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($legacyRelative)) {
+                                            $qrPath = storage_path('app/public/' . $legacyRelative);
+                                            if (file_exists($qrPath)) {
+                                                $qrImageContent = base64_encode(file_get_contents($qrPath));
+                                                $hasQrCode = true;
+                                            }
+                                        }
+                                    }
                 justify-content: flex-start;
                 align-items: flex-start;
                 min-height: 100vh;

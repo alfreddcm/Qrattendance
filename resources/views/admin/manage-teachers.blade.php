@@ -929,7 +929,7 @@
                             <label class="form-label">Active Attendance Code</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="edit_attendance_code" readonly value="No Active Code">
-                                <button type="button" class="btn btn-primary" onclick="regenerateCodeForTeacher()">
+                                <button type="button" class="btn btn-primary" id="edit_regenerateCodeBtn" onclick="regenerateCodeForTeacher()">
                                     <i class="fas fa-sync-alt"></i> Regenerate
                                 </button>
                             </div>
@@ -1122,6 +1122,10 @@ function editTeacher(teacherId) {
     document.getElementById('edit_password').value = '';
     document.getElementById('edit_school_id').value = teacher.school_id || '';
     document.getElementById('edit_phone_number').value = teacher.phone_number || '';
+    const activeAttendanceCode = Array.isArray(teacher.attendance_codes)
+        ? teacher.attendance_codes[0]
+        : (Array.isArray(teacher.attendanceCodes) ? teacher.attendanceCodes[0] : null);
+    document.getElementById('edit_attendance_code').value = activeAttendanceCode?.code || 'No Active Code';
 
      const currentTeacherId = teacher.id;
     const teacherSections = teacher.sections || [];

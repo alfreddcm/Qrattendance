@@ -156,10 +156,13 @@
                                         }
                                     } else {
                                         $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
-                                        $qrPath = public_path('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg');
-                                        if (file_exists($qrPath)) {
-                                            $qrImageContent = base64_encode(file_get_contents($qrPath));
-                                            $hasQrCode = true;
+                                        $legacyRelative = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
+                                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($legacyRelative)) {
+                                            $qrPath = storage_path('app/public/' . $legacyRelative);
+                                            if (file_exists($qrPath)) {
+                                                $qrImageContent = base64_encode(file_get_contents($qrPath));
+                                                $hasQrCode = true;
+                                            }
                                         }
                                     }
                                 @endphp

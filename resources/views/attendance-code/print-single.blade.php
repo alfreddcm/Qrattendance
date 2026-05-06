@@ -169,7 +169,7 @@
                             @php
                                 // Generate the URL for the QR code
                                 // First try direct public path
-                                if (Storage::disk('public')->exists($attendanceCode->qr_code_path)) {
+                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($attendanceCode->qr_code_path)) {
                                     $qrUrl = url('/public-storage/' . ltrim($attendanceCode->qr_code_path, '/'));
                                 } else {
                                     $qrUrl = url('/public-storage/' . ltrim($attendanceCode->qr_code_path, '/'));

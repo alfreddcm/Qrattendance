@@ -320,8 +320,8 @@
                                             $hasValidImage = true;
                                             $imageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
-                                        // Fallback to public path check
-                                        elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
+                                        // Fallback to storage path on disk (handles hosts without public/storage symlink)
+                                        elseif(file_exists(storage_path('app/public/student_pictures/' . $student->picture))) {
                                             $hasValidImage = true;
                                             $imageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
@@ -505,7 +505,7 @@
                                             $hasValidModalImage = true;
                                             $modalImageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
-                                        elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
+                                        elseif(file_exists(storage_path('app/public/student_pictures/' . $student->picture))) {
                                             $hasValidModalImage = true;
                                             $modalImageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }

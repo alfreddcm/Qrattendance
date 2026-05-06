@@ -207,8 +207,8 @@ class PublicAttendanceController extends Controller
                 'section' => [
                     'name' => $attendance->student->section->name ?? '---',
                 ],
-                'picture' => $attendance->student->picture
-                    ? asset('storage/student_pictures/' . $attendance->student->picture)
+                    'picture' => $attendance->student->picture
+                    ? url('/public-storage/' . ltrim('student_pictures/' . $attendance->student->picture, '/'))
                     : null,
             ],
         ]);

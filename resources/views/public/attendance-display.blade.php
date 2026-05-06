@@ -75,10 +75,16 @@ if (isset($teacherSections) && $teacherSections->count() > 0) {
 }
 
 $schoolLogoUrl = null;
-if (!empty($school?->logo)) {
-    $normalizedLogoPath = ltrim(str_replace('storage/', '', $school->logo), '/');
-    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedLogoPath)) {
-        $schoolLogoUrl = url('/public-storage/' . ltrim($normalizedLogoPath, '/'));
+if (!empty($school)) {
+    // Prefer the model accessor which already handles several hosting cases.
+    $schoolLogoUrl = $school->logo_url ?? null;
+
+    // Fallback: attempt to normalize common storage-prefixed values.
+    if (!$schoolLogoUrl && !empty($school->logo)) {
+        $normalizedLogoPath = ltrim(str_replace(['storage/', 'public/storage/'], '', $school->logo), '/');
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedLogoPath)) {
+            $schoolLogoUrl = url('/public-storage/' . ltrim($normalizedLogoPath, '/'));
+        }
     }
 }
 @endphp

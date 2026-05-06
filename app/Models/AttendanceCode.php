@@ -151,7 +151,7 @@ class AttendanceCode extends Model
         if ($this->qr_code_path) {
             $publicPath = public_path($this->qr_code_path);
             if (file_exists($publicPath)) {
-                return url($this->qr_code_path);
+                return url('/public-storage/' . ltrim($this->qr_code_path, '/'));
             }
             return Storage::disk('public')->url($this->qr_code_path);
         }
