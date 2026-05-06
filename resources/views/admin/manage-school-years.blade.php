@@ -18,17 +18,17 @@
 <div class="container-fluid">
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     @endif
 
 
@@ -74,9 +74,9 @@
                             <td class="py-1">
                                 <span class="badge bg-info fs-6">
                                     @if($schoolYear->school_year_start && $schoolYear->school_year_end)
-                                        {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
+                                    {{ $schoolYear->school_year_start }}–{{ $schoolYear->school_year_end }}
                                     @else
-                                        {{ $schoolYear->name }}
+                                    {{ $schoolYear->name }}
                                     @endif
                                 </span>
                             </td>
@@ -88,17 +88,20 @@
                             </td>
                             <td class="py-1">
                                 @if($schoolYear->status === 'active')
-                                    <span class="badge bg-success fs-6">Active</span>
+                                <span class="badge bg-success fs-6">Active</span>
                                 @else
-                                    <span class="badge bg-secondary fs-6">Inactive</span>
+                                <span class="badge bg-secondary fs-6">Inactive</span>
                                 @endif
                             </td>
                             <td class="py-1">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1" onclick="editSchoolYear(@js($schoolYear->uuid ?? $schoolYear->id))" title="Edit School Year">
+                                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1"
+                                        onclick="editSchoolYear(@js($schoolYear->uuid ?? $schoolYear->id))"
+                                        title="Edit School Year">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteSchoolYear(@js($schoolYear->uuid ?? $schoolYear->id), @js($schoolYear->name))">
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1"
+                                        onclick="deleteSchoolYear(@js($schoolYear->uuid ?? $schoolYear->id), @js($schoolYear->name))">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -124,7 +127,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="addSchoolYearModal" tabindex="-1" aria-labelledby="addSchoolYearModalLabel" aria-hidden="true">
+<div class="modal fade" id="addSchoolYearModal" tabindex="-1" aria-labelledby="addSchoolYearModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -137,42 +141,63 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="school_id" class="form-label">School <span class="text-danger">*</span></label>
+                                <label for="school_id" class="form-label">School <span
+                                        class="text-danger">*</span></label>
                                 <select class="form-control" id="school_id" name="school_id" required>
                                     <option value="">Select School</option>
                                     @foreach($schools as $school)
-                                        <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                    @php
+                                    $selected = false;
+                                    // Preserve old input if present
+                                    if (old('school_id') && old('school_id') == $school->id) {
+                                    $selected = true;
+                                    }
+                                    // If only one school exists, preselect it
+                                    elseif ($schools->count() === 1) {
+                                    $selected = true;
+                                    }
+                                    // If authenticated user belongs to a school, prefer that
+                                    elseif(optional(auth()->user())->school_id && auth()->user()->school_id ==
+                                    $school->id) {
+                                    $selected = true;
+                                    }
+                                    @endphp
+                                    <option value="{{ $school->id }}" {{ $selected ? 'selected' : '' }}>
+                                        {{ $school->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="school_year_start" class="form-label">Start Year <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="school_year_start" name="school_year_start" 
-                                       min="2020" max="2100" value="{{ date('Y') }}" required 
-                                       placeholder="e.g., 2024">
+                                <label for="school_year_start" class="form-label">Start Year <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="school_year_start"
+                                    name="school_year_start" min="2020" max="2100" value="{{ date('Y') }}" required
+                                    placeholder="e.g., 2024">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="school_year_end" class="form-label">End Year <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="school_year_end" name="school_year_end" 
-                                       min="2020" max="2100" value="{{ date('Y') + 1 }}" required 
-                                       placeholder="e.g., 2025">
+                                <label for="school_year_end" class="form-label">End Year <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="school_year_end" name="school_year_end"
+                                    min="2020" max="2100" value="{{ date('Y') + 1 }}" required placeholder="e.g., 2025">
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <label for="start_date" class="form-label">Start Date <span
+                                        class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="start_date" name="start_date" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+                                <label for="end_date" class="form-label">End Date <span
+                                        class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="end_date" name="end_date" required>
                             </div>
                         </div>
@@ -180,7 +205,7 @@
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="2"
-                                  placeholder="Optional description (e.g., School Year 2024–2025)"></textarea>
+                            placeholder="Optional description (e.g., School Year 2024–2025)"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -192,7 +217,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="editSchoolYearModal" tabindex="-1" aria-labelledby="editSchoolYearModalLabel" aria-hidden="true">
+<div class="modal fade" id="editSchoolYearModal" tabindex="-1" aria-labelledby="editSchoolYearModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -206,46 +232,52 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="edit_school_id" class="form-label">School <span class="text-danger">*</span></label>
+                                <label for="edit_school_id" class="form-label">School <span
+                                        class="text-danger">*</span></label>
                                 <select class="form-control" id="edit_school_id" name="school_id" required>
                                     <option value="">Select School</option>
                                     @foreach($schools as $school)
-                                        <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="edit_school_year_start" class="form-label">Start Year <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="edit_school_year_start" name="school_year_start" 
-                                       min="2020" max="2100" required placeholder="e.g., 2024">
+                                <label for="edit_school_year_start" class="form-label">Start Year <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="edit_school_year_start"
+                                    name="school_year_start" min="2020" max="2100" required placeholder="e.g., 2024">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="edit_school_year_end" class="form-label">End Year <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="edit_school_year_end" name="school_year_end" 
-                                       min="2020" max="2100" required placeholder="e.g., 2025">
+                                <label for="edit_school_year_end" class="form-label">End Year <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="edit_school_year_end"
+                                    name="school_year_end" min="2020" max="2100" required placeholder="e.g., 2025">
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="edit_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <label for="edit_start_date" class="form-label">Start Date <span
+                                        class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="edit_start_date" name="start_date" required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="edit_end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+                                <label for="edit_end_date" class="form-label">End Date <span
+                                        class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="edit_end_date" name="end_date" required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="edit_status" class="form-label">Status <span class="text-danger">*</span></label>
+                                <label for="edit_status" class="form-label">Status <span
+                                        class="text-danger">*</span></label>
                                 <select class="form-control" id="edit_status" name="status" required>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
@@ -267,7 +299,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteSchoolYearModal" tabindex="-1" aria-labelledby="deleteSchoolYearModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteSchoolYearModal" tabindex="-1" aria-labelledby="deleteSchoolYearModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
@@ -276,7 +309,8 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete <strong id="deleteSchoolYearName"></strong>?</p>
-                <p class="text-danger"><small><i class="fas fa-exclamation-triangle"></i> This action cannot be undone and will affect all attendance data associated with this School Year.</small></p>
+                <p class="text-danger"><small><i class="fas fa-exclamation-triangle"></i> This action cannot be undone
+                        and will affect all attendance data associated with this School Year.</small></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-compact-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -291,7 +325,7 @@
 </div>
 
 
- <script>
+<script>
 // Global CSRF and session management
 function handleAjaxError(response, submitBtn = null) {
     if (response.status === 419) {
@@ -299,13 +333,13 @@ function handleAjaxError(response, submitBtn = null) {
         window.location.reload();
         return;
     }
-    
+
     if (response.status === 403) {
         alert('Access denied. Please check your permissions.');
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
-    
+
     if (response.status === 422) {
         response.json().then(data => {
             if (data.errors) {
@@ -320,7 +354,7 @@ function handleAjaxError(response, submitBtn = null) {
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
-    
+
     // Generic error handling
     response.json().then(data => {
         const msg = (data && (data.message || data.error)) || `Request failed (${response.status})`;
@@ -328,14 +362,14 @@ function handleAjaxError(response, submitBtn = null) {
     }).catch(() => {
         alert(`Request failed with status ${response.status}`);
     });
-    
+
     if (submitBtn) submitBtn.disabled = false;
 }
 
 // Enhanced CSRF token management
 function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
-           document.querySelector('input[name="_token"]')?.value;
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+        document.querySelector('input[name="_token"]')?.value;
 }
 
 function updateCsrfTokens(newToken) {
@@ -344,7 +378,7 @@ function updateCsrfTokens(newToken) {
     if (metaTag) {
         metaTag.setAttribute('content', newToken);
     }
-    
+
     // Update all form tokens
     const tokenInputs = document.querySelectorAll('input[name="_token"]');
     tokenInputs.forEach(input => {
@@ -354,24 +388,24 @@ function updateCsrfTokens(newToken) {
 
 function refreshCsrfToken() {
     return fetch('/admin/refresh-csrf', {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.token) {
-            updateCsrfTokens(data.token);
-            return data.token;
-        }
-        throw new Error('No token received');
-    });
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                updateCsrfTokens(data.token);
+                return data.token;
+            }
+            throw new Error('No token received');
+        });
 }
 
 // Time utilities
- function formatTime(timeString) {
+function formatTime(timeString) {
     if (!timeString) return '';
     if (timeString.length > 5) {
         return timeString.substring(0, 5);
@@ -457,13 +491,15 @@ function validateSchoolYearData(prefix) {
     if (startYear && endYear) {
         if (startYear >= endYear) {
             alert('Start year must be before end year (e.g., 2024–2025)');
-            const endYearField = document.getElementById(prefix === 'add' ? 'school_year_end' : `${prefix}_school_year_end`);
+            const endYearField = document.getElementById(prefix === 'add' ? 'school_year_end' :
+                `${prefix}_school_year_end`);
             if (endYearField) endYearField.focus();
             return false;
         }
 
         if (endYear - startYear !== 1) {
-            if (!confirm('School year typically spans one year (e.g., 2024-2025). Continue with ' + startYear + '–' + endYear + '?')) {
+            if (!confirm('School year typically spans one year (e.g., 2024-2025). Continue with ' + startYear + '–' +
+                    endYear + '?')) {
                 return false;
             }
         }
@@ -515,38 +551,40 @@ function setupTimeValidation() {
             const submitBtn = editSchoolYearForm.querySelector('[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
             const formData = new FormData(editSchoolYearForm);
-            
+
             const csrfToken = getCsrfToken();
-            
+
             fetch(editSchoolYearForm.action, {
-                method: 'POST',
-                headers: { 
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData,
-                credentials: 'same-origin'
-            })
-            .then(async (res) => {
-                if (res.ok) {
-                    let data = {};
-                    try { data = await res.json(); } catch (_) {}
-                    if (data && data.success) {
-                        window.location.reload();
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(async (res) => {
+                    if (res.ok) {
+                        let data = {};
+                        try {
+                            data = await res.json();
+                        } catch (_) {}
+                        if (data && data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Operation completed but response was unexpected.');
+                            window.location.reload();
+                        }
                     } else {
-                        alert(data.message || 'Operation completed but response was unexpected.');
-                        window.location.reload();
+                        handleAjaxError(res, submitBtn);
                     }
-                } else {
-                    handleAjaxError(res, submitBtn);
-                }
-            })
-            .catch(err => {
-                console.error('Network error:', err);
-                alert('Network error submitting the form. Please check your connection and try again.');
-                if (submitBtn) submitBtn.disabled = false;
-            });
+                })
+                .catch(err => {
+                    console.error('Network error:', err);
+                    alert('Network error submitting the form. Please check your connection and try again.');
+                    if (submitBtn) submitBtn.disabled = false;
+                });
         });
     }
 }
@@ -587,7 +625,7 @@ function deleteSchoolYear(schoolYearRouteKey, name) {
 
 document.addEventListener('DOMContentLoaded', function() {
     setupTimeValidation();
-    
+
     // Auto-refresh CSRF token every 30 minutes to prevent expiration
     setInterval(function() {
         refreshCsrfToken().catch(error => {

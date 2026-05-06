@@ -17,29 +17,29 @@
 
 <div class="container-fluid">
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Please fix the following errors:</strong>
-            <ul class="mb-0 mt-2">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Please fix the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
 
@@ -52,9 +52,22 @@
             </div>
 
             <div class="header-right">
+                {{-- Original Add School button commented out per request --}}
+                {{--
                 <button class="btn-compact-primary" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
                     <i class="fas fa-plus me-1"></i>Add School
                 </button>
+                --}}
+
+                {{-- Only show Add School button when there are no schools (hide otherwise) --}}
+                @if($schools->count() == 0)
+                <div style="margin-top:6px;">
+                    <button class="btn-compact-primary" id="newAddSchoolBtn" type="button" data-bs-toggle="modal"
+                        data-bs-target="#addSchoolModal" title="Add a new school">
+                        <i class="fas fa-plus me-1"></i>Add School
+                    </button>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -82,11 +95,12 @@
                         <tr>
                             <td class="py-1 school-logo-cell">
                                 @if($school->logo_url)
-                                    <img src="{{ $school->logo_url }}" alt="Logo" class="school-logo" onerror="handleSchoolLogoError(this)">
+                                <img src="{{ $school->logo_url }}" alt="Logo" class="school-logo"
+                                    onerror="handleSchoolLogoError(this)">
                                 @else
-                                    <div class="school-logo-placeholder">
-                                        <i class="fas fa-school"></i>
-                                    </div>
+                                <div class="school-logo-placeholder">
+                                    <i class="fas fa-school"></i>
+                                </div>
                                 @endif
                             </td>
                             <td class="py-1">
@@ -103,13 +117,12 @@
                             </td>
                             <td class="py-1">
                                 <div class="btn-group btn-group-sm" role="group">
-                                   <a href="{{ route('admin.edit-school', $school) }}"
-                                                   class="btn btn-sm btn-outline-primary px-2 py-1"
-                                                   title="Edit School">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
+                                    <a href="{{ route('admin.edit-school', $school) }}"
+                                        class="btn btn-sm btn-outline-primary px-2 py-1" title="Edit School">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                     <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1"
-                                            onclick="deleteSchool('{{ $school->uuid }}', '{{ $school->name }}')">
+                                        onclick="deleteSchool('{{ $school->uuid }}', '{{ $school->name }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -150,7 +163,8 @@
                     <div class="row">
                         <div class="col-md-12 mb-2">
                             <label for="logo" class="form-label fs-6">School Logo</label>
-                            <input type="file" class="form-control form-control-sm" id="logo" name="logo" accept="image/*">
+                            <input type="file" class="form-control form-control-sm" id="logo" name="logo"
+                                accept="image/*">
                             <small class="text-muted">Upload school logo (optional)</small>
                         </div>
                     </div>
@@ -158,7 +172,8 @@
                         <div class="col-md-6">
                             <div class="mb-2">
                                 <label for="school_id" class="form-label fs-6">School ID</label>
-                                <input type="text" class="form-control form-control-sm" id="school_id" name="school_id" required>
+                                <input type="text" class="form-control form-control-sm" id="school_id" name="school_id"
+                                    required>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -172,13 +187,15 @@
                         <div class="col-md-12">
                             <div class="mb-2">
                                 <label for="address" class="form-label fs-6">Address</label>
-                                <textarea class="form-control form-control-sm" id="address" name="address" rows="2" required></textarea>
+                                <textarea class="form-control form-control-sm" id="address" name="address" rows="2"
+                                    required></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer p-2">
-                    <button type="button" class="btn btn-secondary btn-sm px-2 py-1" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary btn-sm px-2 py-1"
+                        data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary btn-sm px-2 py-1">Add School</button>
                 </div>
             </form>
@@ -186,16 +203,19 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteSchoolModal" tabindex="-1" aria-labelledby="deleteSchoolModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteSchoolModal" tabindex="-1" aria-labelledby="deleteSchoolModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white p-2">
                 <h6 class="modal-title fs-6" id="deleteSchoolModalLabel">Confirm Delete</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body p-2">
                 <p class="fs-6">Are you sure you want to delete the school "<span id="deleteSchoolName"></span>"?</p>
-                <p class="text-danger fs-6"><strong>Warning:</strong> This action cannot be undone and will affect all associated data.</p>
+                <p class="text-danger fs-6"><strong>Warning:</strong> This action cannot be undone and will affect all
+                    associated data.</p>
             </div>
             <div class="modal-footer p-2">
                 <button type="button" class="btn btn-secondary btn-sm px-2 py-1" data-bs-dismiss="modal">Cancel</button>
@@ -257,7 +277,8 @@ function editSchool(id, schoolId, name, address, logo) {
         // Show current logo preview (robust against empty/invalid logo)
         const logoPreview = document.getElementById('current_logo_preview');
         if (logo && typeof logo === 'string' && logo.trim() !== '' && logo !== 'null' && logo !== 'undefined') {
-            logoPreview.innerHTML = `<img src="${logo}" alt="Current Logo" class="current-logo-preview" onerror="this.parentElement.innerHTML='<small class=\"text-muted\">No logo currently uploaded</small>'">`;
+            logoPreview.innerHTML =
+                `<img src="${logo}" alt="Current Logo" class="current-logo-preview" onerror="this.parentElement.innerHTML='<small class=\"text-muted\">No logo currently uploaded</small>'">`;
         } else {
             logoPreview.innerHTML = '<small class="text-muted">No logo currently uploaded</small>';
         }
@@ -304,7 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const logoPreview = document.getElementById('current_logo_preview');
-                logoPreview.innerHTML = `<img src="${e.target.result}" alt="New Logo Preview" class="current-logo-preview">`;
+                logoPreview.innerHTML =
+                    `<img src="${e.target.result}" alt="New Logo Preview" class="current-logo-preview">`;
             };
             reader.readAsDataURL(file);
         }

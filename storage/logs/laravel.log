@@ -284,3 +284,111 @@
 [2026-05-07 02:20:49] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/storage","auth_check":true,"session_id":"DvsNQXUO0F5jG3HPVtRSUzChplNBM29aLldWSDWb","has_session":true,"required_roles":["admin"]} 
 [2026-05-07 02:20:49] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
 [2026-05-07 02:20:54] local.INFO: User logged out successfully {"user_id":1,"username":"adminuser","ip":"127.0.0.1"} 
+[2026-05-07 02:49:20] local.INFO: === LOGIN REQUEST STARTED === {"username":"adminuser","ip":"127.0.0.1","time":"2026-05-07 02:49:20"} 
+[2026-05-07 02:49:20] local.INFO: Attempting teacher/admin login {"identifier":"adminuser"} 
+[2026-05-07 02:49:20] local.INFO: ✓ TEACHER/ADMIN LOGIN SUCCESS {"user_id":1,"username":"adminuser","role":"admin","ip":"127.0.0.1"} 
+[2026-05-07 02:49:20] local.DEBUG: redirectToDashboard called {"user_id":1,"user_class":"User","role":"admin","is_student":false,"is_user":true} 
+[2026-05-07 02:49:20] local.INFO: Redirecting admin user {"user_id":1} 
+[2026-05-07 02:49:20] local.INFO: Teacher/Admin redirect response {"status":302} 
+[2026-05-07 02:49:20] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/dashboard","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:20] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:21] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/database","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:21] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:21] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:21] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:22] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/storage","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:22] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:22] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:22] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:57] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/message","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:57] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:57] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-teachers","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:57] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:58] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-all-students","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:58] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:58] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:58] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:49:58] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:49:59] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:03] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:03] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:28] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:28] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/message","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-teachers","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:35] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-all-students","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:35] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:50:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:50:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:51:05] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:51:05] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:51:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:51:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:52:06] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:52:06] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:52:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:52:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:52:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:52:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:53:06] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:53:06] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:53:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:53:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:54:29] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:54:29] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:54:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:54:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:55:14] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:55:14] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:55:17] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:55:17] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:55:20] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:55:20] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:55:54] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:55:54] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:55:55] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-schools","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:55:55] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:03] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/manage-teachers","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:03] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:06] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/message","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:06] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:06] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-teachers","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:06] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-all-students","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:56:36] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:56:36] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:57:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:57:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:57:37] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:57:37] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:58:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:58:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:58:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:58:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:58:37] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:58:37] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:07] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:07] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:46] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:46] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:48] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/message","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:48] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:48] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-teachers","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:48] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:49] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/get-all-students","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:49] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:49] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:49] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 02:59:49] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/system/status/sms","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 02:59:49] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
+[2026-05-07 03:00:19] local.INFO: === RoleMiddleware CHECK === {"url":"http://127.0.0.1:8000/admin/outbound-messages","auth_check":true,"session_id":"WYTC5aLsLEAYSaATc6dNGw2twLrYrSrqXBWNoANt","has_session":true,"required_roles":["admin"]} 
+[2026-05-07 03:00:19] local.INFO: RoleMiddleware: User authenticated {"user_id":1,"user_role":"admin","user_class":"User"} 
