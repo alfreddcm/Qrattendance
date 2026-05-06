@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Fix Storage Link for cPanel Deployment
-# Single-source setup: public/storage -> ../storage/app/public
 # Usage: bash fix-storage-link-cpanel.sh
 
 echo "========================================="
@@ -11,7 +10,8 @@ echo "========================================="
 echo ""
 
 cd "$(dirname "$0")"
-echo "Current directory: $(pwd)"
+PROJECT_ROOT="$(pwd)"
+echo "Current directory: $PROJECT_ROOT"
 echo ""
 
 # Ensure storage/app/public exists
@@ -21,9 +21,23 @@ if [ ! -d "storage/app/public" ]; then
     echo "Created storage/app/public"
 fi
 
-PUBLIC_STORAGE="public/storage"
+if [ -d "public" ]; then
+    WEB_ROOT="public"
+elif [ -d "public_html" ]; then
+    WEB_ROOT="public_html"
+else
+    echo "Could not find public or public_html in $PROJECT_ROOT"
+    exit 1
+fi
+
+PUBLIC_STORAGE="$WEB_ROOT/storage"
 TARGET_RELATIVE="../storage/app/public"
 BACKUP_SUFFIX="$(date +%Y%m%d_%H%M%S)"
+
+echo "Detected web root: $WEB_ROOT"
+echo "Link path: $PUBLIC_STORAGE"
+echo "Target path (relative): $TARGET_RELATIVE"
+echo ""
 
 # Remove existing link or back up real directory.
 if [ -L "$PUBLIC_STORAGE" ]; then
@@ -31,7 +45,7 @@ if [ -L "$PUBLIC_STORAGE" ]; then
     rm -f "$PUBLIC_STORAGE"
 elif [ -d "$PUBLIC_STORAGE" ]; then
     echo "Backing up existing directory: $PUBLIC_STORAGE"
-    mv "$PUBLIC_STORAGE" "public/storage_backup_$BACKUP_SUFFIX"
+    mv "$PUBLIC_STORAGE" "$WEB_ROOT/storage_backup_$BACKUP_SUFFIX"
 fi
 
 echo "Creating symlink: $PUBLIC_STORAGE -> $TARGET_RELATIVE"
@@ -41,6 +55,11 @@ if [ $? -ne 0 ]; then
     echo ""
     echo "Failed to create symlink. Try running:"
     echo "  php artisan storage:link"
+    exit 1
+fi
+
+if [ ! -L "$PUBLIC_STORAGE" ]; then
+    echo "Link creation command finished but $PUBLIC_STORAGE is not a symlink"
     exit 1
 fi
 
@@ -56,7 +75,7 @@ echo "STORAGE LINK CREATED"
 echo "========================================="
 echo ""
 echo "Symlink status:"
-ls -la public | grep " storage"
+ls -la "$WEB_ROOT" | grep " storage"
 echo ""
 echo "Next steps:"
 echo "  php artisan config:clear"

@@ -150,7 +150,7 @@
         <div class="attendance-code-card">
             <div class="header">
                 @if($attendanceCode->teacher->school && $attendanceCode->teacher->school->logo)
-                    <img src="{{ public_path('storage/' . $attendanceCode->teacher->school->logo) }}"
+                    <img src="{{ url('/public-storage/' . ltrim($attendanceCode->teacher->school->logo, '/')) }}"
                          alt="School Logo"
                          class="school-logo">
                 @endif
@@ -169,11 +169,10 @@
                             @php
                                 // Generate the URL for the QR code
                                 // First try direct public path
-                                if (file_exists(public_path($attendanceCode->qr_code_path))) {
-                                    $qrUrl = url($attendanceCode->qr_code_path);
+                                if (Storage::disk('public')->exists($attendanceCode->qr_code_path)) {
+                                    $qrUrl = url('/public-storage/' . ltrim($attendanceCode->qr_code_path, '/'));
                                 } else {
-                                    // Fallback to storage URL
-                                    $qrUrl = asset('storage/' . $attendanceCode->qr_code_path);
+                                    $qrUrl = url('/public-storage/' . ltrim($attendanceCode->qr_code_path, '/'));
                                 }
                             @endphp
                             <img src="{{ $qrUrl }}" alt="QR Code">

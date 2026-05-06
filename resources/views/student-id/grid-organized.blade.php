@@ -243,16 +243,16 @@
                                                 @php
                                                     $qrCodeUrl = null;
                                                     if ($student->qr_code && Storage::disk('public')->exists($student->qr_code)) {
-                                                        $qrCodeUrl = asset('storage/' . $student->qr_code);
+                                                        $qrCodeUrl = url('/public-storage/' . ltrim($student->qr_code, '/'));
                                                     } else {
                                                         $sanitizedName = preg_replace('/[^A-Za-z0-9\-_]/', '_', $student->name);
                                                         $svgPath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg';
                                                         $pngPath = 'qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png';
                                                         
                                                         if (Storage::disk('public')->exists($svgPath)) {
-                                                            $qrCodeUrl = asset('storage/' . $svgPath);
+                                                            $qrCodeUrl = url('/public-storage/' . ltrim($svgPath, '/'));
                                                         } elseif (Storage::disk('public')->exists($pngPath)) {
-                                                            $qrCodeUrl = asset('storage/' . $pngPath);
+                                                            $qrCodeUrl = url('/public-storage/' . ltrim($pngPath, '/'));
                                                         }
                                                     }
                                                 @endphp

@@ -11,28 +11,28 @@
             </h2>
             <p class="subtitle">Update school information</p>
         </div>
-       
+
     </div>
 </div>
 
 <div class="container-fluid">
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Please fix the following errors:</strong>
-            <ul class="mb-0 mt-2">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Please fix the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
     <div class="row justify-content-center">
@@ -45,12 +45,12 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.update-school', $school) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('admin.update-school', $school) }}"
+                        enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
                         <div class="row">
-
                             <div class="col-md-12 mb-4">
                                 <label for="logo" class="form-label">
                                     <i class="fas fa-image me-1"></i>School Logo
@@ -58,48 +58,43 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="logo-preview" id="logoPreview">
                                         @if($school->logo_url)
-                                            <img src="{{ $school->logo_url }}" alt="Current Logo" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"placeholder-logo\"><i class=\"fas fa-school fa-3x text-muted\"></i><p class=\"mt-2 mb-0 text-muted\">No logo uploaded</p></div>'">
+                                        <img src="{{ $school->logo_url }}" alt="Current Logo"
+                                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'placeholder-logo\'><i class=\'fas fa-school fa-3x text-muted\'></i><p class=\'mt-2 mb-0 text-muted\'>No logo uploaded</p></div>';">
                                         @else
-                                            <div class="placeholder-logo">
-                                                <i class="fas fa-school fa-3x text-muted"></i>
-                                                <p class="mt-2 mb-0 text-muted">No logo uploaded</p>
-                                            </div>
+                                        <div class="placeholder-logo">
+                                            <i class="fas fa-school fa-3x text-muted"></i>
+                                            <p class="mt-2 mb-0 text-muted">No logo uploaded</p>
+                                        </div>
                                         @endif
                                     </div>
                                     <div class="flex-grow-1">
-                                        <input type="file"
-                                               class="form-control @error('logo') is-invalid @enderror"
-                                               id="logo"
-                                               name="logo"
-                                               accept="image/*"
-                                               onchange="previewLogo(this)">
+                                        <input type="file" class="form-control @error('logo') is-invalid @enderror"
+                                            id="logo" name="logo" accept="image/*" onchange="previewLogo(this)">
                                         <div class="form-text">
-                                            Upload a new school logo (JPG, PNG, GIF. Max: 2MB). Leave empty to keep current logo.
+                                            Upload a new school logo (JPG, PNG, GIF. Max: 2MB). Leave empty to keep
+                                            current logo.
                                         </div>
                                         @error('logo')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="school_id" class="form-label">
                                     <i class="fas fa-id-card me-1"></i>School ID <span class="text-danger">*</span>
                                 </label>
-                                <input type="text"
-                                       class="form-control @error('school_id') is-invalid @enderror"
-                                       id="school_id"
-                                       name="school_id"
-                                       value="{{ old('school_id', $school->school_id) }}"
-                                       placeholder="e.g., SCH0001"
-                                       required>
+                                <input type="text" class="form-control @error('school_id') is-invalid @enderror"
+                                    id="school_id" name="school_id" value="{{ old('school_id', $school->school_id) }}"
+                                    placeholder="e.g., SCH0001" required>
                                 <div class="form-text">
                                     Unique identifier for the school
                                 </div>
                                 @error('school_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -108,35 +103,28 @@
                                 <label for="name" class="form-label">
                                     <i class="fas fa-school me-1"></i>School Name <span class="text-danger">*</span>
                                 </label>
-                                <input type="text"
-                                       class="form-control @error('name') is-invalid @enderror"
-                                       id="name"
-                                       name="name"
-                                       value="{{ old('name', $school->name) }}"
-                                       placeholder="Enter school name"
-                                       required>
+                                <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
+                                    name="name" value="{{ old('name', $school->name) }}" placeholder="Enter school name"
+                                    required>
                                 @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
 
                             <div class="col-md-12 mb-4">
                                 <label for="address" class="form-label">
-                                    <i class="fas fa-map-marker-alt me-1"></i>School Address <span class="text-danger">*</span>
+                                    <i class="fas fa-map-marker-alt me-1"></i>School Address <span
+                                        class="text-danger">*</span>
                                 </label>
-                                <textarea class="form-control @error('address') is-invalid @enderror"
-                                          id="address"
-                                          name="address"
-                                          rows="3"
-                                          placeholder="Enter complete school address"
-                                          required>{{ old('address', $school->address) }}</textarea>
+                                <textarea class="form-control @error('address') is-invalid @enderror" id="address"
+                                    name="address" rows="3" placeholder="Enter complete school address"
+                                    required>{{ old('address', $school->address) }}</textarea>
                                 @error('address')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-
 
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('admin.manage-schools') }}" class="btn btn-secondary">
@@ -152,58 +140,96 @@
         </div>
     </div>
 </div>
+</div>
 
 <style>
-    .logo-preview {
-        width: 120px;
-        height: 120px;
-        border: 2px dashed #dee2e6;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-        overflow: hidden;
-    }
+.logo-preview {
+    width: 120px;
+    height: 120px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
 
-    .logo-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 6px;
-    }
+.logo-preview:hover {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+    transition: all 0.3s ease;
+}
 
-    .placeholder-logo {
-        text-align: center;
-        padding: 10px;
-    }
+.logo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
 
-    .placeholder-logo p {
-        font-size: 0.8em;
-    }
+.placeholder-logo {
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
-    .card {
-        border-radius: 10px;
-        border: none;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
+.placeholder-logo i {
+    font-size: 2.5rem;
+}
 
-    .card-header {
-        border-radius: 10px 10px 0 0 !important;
-    }
+.placeholder-logo p {
+    font-size: 0.8em;
+    margin-top: 8px;
+}
 
-    .btn {
-        border-radius: 6px;
-    }
+.card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
 
-    .form-control {
-        border-radius: 6px;
-    }
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
 
-    .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
+.btn {
+    border-radius: 6px;
+}
+
+.form-control {
+    border-radius: 6px;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control[type="file"]::file-selector-button {
+    padding: 0.375rem 0.75rem;
+    margin: -0.375rem -0.75rem;
+    margin-inline-end: 0.75rem;
+    color: #212529;
+    background-color: #e9ecef;
+    pointer-events: none;
+    border-color: inherit;
+    border-style: solid;
+    border-width: 0;
+    border-inline-end-width: 1px;
+    border-radius: 0;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+    background-color: #dde0e3;
+}
 </style>
 
 <script>
@@ -214,12 +240,27 @@ function previewLogo(input) {
         const reader = new FileReader();
 
         reader.onload = function(e) {
-            preview.innerHTML = `<img src="${e.target.result}" alt="Logo Preview">`;
+            preview.innerHTML =
+                `<img src="${e.target.result}" alt="Logo Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
         }
 
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// Add visual feedback when file is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const logoInput = document.getElementById('logo');
+    if (logoInput) {
+        logoInput.addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+            const feedback = this.parentElement.querySelector('.file-feedback');
+            if (feedback) {
+                feedback.textContent = fileName;
+            }
+        });
+    }
+});
 </script>
 
 @endsection

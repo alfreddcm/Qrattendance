@@ -168,6 +168,9 @@ class StudentManagementController extends Controller
         $schoolYears = SchoolYear::all();
         
         $teacherSections = \App\Models\Section::where('teacher_id', Auth::id())
+            ->orWhereHas('teachers', function ($query) {
+                $query->where('users.id', Auth::id());
+            })
             ->with('students')
             ->get();
         
@@ -194,7 +197,12 @@ class StudentManagementController extends Controller
                     'exists:sections,id',
                     function ($attribute, $value, $fail) {
                         $section = \App\Models\Section::where('id', $value)
-                            ->where('teacher_id', Auth::id())
+                            ->where(function ($query) {
+                                $query->where('teacher_id', Auth::id())
+                                      ->orWhereHas('teachers', function ($subQuery) {
+                                          $subQuery->where('users.id', Auth::id());
+                                      });
+                            })
                             ->first();
                         if (!$section) {
                             $fail('The selected section is not assigned to you.');
@@ -227,7 +235,12 @@ class StudentManagementController extends Controller
 
         // Verify the section is assigned to the authenticated teacher
         $section = Section::where('id', $request->section_id)
-            ->where('teacher_id', Auth::id())
+            ->where(function ($query) {
+                $query->where('teacher_id', Auth::id())
+                      ->orWhereHas('teachers', function ($subQuery) {
+                          $subQuery->where('users.id', Auth::id());
+                      });
+            })
             ->first();
             
         if (!$section) {
@@ -379,7 +392,12 @@ class StudentManagementController extends Controller
 
         // Verify that the selected section exists and belongs to this teacher
         $section = Section::where('id', $request->section_id)
-                         ->where('teacher_id', Auth::id())
+                         ->where(function ($query) {
+                             $query->where('teacher_id', Auth::id())
+                                   ->orWhereHas('teachers', function ($subQuery) {
+                                       $subQuery->where('users.id', Auth::id());
+                                   });
+                         })
                          ->first();
 
         if (!$section) {

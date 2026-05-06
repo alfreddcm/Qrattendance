@@ -201,12 +201,12 @@
                                             // Check storage disk first
                                             if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                                                 $hasValidImage = true;
-                                                $imageUrl = Storage::url('student_pictures/' . $student->picture);
+                                                $imageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                             }
                                             // Fallback to public path check
                                             elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
                                                 $hasValidImage = true;
-                                                $imageUrl = asset('storage/student_pictures/' . $student->picture);
+                                                $imageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                             }
                                         }
                                     @endphp
@@ -320,7 +320,7 @@
                                     @endphp
 
                                     @if($hasQrCode)
-                                        <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
+                                        <img src="{{ url('/public-storage/' . ltrim($qrImagePath, '/')) }}" alt="QR Code"
                                              style="width: 40px; height: 40px; border-radius: 4px;"
                                              data-bs-toggle="modal" data-bs-target="#qrModal{{ $student->id }}"
                                              class="cursor-pointer">
@@ -398,11 +398,11 @@
                                     if($student->picture) {
                                         if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                                             $hasValidModalImage = true;
-                                            $modalImageUrl = Storage::url('student_pictures/' . $student->picture);
+                                            $modalImageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
                                         elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
                                             $hasValidModalImage = true;
-                                            $modalImageUrl = asset('storage/student_pictures/' . $student->picture);
+                                            $modalImageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
                                     }
                                 @endphp
@@ -435,10 +435,10 @@
                                     @endphp
                                     <div class="text-center">
                                     @if($qrSvgExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code"
+                                        <img src="{{ url('/public-storage/' . ltrim('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg', '/')) }}" alt="QR Code"
                                              class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @elseif($qrPngExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code"
+                                        <img src="{{ url('/public-storage/' . ltrim('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png', '/')) }}" alt="QR Code"
                                              class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @else
                                         <div class="text-muted">
@@ -656,7 +656,7 @@
                     }
                 @endphp
                 @if($modalHasQrCode)
-                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code" class="img-fluid d-block mx-auto" style="max-width: 300px;">
+                    <img src="{{ url('/public-storage/' . ltrim($modalQrImagePath, '/')) }}" alt="QR Code" class="img-fluid d-block mx-auto" style="max-width: 300px;">
                     <div class="mt-3">
                         <h6>{{ $student->name }}</h6>
                         <p class="text-muted mb-0">LRN: {{ $student->id_no ?? 'N/A' }}</p>
@@ -671,7 +671,7 @@
             </div>
             <div class="modal-footer">
                 @if($modalHasQrCode)
-                    <a href="{{ asset('storage/' . $modalQrImagePath) }}" download="{{ $student->name }}_QR.png" class="btn btn-outline-primary">
+                    <a href="{{ url('/public-storage/' . ltrim($modalQrImagePath, '/')) }}" download="{{ $student->name }}_QR.png" class="btn btn-outline-primary">
                         <i class="fas fa-download me-1"></i>Download QR
                     </a>
                 @endif
@@ -1146,11 +1146,31 @@ function removePhoto() {
     stopCamera();
 });
 
+function fetchTeachersForSchool(schoolId, schoolRouteKey) {
+    const routeKey = schoolRouteKey || schoolId;
+    const primaryUrl = `/admin/schools/${encodeURIComponent(routeKey)}/teachers`;
+
+    return fetch(primaryUrl).then(async (response) => {
+        if (response.ok) {
+            return response.json();
+        }
+
+        if (schoolId && routeKey !== schoolId) {
+            const fallbackUrl = `/admin/schools/${encodeURIComponent(schoolId)}/teachers`;
+            const fallbackResponse = await fetch(fallbackUrl);
+            if (fallbackResponse.ok) {
+                return fallbackResponse.json();
+            }
+        }
+
+        throw new Error(`HTTP error! status: ${response.status}`);
+    });
+}
+
  function loadTeachersBySchool() {
     const schoolSelect = document.getElementById('admin_school_id');
     const teacherSelect = document.getElementById('admin_teacher_id');
     const sectionSelect = document.getElementById('admin_section_id');
-    const schoolYearSelect = document.getElementById('admin_school_year_id');
 
     const schoolId = schoolSelect.value;
     const schoolRouteKey = schoolSelect.options[schoolSelect.selectedIndex]?.dataset.routeKey || schoolId;
@@ -1161,9 +1181,12 @@ function removePhoto() {
     sectionSelect.disabled = true;
 
     if (schoolId) {
-        fetch(`/admin/schools/${schoolRouteKey}/teachers`)
-            .then(response => response.json())
-            .then(teachers => {
+        fetchTeachersForSchool(schoolId, schoolRouteKey)
+            .then(teachersResponse => {
+                const teachers = Array.isArray(teachersResponse)
+                    ? teachersResponse
+                    : (teachersResponse?.data && Array.isArray(teachersResponse.data) ? teachersResponse.data : []);
+
                 teachers.forEach(teacher => {
                     const option = document.createElement('option');
                     option.value = teacher.id;
@@ -1178,15 +1201,14 @@ function removePhoto() {
                 teacherSelect.disabled = false;
             });
     }
-
-    if (schoolYearSelect) {
-        schoolYearSelect.addEventListener('change', function() {
-            if (teacherSelect.value) {
-                loadSectionsByTeacher(); 
-            }
-        });
-    }
 }
+
+document.getElementById('admin_school_year_id')?.addEventListener('change', function() {
+    const teacherSelect = document.getElementById('admin_teacher_id');
+    if (teacherSelect && teacherSelect.value) {
+        loadSectionsByTeacher();
+    }
+});
 
 function fetchSectionsForTeacher(teacherId, teacherRouteKey, schoolYearId) {
     const routeKey = teacherRouteKey || teacherId;

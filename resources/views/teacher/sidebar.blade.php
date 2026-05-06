@@ -444,7 +444,7 @@
 
         <div class="logo">
             @if(auth()->user()->school && auth()->user()->school->logo)
-                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                 <img src="{{ url('/public-storage/' . ltrim(auth()->user()->school->logo, '/')) }}"
                      alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

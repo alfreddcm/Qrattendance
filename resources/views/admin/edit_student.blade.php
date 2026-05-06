@@ -188,7 +188,7 @@
                         <div id="current-photo-container">
                             @if($student->picture)
                             <div class="mb-1">
-                                <img src="{{ asset('storage/student_pictures/' . $student->picture) }}"
+                                <img src="{{ url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/')) }}"
                                     alt="Current Picture" class="student-current-picture">
                             </div>
                             <small class="text-muted text-center">Current</small>

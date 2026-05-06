@@ -12,7 +12,7 @@
             : null;
 
         $schoolLogoUrl = $normalizedLogoPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedLogoPath)
-            ? \Illuminate\Support\Facades\Storage::url($normalizedLogoPath)
+            ? url('/public-storage/' . ltrim($normalizedLogoPath, '/'))
             : null;
     @endphp
 

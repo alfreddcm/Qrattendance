@@ -72,7 +72,7 @@
                     <div class="card shadow-sm h-100 border-0" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); position: relative; overflow: hidden; min-height: 200px;">
                         <div class="school-logo-overlay">
                             @if(auth()->user()->school && auth()->user()->school->logo)
-                                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                                  <img src="{{ url('/public-storage/' . ltrim(auth()->user()->school->logo, '/')) }}"
                                      alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
                                      class="school-logo-positioned"
                                      style="opacity: 0.2;"
@@ -134,7 +134,7 @@
                     <div class="card shadow-sm h-100 border-0" style="background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); position: relative; overflow: hidden; min-height: 200px;">
                         <div class="school-logo-overlay">
                             @if(auth()->user()->school && auth()->user()->school->logo)
-                                <img src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                                  <img src="{{ url('/public-storage/' . ltrim(auth()->user()->school->logo, '/')) }}"
                                      alt="{{ auth()->user()->school->name ?? 'School' }} Logo"
                                      class="school-logo-positioned"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

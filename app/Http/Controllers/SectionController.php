@@ -71,15 +71,18 @@ class SectionController extends Controller
                 ], 409);
             }
 
-             $teacher = User::where('id', $request->teacher_id)
-                ->where('role', 'teacher')
-                ->first();
+            $teacher = null;
+            if ($request->filled('teacher_id')) {
+                $teacher = User::where('id', $request->teacher_id)
+                    ->where('role', 'teacher')
+                    ->first();
 
-            if (!$teacher) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Selected teacher is not valid.'
-                ], 400);
+                if (!$teacher) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Selected teacher is not valid.'
+                    ], 400);
+                }
             }
 
              $timeValidation = $this->validateSectionTimeSequence($request);
@@ -94,12 +97,14 @@ class SectionController extends Controller
             }
 
             $validatedData = $validator->validated();
-            
+
+            $teacherId = (isset($validatedData['teacher_id']) && $validatedData['teacher_id'] !== '') ? $validatedData['teacher_id'] : null;
+
             $section = Section::create([
                 'name' => $validatedData['name'],
                 'gradelevel' => $validatedData['gradelevel'],
                 'school_year_id' => $validatedData['school_year_id'],
-                'teacher_id' => $validatedData['teacher_id'],
+                'teacher_id' => $teacherId,
                 'am_time_in_start' => $validatedData['am_time_in_start'],
                 'am_time_in_end' => $validatedData['am_time_in_end'],
                 'am_time_out_start' => $validatedData['am_time_out_start'],
@@ -111,14 +116,17 @@ class SectionController extends Controller
             ]);
 
              try {
-                if (method_exists($section, 'teachers')) {
-                    if (!$section->teachers()->where('teacher_id', $validatedData['teacher_id'])->exists()) {
-                        $section->teachers()->attach($validatedData['teacher_id']);
+                if (!empty($teacherId)) {
+                    if (method_exists($section, 'teachers')) {
+                        if (!$section->teachers()->where('teacher_id', $teacherId)->exists()) {
+                            $section->teachers()->attach($teacherId);
+                        }
                     }
-                }
-                 $newTeacher = User::find($validatedData['teacher_id']);
-                if ($newTeacher && $newTeacher->role === 'teacher') {
-                    $newTeacher->update(['section_id' => $section->id]);
+
+                    $newTeacher = User::find($teacherId);
+                    if ($newTeacher && $newTeacher->role === 'teacher') {
+                        $newTeacher->update(['section_id' => $section->id]);
+                    }
                 }
             } catch (\Exception $pivotEx) {
                 Log::warning('Non-fatal: could not sync pivot/teacher reference on section store', [
@@ -234,7 +242,7 @@ class SectionController extends Controller
             'name' => 'required|string|max:255',
             'gradelevel' => 'required|integer|min:1|max:12',
             'school_year_id' => 'required|exists:school_years,id',
-            'teacher_id' => 'required|exists:users,id',
+            'teacher_id' => 'nullable|exists:users,id',
             'am_time_in_start' => 'required|date_format:H:i',
             'am_time_in_end' => 'required|date_format:H:i|after:am_time_in_start',
             'am_time_out_start' => 'required|date_format:H:i|after:am_time_in_end',
@@ -275,18 +283,21 @@ class SectionController extends Controller
                 return redirect()->back()->with('error', 'A section with this name and grade level already exists for the selected school year.');
             }
 
-             $teacher = User::where('id', $validatedData['teacher_id'])
-                ->where('role', 'teacher')
-                ->first();
+            $teacher = null;
+            if (!empty($validatedData['teacher_id'])) {
+                $teacher = User::where('id', $validatedData['teacher_id'])
+                    ->where('role', 'teacher')
+                    ->first();
 
-            if (!$teacher) {
-                if ($request->ajax() || $request->isJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Selected teacher is not valid.'
-                    ], 400);
+                if (!$teacher) {
+                    if ($request->ajax() || $request->isJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Selected teacher is not valid.'
+                        ], 400);
+                    }
+                    return redirect()->back()->with('error', 'Selected teacher is not valid.');
                 }
-                return redirect()->back()->with('error', 'Selected teacher is not valid.');
             }
 
              $timeValidation = $this->validateSectionTimeSequence((object) $data);
@@ -300,8 +311,8 @@ class SectionController extends Controller
                 return redirect()->back()->with('error', $timeValidation['message']);
             }
 
-             $oldTeacherId = $section->teacher_id;
-            $newTeacherId = $validatedData['teacher_id'];
+            $oldTeacherId = $section->teacher_id;
+            $newTeacherId = (isset($validatedData['teacher_id']) && $validatedData['teacher_id'] !== '') ? $validatedData['teacher_id'] : null;
 
             $timeRangeData = [
                 'am_time_in_start' => $validatedData['am_time_in_start'],
@@ -318,7 +329,7 @@ class SectionController extends Controller
                 'name' => $validatedData['name'],
                 'gradelevel' => $validatedData['gradelevel'],
                 'school_year_id' => $validatedData['school_year_id'],
-                'teacher_id' => $validatedData['teacher_id'],
+                'teacher_id' => $newTeacherId,
                 'am_time_in_start' => $timeRangeData['am_time_in_start'],
                 'am_time_in_end' => $timeRangeData['am_time_in_end'],
                 'am_time_out_start' => $timeRangeData['am_time_out_start'],

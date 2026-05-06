@@ -3554,7 +3554,11 @@ class AdminController extends Controller
 
         $teachers = User::where('role', 'teacher')
                        ->where('school_id', $school->id)
-                       ->where('is_active', true)
+                       ->where(function ($query) {
+                           // Keep backward compatibility with older rows where is_active can be null.
+                           $query->where('is_active', true)
+                                 ->orWhereNull('is_active');
+                       })
                        ->with(['sections' => function($query) {
                            $query->select('sections.id', 'sections.name', 'sections.gradelevel');
                        }])

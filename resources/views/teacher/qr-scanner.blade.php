@@ -667,7 +667,7 @@ foreach ($recentRecords as $record) {
             <div class="school-brand">
                 <div class="school-logo">
                     @if($school && $school->logo)
-                        <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name ?? 'School Logo' }}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-graduation-cap\'></i>';">
+                        <img src="{{ url('/public-storage/' . ltrim($school->logo, '/')) }}" alt="{{ $school->name ?? 'School Logo' }}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-graduation-cap\'></i>';">
                     @else
                         <i class="fas fa-graduation-cap"></i>
                     @endif
@@ -1133,7 +1133,7 @@ foreach ($recentRecords as $record) {
         // Update student photo if available
         const photoElement = document.getElementById('student-photo');
         if (studentData.picture) {
-            photoElement.innerHTML = `<img src="{{ asset('storage/student_pictures') }}/${studentData.picture}" alt="${studentData.name}">`;
+            photoElement.innerHTML = `<img src="{{ url('/public-storage/student_pictures') }}/${studentData.picture}" alt="${studentData.name}">`;
         } else {
             photoElement.innerHTML = `<i class="fas fa-user-graduate"></i><div class="photo-text">PHOTO</div>`;
         }

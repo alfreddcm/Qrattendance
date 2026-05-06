@@ -254,9 +254,9 @@ function editSchool(id, schoolId, name, address, logo) {
         document.getElementById('edit_name').value = name || '';
         document.getElementById('edit_address').value = address || '';
 
-        // Show current logo preview
+        // Show current logo preview (robust against empty/invalid logo)
         const logoPreview = document.getElementById('current_logo_preview');
-        if (logo) {
+        if (logo && typeof logo === 'string' && logo.trim() !== '' && logo !== 'null' && logo !== 'undefined') {
             logoPreview.innerHTML = `<img src="${logo}" alt="Current Logo" class="current-logo-preview" onerror="this.parentElement.innerHTML='<small class=\"text-muted\">No logo currently uploaded</small>'">`;
         } else {
             logoPreview.innerHTML = '<small class="text-muted">No logo currently uploaded</small>';

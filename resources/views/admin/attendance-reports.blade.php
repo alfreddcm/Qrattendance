@@ -216,7 +216,7 @@
                                             @if($record->student)
                                                 <div class="d-flex align-items-center">
                                                     @if($record->student->picture)
-                                                        <img src="{{ asset('storage/student_pictures/' . $record->student->picture) }}"
+                                                         <img src="{{ url('/public-storage/' . ltrim('student_pictures/' . $record->student->picture, '/')) }}"
                                                              alt="{{ $record->student->name }}"
                                                              class="rounded-circle me-2"
                                                              style="width: 30px; height: 30px; object-fit: cover;">

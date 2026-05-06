@@ -318,12 +318,12 @@
                                         // Check storage disk first
                                         if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                                             $hasValidImage = true;
-                                            $imageUrl = Storage::url('student_pictures/' . $student->picture);
+                                            $imageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
                                         // Fallback to public path check
                                         elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
                                             $hasValidImage = true;
-                                            $imageUrl = asset('storage/student_pictures/' . $student->picture);
+                                            $imageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
                                     }
                                 @endphp
@@ -405,7 +405,7 @@
                                 }
                                 @endphp
                                 @if($hasQrCode)
-                                    <img src="{{ asset('storage/' . $qrImagePath) }}" alt="QR Code"
+                                     <img src="{{ url('/public-storage/' . ltrim($qrImagePath, '/')) }}" alt="QR Code"
                                          class="qr-code-display border rounded"
                                          style="width: 40px; height: 40px; cursor: pointer;"
                                          data-bs-toggle="modal"
@@ -503,11 +503,11 @@
                                     if($student->picture) {
                                         if(Storage::disk('public')->exists('student_pictures/' . $student->picture)) {
                                             $hasValidModalImage = true;
-                                            $modalImageUrl = Storage::url('student_pictures/' . $student->picture);
+                                            $modalImageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
                                         elseif(file_exists(public_path('storage/student_pictures/' . $student->picture))) {
                                             $hasValidModalImage = true;
-                                            $modalImageUrl = asset('storage/student_pictures/' . $student->picture);
+                                            $modalImageUrl = url('/public-storage/' . ltrim('student_pictures/' . $student->picture, '/'));
                                         }
                                     }
                                 @endphp
@@ -540,10 +540,10 @@
                                     @endphp
                                     <div class="text-center">
                                     @if($qrSvgExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg') }}" alt="QR Code"
+                                        <img src="{{ url('/public-storage/' . ltrim('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.svg', '/')) }}" alt="QR Code"
                                              class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @elseif($qrPngExists)
-                                        <img src="{{ asset('storage/qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png') }}" alt="QR Code"
+                                        <img src="{{ url('/public-storage/' . ltrim('qr_codes/' . $student->id_no . '_' . $sanitizedName . '.png', '/')) }}" alt="QR Code"
                                              class="border rounded d-block mx-auto" style="width: 180px; height: 180px;">
                                     @else
                                         <div class="text-muted">
@@ -712,7 +712,7 @@
                     }
                 @endphp
                 @if($modalHasQrCode)
-                    <img src="{{ asset('storage/' . $modalQrImagePath) }}" alt="QR Code"
+                    <img src="{{ url('/public-storage/' . ltrim($modalQrImagePath, '/')) }}" alt="QR Code"
                          style="width: 250px; height: 250px; border: 2px solid #dee2e6; border-radius: 10px;">
                 @else
                     <div class="text-muted">

@@ -78,7 +78,7 @@ $schoolLogoUrl = null;
 if (!empty($school?->logo)) {
     $normalizedLogoPath = ltrim(str_replace('storage/', '', $school->logo), '/');
     if (\Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedLogoPath)) {
-        $schoolLogoUrl = asset('storage/' . $normalizedLogoPath);
+        $schoolLogoUrl = url('/public-storage/' . ltrim($normalizedLogoPath, '/'));
     }
 }
 @endphp
@@ -664,7 +664,7 @@ if (!empty($school?->logo)) {
          <div class="top-section">
              <div class="student-photo-column" id="studentPreviewPhoto">
                 @if($currentStudent && $currentStudent->picture)
-                    <img src="{{ asset('storage/student_pictures/' . $currentStudent->picture) }}" alt="Student Photo">
+                    <img src="{{ url('/public-storage/' . ltrim('student_pictures/' . $currentStudent->picture, '/')) }}" alt="Student Photo">
                 @else
                     <div class="student-photo-placeholder">
                         <i class="fa-solid fa-user"></i>
@@ -1133,7 +1133,7 @@ if (!empty($school?->logo)) {
                         id: {{ $currentStudent->id }},
                         name: @json($currentStudent->name),
                         section: { name: @json($currentStudent->section->name ?? '---') },
-                        picture: @json($currentStudent->picture ? asset('storage/student_pictures/' . $currentStudent->picture) : null)
+                        picture: @json($currentStudent->picture ? url('/public-storage/' . ltrim('student_pictures/' . $currentStudent->picture, '/')) : null)
                     },
                     attendance: {
                         time_in_am: @json($currentAttendanceRecord->time_in_am ?? null),
