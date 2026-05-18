@@ -54,7 +54,7 @@ class AttendanceCode extends Model
 
     public function generateQrCode()
     {
-        $url = url('/public/attendance/' . $this->code);
+        $url = route('public.attendance.show', ['code' => $this->code]);
         
         $qrCode = QrCode::format('svg')
             ->size(300)

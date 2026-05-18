@@ -56,7 +56,7 @@ class AttendanceCodeController extends Controller
                 'data' => [
                     'code' => $attendanceCode->code,
                     'qr_code_url' => $attendanceCode->qr_code_url,
-                    'access_url' => url('/public/attendance/' . $attendanceCode->code),
+                    'access_url' => route('public.attendance.show', ['code' => $attendanceCode->code]),
                     'id' => $attendanceCode->uuid
                 ]
             ]);
@@ -98,7 +98,7 @@ class AttendanceCodeController extends Controller
                     'id' => $activeCode->uuid,
                     'code' => $activeCode->code,
                     'qr_code_url' => $activeCode->qr_code_url,
-                    'access_url' => url('/public/attendance/' . $activeCode->code),
+                    'access_url' => route('public.attendance.show', ['code' => $activeCode->code]),
                     'section_id' => $activeCode->section_id,
                     'section_name' => $activeCode->section ? $activeCode->section->name : 'All Sections'
                 ]
