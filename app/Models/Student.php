@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuidRouteKey;
+use App\Observers\StudentObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -37,6 +38,7 @@ class Student extends Authenticatable
         'user_id',
         'school_id',
         'password',
+        'password_changed',
         'remember_token'
     ];
 
@@ -50,6 +52,15 @@ class Student extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * The "booted" method of the model.
+     * Register observers for the Student model.
+     */
+    protected static function booted()
+    {
+        static::observe(StudentObserver::class);
     }
 
     // Role accessor - always returns 'student' for consistency with middleware
@@ -69,6 +80,30 @@ class Student extends Authenticatable
         return !empty($this->password)
             && !empty($this->id_no)
             && Hash::check((string) $this->id_no, $this->password);
+    }
+
+    /**
+     * Set the student's password to their current LRN (default password).
+     * Mark the password as not yet changed by the student.
+     */
+    public function setDefaultPassword(): void
+    {
+        $this->update([
+            'password' => Hash::make($this->id_no),
+            'password_changed' => false,
+        ]);
+    }
+
+    /**
+     * Update the student's password and mark it as changed.
+     * This should be called when student changes their password.
+     */
+    public function updatePassword(string $newPassword): void
+    {
+        $this->update([
+            'password' => Hash::make($newPassword),
+            'password_changed' => true,
+        ]);
     }
 
     // Accessor for grade_level (from section relationship)

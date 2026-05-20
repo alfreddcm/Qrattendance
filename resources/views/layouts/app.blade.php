@@ -307,9 +307,15 @@
 
                 if ('serviceWorker' in navigator) {
                     window.addEventListener('load', function () {
-                        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {
-                            return null;
-                        });
+                        try {
+                            const swUrl = '{{ asset("sw.js") }}';
+                            const baseEl = document.querySelector('base');
+                            let scopePath = baseEl ? baseEl.getAttribute('href') : (new URL(swUrl).pathname.replace(/sw\.js$/, ''));
+                            if (!scopePath.endsWith('/')) scopePath = scopePath + '/';
+                            navigator.serviceWorker.register(swUrl, { scope: scopePath }).catch(function () { return null; });
+                        } catch (e) {
+                            // ignore registration errors
+                        }
                     });
                 }
 

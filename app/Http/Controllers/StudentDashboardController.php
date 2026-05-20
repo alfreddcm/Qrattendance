@@ -109,9 +109,8 @@ class StudentDashboardController extends Controller
             return back()->withErrors(['current_password' => 'Current password is incorrect.']);
         }
 
-        $student->update([
-            'password' => bcrypt($request->password),
-        ]);
+        // Use the helper method to properly update password and mark as changed
+        $student->updatePassword($request->password);
 
         return back()->with('success', 'Password updated successfully.');
     }

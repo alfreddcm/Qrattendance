@@ -17,12 +17,25 @@ class PublicAttendanceController extends Controller
 {
     public function show($code)
     {
+        Log::info('Public attendance page requested', [
+            'code' => $code,
+            'url' => request()->fullUrl(),
+            'method' => request()->method(),
+            'ip' => request()->ip(),
+            'headers' => request()->headers->all(),
+        ]);
+
         $attendanceCode = AttendanceCode::with(['teacher.school', 'section'])
             ->where('code', $code)
             ->where('is_active', true)
             ->first();
 
         if (!$attendanceCode) {
+            Log::warning('Public attendance code not found or inactive', [
+                'code' => $code,
+                'url' => request()->fullUrl(),
+                'ip' => request()->ip(),
+            ]);
             return view('public.attendance-error', [
                 'message' => 'Invalid or Expired QR Code',
                 'details' => 'The attendance code you scanned is not valid or has expired.'

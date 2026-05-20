@@ -93,26 +93,42 @@ class StudentManagementController extends Controller
       
     private function getCurrentSchoolYearId()
     {
-        $schoolYears = SchoolYear::orderBy('start_date')->get();
-        return $schoolYears->last()?->id;
+        return SchoolYear::getCurrentSchoolYear(Auth::user()->school_id)?->id
+            ?? SchoolYear::orderBy('start_date')->value('id');
     }
 
     public function index(Request $request)
     {
         $query = Student::with('section')->where('user_id', Auth::id());
         
+        // Get active school year for filtering
+        $activeSchoolYear = SchoolYear::getCurrentSchoolYear(Auth::user()->school_id);
+        
+        $availableSections = \App\Models\Section::where('teacher_id', Auth::id())
+            ->with(['schoolYear', 'students']);
+        
+        // Only show sections from the active school year
+        if ($activeSchoolYear) {
+            $availableSections->where('school_year_id', $activeSchoolYear->id);
+        }
+        
+        $availableSections = $availableSections
+            ->orderBy('school_year_id', 'desc')
+            ->orderBy('gradelevel')
+            ->orderBy('name')
+            ->get();
+
+        $selectedSchoolYear = $request->filled('school_year_id')
+            ? $request->school_year_id
+            : ($activeSchoolYear?->id ?? $availableSections->first()?->school_year_id);
+        
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where('name', 'like', "%{$search}%");
         }
         
-        if ($request->filled('school_year_id')) {
-            $query->where('school_year_id', $request->school_year_id);
-        } else {
-            $selectedSemester = $this->getCurrentSchoolYearId();
-            if ($selectedSemester) {
-                $query->where('school_year_id', $selectedSemester);
-            }
+        if ($selectedSchoolYear) {
+            $query->where('school_year_id', $selectedSchoolYear);
         }
         
          if ($request->filled('grade_section')) {
@@ -167,14 +183,16 @@ class StudentManagementController extends Controller
         // Get semesters for the dropdown
         $schoolYears = SchoolYear::all();
         
-        $teacherSections = \App\Models\Section::where('teacher_id', Auth::id())
-            ->orWhereHas('teachers', function ($query) {
-                $query->where('users.id', Auth::id());
+        $teacherSections = $availableSections
+            ->when($selectedSchoolYear, function ($query) use ($selectedSchoolYear) {
+                $query->where('school_year_id', $selectedSchoolYear);
             })
-            ->with('students')
-            ->get();
+            ->values();
+
+        $selectedSectionId = old('section_id')
+            ?: $teacherSections->first()?->id;
         
-        return view('teacher.students', compact('students', 'gradeSectionOptions', 'schoolYears', 'teacherSections'));
+        return view('teacher.students', compact('students', 'gradeSectionOptions', 'schoolYears', 'teacherSections', 'selectedSchoolYear', 'selectedSectionId'));
     }
 
     public function addStudent(Request $request)
@@ -197,12 +215,7 @@ class StudentManagementController extends Controller
                     'exists:sections,id',
                     function ($attribute, $value, $fail) {
                         $section = \App\Models\Section::where('id', $value)
-                            ->where(function ($query) {
-                                $query->where('teacher_id', Auth::id())
-                                      ->orWhereHas('teachers', function ($subQuery) {
-                                          $subQuery->where('users.id', Auth::id());
-                                      });
-                            })
+                            ->where('teacher_id', Auth::id())
                             ->first();
                         if (!$section) {
                             $fail('The selected section is not assigned to you.');
@@ -234,17 +247,13 @@ class StudentManagementController extends Controller
         }
 
         // Verify the section is assigned to the authenticated teacher
-        $section = Section::where('id', $request->section_id)
-            ->where(function ($query) {
-                $query->where('teacher_id', Auth::id())
-                      ->orWhereHas('teachers', function ($subQuery) {
-                          $subQuery->where('users.id', Auth::id());
-                      });
-            })
+        $section = Section::where('id', $validated['section_id'])
+            ->where('school_year_id', $validated['school_year_id'])
+            ->where('teacher_id', Auth::id())
             ->first();
             
         if (!$section) {
-            return back()->withErrors(['section_id' => 'Selected section is not assigned to you.'])->withInput();
+            return back()->withErrors(['section_id' => 'Selected section is not assigned to you for the selected school year.'])->withInput();
         }
 
         $studentData = $request->except(['_token']);

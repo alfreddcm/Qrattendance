@@ -79,10 +79,6 @@
                                             {{ $section->name }} (Grade {{ $section->gradelevel }})
                                         </span>
                                     @endforeach
-                                @elseif(auth()->user()->section)
-                                    <span class="me-1 mb-1">
-                                        {{ auth()->user()->section->name }} (Grade {{ auth()->user()->section->gradelevel }})
-                                    </span>
                                 @else
                                     <span class="text-muted">No sections assigned</span>
                                 @endif

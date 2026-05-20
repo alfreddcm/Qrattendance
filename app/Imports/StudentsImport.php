@@ -3,6 +3,7 @@ namespace App\Imports;
 
 use Maatwebsite\Excel\Concerns\ToModel;
 use App\Models\Student;
+use Illuminate\Support\Facades\Hash;
 
 class StudentsImport implements ToModel
 {
@@ -15,8 +16,10 @@ class StudentsImport implements ToModel
     
     public function model(array $row)
     {
+        $lrn = $row[0];
+        
         return new Student([
-            'id_no'   => $row[0],
+            'id_no'   => $lrn,
             'name'    => $row[1],
             'section' => $row[2] ?? 'Default Section',
             'grade_level' => $row[3] ?? 'Grade 10',
@@ -29,6 +32,9 @@ class StudentsImport implements ToModel
             'contact_person_contact' => $row[10] ?? null,
             'semester_id' => $row[11] ?? 1, 
             'user_id' => $this->userId,
+            // Set default password: hash of the LRN (student ID)
+            'password' => Hash::make($lrn),
+            'password_changed' => false,
         ]);
     }
 }

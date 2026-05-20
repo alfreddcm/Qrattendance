@@ -59,7 +59,12 @@ class SchoolYearController extends Controller
                     'school_years_count' => $schoolYears->count()
                 ]);
 
+                $currentSchoolYear = SchoolYear::getCurrentSchoolYear($user->school_id);
+
                 $sections = \App\Models\Section::where('teacher_id', $user->id)
+                    ->when($currentSchoolYear, function ($query) use ($currentSchoolYear) {
+                        $query->where('school_year_id', $currentSchoolYear->id);
+                    })
                     ->with(['schoolYear'])
                     ->orderBy('gradelevel')
                     ->orderBy('name')

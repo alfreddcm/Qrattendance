@@ -410,7 +410,7 @@ class TeacherController extends Controller
 
     public function account()
     {
-        $teacher = Auth::user()->load(['section', 'sections']);
+        $teacher = Auth::user()->load(['sections']);
         return view('teacher.manageaccount', compact('teacher'));
     }
 

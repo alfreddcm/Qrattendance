@@ -24,7 +24,8 @@
     }
     $schoolYears = \App\Models\SchoolYear::all();
     $activeSchoolYear = \App\Models\SchoolYear::getCurrentSchoolYear(auth()->user()->school_id);
-    $selectedSchoolYear = request('school_year_id') ?: ($activeSchoolYear ? $activeSchoolYear->id : null);
+    $selectedSchoolYear = $selectedSchoolYear ?? request('school_year_id') ?: ($activeSchoolYear ? $activeSchoolYear->id : null);
+    $selectedSectionId = $selectedSectionId ?? old('section_id');
 
     $sectionCounts = $students->groupBy(function($student) {
                     return $student->section ? $student->section->name : 'Unknown';
@@ -196,7 +197,7 @@
                 <div class="col-12">
                     <div class="text-center text-muted py-3">
                         <i class="fas fa-info-circle me-2"></i>
-                        No sections found. Add students to see section overview.
+                        No sections found. Contact your administrator to assign your section before adding students.
                     </div>
                 </div>
             @endif
@@ -216,9 +217,15 @@
             </div>
 
              <div class="d-flex align-items-center gap-2 flex-wrap">
-                 <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                    <i class="fas fa-plus me-1"></i>Add Student
-                </button>
+                 @if(($teacherSections ?? collect())->count() > 0)
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class="fas fa-plus me-1"></i>Add Student
+                    </button>
+                @else
+                    <button class="btn btn-light btn-sm" type="button" disabled title="Assign a section before adding students">
+                        <i class="fas fa-plus me-1"></i>Add Student
+                    </button>
+                @endif
 
                 @if(count($students) > 0)
                     @if($missingQr)
@@ -470,11 +477,13 @@
                 <div class="mb-4">
                     <i class="fas fa-users text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
                 </div>
-                <h4 class="text-muted mb-3">No students found</h4>
-                <p class="text-muted mb-4">You haven't added any students yet. Get started by adding your first student.</p>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                    <i class="fas fa-plus me-1"></i>Add Student
-                </button>
+                @if(($teacherSections ?? collect())->count() > 0)
+                    <h4 class="text-muted mb-3">No students found</h4>
+                    <p class="text-muted mb-4">You haven't added any students yet. Click the "Add Student" button above to get started.</p>
+                @else
+                    <h4 class="text-muted mb-3">No sections found</h4>
+                    <p class="text-muted mb-4">Contact your administrator to assign your section before adding students.</p>
+                @endif
             </div>
         @endif
     </div>
@@ -870,7 +879,7 @@
                                     <select class="form-select" id="teacher_section_id" name="section_id" required>
                                         <option value="">Select Grade & Section</option>
                                         @foreach($teacherSections ?? [] as $section)
-                                            <option value="{{ $section->id }}" {{ old('section_id') == $section->id ? 'selected' : '' }}>Grade {{ $section->gradelevel }} - {{ $section->name }}</option>
+                                            <option value="{{ $section->id }}" {{ (old('section_id', $selectedSectionId) == $section->id) ? 'selected' : '' }}>Grade {{ $section->gradelevel }} - {{ $section->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -879,7 +888,7 @@
                                     <select class="form-select" id="teacher_semester_id" name="school_year_id">
                                         <option value="">Select School Year</option>
                                         @foreach($schoolYears ?? [] as $sy)
-                                            <option value="{{ $sy->id }}" {{ old('school_year_id') == $sy->id ? 'selected' : '' }}>{{ $sy->name }}</option>
+                                            <option value="{{ $sy->id }}" {{ (old('school_year_id', $selectedSchoolYear) == $sy->id) ? 'selected' : '' }}>{{ $sy->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
